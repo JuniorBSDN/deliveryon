@@ -55,7 +55,6 @@
         .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
 
         /* ================= ÁREA PRINCIPAL ================= */
-        /* FIX: min-width: 0 impede o "Flex Blowout" que quebrava o layout no celular */
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
@@ -145,21 +144,17 @@
             .main-content { margin-left: 0; width: 100vw; }
             .topbar { display: flex; }
 
-            /* Ajuste de espaçamentos - Recupera área de tela no mobile */
             .content-container { padding: 15px; }
             .card { padding: 15px; margin-bottom: 15px; }
             .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
             .page-title { font-size: 1.4rem; }
 
-            /* Grids responsivos */
             .form-grid { grid-template-columns: 1fr; }
 
-            /* Toolbars (Barra de busca e botões) */
             .action-bar-mobile { flex-direction: column; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100%; margin-bottom: 10px; }
             .action-bar-mobile > *:last-child { margin-bottom: 0; }
 
-            /* Lista Avançada (Notificações) */
             .adv-list-header { flex-direction: column; align-items: flex-start; }
             .filter-tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
             .filter-btn { white-space: nowrap; flex-shrink: 0; }
@@ -167,7 +162,6 @@
             .item-actions { width: 100%; justify-content: flex-start; margin-top: 5px; }
             .item-actions .btn { flex: 1; }
 
-            /* Modais Mobile */
             .modal-content { width: 95%; max-height: 90vh; }
             .modal-footer { flex-direction: column; gap: 10px; }
             .modal-footer .btn { width: 100%; margin: 0; }
@@ -191,11 +185,8 @@
             <li><a class="nav-link active" onclick="navigate('dashboard', this)">
                 <span class="nav-icon"><i class="ph ph-chart-line-up"></i></span> Dashboard
             </a></li>
-            <li><a class="nav-link" onclick="navigate('novo-cliente', this)">
-                <span class="nav-icon"><i class="ph ph-user-plus"></i></span> Novo Cliente
-            </a></li>
             <li><a class="nav-link" onclick="navigate('empresas', this)">
-                <span class="nav-icon"><i class="ph ph-buildings"></i></span> Empresas
+                <span class="nav-icon"><i class="ph ph-buildings"></i></span> Empresas & Clientes
             </a></li>
             <li><a class="nav-link" onclick="navigate('helpdesk', this)">
                 <span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk Master
@@ -214,7 +205,7 @@
                 <span class="logo-delivery">delivery</span>
             </div>
 
-            <div style="width: 24px;"></div> <!-- Espaçador para centralizar -->
+            <div style="width: 24px;"></div>
         </header>
 
         <div class="content-container">
@@ -225,7 +216,6 @@
                     <h1 class="page-title"><i class="ph-duotone ph-chart-pie-slice"></i> Dashboard Master</h1>
                 </div>
 
-                <!-- Indicadores (Ajustado minmax para 140px, formando 2 colunas perfeitas no celular) -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card">
                         <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="ph ph-hard-drives"></i> DB Disk</h3>
@@ -260,7 +250,6 @@
                     </div>
 
                     <div id="advancedAlertsList">
-                        <!-- Alerta: Infraestrutura -->
                         <div class="adv-list-item alert-infra">
                             <div style="display: flex; gap: 15px; width: 100%;">
                                 <div class="item-icon icon-danger"><i class="ph ph-database"></i></div>
@@ -278,7 +267,6 @@
                             </div>
                         </div>
 
-                        <!-- Alerta: Financeiro (Hoje) -->
                         <div class="adv-list-item alert-fin">
                             <div style="display: flex; gap: 15px; width: 100%;">
                                 <div class="item-icon icon-warning"><i class="ph ph-invoice"></i></div>
@@ -297,7 +285,6 @@
                             </div>
                         </div>
 
-                        <!-- Alerta: Helpdesk -->
                         <div class="adv-list-item alert-sup">
                             <div style="display: flex; gap: 15px; width: 100%;">
                                 <div class="item-icon icon-info"><i class="ph ph-headset"></i></div>
@@ -311,20 +298,28 @@
                                 </div>
                             </div>
                             <div class="item-actions">
-                                <button class="btn btn-primary" style="font-size: 0.8rem;" onclick="navigate('helpdesk', document.querySelectorAll('.nav-link')[3])"><i class="ph ph-wrench"></i> Gerar O.S.</button>
+                                <button class="btn btn-primary" style="font-size: 0.8rem;" onclick="navigate('helpdesk', document.querySelectorAll('.nav-link')[2])"><i class="ph ph-wrench"></i> Gerar O.S.</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ================= TELA: 1.2 NOVO CLIENTE ================= -->
-            <section id="sec-novo-cliente" class="page-section hidden">
-                <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-user-plus"></i> Cadastro de Novo Cliente</h1>
+            <!-- ================= TELA: 1.3 EMPRESAS & CLIENTES UNIFICADOS ================= -->
+            <section id="sec-empresas" class="page-section hidden">
+                <div class="page-header flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
+                    <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas & Clientes</h1>
+                    <div class="flex gap-10 action-bar-mobile">
+                        <input type="text" class="form-control" placeholder="Busca avançada...">
+                        <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir</button>
+                        <button class="btn btn-primary" onclick="toggleCadastroForm()"><i class="ph ph-plus" id="btn-novo-icon"></i> <span id="btn-novo-text">Novo Cliente</span></button>
+                    </div>
                 </div>
-                <div class="card">
-                    <form onsubmit="event.preventDefault(); alert('Cliente salvo com sucesso!'); navigate('empresas', document.querySelectorAll('.nav-link')[2]);">
+
+                <!-- Formulário de Novo Cliente / Empresa (Oculto por padrão, aparece ao clicar no botão acima) -->
+                <div class="card hidden" id="card-novo-cliente">
+                    <h3 class="mb-20" style="display: flex; align-items: center; gap: 8px; color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Nova Empresa / Cliente</h3>
+                    <form onsubmit="event.preventDefault(); alert('Cliente/Empresa cadastrado com sucesso!'); toggleCadastroForm();">
                         <div class="form-grid">
                             <div class="form-group"><label>Razão Social</label><input type="text" class="form-control" required></div>
                             <div class="form-group"><label>Nome Fantasia</label><input type="text" class="form-control" required></div>
@@ -353,27 +348,14 @@
                             <div class="form-group"><label>Qtd. Unidades (Filiais)</label><input type="number" class="form-control" required></div>
                         </div>
 
-                        <!-- action-bar-mobile garante botões 100% no celular -->
                         <div class="flex action-bar-mobile" style="justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                            <button type="button" class="btn btn-outline" onclick="navigate('dashboard', document.querySelectorAll('.nav-link')[0])"><i class="ph ph-x"></i> Cancelar</button>
+                            <button type="button" class="btn btn-outline" onclick="toggleCadastroForm()"><i class="ph ph-x"></i> Cancelar</button>
                             <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cadastro</button>
                         </div>
                     </form>
                 </div>
-            </section>
 
-            <!-- ================= TELA: 1.3 EMPRESAS ================= -->
-            <section id="sec-empresas" class="page-section hidden">
-                <div class="page-header flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
-                    <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas</h1>
-                    <!-- Classe action-bar-mobile centraliza e ajusta tamanho no celular -->
-                    <div class="flex gap-10 action-bar-mobile">
-                        <input type="text" class="form-control" placeholder="Busca avançada...">
-                        <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir</button>
-                        <button class="btn btn-primary" onclick="navigate('novo-cliente', document.querySelectorAll('.nav-link')[1])"><i class="ph ph-plus"></i> Novo Cliente</button>
-                    </div>
-                </div>
-
+                <!-- Tabela de Empresas / Clientes Existentes -->
                 <div class="card" style="padding: 0;">
                     <div class="table-responsive">
                         <table>
@@ -426,7 +408,6 @@
                     <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk Master</h1>
                 </div>
 
-                <!-- Grid 140px garante 2x2 no mobile -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card" style="text-align: center;">
                         <h4 style="color: var(--text-muted); font-size: 0.9rem;">Abertos</h4>
@@ -515,21 +496,46 @@
         </div>
     </div>
 
-    <!-- Modal: Editar Empresa -->
+    <!-- Modal: Editar Empresa / Cliente (COMPLETO) -->
     <div class="modal-overlay" id="modalEditar">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
-                <h3><i class="ph ph-pencil-simple" style="color: var(--brand-primary);"></i> Editar Empresa</h3>
+                <h3><i class="ph ph-pencil-simple" style="color: var(--brand-primary);"></i> Editar Empresa / Cliente</h3>
                 <button class="close-modal" onclick="closeModal('modalEditar')">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group"><label>Razão Social</label><input type="text" class="form-control" value="Pizzaria Bella Napoli"></div>
-                <div class="form-group"><label>CNPJ</label><input type="text" class="form-control" value="12.345.678/0001-99"></div>
-                <p class="text-muted" style="font-size: 0.8rem; margin-top: 10px;"><i class="ph ph-info"></i> Formulário completo de edição é carregado aqui.</p>
+                <div class="form-grid">
+                    <div class="form-group"><label>Razão Social</label><input type="text" class="form-control" value="Pizzaria Bella Napoli Ltda"></div>
+                    <div class="form-group"><label>Nome Fantasia</label><input type="text" class="form-control" value="Pizzaria Bella Napoli"></div>
+                    <div class="form-group"><label>CNPJ</label><input type="text" class="form-control" value="12.345.678/0001-99"></div>
+                    <div class="form-group"><label>Responsável</label><input type="text" class="form-control" value="José Airton"></div>
+                    <div class="form-group"><label>Contato (Telefone/WhatsApp)</label><input type="text" class="form-control" value="(11) 99999-9999"></div>
+                    <div class="form-group"><label>Email</label><input type="email" class="form-control" value="contato@bellanapoli.com"></div>
+                </div>
+                <div class="form-group"><label>Endereço Completo</label><input type="text" class="form-control" value="Av. Central, 1000 - Centro"></div>
+
+                <h4 class="mb-20 mt-20" style="border-bottom: 1px solid #eee; padding-bottom: 8px; color: var(--brand-primary);"><i class="ph ph-file-text"></i> Contrato e Limites Atuais</h4>
+                <div class="form-grid">
+                    <div class="form-group"><label>Plano Contratado</label>
+                        <select class="form-control">
+                            <option>Basic (Até 5 usuários)</option>
+                            <option selected>Pro (Até 20 usuários)</option>
+                            <option>Enterprise (Ilimitado)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Dia de Vencimento</label><input type="number" class="form-control" value="15"></div>
+                    <div class="form-group"><label>Status do Sistema</label>
+                        <select class="form-control">
+                            <option value="ativo" selected>Ativo</option>
+                            <option value="bloqueado">Bloqueado</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Qtd. Usuários Permitidos</label><input type="number" class="form-control" value="20"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalEditar')">Cancelar</button>
-                <button class="btn btn-primary" onclick="closeModal('modalEditar'); alert('Salvo!')"><i class="ph ph-floppy-disk"></i> Salvar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalEditar'); alert('Alterações salvas com sucesso!')"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -570,7 +576,6 @@
                     <tr><td>15/09/2023</td><td>R$ 150,00</td><td><span class="badge badge-success">Pago</span></td></tr>
                 </table>
             </div>
-            <!-- Footer necessário para garantir o layout no mobile -->
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
             </div>
@@ -663,6 +668,24 @@
             if (sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
+            }
+        }
+
+        // Toggle do Formulário de Novo Cliente na tela de Empresas
+        function toggleCadastroForm() {
+            const formCard = document.getElementById('card-novo-cliente');
+            const btnText = document.getElementById('btn-novo-text');
+            const btnIcon = document.getElementById('btn-novo-icon');
+
+            formCard.classList.toggle('hidden');
+
+            if(!formCard.classList.contains('hidden')) {
+                btnText.innerText = 'Fechar Formulário';
+                btnIcon.className = 'ph ph-x';
+                formCard.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                btnText.innerText = 'Novo Cliente';
+                btnIcon.className = 'ph ph-plus';
             }
         }
 
