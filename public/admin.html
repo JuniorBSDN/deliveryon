@@ -57,7 +57,6 @@
         .nav-footer { padding: 15px; border-top: 1px solid #333; }
 
         /* ================= ÁREA PRINCIPAL ================= */
-        /* FIX: min-width: 0 impede o "Flex Blowout" no mobile */
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--card-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
@@ -89,18 +88,16 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
-        /* Tabs (Abas Relatórios) */
+        /* Tabs */
         .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .tab-btn { background: none; border: none; padding: 10px 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; }
         .tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
-
-        /* Dashboard Chart Grid */
         .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
 
         /* ================= MODAIS ================= */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
         .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
@@ -113,30 +110,22 @@
         .cracha-photo { width: 100px; height: 100px; background: #eee; border-radius: 50%; margin: -40px auto 10px; border: 4px solid white; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .cracha-qr { width: 120px; height: 120px; margin: 15px auto; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
 
-        /* ================= RESPONSIVIDADE (FIX CELULAR) ================= */
+        /* ================= RESPONSIVIDADE ================= */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; width: 100vw; }
             .topbar { display: flex; }
-            
-            /* Ajuste de espaçamentos para celular */
             .content-container { padding: 15px; }
             .card { padding: 15px; margin-bottom: 15px; }
             .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
             .page-title { font-size: 1.4rem; }
-
-            /* Grids responsivos */
             .form-grid { grid-template-columns: 1fr; }
             .chart-grid { grid-template-columns: 1fr; }
-            
-            /* Action Bars & Toolbars (Busca, botões) */
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
             .action-bar-mobile > *:last-child { margin-bottom: 0; }
             .action-bar-mobile .btn { width: 100%; justify-content: center; }
-
-            /* Modais Mobile */
             .modal-content { width: 95%; max-height: 90vh; }
             .modal-footer { flex-direction: column; gap: 10px; }
             .modal-footer .btn { width: 100%; margin: 0; }
@@ -155,16 +144,16 @@
             <span>Gestão Retaguarda</span>
         </div>
         <ul class="nav-menu">
-            <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> 2.1 Dashboard</a></li>
-            <li><a class="nav-link" onclick="navigate('produtos', this)"><span class="nav-icon"><i class="ph ph-hamburger"></i></span> 2.2 Produtos</a></li>
-            <li><a class="nav-link" onclick="navigate('clientes', this)"><span class="nav-icon"><i class="ph ph-users"></i></span> 2.3 Clientes</a></li>
-            <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> 2.7 Colaboradores</a></li>
-            <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> 2.4 Relatórios</a></li>
-            <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> 2.4 Ouvidoria</a></li>
-            <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> 2.5 Configurações</a></li>
+            <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> Dashboard</a></li>
+            <li><a class="nav-link" onclick="navigate('produtos', this)"><span class="nav-icon"><i class="ph ph-hamburger"></i></span> Produtos</a></li>
+            <li><a class="nav-link" onclick="navigate('clientes', this)"><span class="nav-icon"><i class="ph ph-users"></i></span> Clientes</a></li>
+            <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> Colaboradores</a></li>
+            <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
+            <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
+            <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
-            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;"><span class="nav-icon"><i class="ph ph-sign-out"></i></span> 2.6 Sair da Conta</a>
+            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;"><span class="nav-icon"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
         </div>
     </aside>
 
@@ -199,7 +188,6 @@
                     </div>
                 </div>
 
-                <!-- Gráficos com classe chart-grid para ajustar 100% no mobile -->
                 <div class="chart-grid">
                     <div class="card">
                         <h3>Gráfico de Fluxo</h3>
@@ -256,13 +244,32 @@
                             <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-0042" readonly style="background:#f0f0f0;"></div>
                             <div class="form-group"><label>Foto (URL ou Arquivo)</label><input type="file" class="form-control"></div>
                             <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" required></div>
-                            <div class="form-group"><label>Categoria</label>
-                                <select class="form-control">
-                                    <optgroup label="Hambúrgueres"><option>X-Burger</option><option>X-Salada</option><option>X-Tudo</option></optgroup>
-                                    <optgroup label="Pizzas"><option>Pequena</option><option>Média</option><option>Grande</option></optgroup>
-                                    <optgroup label="Bebidas"><option>Sucos</option><option>Refrigerantes</option></optgroup>
-                                </select>
-                            </div>
+                                <div class="form-group">
+                                    <label for="categoria">Categoria do Produto</label>
+                                    <select class="form-control" id="categoria" name="categoria" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="hamburgueres">🍔 Hambúrgueres</option>
+                                        <option value="pizzas">🍕 Pizzas</option>
+                                        <option value="hot-dogs">🌭 Hot Dogs</option>
+                                        <option value="acompanhamentos">🍟 Acompanhamentos</option>
+                                        <option value="petiscos">🍗 Petiscos</option>
+                                        <option value="salgados">🥟 Salgados</option>
+                                        <option value="refeicoes">🥘 Refeições</option>
+                                        <option value="marmitas">🍱 Marmitas</option>
+                                        <option value="crepes">🥞 Crepes</option>
+                                        <option value="tortas-bolos">🥧 Tortas e Bolos</option>
+                                        <option value="acai">🍧 Açaí</option>
+                                        <option value="sorvetes">🍦 Sorvetes</option>
+                                        <option value="picoles">🍭 Picolés</option>
+                                        <option value="bebidas">🥤 Bebidas</option>
+                                        <option value="cafes-chas">☕ Cafés e Chás</option>
+                                        <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
+                                        <option value="milkshakes">🥛 Milkshakes</option>
+                                        <option value="sobremesas">🍰 Sobremesas</option>
+                                        <option value="combos-promocoes">🎁 Combos e Promoções</option>
+                                        <option value="outra">➕ Outra Categoria</option>
+                                    </select>
+                                </div>
                             <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" required></div>
                             <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="999"></div>
                         </div>
@@ -329,7 +336,9 @@
                                     <td>Próximo ao mercado central</td>
                                     <td style="text-align: right;">
                                         <button class="btn-action" title="Editar" onclick="openModal('modalEditCliente')"><i class="ph ph-pencil-simple"></i></button>
-                                        <button class="btn-action" title="Histórico Completo" onclick="openModal('modalHistCliente')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                        <button class="btn-action" title="Histórico de Compras" onclick="openModal('modalHistCliente')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                        <!-- Botão de Excluir Cliente Adicionado -->
+                                        <button class="btn-action" title="Excluir Cliente" style="color: var(--danger);" onclick="if(confirm('Tem certeza que deseja excluir este cliente?')) alert('Cliente excluído com sucesso!');"><i class="ph ph-trash"></i></button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -358,7 +367,7 @@
 
                             <div class="form-group">
                                 <label>Função</label>
-                                <select class="form-control" id="select-funcao" onchange="toggleMotoboyFields(this.value)" required>
+                                <select class="form-control" id="select-funcao" onchange="toggleMotoboyFields(this.value, 'campos-motoboy')" required>
                                     <option value="">Selecione...</option>
                                     <option value="Administrador">Administrador</option>
                                     <option value="Gerente">Gerente</option>
@@ -544,8 +553,8 @@
                         <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
                         <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" value="Bella Napoli"></div>
                         <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" value="A melhor pizza da cidade"></div>
-                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control"></div>
-                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control"></div>
+                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" value="Av. Central, 1000"></div>
+                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" value="(11) 99999-9999"></div>
                         <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" rows="2">Seg a Dom: 18h às 23h</textarea></div>
                     </div>
 
@@ -561,18 +570,20 @@
 
                         <div class="card">
                             <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
-                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="alert('Backup gerado e baixado com sucesso!')"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
+                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="alert('Iniciando compressão de dados...\nBackup gerado e baixado com sucesso no formato .ZIP!')"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
                             <div style="border-top: 1px solid #eee; padding-top: 15px;">
                                 <div class="form-group"><label>Agendar Backup Automático</label>
-                                    <select class="form-control"><option>Desativado</option><option>Diário</option><option>Semanal</option></select>
+                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
                                 </div>
-                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control"></div>
+                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@bellanapoli.com"></div>
                                 <div class="form-group"><label>Limpeza Automática (LGPD)</label>
-                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option>Semestral</option></select>
+                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button class="btn btn-success" style="width: 100%;"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button></div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                            <button class="btn btn-success" style="width: 100%;" onclick="alert('Configurações salvas e aplicadas com sucesso!')"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -604,10 +615,68 @@
     </div>
 
     <div class="modal-overlay" id="modalEditarPedido">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Pedido #1045</h3><button class="close-modal" onclick="closeModal('modalEditarPedido')">&times;</button></div>
-            <div class="modal-body"><p class="text-muted">Formulário de edição de itens seria carregado aqui.</p></div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditarPedido')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditarPedido')">Salvar</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Nome do Cliente</label><input type="text" class="form-control" value="João Silva" required></div>
+                    <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" value="(11) 99999-9999" required></div>
+                    <div class="form-group"><label>Endereço de Entrega</label><input type="text" class="form-control" value="Rua das Flores, 123 - Centro" required></div>
+                    <div class="form-group"><label>Forma de Pagamento</label>
+                        <select class="form-control">
+                            <option selected>PIX (Aguardando)</option>
+                            <option>Cartão de Crédito na Entrega</option>
+                            <option>Dinheiro (Levar Troco)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h4 class="mt-20 mb-20" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Itens do Pedido</h4>
+
+                <div class="table-responsive mb-20">
+                    <table>
+                        <thead>
+                            <tr><th>Item</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th><th style="text-align: right;">Ação</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Pizza Calabresa G</td>
+                                <td><input type="number" class="form-control" value="1" style="width: 60px; padding: 4px;"></td>
+                                <td>R$ 65,00</td>
+                                <td>R$ 65,00</td>
+                                <td style="text-align: right;"><button class="btn-action" style="color: var(--danger);" title="Remover Item"><i class="ph ph-trash"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td>Guaraná 2L</td>
+                                <td><input type="number" class="form-control" value="1" style="width: 60px; padding: 4px;"></td>
+                                <td>R$ 15,00</td>
+                                <td>R$ 15,00</td>
+                                <td style="text-align: right;"><button class="btn-action" style="color: var(--danger);" title="Remover Item"><i class="ph ph-trash"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-grid" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <div class="form-group" style="margin-bottom:0;"><label>Adicionar Novo Produto</label>
+                        <select class="form-control">
+                            <option value="">Selecione um produto...</option>
+                            <option>X-Burger Especial - R$ 25,00</option>
+                            <option>Batata Frita G - R$ 20,00</option>
+                            <option>Coca-Cola 2L - R$ 16,00</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="alert('Item adicionado ao pedido!')"><i class="ph ph-plus"></i> Inserir Item</button>
+                    </div>
+                </div>
+
+                <div class="form-group mt-20"><label>Observações do Pedido</label><textarea class="form-control" rows="2">Sem cebola na pizza, por favor.</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalEditarPedido')">Cancelar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalEditarPedido'); alert('Pedido #1045 atualizado com sucesso!')"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+            </div>
         </div>
     </div>
 
@@ -634,33 +703,97 @@
     <div class="modal-overlay" id="modalEditProduto">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Produto</h3><button class="close-modal" onclick="closeModal('modalEditProduto')">&times;</button></div>
-            <div class="modal-body"><div class="form-group"><label>Nome</label><input type="text" class="form-control" value="Pizza Calabresa G"></div><div class="form-group"><label>Preço</label><input type="text" class="form-control" value="65.00"></div><p class="text-muted" style="font-size: 0.8rem;">* Formulário completo é carregado aqui.</p></div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditProduto')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditProduto')">Salvar</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-001" readonly style="background:#f0f0f0;"></div>
+                    <div class="form-group"><label>Foto Atual / Nova Foto</label><input type="file" class="form-control"></div>
+                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" value="Pizza Calabresa G" required></div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select class="form-control" required>
+                            <option value="hamburgueres">🍔 Hambúrgueres</option>
+                            <option value="pizzas" selected>🍕 Pizzas</option>
+                            <option value="hot-dogs">🌭 Hot Dogs</option>
+                            <option value="bebidas">🥤 Bebidas</option>
+                            <option value="sobremesas">🍰 Sobremesas</option>
+                            <option value="outra">➕ Outras</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" value="65.00" required></div>
+                    <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="50"></div>
+                </div>
+                <div class="form-group mt-20"><label>Descrição</label><textarea class="form-control" rows="2">Massa fina, borda recheada.</textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditProduto')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditProduto'); alert('Produto atualizado com sucesso!')">Salvar Alterações</button></div>
         </div>
     </div>
 
-    <!-- Modais Clientes -->
     <div class="modal-overlay" id="modalEditCliente">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Cliente</h3><button class="close-modal" onclick="closeModal('modalEditCliente')">&times;</button></div>
-            <div class="modal-body"><div class="form-group"><label>Nome</label><input type="text" class="form-control" value="Maria Oliveira"></div><p class="text-muted" style="font-size: 0.8rem;">* Formulário completo é carregado aqui.</p></div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditCliente')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditCliente')">Salvar</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" value="Maria Oliveira" required></div>
+                    <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" value="(11) 98888-7777" required></div>
+                    <div class="form-group"><label>Email</label><input type="email" class="form-control" value="maria.oliveira@email.com"></div>
+                    <div class="form-group"><label>Endereço</label><input type="text" class="form-control" value="Rua das Flores, 123" required></div>
+                </div>
+                <div class="form-group mt-20"><label>Referência Local</label><input type="text" class="form-control" value="Próximo ao mercado central"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditCliente')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditCliente'); alert('Cliente atualizado com sucesso!')">Salvar Alterações</button></div>
         </div>
     </div>
 
     <div class="modal-overlay" id="modalHistCliente">
-        <div class="modal-content">
-            <div class="modal-header"><h3><i class="ph ph-clock-counter-clockwise"></i> Histórico: Maria Oliveira</h3><button class="close-modal" onclick="closeModal('modalHistCliente')">&times;</button></div>
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><h3><i class="ph ph-clock-counter-clockwise"></i> Histórico de Compras: Maria Oliveira</h3><button class="close-modal" onclick="closeModal('modalHistCliente')">&times;</button></div>
             <div class="modal-body">
-                <h4 style="margin-bottom:10px;">Últimas Compras</h4>
-                <table style="width: 100%; font-size: 0.85rem; margin-bottom: 20px;">
-                    <tr><td style="border-bottom:1px solid #eee; padding:5px;">Ontem</td><td style="border-bottom:1px solid #eee; padding:5px;">Pedido #1022</td><td style="border-bottom:1px solid #eee; padding:5px; text-align:right;">R$ 45,00</td></tr>
-                </table>
-                <h4 style="margin-bottom:10px;">Feeds (Ouvidoria)</h4>
-                <div style="background:#f9f9f9; padding:10px; border-radius:6px; font-size:0.85rem;">"Excelente!" - Avaliação: Ótimo</div>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Total de Pedidos</span>
+                        <h3 style="font-size: 1.2rem; color: var(--brand-primary);">12 Pedidos</h3>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Valor Gasto Acumulado</span>
+                        <h3 style="font-size: 1.2rem; color: var(--success);">R$ 780,50</h3>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 10px; font-size: 1rem;">Últimas Transações</h4>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Data / ID</th><th>Itens Principais</th><th>Forma de Pagamento</th><th>Total</th><th style="text-align: right;">Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Ontem<br><span style="font-size: 0.75rem; color: #888;">#1022</span></td>
+                                <td>1x Pizza Calabresa G, 1x Guaraná</td>
+                                <td>PIX</td>
+                                <td>R$ 75,00</td>
+                                <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
+                            </tr>
+                            <tr>
+                                <td>10/05/2026<br><span style="font-size: 0.75rem; color: #888;">#0984</span></td>
+                                <td>2x X-Tudo Especial</td>
+                                <td>Cartão de Crédito</td>
+                                <td>R$ 45,00</td>
+                                <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
+                            </tr>
+                            <tr>
+                                <td>28/04/2026<br><span style="font-size: 0.75rem; color: #888;">#0912</span></td>
+                                <td>1x Porção de Batata Frita G</td>
+                                <td>Dinheiro</td>
+                                <td>R$ 32,00</td>
+                                <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalHistCliente')">Fechar</button>
+                <button class="btn btn-primary" onclick="alert('Exportando histórico completo em PDF...')"><i class="ph ph-file-pdf"></i> Exportar Extrato</button>
             </div>
         </div>
     </div>
@@ -680,16 +813,56 @@
         </div>
     </div>
 
-    <!-- Modais Colaboradores -->
     <div class="modal-overlay" id="modalEditColab">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Colaborador</h3><button class="close-modal" onclick="closeModal('modalEditColab')">&times;</button></div>
             <div class="modal-body">
-                <div class="form-group"><label>Nome</label><input type="text" class="form-control" value="Carlos Pereira"></div>
-                <div class="form-group"><label>Telefone</label><input type="text" class="form-control" value="(11) 97777-6666"></div>
-                <p class="text-muted" style="font-size: 0.8rem;">* Formulário completo é carregado aqui.</p>
+                <div class="form-grid">
+                    <div class="form-group"><label>Foto Atual / Arquivo</label><input type="file" class="form-control"></div>
+                    <div class="form-group"><label>Nome</label><input type="text" class="form-control" value="Carlos Pereira" required></div>
+                    <div class="form-group"><label>Telefone</label><input type="text" class="form-control" value="(11) 97777-6666" required></div>
+                    <div class="form-group"><label>E-mail</label><input type="email" class="form-control" value="carlos.moto@email.com" required></div>
+                    <div class="form-group"><label>CPF / Documento</label><input type="text" class="form-control" value="111.222.333-44" required></div>
+                    <div class="form-group"><label>Data de Nascimento</label><input type="date" class="form-control" value="1992-08-15" required></div>
+                    <div class="form-group"><label>Endereço</label><input type="text" class="form-control" value="Rua X, 45 - Bairro Y" required></div>
+
+                    <div class="form-group">
+                        <label>Função</label>
+                        <select class="form-control" onchange="toggleMotoboyFields(this.value, 'campos-motoboy-modal')" required>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Caixa">Caixa</option>
+                            <option value="Cozinheiro">Cozinheiro</option>
+                            <option value="Motoboy" selected>Entregador / Motoboy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status Atual</label>
+                        <select class="form-control">
+                            <option value="Disponível" selected>Disponível</option>
+                            <option value="Pausado">Pausado</option>
+                            <option value="Indisponível">Indisponível</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="campos-motoboy-modal" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Código do Entregador</label><input type="text" class="form-control" value="MOT-045" readonly></div>
+                        <div class="form-group"><label>Tipo de Veículo</label>
+                            <select class="form-control"><option selected>Moto</option><option>Bicicleta</option><option>Carro</option></select>
+                        </div>
+                        <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" value="Honda CG 160"></div>
+                        <div class="form-group"><label>Cor</label><input type="text" class="form-control" value="Preta"></div>
+                        <div class="form-group"><label>Placa</label><input type="text" class="form-control" value="AAA-0000"></div>
+                        <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" value="Zona Sul, Centro"></div>
+                        <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" value="6.50"></div>
+                    </div>
+                </div>
+                <div class="form-group mt-20"><label>Observações Gerais</label><textarea class="form-control" rows="2">Piloto experiente. Preferência por rotas centrais.</textarea></div>
             </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditColab')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditColab')">Salvar</button></div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditColab')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditColab'); alert('Colaborador atualizado com sucesso!')">Salvar Alterações</button></div>
         </div>
     </div>
 
@@ -761,9 +934,8 @@
 
     <!-- ================= SCRIPTS ================= -->
     <script>
-        // Lógica de Gatilho para Campos de Entregador
-        function toggleMotoboyFields(funcao) {
-            const camposMotoboy = document.getElementById('campos-motoboy');
+        function toggleMotoboyFields(funcao, idContainer) {
+            const camposMotoboy = document.getElementById(idContainer);
             if (funcao === 'Motoboy') {
                 camposMotoboy.classList.remove('hidden');
             } else {
@@ -771,15 +943,13 @@
             }
         }
 
-        // Navegação SPA
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
 
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
-            
-            // Fecha sidebar no mobile ao clicar em um link
+
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
             if (sidebar.classList.contains('open')) {
@@ -788,18 +958,16 @@
             }
         }
 
-        // Toggle Sidebar Mobile
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('mobile-overlay').classList.toggle('active');
         }
-        
+
         document.getElementById('mobile-overlay').addEventListener('click', () => {
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('mobile-overlay').classList.remove('active');
         });
 
-        // Abas (Relatórios)
         function switchTab(btn, targetId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -807,11 +975,9 @@
             document.getElementById(targetId).classList.remove('hidden');
         }
 
-        // Modais
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-        // Mudança de Status do Pedido
         function notifyStatus(selectElement) {
             const status = selectElement.value;
             if(status.includes('Aguardando')) { selectElement.style.background = '#fff3cd'; selectElement.style.color = '#856404'; }
@@ -820,19 +986,18 @@
             else if(status.includes('Entregue')) { selectElement.style.background = '#d4edda'; selectElement.style.color = '#155724'; }
         }
 
-        // Gráficos Chart.js (Dashboard 2.1)
         window.onload = function() {
             if(document.getElementById('chartFluxo')) {
                 new Chart(document.getElementById('chartFluxo').getContext('2d'), {
-                    type: 'line', 
-                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [12, 25, 45, 60, 35], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]}, 
+                    type: 'line',
+                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [12, 25, 45, 60, 35], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
             }
             if(document.getElementById('chartOuvidoria')) {
                 new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
-                    type: 'doughnut', 
-                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [65, 20, 10, 3, 2], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] }, 
+                    type: 'doughnut',
+                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [65, 20, 10, 3, 2], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
             }
