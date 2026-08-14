@@ -55,16 +55,17 @@
         .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
 
         /* ================= ÁREA PRINCIPAL ================= */
-        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; }
+        /* FIX: min-width: 0 impede o "Flex Blowout" que quebrava o layout no celular */
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
-        .content-container { padding: 30px; overflow-y: auto; flex: 1; }
+        .content-container { padding: 30px; overflow-y: auto; flex: 1; min-width: 0; }
 
         .page-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .page-title { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
 
         /* ================= COMPONENTES ================= */
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-width: 0; }
 
         /* Formulários */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
@@ -85,7 +86,7 @@
         .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); border-color: #ccc; }
 
         /* Tabelas */
-        .table-responsive { width: 100%; overflow-x: auto; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; white-space: nowrap; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
@@ -125,64 +126,52 @@
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
         .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; }
 
-        /* ================= RESPONSIVIDADE ================= */
+        /* ================= LOGO ANIMADO ================= */
+        .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
+        .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; }
+        @keyframes neon-pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
+            100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
+        }
+        .topbar .logo-wrapper { flex-direction: row; align-items: baseline; gap: 4px; }
+        .topbar .logo-on { font-size: 1.5rem; -webkit-text-stroke: 1px var(--brand-primary); }
+        .topbar .logo-delivery { font-size: 1rem; }
+
+        /* ================= RESPONSIVIDADE (FIX CELULAR) ================= */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; }
+            .main-content { margin-left: 0; width: 100vw; }
             .topbar { display: flex; }
+
+            /* Ajuste de espaçamentos - Recupera área de tela no mobile */
+            .content-container { padding: 15px; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .page-title { font-size: 1.4rem; }
+
+            /* Grids responsivos */
             .form-grid { grid-template-columns: 1fr; }
+
+            /* Toolbars (Barra de busca e botões) */
+            .action-bar-mobile { flex-direction: column; align-items: stretch !important; width: 100%; }
+            .action-bar-mobile > * { width: 100%; margin-bottom: 10px; }
+            .action-bar-mobile > *:last-child { margin-bottom: 0; }
+
+            /* Lista Avançada (Notificações) */
+            .adv-list-header { flex-direction: column; align-items: flex-start; }
+            .filter-tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+            .filter-btn { white-space: nowrap; flex-shrink: 0; }
+            .adv-list-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .item-actions { width: 100%; justify-content: flex-start; margin-top: 5px; }
+            .item-actions .btn { flex: 1; }
+
+            /* Modais Mobile */
+            .modal-content { width: 95%; max-height: 90vh; }
+            .modal-footer { flex-direction: column; gap: 10px; }
+            .modal-footer .btn { width: 100%; margin: 0; }
         }
-        /* ================= LOGO ANIMADO (ON delivery) ================= */
-.logo-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 0.85;
-    text-decoration: none;
-    user-select: none;
-}
-
-.logo-on {
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: white; /* Interior branco como na imagem original */
-    -webkit-text-stroke: 1.5px var(--brand-primary); /* Contorno laranja */
-    font-family: 'Arial Black', Impact, sans-serif;
-    letter-spacing: 1px;
-    animation: neon-pulse 1.5s infinite alternate ease-in-out;
-}
-
-.logo-delivery {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    letter-spacing: -0.5px;
-}
-
-/* Animação do Brilho Variante (Pulsante) */
-@keyframes neon-pulse {
-    0% {
-        text-shadow: 0 0 5px rgba(255, 87, 34, 0.4),
-                     0 0 10px rgba(255, 87, 34, 0.2);
-    }
-    100% {
-        text-shadow: 0 0 8px rgba(255, 87, 34, 0.8),
-                     0 0 15px rgba(255, 87, 34, 0.6),
-                     0 0 25px rgba(255, 87, 34, 0.4);
-    }
-}
-
-/* Ajuste do logo para a Topbar do Mobile (Fica lado a lado) */
-.topbar .logo-wrapper {
-    flex-direction: row;
-    align-items: baseline;
-    gap: 4px;
-}
-.topbar .logo-on { font-size: 1.5rem; -webkit-text-stroke: 1px var(--brand-primary); }
-.topbar .logo-delivery { font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -193,23 +182,23 @@
     <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header" style="height: 100px;">
-    <div class="logo-wrapper">
-        <span class="logo-on">ON</span>
-        <span class="logo-delivery">delivery</span>
-    </div>
-</div>
+            <div class="logo-wrapper">
+                <span class="logo-on">ON</span>
+                <span class="logo-delivery">delivery</span>
+            </div>
+        </div>
         <ul class="nav-menu">
             <li><a class="nav-link active" onclick="navigate('dashboard', this)">
-                <span class="nav-icon"><i class="ph ph-chart-line-up"></i></span> 1.1 Dashboard
+                <span class="nav-icon"><i class="ph ph-chart-line-up"></i></span> Dashboard
             </a></li>
             <li><a class="nav-link" onclick="navigate('novo-cliente', this)">
-                <span class="nav-icon"><i class="ph ph-user-plus"></i></span> 1.2 Novo Cliente
+                <span class="nav-icon"><i class="ph ph-user-plus"></i></span> Novo Cliente
             </a></li>
             <li><a class="nav-link" onclick="navigate('empresas', this)">
-                <span class="nav-icon"><i class="ph ph-buildings"></i></span> 1.3 Empresas
+                <span class="nav-icon"><i class="ph ph-buildings"></i></span> Empresas
             </a></li>
             <li><a class="nav-link" onclick="navigate('helpdesk', this)">
-                <span class="nav-icon"><i class="ph ph-headset"></i></span> 1.5 Helpdesk Master
+                <span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk Master
             </a></li>
         </ul>
     </aside>
@@ -236,8 +225,8 @@
                     <h1 class="page-title"><i class="ph-duotone ph-chart-pie-slice"></i> Dashboard Master</h1>
                 </div>
 
-                <!-- Indicadores -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <!-- Indicadores (Ajustado minmax para 140px, formando 2 colunas perfeitas no celular) -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card">
                         <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="ph ph-hard-drives"></i> DB Disk</h3>
                         <p style="font-size: 1.8rem; color: var(--success); font-weight: bold; margin-top: 5px;">45%</p>
@@ -260,7 +249,7 @@
                 <div class="adv-list-card">
                     <div class="adv-list-header">
                         <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.2rem; margin: 0;">
-                            <i class="ph-duotone ph-bell-ringing" style="color: var(--brand-primary); font-size: 1.5rem;"></i> Central de Alertas e Notificações
+                            <i class="ph-duotone ph-bell-ringing" style="color: var(--brand-primary); font-size: 1.5rem;"></i> Central de Alertas
                         </h3>
                         <div class="filter-tabs" id="alertFilters">
                             <button class="filter-btn active" onclick="filterAlerts('all', this)">Todos (4)</button>
@@ -273,14 +262,16 @@
                     <div id="advancedAlertsList">
                         <!-- Alerta: Infraestrutura -->
                         <div class="adv-list-item alert-infra">
-                            <div class="item-icon icon-danger"><i class="ph ph-database"></i></div>
-                            <div class="item-content">
-                                <div class="item-top">
-                                    <h4>Aviso Prévio: Estouro de Banco de Dados</h4>
-                                    <span class="badge-critical">Crítico</span>
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <div class="item-icon icon-danger"><i class="ph ph-database"></i></div>
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <h4>Estouro de Banco de Dados</h4>
+                                        <span class="badge-critical">Crítico</span>
+                                    </div>
+                                    <p class="item-desc">O Cluster 01 (Master) atingiu 85% do espaço.</p>
+                                    <div class="item-meta"><i class="ph ph-clock"></i> Há 10 min</div>
                                 </div>
-                                <p class="item-desc">O Cluster 01 (Master) atingiu 85% do espaço em disco alocado.</p>
-                                <div class="item-meta"><i class="ph ph-clock"></i> Há 10 minutos • Monitoramento Automático</div>
                             </div>
                             <div class="item-actions">
                                 <button class="btn btn-danger" style="font-size: 0.8rem;"><i class="ph ph-magnifying-glass"></i> Verificar Infra</button>
@@ -289,14 +280,16 @@
 
                         <!-- Alerta: Financeiro (Hoje) -->
                         <div class="adv-list-item alert-fin">
-                            <div class="item-icon icon-warning"><i class="ph ph-invoice"></i></div>
-                            <div class="item-content">
-                                <div class="item-top">
-                                    <h4>Pizzaria Bella Napoli - Fatura Vence Hoje</h4>
-                                    <span class="badge-medium">Atenção</span>
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <div class="item-icon icon-warning"><i class="ph ph-invoice"></i></div>
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <h4>Bella Napoli - Vence Hoje</h4>
+                                        <span class="badge-medium">Atenção</span>
+                                    </div>
+                                    <p class="item-desc">Plano Pro (20 usuários). Valor: R$ 250,00.</p>
+                                    <div class="item-meta"><i class="ph ph-clock"></i> Hoje, 08:00</div>
                                 </div>
-                                <p class="item-desc">Plano Pro (20 usuários). Valor: R$ 250,00. Aguardando confirmação.</p>
-                                <div class="item-meta"><i class="ph ph-clock"></i> Hoje, 08:00 • Sistema Financeiro</div>
                             </div>
                             <div class="item-actions">
                                 <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i> Gerar Pix</button>
@@ -304,34 +297,21 @@
                             </div>
                         </div>
 
-                        <!-- Alerta: Financeiro (Amanhã) -->
-                        <div class="adv-list-item alert-fin">
-                            <div class="item-icon icon-warning"><i class="ph ph-calendar-blank"></i></div>
-                            <div class="item-content">
-                                <div class="item-top">
-                                    <h4>Burger King (Centro) - Fatura Vence Amanhã</h4>
-                                </div>
-                                <p class="item-desc">Plano Multi (Unidades ilimitadas). Valor: R$ 850,00.</p>
-                                <div class="item-meta"><i class="ph ph-clock"></i> Ontem, 23:59 • Sistema Financeiro</div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn btn-secondary" style="font-size: 0.8rem;" onclick="dismissListItem(this)"><i class="ph ph-check"></i> Dispensar</button>
-                            </div>
-                        </div>
-
                         <!-- Alerta: Helpdesk -->
                         <div class="adv-list-item alert-sup">
-                            <div class="item-icon icon-info"><i class="ph ph-headset"></i></div>
-                            <div class="item-content">
-                                <div class="item-top">
-                                    <h4>Sushi House - Integração iFood</h4>
-                                    <span class="badge-medium">SLA Ativo</span>
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <div class="item-icon icon-info"><i class="ph ph-headset"></i></div>
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <h4>Sushi House - Integração iFood</h4>
+                                        <span class="badge-medium">SLA Ativo</span>
+                                    </div>
+                                    <p class="item-desc">Pedidos do iFood não caem no PDV.</p>
+                                    <div class="item-meta"><i class="ph ph-clock"></i> Há 2 horas</div>
                                 </div>
-                                <p class="item-desc">Problema relatado: "Pedidos do iFood não estão caindo na tela do PDV."</p>
-                                <div class="item-meta"><i class="ph ph-clock"></i> Há 2 horas • Aberto via painel do cliente</div>
                             </div>
                             <div class="item-actions">
-                                <button class="btn btn-primary" style="font-size: 0.8rem;" onclick="alert('Redirecionando para Helpdesk...'); navigate('helpdesk', document.querySelectorAll('.nav-link')[3])"><i class="ph ph-wrench"></i> Gerar O.S.</button>
+                                <button class="btn btn-primary" style="font-size: 0.8rem;" onclick="navigate('helpdesk', document.querySelectorAll('.nav-link')[3])"><i class="ph ph-wrench"></i> Gerar O.S.</button>
                             </div>
                         </div>
                     </div>
@@ -372,7 +352,9 @@
                             <div class="form-group"><label>Qtd. Usuários Permitidos</label><input type="number" class="form-control" required></div>
                             <div class="form-group"><label>Qtd. Unidades (Filiais)</label><input type="number" class="form-control" required></div>
                         </div>
-                        <div class="flex" style="justify-content: flex-end; gap: 10px; margin-top: 20px;">
+
+                        <!-- action-bar-mobile garante botões 100% no celular -->
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end; gap: 10px; margin-top: 20px;">
                             <button type="button" class="btn btn-outline" onclick="navigate('dashboard', document.querySelectorAll('.nav-link')[0])"><i class="ph ph-x"></i> Cancelar</button>
                             <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cadastro</button>
                         </div>
@@ -384,7 +366,8 @@
             <section id="sec-empresas" class="page-section hidden">
                 <div class="page-header flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
                     <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas</h1>
-                    <div class="flex gap-10">
+                    <!-- Classe action-bar-mobile centraliza e ajusta tamanho no celular -->
+                    <div class="flex gap-10 action-bar-mobile">
                         <input type="text" class="form-control" placeholder="Busca avançada...">
                         <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir</button>
                         <button class="btn btn-primary" onclick="navigate('novo-cliente', document.querySelectorAll('.nav-link')[1])"><i class="ph ph-plus"></i> Novo Cliente</button>
@@ -443,7 +426,8 @@
                     <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk Master</h1>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <!-- Grid 140px garante 2x2 no mobile -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card" style="text-align: center;">
                         <h4 style="color: var(--text-muted); font-size: 0.9rem;">Abertos</h4>
                         <h2 style="color:var(--danger); font-size: 2rem;">12</h2>
@@ -457,19 +441,19 @@
                         <h2 style="color:var(--success); font-size: 2rem;">148</h2>
                     </div>
                     <div class="card" style="text-align: center;">
-                        <h4 style="color: var(--text-muted); font-size: 0.9rem;">SLA / Tempo Médio</h4>
-                        <h2 style="font-size: 1.6rem; color: var(--text-main); margin-top: 5px;">98% <span style="font-size: 1rem; font-weight: normal;">/ 1h20m</span></h2>
+                        <h4 style="color: var(--text-muted); font-size: 0.9rem;">SLA / T. Médio</h4>
+                        <h2 style="font-size: 1.6rem; color: var(--text-main); margin-top: 5px;">98% <span style="font-size: 1rem; font-weight: normal;">/ 1h20</span></h2>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px;">
-                        <div class="flex gap-10">
+                    <div class="flex justify-between align-center mb-20 action-bar-mobile" style="gap: 10px;">
+                        <div class="flex gap-10 action-bar-mobile" style="width: 100%;">
                             <input type="date" class="form-control">
                             <input type="date" class="form-control">
                             <button class="btn btn-secondary"><i class="ph ph-funnel"></i> Buscar</button>
                         </div>
-                        <button class="btn btn-outline"><i class="ph ph-printer"></i> Imprimir Resultado</button>
+                        <button class="btn btn-outline" style="width: 100%;"><i class="ph ph-printer"></i> Imprimir Resultado</button>
                     </div>
 
                     <div class="table-responsive">
@@ -494,9 +478,9 @@
                                         </select>
                                     </td>
                                     <td class="actions-cell" style="justify-content: flex-end;">
-                                        <button class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalConcluirChamado')"><i class="ph ph-check"></i> Concluir</button>
-                                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalCancelarChamado')"><i class="ph ph-x"></i> Cancelar</button>
-                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalHistoricoChamado')"><i class="ph ph-clock"></i> Histórico</button>
+                                        <button class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalConcluirChamado')"><i class="ph ph-check"></i></button>
+                                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalCancelarChamado')"><i class="ph ph-x"></i></button>
+                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalHistoricoChamado')"><i class="ph ph-clock"></i></button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -586,6 +570,10 @@
                     <tr><td>15/09/2023</td><td>R$ 150,00</td><td><span class="badge badge-success">Pago</span></td></tr>
                 </table>
             </div>
+            <!-- Footer necessário para garantir o layout no mobile -->
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
+            </div>
         </div>
     </div>
 
@@ -603,7 +591,7 @@
                 </div>
                 <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 15px;">
                     <input type="checkbox" id="envia-comprovante" checked style="width: 16px; height: 16px;">
-                    <label for="envia-comprovante" style="margin: 0; font-weight: normal; cursor: pointer;">Enviar comprovante de atendimento automático</label>
+                    <label for="envia-comprovante" style="margin: 0; font-weight: normal; cursor: pointer;">Enviar comprovante de atendimento</label>
                 </div>
             </div>
             <div class="modal-footer">
@@ -639,7 +627,7 @@
                 <button class="close-modal" onclick="closeModal('modalHistoricoChamado')">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="flex gap-10 mb-20">
+                <div class="flex gap-10 mb-20 action-bar-mobile">
                     <input type="date" class="form-control">
                     <button class="btn btn-secondary"><i class="ph ph-funnel"></i> Filtrar</button>
                 </div>
