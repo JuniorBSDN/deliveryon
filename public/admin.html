@@ -57,20 +57,21 @@
         .nav-footer { padding: 15px; border-top: 1px solid #333; }
 
         /* ================= ÁREA PRINCIPAL ================= */
-        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; }
+        /* FIX: min-width: 0 impede o "Flex Blowout" no mobile */
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--card-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
-        .content-container { padding: 25px; overflow-y: auto; flex: 1; }
+        .content-container { padding: 25px; overflow-y: auto; flex: 1; min-width: 0; }
         .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .page-title { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
         /* ================= COMPONENTES ================= */
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); min-width: 0; }
 
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
-        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; }
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
         .form-control:focus { border-color: var(--brand-primary); }
 
         .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
@@ -83,15 +84,18 @@
         .btn-action { padding: 6px 10px; border-radius: 4px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; transition: all 0.2s; }
         .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); }
 
-        .table-responsive { width: 100%; overflow-x: auto; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; white-space: nowrap; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
         /* Tabs (Abas Relatórios) */
-        .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-        .tab-btn { background: none; border: none; padding: 10px 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .tab-btn { background: none; border: none; padding: 10px 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; }
         .tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+
+        /* Dashboard Chart Grid */
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
 
         /* ================= MODAIS ================= */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
@@ -101,7 +105,7 @@
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
-        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; }
+        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
 
         /* Crachá Design */
         .cracha-container { width: 280px; margin: 0 auto; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; text-align: center; background: white; }
@@ -109,12 +113,33 @@
         .cracha-photo { width: 100px; height: 100px; background: #eee; border-radius: 50%; margin: -40px auto 10px; border: 4px solid white; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .cracha-qr { width: 120px; height: 120px; margin: 15px auto; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
 
-        /* Responsividade */
+        /* ================= RESPONSIVIDADE (FIX CELULAR) ================= */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; }
+            .main-content { margin-left: 0; width: 100vw; }
             .topbar { display: flex; }
+            
+            /* Ajuste de espaçamentos para celular */
+            .content-container { padding: 15px; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .page-title { font-size: 1.4rem; }
+
+            /* Grids responsivos */
+            .form-grid { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            
+            /* Action Bars & Toolbars (Busca, botões) */
+            .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+            .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
+            .action-bar-mobile > *:last-child { margin-bottom: 0; }
+            .action-bar-mobile .btn { width: 100%; justify-content: center; }
+
+            /* Modais Mobile */
+            .modal-content { width: 95%; max-height: 90vh; }
+            .modal-footer { flex-direction: column; gap: 10px; }
+            .modal-footer .btn { width: 100%; margin: 0; }
         }
     </style>
 </head>
@@ -159,29 +184,30 @@
                     <h1 class="page-title"><i class="ph-duotone ph-storefront"></i> Visão Geral Diária</h1>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card" style="border-top: 4px solid var(--warning);">
-                        <span style="color: var(--text-muted);">Aguardando</span><h2 style="font-size: 2rem;">14</h2>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Aguardando</span><h2 style="font-size: 1.8rem;">14</h2>
                     </div>
                     <div class="card" style="border-top: 4px solid var(--success);">
-                        <span style="color: var(--text-muted);">Entregues</span><h2 style="font-size: 2rem;">42</h2>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Entregues</span><h2 style="font-size: 1.8rem;">42</h2>
                     </div>
                     <div class="card" style="border-top: 4px solid var(--danger);">
-                        <span style="color: var(--text-muted);">Cancelados</span><h2 style="font-size: 2rem;">2</h2>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Cancelados</span><h2 style="font-size: 1.8rem;">2</h2>
                     </div>
                     <div class="card">
-                        <span style="color: var(--text-muted);">Receita Total</span><h2 style="font-size: 2rem;">R$ 1.620</h2>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Receita Total</span><h2 style="font-size: 1.8rem;">R$ 1.620</h2>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <!-- Gráficos com classe chart-grid para ajustar 100% no mobile -->
+                <div class="chart-grid">
                     <div class="card">
                         <h3>Gráfico de Fluxo</h3>
-                        <div style="height: 200px;"><canvas id="chartFluxo"></canvas></div>
+                        <div style="height: 200px; width: 100%; position: relative;"><canvas id="chartFluxo"></canvas></div>
                     </div>
                     <div class="card">
                         <h3>Ouvidoria (Avaliações)</h3>
-                        <div style="height: 200px;"><canvas id="chartOuvidoria"></canvas></div>
+                        <div style="height: 200px; width: 100%; position: relative;"><canvas id="chartOuvidoria"></canvas></div>
                     </div>
                 </div>
 
@@ -241,13 +267,13 @@
                             <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="999"></div>
                         </div>
                         <div class="form-group"><label>Descrição</label><textarea class="form-control" rows="2"></textarea></div>
-                        <div class="flex" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-plus-circle"></i> Cadastrar Produto</button></div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-plus-circle"></i> Cadastrar Produto</button></div>
                     </form>
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color);">
-                        <input type="text" class="form-control" placeholder="Buscar por cod/nome/categoria..." style="width: 300px;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color);">
+                        <input type="text" class="form-control" placeholder="Buscar por cod/nome/categoria..." style="width: 100%; max-width: 300px;">
                         <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir Lista</button>
                     </div>
                     <div class="table-responsive">
@@ -285,13 +311,13 @@
                             <div class="form-group"><label>Endereço</label><input type="text" class="form-control" required></div>
                         </div>
                         <div class="form-group"><label>Referência Local</label><input type="text" class="form-control"></div>
-                        <div class="flex" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cliente</button></div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cliente</button></div>
                     </form>
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color);">
-                        <input type="text" class="form-control" placeholder="Buscar nome/telefone/ref..." style="width: 100%; max-width: 400px;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color);">
+                        <input type="text" class="form-control" placeholder="Buscar nome/telefone/ref..." style="width: 100%;">
                     </div>
                     <div class="table-responsive">
                         <table>
@@ -312,9 +338,9 @@
                 </div>
             </section>
 
-            <!-- ================= 2.7 COLABORADORES (Adicionado conforme requisitado) ================= -->
+            <!-- ================= 2.7 COLABORADORES ================= -->
             <section id="sec-colaboradores" class="page-section hidden">
-                <div class="page-header flex justify-between align-center">
+                <div class="page-header flex justify-between align-center action-bar-mobile">
                     <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1>
                 </div>
 
@@ -374,15 +400,15 @@
                         </div>
 
                         <div class="form-group mt-20"><label>Observações Gerais</label><textarea class="form-control" rows="2"></textarea></div>
-                        <div class="flex mt-20" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Colaborador</button></div>
+                        <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Colaborador</button></div>
                     </form>
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
-                        <div class="flex gap-10" style="flex-wrap: wrap; flex: 1;">
-                            <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 250px;">
-                            <select class="form-control" style="width: 200px;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
+                        <div class="flex gap-10 action-bar-mobile" style="flex-wrap: wrap; flex: 1;">
+                            <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 100%;">
+                            <select class="form-control" style="width: 100%;">
                                 <option value="">Filtrar Função...</option>
                                 <option value="Caixa">Caixa</option>
                                 <option value="Motoboy">Entregador / Motoboy</option>
@@ -403,7 +429,7 @@
                                     <td>Entregador / Motoboy</td>
                                     <td>(11) 97777-6666</td>
                                     <td><span class="badge badge-success">Disponível</span></td>
-                                    <td style="text-align: right;">
+                                    <td style="text-align: right; min-width: 150px;">
                                         <button class="btn-action" title="Editar" onclick="openModal('modalEditColab')"><i class="ph ph-pencil-simple"></i></button>
                                         <button class="btn-action" title="Contrato" onclick="openModal('modalContratoColab')"><i class="ph ph-scroll"></i></button>
                                         <button class="btn-action" title="Visualizar Crachá" onclick="openModal('modalCracha')"><i class="ph ph-identification-card text-info" style="color: var(--info);"></i></button>
@@ -419,9 +445,9 @@
 
             <!-- ================= 2.4 RELATÓRIOS ================= -->
             <section id="sec-relatorios" class="page-section hidden">
-                <div class="page-header flex justify-between align-center">
+                <div class="page-header flex justify-between align-center action-bar-mobile">
                     <h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1>
-                    <button class="btn btn-danger"><i class="ph ph-file-pdf"></i> Imprimir PDF Selecionado</button>
+                    <button class="btn btn-danger"><i class="ph ph-file-pdf"></i> Imprimir PDF</button>
                 </div>
 
                 <div class="card">
@@ -477,7 +503,7 @@
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
 
                 <div class="card" style="border: 1px solid var(--danger); background: #fff5f5;">
-                    <div class="flex justify-between align-center mb-20">
+                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 5px;">
                         <h3 style="color: var(--danger);"><i class="ph ph-warning-circle"></i> Feed Crítico em Destaque</h3>
                         <span style="font-size: 0.85rem; color: #999;">Ontem, 22:30 • Centro</span>
                     </div>
@@ -486,8 +512,8 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color);">
-                        <input type="date" class="form-control">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color);">
+                        <input type="date" class="form-control" style="width: 100%;">
                         <button class="btn btn-primary"><i class="ph ph-magnifying-glass"></i> Buscar Feeds</button>
                     </div>
                     <div class="table-responsive">
@@ -527,9 +553,9 @@
                         <div class="card">
                             <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
                             <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>
-                            <div class="flex gap-10">
-                                <div class="form-group" style="flex:1;"><label>Cor Principal</label><input type="color" class="form-control" value="#ff5722" style="height: 45px; padding: 2px;"></div>
-                                <div class="form-group" style="flex:1;"><label>Cor Secundária</label><input type="color" class="form-control" value="#e64a19" style="height: 45px; padding: 2px;"></div>
+                            <div class="flex gap-10" style="flex-wrap: wrap;">
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" value="#ff5722" style="height: 45px; padding: 2px;"></div>
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" value="#e64a19" style="height: 45px; padding: 2px;"></div>
                             </div>
                         </div>
 
@@ -541,12 +567,12 @@
                                     <select class="form-control"><option>Desativado</option><option>Diário</option><option>Semanal</option></select>
                                 </div>
                                 <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control"></div>
-                                <div class="form-group"><label>Limpeza Automática de Histórico (LGPD)</label>
+                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
                                     <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option>Semestral</option></select>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex" style="justify-content: flex-end;"><button class="btn btn-success" style="width: 100%;"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button></div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button class="btn btn-success" style="width: 100%;"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button></div>
                     </div>
                 </div>
             </section>
@@ -633,6 +659,9 @@
                 <h4 style="margin-bottom:10px;">Feeds (Ouvidoria)</h4>
                 <div style="background:#f9f9f9; padding:10px; border-radius:6px; font-size:0.85rem;">"Excelente!" - Avaliação: Ótimo</div>
             </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalHistCliente')">Fechar</button>
+            </div>
         </div>
     </div>
 
@@ -645,12 +674,13 @@
                 <div style="margin-top: 15px; padding: 15px; background: #f4f7f6; border-radius: 8px; font-style: italic;">"Melhor lanche da cidade, atendimento super rápido e chegou quentinho!"</div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalVerFeed')">Fechar</button>
                 <button class="btn btn-success" onclick="closeModal('modalVerFeed'); alert('E-mail automático enviado: Obrigado pelo Feedback!')"><i class="ph ph-check"></i> Marcar OK (Agradecer)</button>
             </div>
         </div>
     </div>
 
-    <!-- Modais Colaboradores (Criados na Etapa Anterior) -->
+    <!-- Modais Colaboradores -->
     <div class="modal-overlay" id="modalEditColab">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Colaborador</h3><button class="close-modal" onclick="closeModal('modalEditColab')">&times;</button></div>
@@ -683,7 +713,7 @@
     <div class="modal-overlay" id="modalCracha">
         <div class="modal-content" style="max-width: 400px; background: transparent; box-shadow: none;">
             <div class="modal-body" style="padding: 0;">
-                <div class="cracha-container">
+                <div class="cracha-container" style="max-width: 100%;">
                     <div class="cracha-header">
                         <h2 style="font-size: 1.2rem; margin-bottom: 2px;">Bella Napoli</h2>
                         <span style="font-size: 0.75rem; font-weight: normal;">A melhor pizza da cidade</span>
@@ -699,9 +729,9 @@
                     </div>
                     <p style="font-size: 0.7rem; color: #999; margin-bottom: 20px;">Leia o QR Code para acessar operações</p>
                 </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn btn-secondary" onclick="closeModal('modalCracha')"><i class="ph ph-x"></i> Fechar Crachá</button>
-                    <button class="btn btn-primary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir</button>
+                <div style="text-align: center; margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('modalCracha')"><i class="ph ph-x"></i> Fechar Crachá</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir</button>
                 </div>
             </div>
         </div>
@@ -721,8 +751,10 @@
                     <p style="margin-bottom: 5px;"><strong>Entregas Hoje:</strong> 12 concluídas</p>
                     <p><strong>Avaliação Média:</strong> ⭐ 4.8 / 5.0</p>
                 </div>
-                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;"><i class="ph ph-map-pin"></i> Rastrear Localização Atual</button>
-                <button class="btn btn-outline" style="width: 100%;"><i class="ph ph-receipt"></i> Ver Extrato de Repasses</button>
+                <div class="action-bar-mobile" style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary" style="width: 100%;"><i class="ph ph-map-pin"></i> Rastrear Localização Atual</button>
+                    <button class="btn btn-outline" style="width: 100%;"><i class="ph ph-receipt"></i> Ver Extrato de Repasses</button>
+                </div>
             </div>
         </div>
     </div>
@@ -746,15 +778,26 @@
 
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
-            if (window.innerWidth <= 768) { toggleSidebar(); }
+            
+            // Fecha sidebar no mobile ao clicar em um link
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
         }
 
-        // Sidebar Mobile
+        // Toggle Sidebar Mobile
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('mobile-overlay').classList.toggle('active');
         }
-        document.getElementById('mobile-overlay').addEventListener('click', toggleSidebar);
+        
+        document.getElementById('mobile-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('mobile-overlay').classList.remove('active');
+        });
 
         // Abas (Relatórios)
         function switchTab(btn, targetId) {
@@ -781,12 +824,16 @@
         window.onload = function() {
             if(document.getElementById('chartFluxo')) {
                 new Chart(document.getElementById('chartFluxo').getContext('2d'), {
-                    type: 'line', data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [12, 25, 45, 60, 35], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    type: 'line', 
+                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [12, 25, 45, 60, 35], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]}, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
             }
             if(document.getElementById('chartOuvidoria')) {
                 new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
-                    type: 'doughnut', data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [65, 20, 10, 3, 2], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                    type: 'doughnut', 
+                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [65, 20, 10, 3, 2], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
             }
         };
