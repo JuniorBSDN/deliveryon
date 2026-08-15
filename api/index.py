@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-app = FastAPI(title="DeliveryON API", description="API Serverless para Vercel + Neon DB")
+app = FastAPI(title="DeliveryON API", description="API Master Completa - Vercel + Neon DB")
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,16 +49,12 @@ def master_login(auth: MasterAuth):
 @app.get("/api/master/metrics")
 def get_master_metrics(db=Depends(get_db)):
     cursor = db.cursor()
-    
-    # Conta total de clientes
     cursor.execute("SELECT COUNT(*) as total FROM empresas")
     total_clientes = cursor.fetchone()['total']
     
-    # Consulta o tamanho real do banco de dados atual em bytes
+    # Calcula o tamanho real do banco no Postgres
     cursor.execute("SELECT pg_database_size(current_database()) as db_size;")
     db_bytes = cursor.fetchone()['db_size']
-    
-    # Converte os bytes para formato amigável (Ex: MB ou KB)
     if db_bytes < 1024 * 1024:
         db_size_str = f"{round(db_bytes / 1024, 2)} KB"
     elif db_bytes < 1024 * 1024 * 1024:
@@ -67,7 +63,7 @@ def get_master_metrics(db=Depends(get_db)):
         db_size_str = f"{round(db_bytes / (1024 * 1024 * 1024), 2)} GB"
 
     return {
-        "db_disk_usage": db_size_str,  # Retorna o tamanho real medido no Neon DB
+        "db_disk_usage": db_size_str,
         "total_clientes": total_clientes,
         "mrr": f"R$ {total_clientes * 250},00"
     }
@@ -75,7 +71,7 @@ def get_master_metrics(db=Depends(get_db)):
 @app.get("/api/master/empresas")
 def list_empresas(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id, nome_fantasia, cnpj, plano, status FROM empresas ORDER BY id DESC")
+    cursor.execute("SELECT id, razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, plano, vencimento, limite_usuarios, status FROM empresas ORDER BY id DESC")
     return cursor.fetchall()
 
 @app.post("/api/master/empresas")
@@ -94,6 +90,17 @@ def create_empresa(empresa: EmpresaCreate, db=Depends(get_db)):
         novo_id = cursor.fetchone()['id']
         db.commit()
         return {"mensagem": "Tenant criado com sucesso", "id": novo_id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/api/master/empresas/{empresa_id}")
+def delete_empresa(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("DELETE FROM empresas WHERE id = %s", (empresa_id,))
+        db.commit()
+        return {"mensagem": "Empresa excluída com sucesso"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
