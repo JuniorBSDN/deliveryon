@@ -21,6 +21,7 @@ app.add_middleware(
 # Conexão com o Neon PostgreSQL (Variável de Ambiente configurada no Vercel)
 DATABASE_URL = os.getenv("DATABASE_URL", "Sua_String_De_Conexao_Neon_Aqui")
 
+
 def get_db():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     try:
@@ -28,12 +29,14 @@ def get_db():
     finally:
         conn.close()
 
+
 # ==========================================
 # SCHEMAS (Modelos de Validação de Dados JSON)
 # ==========================================
 
 class MasterAuth(BaseModel):
     senha: str
+
 
 class EmpresaCreate(BaseModel):
     razao_social: str
@@ -47,6 +50,7 @@ class EmpresaCreate(BaseModel):
     vencimento: int
     limite_usuarios: int
 
+
 class ProdutoCreate(BaseModel):
     nome: str
     categoria: str
@@ -54,6 +58,7 @@ class ProdutoCreate(BaseModel):
     estoque: int
     descricao: str
     foto: str
+
 
 class ColaboradorCreate(BaseModel):
     nome: str
@@ -69,8 +74,10 @@ class ColaboradorCreate(BaseModel):
     veiculo_placa: Optional[str] = None
     taxa_entrega: Optional[float] = None
 
+
 class StatusUpdate(BaseModel):
     status: str
+
 
 # ==========================================
 # ENDPOINTS: MASTER (Gestão SaaS)
@@ -78,16 +85,14 @@ class StatusUpdate(BaseModel):
 
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
-    # Puxa do Vercel, mas se não existir, assume "master123" como padrão temporário
-    SENHA_CORRETA = os.getenv("SENHA_MASTER")
-    
-    # Linha de diagnóstico (opcional): verifique os logs do Vercel se persistir
-    print(f"Senha digitada: {auth.senha} | Senha esperada configurada.")
+    # Puxa do Vercel, mas assume "master123" se a variável não estiver definida
+    SENHA_CORRETA = os.getenv("SENHA_MASTER", "master123")
 
     if auth.senha == SENHA_CORRETA:
         return {"autorizado": True, "token": "token_jwt_backinformatica_valido"}
-    
+
     raise HTTPException(status_code=401, detail="Senha Master incorreta")
+
 
 @app.get("/api/master/metrics")
 def get_master_metrics(db=Depends(get_db)):
@@ -97,8 +102,9 @@ def get_master_metrics(db=Depends(get_db)):
     return {
         "db_disk_usage": "45%",
         "total_clientes": total_clientes,
-        "mrr": f"R$ {total_clientes * 250},00" # Simulação de MRR
+        "mrr": f"R$ {total_clientes * 250},00"  # Simulação de MRR
     }
+
 
 @app.post("/api/master/empresas")
 def create_empresa(empresa: EmpresaCreate, db=Depends(get_db)):
@@ -108,13 +114,16 @@ def create_empresa(empresa: EmpresaCreate, db=Depends(get_db)):
             INSERT INTO empresas (razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, endereco, plano, vencimento, limite_usuarios)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
         """
-        cursor.execute(query, (empresa.razao_social, empresa.nome_fantasia, empresa.cnpj, empresa.responsavel, empresa.contato, empresa.email_admin, empresa.endereco, empresa.plano, empresa.vencimento, empresa.limite_usuarios))
+        cursor.execute(query, (
+        empresa.razao_social, empresa.nome_fantasia, empresa.cnpj, empresa.responsavel, empresa.contato,
+        empresa.email_admin, empresa.endereco, empresa.plano, empresa.vencimento, empresa.limite_usuarios))
         novo_id = cursor.fetchone()['id']
         db.commit()
         return {"mensagem": "Tenant criado com sucesso", "id": novo_id}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+
 
 # ==========================================
 # ENDPOINTS: ADMIN (Gestão do Restaurante)
@@ -130,13 +139,16 @@ def admin_login(login: AuthLogin, db=Depends(get_db)):
         return {"token": "token_admin_valido", "empresa_id": empresa['id'], "nome": empresa['nome_fantasia']}
     raise HTTPException(status_code=401, detail="Acesso não autorizado")
 
+
 @app.post("/api/admin/produtos")
 def create_produto(produto: ProdutoCreate, db=Depends(get_db)):
     cursor = db.cursor()
     query = "INSERT INTO produtos (nome, categoria, preco, estoque, descricao, foto) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"
-    cursor.execute(query, (produto.nome, produto.categoria, produto.preco, produto.estoque, produto.descricao, produto.foto))
+    cursor.execute(query,
+                   (produto.nome, produto.categoria, produto.preco, produto.estoque, produto.descricao, produto.foto))
     db.commit()
     return {"id": cursor.fetchone()['id'], "status": "criado"}
+
 
 @app.post("/api/admin/colaboradores")
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
@@ -145,9 +157,12 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
         INSERT INTO colaboradores (nome, telefone, email, cpf, funcao, status, veiculo_placa, taxa_entrega)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
     """
-    cursor.execute(query, (colab.nome, colab.telefone, colab.email, colab.cpf, colab.funcao, colab.status, colab.veiculo_placa, colab.taxa_entrega))
+    cursor.execute(query, (
+    colab.nome, colab.telefone, colab.email, colab.cpf, colab.funcao, colab.status, colab.veiculo_placa,
+    colab.taxa_entrega))
     db.commit()
     return {"id": cursor.fetchone()['id']}
+
 
 # ==========================================
 # ENDPOINTS: ENTREGADOR (App Motoboy)
@@ -161,12 +176,14 @@ def get_rotas_ativas(db=Depends(get_db)):
     rotas = cursor.fetchall()
     return rotas
 
+
 @app.put("/api/entregador/pedidos/{pedido_id}/status")
 def update_pedido_status(pedido_id: int, payload: StatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("UPDATE pedidos SET status = %s WHERE id = %s", (payload.status, pedido_id))
     db.commit()
     return {"mensagem": f"Pedido {pedido_id} marcado como {payload.status}"}
+
 
 # ==========================================
 # ENDPOINTS: CLIENTE (Cardápio App)
