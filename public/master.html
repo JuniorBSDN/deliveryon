@@ -29,7 +29,7 @@
 
         /* ================= RESET E TIPOGRAFIA ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        
+
         /* O BODY INICIA OCULTO CONFORME O NOVO PADRÃO */
         body { display: none; background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; }
 
@@ -197,7 +197,7 @@
                 <!-- Formulário de Novo Cliente (COM IDs PADRONIZADOS PARA A API) -->
                 <div class="card hidden" id="mst-form-nova-empresa">
                     <h3 class="mb-20" style="display: flex; align-items: center; gap: 8px; color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Novo Tenant no Neon</h3>
-                    
+
                     <form id="form-cad-cliente" onsubmit="cadastrarEmpresa(event)">
                         <div class="form-grid">
                             <div class="form-group"><label>Razão Social</label><input type="text" id="mst-cad-razao" class="form-control" required></div>
@@ -268,10 +268,7 @@
     <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
     <script>
         // CONFIGURAÇÕES GLOBAIS DA API
-        const API_BASE_URL = '/api/master'; 
-        
-        // Dispara a verificação ao carregar a página
-        window.onload = autenticarMaster;
+        const API_BASE_URL = '/api/master';
 
         async function autenticarMaster() {
             // Verifica se já possui token na sessão
@@ -281,29 +278,25 @@
                 return;
             }
 
-            // Exibe o prompt nativo conforme solicitado
+            // Exibe o prompt nativo para digitar a senha
             const senha = prompt("Chave de Segurança Master (Senha):");
-            
+
             if (!senha) {
-                // Redireciona ou mantém a tela branca/oculta
-                window.location.href = "index.html"; 
+                window.location.href = "index.html";
                 return;
             }
 
             try {
-                // SIMULAÇÃO DO FETCH PARA A API (Ajustado para o endpoint do Python)
-                /*
+                // Comunicação REAL via POST com o Back-end Python
                 const response = await fetch('/api/master/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: "admin@master.com", senha: senha })
+                    body: JSON.stringify({ senha: senha })
                 });
-                const data = await response.json();
-                */
 
-                // Validação Local baseada na API criada (Senha esperada: "master123")
-                if (senha === "SENHA_MASTER") {
-                    localStorage.setItem('deliveryon_master_token', 'token_jwt_master_valido');
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('deliveryon_master_token', data.token);
                     liberarPainel();
                 } else {
                     alert("Acesso negado. Senha incorreta.");
@@ -311,7 +304,8 @@
                 }
 
             } catch (error) {
-                alert("Erro ao comunicar com o servidor.");
+                console.error("Erro de conexão:", error);
+                alert("Erro ao comunicar com o servidor da API.");
                 window.location.reload();
             }
         }
@@ -319,8 +313,8 @@
         function liberarPainel() {
             // Torna o body visível (display flex para manter o layout lateral)
             document.body.style.display = "flex";
-            
-            // Injeção dos dados do Gestor 
+
+            // Injeção dos dados do Gestor
             document.getElementById('app-company-name').textContent = "Back Informatica";
             document.getElementById('app-user-name').textContent = "Gestor: José Airton";
 
@@ -406,7 +400,7 @@
                 document.getElementById('form-cad-cliente').reset();
                 toggleCadastroForm();
                 carregarEmpresas();
-                
+
                 btnSubmit.innerHTML = '<i class="ph ph-cloud-arrow-up"></i> Registrar no Banco de Dados';
                 btnSubmit.disabled = false;
             }, 1200);
