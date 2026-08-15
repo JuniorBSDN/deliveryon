@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = os.getenv("DATA_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
@@ -49,10 +49,25 @@ def master_login(auth: MasterAuth):
 @app.get("/api/master/metrics")
 def get_master_metrics(db=Depends(get_db)):
     cursor = db.cursor()
+    
+    # Conta total de clientes
     cursor.execute("SELECT COUNT(*) as total FROM empresas")
     total_clientes = cursor.fetchone()['total']
+    
+    # Consulta o tamanho real do banco de dados atual em bytes
+    cursor.execute("SELECT pg_database_size(current_database()) as db_size;")
+    db_bytes = cursor.fetchone()['db_size']
+    
+    # Converte os bytes para formato amigável (Ex: MB ou KB)
+    if db_bytes < 1024 * 1024:
+        db_size_str = f"{round(db_bytes / 1024, 2)} KB"
+    elif db_bytes < 1024 * 1024 * 1024:
+        db_size_str = f"{round(db_bytes / (1024 * 1024), 2)} MB"
+    else:
+        db_size_str = f"{round(db_bytes / (1024 * 1024 * 1024), 2)} GB"
+
     return {
-        "db_disk_usage": "12%",
+        "db_disk_usage": db_size_str,  # Retorna o tamanho real medido no Neon DB
         "total_clientes": total_clientes,
         "mrr": f"R$ {total_clientes * 250},00"
     }
