@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-app = FastAPI(title="DeliveryON API", description="API Master Completa - Vercel + Neon DB")
+app = FastAPI(title="DeliveryON API", description="API Master e Admin - Vercel + Neon DB")
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,6 +44,9 @@ class EmpresaUpdate(BaseModel):
     plano: str
     vencimento: int
     limite_usuarios: int
+
+class AdminAuth(BaseModel):
+    cnpj: str
 
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
@@ -135,7 +138,6 @@ def toggle_status_empresa(empresa_id: int, db=Depends(get_db)):
 def carimbar_pagamento(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Aqui você pode registrar a data do pagamento ou enviar recibo
         cursor.execute("SELECT nome_fantasia FROM empresas WHERE id = %s", (empresa_id,))
         emp = cursor.fetchone()
         if not emp:
@@ -156,3 +158,17 @@ def delete_empresa(empresa_id: int, db=Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/login")
+def admin_login(auth: AdminAuth, db=Depends(get_db)):
+    cursor = db.cursor()
+    cnpj_limpo = ''.join(filter(str.isdigit, auth.cnpj))
+    cursor.execute("SELECT id, nome_fantasia, status FROM empresas WHERE REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', '') = %s", (cnpj_limpo,))
+    empresa = cursor.fetchone()
+    
+    if not empresa:
+        raise HTTPException(status_code=404, detail="CNPJ não encontrado. Verifique com o suporte Master.")
+    if empresa['status'] != 'ativo':
+        raise HTTPException(status_code=403, detail="Esta empresa está temporariamente bloqueada.")
+        
+    return {"autorizado": True, "empresa": empresa['nome_fantasia'], "id": empresa['id']}
