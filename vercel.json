@@ -13,23 +13,15 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "dest": "api/index.py"
     },
     {
       "src": "/master",
-      "dest": "/public/master.html"
-    },
-    {
-      "src": "/admin",
-      "dest": "/public/admin.html"
-    },
-    {
-      "src": "/entregador",
-      "dest": "/public/entregador.html"
+      "dest": "api/index.py"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/index.html"
+      "dest": "public/$1"
     }
   ]
 }
