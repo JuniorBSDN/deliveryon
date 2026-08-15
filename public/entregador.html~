@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Entregador - DeliveryON</title>
+
+    <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Leaflet CSS (Mapa Gratuito OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* ================= VARIÁVEIS GERAIS (Padrão deliveryON Master) ================= */
+        :root {
+            --brand-primary: #ff5722;
+            --brand-secondary: #e64a19;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #777777;
+            --border-color: #e0e0e0;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --sidebar-width: 260px;
+            --topbar-height: 60px;
+        }
+
+        /* ================= RESET E TIPOGRAFIA ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: font-size 0.2s ease; }
+
+        /* ================= UTILITÁRIOS ================= */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .gap-10 { gap: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-success { background-color: var(--success); }
+        .badge-danger { background-color: var(--danger); }
+        .badge-warning { background-color: var(--warning); color: #333; }
+
+        /* ================= BARRA LATERAL ================= */
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; }
+        .sidebar-header { height: 100px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 10px; }
+        .nav-menu { list-style: none; padding: 20px 15px; flex: 1; }
+        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background-color: #fcece7; color: var(--brand-primary); }
+        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
+
+        /* ================= ÁREA PRINCIPAL ================= */
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+        .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
+        .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
+        .content-container { padding: 30px; overflow-y: auto; flex: 1; min-width: 0; }
+
+        .page-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .page-title { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        /* ================= COMPONENTES ================= */
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-width: 0; }
+
+        /* Formulários */
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
+        .form-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(255,87,34,0.2); }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
+
+        /* Botões */
+        .btn { padding: 9px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
+
+        /* Mapa Gratuito */
+        #mapa-rota { height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px; }
+
+        /* ================= MODAIS ================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+        .close-modal:hover { color: #333; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* ================= LOGO ANIMADO IDÊNTICO AO MASTER ================= */
+        .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
+        .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; }
+        @keyframes neon-pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
+            100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
+        }
+        .topbar .logo-wrapper { flex-direction: row; align-items: baseline; gap: 4px; }
+        .topbar .logo-on { font-size: 1.5rem; -webkit-text-stroke: 1px var(--brand-primary); }
+        .topbar .logo-delivery { font-size: 1rem; }
+
+        /* Estilos de Impressão */
+        @media print {
+            body { background: white; height: auto; overflow: visible; display: block; }
+            .sidebar, .topbar, .page-header button, .action-bar-mobile, .no-print { display: none !important; }
+            .main-content { margin-left: 0 !important; width: 100% !important; height: auto !important; }
+            .content-container { padding: 0 !important; overflow: visible !important; }
+            .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            table { width: 100% !important; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd !important; padding: 8px !important; }
+        }
+
+        /* ================= RESPONSIVIDADE (FIX CELULAR) ================= */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100vw; }
+            .topbar { display: flex; }
+
+            .content-container { padding: 15px; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .page-title { font-size: 1.4rem; }
+            .action-bar-mobile { flex-direction: column; align-items: stretch !important; width: 100%; }
+            .action-bar-mobile > * { width: 100%; margin-bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ferramentas de Acessibilidade (A+ / A-) -->
+    <div class="accessibility-tools no-print" style="position: fixed; top: 50%; right: 0; transform: translateY(-50%); z-index: 9999; background: white; border: 1px solid #ccc; border-right: none; border-radius: 8px 0 0 8px; box-shadow: -2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
+        <button onclick="changeFontSize(1)" style="padding: 10px 15px; border: none; border-bottom: 1px solid #eee; background: transparent; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: #333;" title="Aumentar Fonte">A+</button>
+        <button onclick="changeFontSize(-1)" style="padding: 10px 15px; border: none; background: transparent; cursor: pointer; font-weight: bold; font-size: 1rem; color: #333;" title="Diminuir Fonte">A-</button>
+    </div>
+
+    <!-- OVERLAY SIDEBAR MOBILE -->
+    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none;"></div>
+
+    <!-- BARRA LATERAL (Padrão DeliveryON Master) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header" style="height: 100px;">
+            <div class="logo-wrapper">
+                <span class="logo-on">ON</span>
+                <span class="logo-delivery">delivery</span>
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li><a class="nav-link active" onclick="navigate('rotas', this)">
+                <span class="nav-icon"><i class="ph ph-motorcycle"></i></span> Minhas Rotas
+            </a></li>
+            <li><a class="nav-link" onclick="navigate('extrato', this)">
+                <span class="nav-icon"><i class="ph ph-wallet"></i></span> Extrato do Dia
+            </a></li>
+        </ul>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="main-content">
+        <!-- TOPBAR MOBILE -->
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+            <div class="logo-wrapper">
+                <span class="logo-on">ON</span>
+                <span class="logo-delivery">delivery</span>
+            </div>
+            <div style="width: 24px;"></div>
+        </header>
+
+        <div class="content-container">
+
+            <!-- ================= TELA: ROTAS ATIVAS ================= -->
+            <section id="sec-rotas" class="page-section">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="ph-duotone ph-map-pin"></i> Rotas de Entrega Ativas</h1>
+                    <button class="btn btn-secondary" onclick="location.reload()"><i class="ph ph-arrows-clockwise"></i> Atualizar Rotas</button>
+                </div>
+
+                <!-- Indicador do Entregador Logado -->
+                <div class="card" style="background: linear-gradient(135deg, #1a1a1a, #333); color: white; border: none;">
+                    <div class="flex justify-between align-center" style="flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: #aaa; text-transform: uppercase; font-weight: bold;">Entregador em Turno</span>
+                            <h2 style="font-size: 1.4rem; margin-top: 2px;">Carlos Pereira</h2>
+                        </div>
+                        <div>
+                            <span class="badge badge-success" style="font-size: 0.9rem; padding: 6px 12px;"><i class="ph ph-check-circle"></i> Disponível</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Rota Interativa com Mapa Gratuito -->
+                <div class="card" id="card-pedido-1045">
+                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                        <div>
+                            <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #1045</span>
+                            <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: João Silva</h3>
+                        </div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às 20:15</span>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço:</p>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;" id="end-1045">Rua das Flores, 123 - Centro (Próximo à praça central)</p>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Total a Receber</span>
+                            <h4 style="font-size: 1.1rem; color: var(--text-main);" id="val-1045">R$ 85,90 <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(PIX / Pago)</span></h4>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa (Comissão)</span>
+                            <h4 style="font-size: 1.1rem; color: var(--success);">R$ 6,50</h4>
+                        </div>
+                    </div>
+
+                    <!-- MAPA GRATUITO OPENSTREETMAP -->
+                    <div class="form-group">
+                        <label><i class="ph ph-compass"></i> Rota GPS Integrada (Gratuita)</label>
+                        <div id="mapa-rota"></div>
+                    </div>
+
+                    <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
+                        <a href="https://maps.google.com/?q=Rua+das+Flores+123+Centro" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
+                        <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('1045', 'João Silva', 'R$ 85,90')"><i class="ph ph-check-circle"></i> Concluir / Entregue</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TELA: EXTRATO DO DIA ================= -->
+            <section id="sec-extrato" class="page-section hidden">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="ph-duotone ph-wallet"></i> Extrato de Repasses e Atendimentos</h1>
+                    <button class="btn btn-primary no-print" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Relatório</button>
+                </div>
+
+                <!-- Filtros de Busca por Data, Mês e Ano -->
+                <div class="card no-print">
+                    <h3 style="font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;"><i class="ph ph-funnel"></i> Filtrar Atendimentos</h3>
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="form-group">
+                            <label>Data Específica</label>
+                            <input type="date" id="filtro-data" class="form-control" onchange="filtrarExtrato()">
+                        </div>
+                        <div class="form-group">
+                            <label>Mês</label>
+                            <select id="filtro-mes" class="form-control" onchange="filtrarExtrato()">
+                                <option value="">Todos os meses</option>
+                                <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
+                                <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
+                                <option value="07">Julho</option><option value="08" selected>Agosto</option><option value="09">Setembro</option>
+                                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ano</label>
+                            <select id="filtro-ano" class="form-control" onchange="filtrarExtrato()">
+                                <option value="">Todos os anos</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Total de Entregas Filtradas</span>
+                            <h3 style="font-size: 1.5rem; color: var(--brand-primary); margin-top: 5px;" id="total-qtd">3 Entregas</h3>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Acumulado a Receber</span>
+                            <h3 style="font-size: 1.5rem; color: var(--success); margin-top: 5px;" id="total-valor">R$ 19,50</h3>
+                        </div>
+                    </div>
+
+                    <h3 class="mb-20" style="font-size: 1.1rem;">Lista de Atendimentos Realizados</h3>
+                    <div class="card" style="padding: 0; box-shadow: none;">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr><th>Pedido / Cliente</th><th>Data / Horário</th><th>Taxa</th></tr>
+                            </thead>
+                            <tbody id="tabela-extrato">
+                                <tr data-data="2026-08-14"><td><strong>#1045 - João Silva</strong><br><small style="color:var(--text-muted)">Rua das Flores, 123</small></td><td>14/08/2026 20:30</td><td><span class="badge badge-success">R$ 6,50</span></td></tr>
+                                <tr data-data="2026-08-14"><td><strong>#1040 - Ana Souza</strong><br><small style="color:var(--text-muted)">Av. Central, 45</small></td><td>14/08/2026 18:30</td><td><span class="badge badge-success">R$ 6,50</span></td></tr>
+                                <tr data-data="2026-08-13"><td><strong>#1038 - Marcos Lima</strong><br><small style="color:var(--text-muted)">Rua do Sol, 90</small></td><td>13/08/2026 17:50</td><td><span class="badge badge-success">R$ 6,50</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div> <!-- /content-container -->
+
+        <!-- Rodapé Discreto -->
+        <footer class="no-print" style="text-align: center; padding: 10px; background-color: transparent; color: #999; font-size: 0.75rem; border-top: 1px solid var(--border-color); margin-top: auto;">
+            DeliveryON - soluções para delivery
+        </footer>
+    </main>
+
+    <!-- ================= MODAL: PERGUNTA DE COMPROVANTE AO CONCLUIR ================= -->
+    <div class="modal-overlay" id="modalComprovante">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-receipt" style="color: var(--brand-primary);"></i> Concluir Entrega</h3>
+                <button class="close-modal" onclick="closeModal('modalComprovante')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="width: 60px; height: 60px; background: #e8f5e9; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 10px;">
+                        <i class="ph ph-check"></i>
+                    </div>
+                    <h4 style="font-size: 1.1rem; color: var(--text-main);">Entrega realizada com sucesso!</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">O cliente precisa de um comprovante digital de pagamento?</p>
+                </div>
+                <input type="hidden" id="modal-pedido-id">
+                <input type="hidden" id="modal-cliente-nome">
+                <input type="hidden" id="modal-pedido-valor">
+            </div>
+            <div class="modal-footer" style="flex-direction: column; gap: 8px;">
+                <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="executarConclusao(true)"><i class="ph ph-whatsapp-logo"></i> Enviar Comprovante e Concluir</button>
+                <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="executarConclusao(false)">Apenas Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS (Biblioteca do Mapa Gratuito) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Plugin VLibras -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+
+    <script>
+        // Acessibilidade - Tamanho da Fonte
+        let currentFontSize = 100;
+        function changeFontSize(step) {
+            currentFontSize += step * 10;
+            if(currentFontSize < 80) currentFontSize = 80;
+            if(currentFontSize > 150) currentFontSize = 150;
+            document.body.style.fontSize = currentFontSize + '%';
+        }
+
+        // Navegação SPA entre abas do Motoboy
+        function navigate(sectionId, clickedElement) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            if(clickedElement) clickedElement.classList.add('active');
+
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.style.display = 'none';
+            }
+        }
+
+        // Toggle Sidebar Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        }
+
+        document.getElementById('mobile-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('mobile-overlay').style.display = 'none';
+        });
+
+        // Modais
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        // Inicialização do Mapa Gratuito OpenStreetMap focado na rota
+        document.addEventListener("DOMContentLoaded", function() {
+            const latRestaurante = -0.9234;
+            const lngRestaurante = -48.1321;
+
+            const map = L.map('mapa-rota').setView([latRestaurante, lngRestaurante], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            L.marker([latRestaurante, lngRestaurante]).addTo(map)
+                .bindPopup('<b>Bella Napoli (Retirada)</b>').openPopup();
+
+            L.marker([-0.9270, -48.1390]).addTo(map)
+                .bindPopup('<b>Entrega:</b> João Silva (Rua das Flores, 123)');
+        });
+
+        // Abre o modal perguntando sobre o comprovante
+        function abrirModalConclusao(id, cliente, valor) {
+            document.getElementById('modal-pedido-id').value = id;
+            document.getElementById('modal-cliente-nome').value = cliente;
+            document.getElementById('modal-pedido-valor').value = valor;
+            openModal('modalComprovante');
+        }
+
+        // Executa a conclusão com ou sem envio de comprovante via WhatsApp
+        function executarConclusao(enviarComprovante) {
+            const id = document.getElementById('modal-pedido-id').value;
+            const cliente = document.getElementById('modal-cliente-nome').value;
+            const valor = document.getElementById('modal-pedido-valor').value;
+
+            closeModal('modalComprovante');
+
+            if (enviarComprovante) {
+                const mensagem = `*COMPROVANTE DE ENTREGA - deliveryON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso e verificado.\n\nObrigado pela preferência!`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
+            }
+
+            alert(`✅ Pedido #${id} concluído e registrado no extrato com sucesso!`);
+
+            // Remove o card da rota ativa visualmente
+            const card = document.getElementById('card-pedido-' + id);
+            if(card) {
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            }
+        }
+
+        // Sistema de Filtro do Extrato por Data, Mês e Ano
+        function filtrarExtrato() {
+            const dataFiltro = document.getElementById('filtro-data').value; // Formato YYYY-MM-DD
+            const mesFiltro = document.getElementById('filtro-mes').value;   // Formato MM
+            const anoFiltro = document.getElementById('filtro-ano').value;   // Formato YYYY
+
+            const linhas = document.querySelectorAll('#tabela-extrato tr');
+            let qtdVisiveis = 0;
+            let valorTotal = 0;
+
+            linhas.forEach(linha => {
+                const dataLinha = linha.getAttribute('data-data'); // YYYY-MM-DD
+                const [anoL, mesL, diaL] = dataLinha.split('-');
+
+                let match = true;
+
+                if (dataFiltro && dataLinha !== dataFiltro) {
+                    match = false;
+                }
+                if (mesFiltro && mesL !== mesFiltro) {
+                    match = false;
+                }
+                if (anoFiltro && anoL !== anoFiltro) {
+                    match = false;
+                }
+
+                if (match) {
+                    linha.style.display = '';
+                    qtdVisiveis++;
+                    valorTotal += 6.50; // Valor fixo da taxa de exemplo
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
+            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+        }
+    </script>
+</body>
+</html>
