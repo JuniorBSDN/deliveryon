@@ -29,7 +29,9 @@
 
         /* ================= RESET E TIPOGRAFIA ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* O BODY INICIA OCULTO CONFORME O NOVO PADRÃO */
+        body { display: none; background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; }
 
         /* ================= UTILITÁRIOS ================= */
         .hidden { display: none !important; }
@@ -90,16 +92,9 @@
         th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
         .actions-cell { display: flex; gap: 6px; }
 
-        /* ================= MODAIS ================= */
+        /* ================= MODAIS OVERLAY ================= */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; backdrop-filter: blur(5px); }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
-        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 8px; }
-        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
-        .close-modal:hover { color: #333; }
-        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
-        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
 
         /* ================= LOGO ANIMADO ================= */
         .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
@@ -125,33 +120,6 @@
 
     <!-- OVERLAY SIDEBAR MOBILE -->
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
-
-    <!-- MODAL DE LOGIN MASTER (Bloqueia a tela até autenticar) -->
-    <div class="modal-overlay" id="modalLogin" style="z-index: 9999; display: flex;">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-top: 30px;">
-                <div class="logo-wrapper">
-                    <span class="logo-on">ON</span>
-                    <span class="logo-delivery">Master Access</span>
-                </div>
-            </div>
-            <div class="modal-body">
-                <form id="form-login-master" onsubmit="realizarLogin(event)">
-                    <div class="form-group">
-                        <label>Email de Gestão</label>
-                        <input type="email" id="login-email" class="form-control" required placeholder="admin@backinformatica.com.br">
-                    </div>
-                    <div class="form-group">
-                        <label>Senha Master</label>
-                        <input type="password" id="login-senha" class="form-control" required placeholder="••••••••">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px;">
-                        <i class="ph ph-sign-in"></i> Autenticar e Acessar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
@@ -300,57 +268,58 @@
     <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
     <script>
         // CONFIGURAÇÕES GLOBAIS DA API
-        const API_BASE_URL = '/api/master'; // Aponta para o Vercel Serverless (Python)
+        const API_BASE_URL = '/api/master'; 
         
-        // Verifica Autenticação ao carregar a página
-        document.addEventListener('DOMContentLoaded', () => {
-            verificarLogin();
-        });
+        // Dispara a verificação ao carregar a página
+        window.onload = autenticarMaster;
 
-        function verificarLogin() {
-            const token = localStorage.getItem('deliveryon_master_token');
-            const modalLogin = document.getElementById('modalLogin');
+        async function autenticarMaster() {
+            // Verifica se já possui token na sessão
+            const tokenExistente = localStorage.getItem('deliveryon_master_token');
+            if (tokenExistente) {
+                liberarPainel();
+                return;
+            }
+
+            // Exibe o prompt nativo conforme solicitado
+            const senha = prompt("Chave de Segurança Master (Senha):");
             
-            if (!token) {
-                // Bloqueia a tela e exige login
-                modalLogin.classList.add('active');
-            } else {
-                // Usuário logado, inicializa a aplicação
-                modalLogin.classList.remove('active');
-                inicializarPainelMaster();
+            if (!senha) {
+                // Redireciona ou mantém a tela branca/oculta
+                window.location.href = "index.html"; 
+                return;
+            }
+
+            try {
+                // SIMULAÇÃO DO FETCH PARA A API (Ajustado para o endpoint do Python)
+                /*
+                const response = await fetch('/api/master/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: "admin@master.com", senha: senha })
+                });
+                const data = await response.json();
+                */
+
+                // Validação Local baseada na API criada (Senha esperada: "master123")
+                if (senha === "master123") {
+                    localStorage.setItem('deliveryon_master_token', 'token_jwt_master_valido');
+                    liberarPainel();
+                } else {
+                    alert("Acesso negado. Senha incorreta.");
+                    window.location.reload();
+                }
+
+            } catch (error) {
+                alert("Erro ao comunicar com o servidor.");
+                window.location.reload();
             }
         }
 
-        // Simulação do Login (POST /api/auth/master)
-        async function realizarLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-
-            // Aqui entraria o fetch real para o Vercel/Python:
-            /*
-            const response = await fetch('/api/auth/master', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, senha })
-            });
-            const data = await response.json();
-            */
-
-            // SIMULAÇÃO DE SUCESSO BASEADO NOS DADOS DO USUÁRIO
-            localStorage.setItem('deliveryon_master_token', 'token_jwt_valido_simulado');
+        function liberarPainel() {
+            // Torna o body visível (display flex para manter o layout lateral)
+            document.body.style.display = "flex";
             
-            // Recarrega o estado visual
-            verificarLogin();
-        }
-
-        function fazerLogout() {
-            localStorage.removeItem('deliveryon_master_token');
-            window.location.reload();
-        }
-
-        // Função principal de inicialização pós-login
-        function inicializarPainelMaster() {
             // Injeção dos dados do Gestor 
             document.getElementById('app-company-name').textContent = "Back Informatica";
             document.getElementById('app-user-name').textContent = "Gestor: José Airton";
@@ -360,7 +329,13 @@
             carregarEmpresas();
         }
 
-        // GET /api/master/metrics
+        function fazerLogout() {
+            localStorage.removeItem('deliveryon_master_token');
+            window.location.reload();
+        }
+
+        // ================= FUNÇÕES DE DADOS (API MOCK) =================
+
         async function carregarMetricas() {
             try {
                 // Simulação da resposta do Vercel/Neon DB
@@ -378,13 +353,11 @@
             }
         }
 
-        // GET /api/master/empresas
         async function carregarEmpresas() {
             const tbody = document.getElementById('mst-tabela-empresas');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Buscando dados no Neon DB...</td></tr>';
 
             setTimeout(() => {
-                // Mock de dados vindos do banco
                 const empresas = [
                     { id: 1, fantasia: 'Bella Napoli', plano: 'Pro', status: 'ativo' },
                     { id: 2, fantasia: 'Burger King Vigia', plano: 'Enterprise', status: 'bloqueado' }
@@ -408,14 +381,12 @@
             }, 800);
         }
 
-        // POST /api/master/empresas (Criação de Tenant)
         async function cadastrarEmpresa(e) {
             e.preventDefault();
             const btnSubmit = document.getElementById('btn-submit-empresa');
             btnSubmit.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Processando...';
             btnSubmit.disabled = true;
 
-            // Captura rigidamente através dos IDs padronizados
             const payload = {
                 razao_social: document.getElementById('mst-cad-razao').value,
                 nome_fantasia: document.getElementById('mst-cad-fantasia').value,
@@ -429,29 +400,12 @@
                 limite_usuarios: parseInt(document.getElementById('mst-cad-limite-user').value)
             };
 
-            console.log("JSON pronto para envio ao Python/Vercel:", payload);
-
-            /* FETCH REAL:
-            try {
-                const req = await fetch('/api/empresas', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('deliveryon_master_token')}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-                const res = await req.json();
-                alert("Tenant criado com ID: " + res.id);
-            } catch (err) { ... }
-            */
-
             // Simulação de tempo de resposta da API
             setTimeout(() => {
                 alert(`Sucesso! A empresa ${payload.nome_fantasia} foi criada no banco de dados Neon.\nUm email com o acesso ao 'admin.html' foi disparado para ${payload.email_admin}.`);
                 document.getElementById('form-cad-cliente').reset();
                 toggleCadastroForm();
-                carregarEmpresas(); // Atualiza a tabela
+                carregarEmpresas();
                 
                 btnSubmit.innerHTML = '<i class="ph ph-cloud-arrow-up"></i> Registrar no Banco de Dados';
                 btnSubmit.disabled = false;
