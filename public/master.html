@@ -34,34 +34,70 @@
         .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; }
         .badge-success { background-color: var(--success); }
         .badge-danger { background-color: var(--danger); }
-        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; }
+        .badge-warning { background-color: var(--warning); color: #333; }
+        .badge-critical { background: var(--danger); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .badge-medium { background: var(--warning); color: #333; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; }
         .sidebar-header { height: 80px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 10px; }
         .nav-menu { list-style: none; padding: 20px 15px; flex: 1; }
-        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; cursor: pointer; margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; cursor: pointer; margin-bottom: 5px; transition: all 0.2s; }
         .nav-link:hover, .nav-link.active { background-color: #fcece7; color: var(--brand-primary); }
         .nav-icon { margin-right: 12px; font-size: 1.4rem; }
+
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
         .content-container { padding: 30px; overflow-y: auto; flex: 1; min-width: 0; }
+
         .page-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .page-title { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
         .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; }
         .form-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(255,87,34,0.2); }
-        .btn { padding: 9px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+        .btn { padding: 9px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
         .btn-primary { background: var(--brand-primary); color: white; }
         .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
-        .btn-action { padding: 8px; border-radius: 6px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+        .btn-action { padding: 8px; border-radius: 6px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); border-color: #ccc; }
+
         .table-responsive { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; white-space: nowrap; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
         .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+
+        /* Central de Alertas & Modais */
+        .adv-list-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-top: 20px; }
+        .adv-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .filter-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-btn { padding: 6px 12px; border: 1px solid var(--border-color); background: #f8f9fa; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+        .filter-btn.active { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+        .adv-list-item { display: flex; gap: 15px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; background: white; align-items: center; }
+        .item-icon { width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        .icon-danger { background: #ffebee; color: var(--danger); }
+        .icon-warning { background: #fff8e1; color: #ff8f00; }
+        .icon-info { background: #e3f2fd; color: #1976d2; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; }
+
         .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; }
         .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; }
         .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; }
@@ -91,7 +127,7 @@
             <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk Master</a></li>
         </ul>
         <div style="padding: 20px; border-top: 1px solid var(--border-color);">
-            <button class="btn btn-outline" style="width: 100%; color: var(--danger);" onclick="fazerLogout()"><i class="ph ph-sign-out"></i> Sair</button>
+            <button class="btn btn-outline" style="width: 100%; color: var(--danger);" onclick="fazerLogout()"><i class="ph ph-sign-out"></i> Sair do Painel</button>
         </div>
     </aside>
 
@@ -106,12 +142,13 @@
         </header>
 
         <div class="content-container">
-            <!-- DASHBOARD -->
+
+            <!-- ================= DASHBOARD ================= -->
             <section id="sec-dashboard" class="page-section">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-chart-pie-slice"></i> Dashboard Master</h1></div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card">
-                        <h3 style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-hard-drives"></i> DB Disk</h3>
+                        <h3 style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-hard-drives"></i> DB Disk (Neon)</h3>
                         <p id="metric-disk" style="font-size: 1.8rem; color: var(--success); font-weight: bold; margin-top: 5px;">--</p>
                     </div>
                     <div class="card">
@@ -123,9 +160,30 @@
                         <p id="metric-mrr" style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;">--</p>
                     </div>
                 </div>
+
+                <!-- Central de Alertas -->
+                <div class="adv-list-card">
+                    <div class="adv-list-header">
+                        <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.2rem; margin: 0;">
+                            <i class="ph-duotone ph-bell-ringing" style="color: var(--brand-primary); font-size: 1.5rem;"></i> Central de Alertas
+                        </h3>
+                    </div>
+                    <div id="advancedAlertsList">
+                        <div class="adv-list-item">
+                            <div class="item-icon icon-danger"><i class="ph ph-database"></i></div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h4>Neon DB Conectado</h4>
+                                    <span class="badge-critical">Estável</span>
+                                </div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">O banco de dados está respondendo perfeitamente em produção.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <!-- EMPRESAS & CLIENTES -->
+            <!-- ================= EMPRESAS & CLIENTES ================= -->
             <section id="sec-empresas" class="page-section hidden">
                 <div class="page-header flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
                     <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas & Clientes</h1>
@@ -133,31 +191,31 @@
                 </div>
 
                 <div class="card hidden" id="card-novo-cliente">
-                    <h3 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Novo Tenant no Neon DB</h3>
+                    <h3 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Nova Empresa / Tenant</h3>
                     <form id="form-cad-empresa" onsubmit="cadastrarEmpresa(event)">
                         <div class="form-grid">
                             <div class="form-group"><label>Razão Social</label><input type="text" id="cad-razao" class="form-control" required></div>
                             <div class="form-group"><label>Nome Fantasia</label><input type="text" id="cad-fantasia" class="form-control" required></div>
-                            <div class="form-group"><label>CNPJ</label><input type="text" id="cad-cnpj" class="form-control" required></div>
+                            <div class="form-group"><label>CNPJ</label><input type="text" id="cad-cnpj" class="form-control" placeholder="00.000.000/0001-00" required></div>
                             <div class="form-group"><label>Responsável</label><input type="text" id="cad-resp" class="form-control" required></div>
-                            <div class="form-group"><label>Contato</label><input type="text" id="cad-contato" class="form-control" required></div>
+                            <div class="form-group"><label>Contato (WhatsApp)</label><input type="text" id="cad-contato" class="form-control" required></div>
                             <div class="form-group"><label>Email Admin</label><input type="email" id="cad-email" class="form-control" required></div>
                         </div>
                         <div class="form-group"><label>Endereço Completo</label><input type="text" id="cad-endereco" class="form-control" required></div>
                         <div class="form-grid">
                             <div class="form-group"><label>Plano</label>
                                 <select id="cad-plano" class="form-control">
-                                    <option value="basic">Basic</option>
-                                    <option value="pro">Pro</option>
-                                    <option value="enterprise">Enterprise</option>
+                                    <option value="basic">Basic (Até 5 usuários)</option>
+                                    <option value="pro">Pro (Até 20 usuários)</option>
+                                    <option value="enterprise">Enterprise (Ilimitado)</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label>Vencimento (Dia)</label><input type="number" id="cad-vencimento" class="form-control" min="1" max="31" required></div>
-                            <div class="form-group"><label>Limite Usuários</label><input type="number" id="cad-limite" class="form-control" required></div>
+                            <div class="form-group"><label>Vencimento (Dia)</label><input type="number" id="cad-vencimento" class="form-control" min="1" max="31" placeholder="Ex: 15" required></div>
+                            <div class="form-group"><label>Limite Usuários</label><input type="number" id="cad-limite" class="form-control" placeholder="Ex: 10" required></div>
                         </div>
                         <div class="flex" style="justify-content: flex-end; gap: 10px; margin-top: 20px;">
                             <button type="button" class="btn btn-outline" onclick="toggleCadastroForm()">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" id="btn-submit">Salvar no Neon DB</button>
+                            <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ph ph-floppy-disk"></i> Salvar no Neon DB</button>
                         </div>
                     </form>
                 </div>
@@ -171,7 +229,7 @@
                                     <th>CNPJ</th>
                                     <th>Plano</th>
                                     <th>Status</th>
-                                    <th style="text-align: right;">Ações</th>
+                                    <th style="text-align: right;">Ações do Master</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-empresas">
@@ -182,14 +240,73 @@
                 </div>
             </section>
 
-            <!-- HELPDESK -->
+            <!-- ================= HELPDESK ================= -->
             <section id="sec-helpdesk" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk Master</h1></div>
-                <div class="card"><p style="color: var(--text-muted); text-align: center; padding: 40px;">Nenhum chamado de suporte pendente no momento.</p></div>
+                <div class="card">
+                    <p style="color: var(--text-muted); text-align: center; padding: 40px;">
+                        <i class="ph ph-wrench" style="font-size: 3rem; margin-bottom: 10px; display: block;"></i>
+                        Central de chamados e suporte integrada pronta para o atendimento aos tenants.
+                    </p>
+                </div>
             </section>
         </div>
     </main>
 
+    <!-- ================= MODAIS DO ESCOPO ================= -->
+    <div class="modal-overlay" id="modalPix">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-qr-code" style="color: var(--brand-primary);"></i> Cobrança PIX</h3>
+                <button class="close-modal" onclick="closeModal('modalPix')">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <input type="text" class="form-control" value="00020126580014br.gov.bcb.pix..." readonly style="width: 100%; text-align: center; background: #f9f9f9;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="alert('Código Copiado!'); closeModal('modalPix')"><i class="ph ph-copy"></i> Copiar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalContrato">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-scroll" style="color: var(--brand-primary);"></i> Gerar Contrato SaaS</h3>
+                <button class="close-modal" onclick="closeModal('modalContrato')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="rich-text-editor" contenteditable="true">
+                    <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE SOFTWARE (SaaS)</h2><br>
+                    <p>Pelo presente instrumento, a DeliveryON estabelece os termos de uso...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalContrato')">Fechar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalContrato'); alert('Contrato enviado!')"><i class="ph ph-paper-plane-tilt"></i> Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalHistorico">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-clock-counter-clockwise" style="color: var(--brand-primary);"></i> Histórico Financeiro</h3>
+                <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table style="width: 100%;">
+                    <tr><th>Data</th><th>Valor</th><th>Status</th></tr>
+                    <tr><td>Hoje</td><td>R$ 250,00</td><td><span class="badge badge-success">Ativo</span></td></tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
     <script>
         window.onload = autenticarMaster;
 
@@ -260,7 +377,7 @@
                     const empresas = await res.json();
                     tbody.innerHTML = '';
                     if (empresas.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada no Neon DB.</td></tr>';
                         return;
                     }
                     empresas.forEach(emp => {
@@ -272,7 +389,10 @@
                                 <td style="text-transform: uppercase;">${emp.plano}</td>
                                 <td><span class="badge ${badge}">${emp.status}</span></td>
                                 <td class="actions-cell">
-                                    <button class="btn-action" title="Acessar" onclick="alert('Acessando painel da empresa ID ${emp.id}')"><i class="ph ph-sign-in"></i></button>
+                                    <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
+                                    <button class="btn-action" title="Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
+                                    <button class="btn-action" title="Histórico" onclick="openModal('modalHistorico')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
                                 </td>
                             </tr>
                         `;
@@ -322,7 +442,23 @@
                 alert("Erro de conexão com a API.");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Salvar no Neon DB";
+                btn.innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar no Neon DB';
+            }
+        }
+
+        async function deletarEmpresa(id) {
+            if(confirm("Deseja realmente excluir esta empresa do Neon DB?")) {
+                try {
+                    const res = await fetch(`/api/master/empresas/${id}`, { method: 'DELETE' });
+                    if(res.ok) {
+                        carregarEmpresas();
+                        carregarMetricas();
+                    } else {
+                        alert("Erro ao excluir.");
+                    }
+                } catch(e) {
+                    alert("Erro de conexão.");
+                }
             }
         }
 
@@ -352,6 +488,9 @@
             sidebar.classList.toggle('open');
             overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
         }
+
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
     </script>
 </body>
 </html>
