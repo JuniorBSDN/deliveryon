@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard - DeliveryON</title>
+    <title>Painel do Gestor - deliveryON</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
             --brand-primary: #ff5722;
             --brand-secondary: #e64a19;
             --bg-color: #f4f7f6;
             --sidebar-bg: #ffffff;
+            --sidebar-text: #333333;
             --card-bg: #ffffff;
             --text-main: #333333;
             --text-muted: #777777;
@@ -22,67 +25,80 @@
             --sidebar-width: 260px;
             --topbar-height: 60px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: none; height: 100vh; overflow: hidden; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
         .hidden { display: none !important; }
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }
         .align-center { align-items: center; }
-        .gap-10 { gap: 10px; }
-        .mt-20 { margin-top: 20px; }
-        .mb-20 { margin-bottom: 20px; }
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
+
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
         .badge-success { background-color: var(--success); }
         .badge-danger { background-color: var(--danger); }
+        .badge-warning { background-color: var(--warning); color: #333; }
+        .badge-info { background-color: var(--info); }
 
-        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; }
-        .sidebar-header { height: 80px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 10px; }
-        .nav-menu { list-style: none; padding: 20px 15px; flex: 1; }
-        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; cursor: pointer; margin-bottom: 5px; transition: all 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #fcece7; color: var(--brand-primary); }
-        .nav-icon { margin-right: 12px; font-size: 1.4rem; }
+        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        .on-logo-top { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
+        .on-logo-bottom { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; margin-top: 2px; }
+        @keyframes neon-pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
+            100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
+        }
+        .topbar .on-logo-container { transform: scale(0.65); }
+        .sidebar-header .on-logo-container { transform: scale(0.85); margin-top: 10px; }
+
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; border-right: 1px solid var(--border-color); }
+        .sidebar-header { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 0 20px; background-color: #fafafa; }
+        .nav-menu { list-style: none; padding: 15px 10px; flex: 1; overflow-y: auto; }
+        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(255, 87, 34, 0.1); color: var(--brand-primary); }
+        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; color: var(--brand-primary); }
+        .nav-footer { padding: 15px; border-top: 1px solid var(--border-color); background-color: #fafafa; }
 
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
-        .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
+        .topbar { display: none; height: var(--topbar-height); background: var(--card-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
-        .content-container { padding: 30px; overflow-y: auto; flex: 1; min-width: 0; }
+        .content-container { padding: 25px; overflow-y: auto; flex: 1; min-width: 0; }
+        .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-        .page-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .page-title { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); min-width: 0; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
-        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; }
-        .form-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(255,87,34,0.2); }
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
+        .form-control:focus { border-color: var(--brand-primary); }
 
-        .btn { padding: 9px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+        .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn:hover { opacity: 0.85; }
         .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #6c757d; color: white; }
         .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
-        .btn-action { padding: 8px; border-radius: 6px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); border-color: #ccc; }
+        .btn-action { padding: 6px 10px; border-radius: 4px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; }
 
         .table-responsive { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; white-space: nowrap; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
-        th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
-        .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+        th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
+
+        .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { background: none; border: none; padding: 10px 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
         .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 8px; }
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
 
-        .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; }
-        .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; }
-        .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -94,383 +110,357 @@
 </head>
 <body>
 
-    <div id="mobile-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; z-index:999;" onclick="toggleSidebar()"></div>
+    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
 
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header" style="height: 100px;">
-            <div class="logo-wrapper">
-                <span class="logo-on" style="font-size: 2rem;">ON</span>
-                <span class="logo-delivery">delivery</span>
+        <div class="sidebar-header">
+            <div class="on-logo-container">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
             </div>
         </div>
         <ul class="nav-menu">
-            <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-chart-line-up"></i></span> Dashboard</a></li>
-            <li><a class="nav-link" onclick="navigate('empresas', this)"><span class="nav-icon"><i class="ph ph-buildings"></i></span> Empresas & Clientes</a></li>
-            <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk Master</a></li>
+            <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> Dashboard</a></li>
+            <li><a class="nav-link" onclick="navigate('produtos', this)"><span class="nav-icon"><i class="ph ph-hamburger"></i></span> Produtos</a></li>
+            <li><a class="nav-link" onclick="navigate('clientes', this)"><span class="nav-icon"><i class="ph ph-users"></i></span> Clientes</a></li>
+            <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> Colaboradores</a></li>
+            <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
+            <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
+            <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
-        <div style="padding: 20px; border-top: 1px solid var(--border-color);">
-            <button class="btn btn-outline" style="width: 100%; color: var(--danger);" onclick="fazerLogout()"><i class="ph ph-sign-out"></i> Sair</button>
+        <div class="nav-footer">
+            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;" onclick="localStorage.clear(); window.location.reload();"><span class="nav-icon" style="color: #ff5252;"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
         </div>
     </aside>
 
     <main class="main-content">
         <header class="topbar">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
-            <div class="logo-wrapper" style="transform: scale(0.8);">
-                <span class="logo-on" style="font-size: 1.5rem;">ON</span>
-                <span class="logo-delivery">delivery</span>
+            <div class="on-logo-container">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
             </div>
             <div style="width: 24px;"></div>
         </header>
 
         <div class="content-container">
+
             <!-- DASHBOARD -->
             <section id="sec-dashboard" class="page-section">
-                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-chart-pie-slice"></i> Dashboard Master</h1></div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-storefront"></i> Visão Geral Diária</h1></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="card" style="border-top: 4px solid var(--warning);"><span style="color: var(--text-muted);">Aguardando</span><h2 style="font-size: 1.8rem;" id="val-waiting-count">0</h2></div>
+                    <div class="card" style="border-top: 4px solid var(--success);"><span style="color: var(--text-muted);">Entregues</span><h2 style="font-size: 1.8rem;" id="val-delivered-count">0</h2></div>
+                    <div class="card" style="border-top: 4px solid var(--danger);"><span style="color: var(--text-muted);">Cancelados</span><h2 style="font-size: 1.8rem;" id="val-canceled-count">0</h2></div>
+                    <div class="card"><span style="color: var(--text-muted);">Receita Total</span><h2 style="font-size: 1.8rem;" id="val-revenue-total">R$ 0,00</h2></div>
+                </div>
+
+                <div class="chart-grid">
                     <div class="card">
-                        <h3 style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-hard-drives"></i> DB Disk (Neon)</h3>
-                        <p id="metric-disk" style="font-size: 1.8rem; color: var(--success); font-weight: bold; margin-top: 5px;">--</p>
+                        <h3>Gráfico de Fluxo</h3>
+                        <div style="height: 200px; width: 100%; position: relative;"><canvas id="chartFluxo"></canvas></div>
                     </div>
                     <div class="card">
-                        <h3 style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-users"></i> Total Clientes</h3>
-                        <p id="metric-clientes" style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;">--</p>
+                        <h3>Ouvidoria (Avaliações)</h3>
+                        <div style="height: 200px; width: 100%; position: relative;"><canvas id="chartOuvidoria"></canvas></div>
                     </div>
-                    <div class="card">
-                        <h3 style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-currency-circle-dollar"></i> Receita (MRR)</h3>
-                        <p id="metric-mrr" style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;">--</p>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Últimos Pedidos Recebidos</h3></div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody id="tbody-recent-orders"><tr><td colspan="5" style="text-align: center;">Carregando pedidos...</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <!-- EMPRESAS & CLIENTES -->
-            <section id="sec-empresas" class="page-section hidden">
-                <div class="page-header flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
-                    <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas & Clientes</h1>
-                    <button class="btn btn-primary" onclick="toggleCadastroForm()"><i class="ph ph-plus" id="btn-novo-icon"></i> <span id="btn-novo-text">Novo Cliente</span></button>
-                </div>
-
-                <div class="card hidden" id="card-novo-cliente">
-                    <h3 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Nova Empresa</h3>
-                    <form id="form-cad-empresa" onsubmit="cadastrarEmpresa(event)">
+            <!-- PRODUTOS -->
+            <section id="sec-produtos" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-hamburger"></i> Gestão de Produtos</h1></div>
+                <div class="card">
+                    <h3 class="mb-20">Adicionar Novo Produto</h3>
+                    <form id="form-add-product" onsubmit="event.preventDefault(); createProduct();">
                         <div class="form-grid">
-                            <div class="form-group"><label>Razão Social</label><input type="text" id="cad-razao" class="form-control" required></div>
-                            <div class="form-group"><label>Nome Fantasia</label><input type="text" id="cad-fantasia" class="form-control" required></div>
-                            <div class="form-group"><label>CNPJ</label><input type="text" id="cad-cnpj" class="form-control" placeholder="00.000.000/0001-00" required></div>
-                            <div class="form-group"><label>Responsável</label><input type="text" id="cad-resp" class="form-control" required></div>
-                            <div class="form-group"><label>Contato</label><input type="text" id="cad-contato" class="form-control" required></div>
-                            <div class="form-group"><label>Email Admin</label><input type="email" id="cad-email" class="form-control" required></div>
-                        </div>
-                        <div class="form-group"><label>Endereço Completo</label><input type="text" id="cad-endereco" class="form-control" required></div>
-                        <div class="form-grid">
-                            <div class="form-group"><label>Plano</label>
-                                <select id="cad-plano" class="form-control">
-                                    <option value="basic">Basic</option>
-                                    <option value="pro">Pro</option>
-                                    <option value="enterprise">Enterprise</option>
+                            <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" required id="input-new-prod-name"></div>
+                            <div class="form-group">
+                                <label>Categoria</label>
+                                <select class="form-control" id="categoria" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="hamburgueres">🍔 Hambúrgueres</option>
+                                    <option value="pizzas">🍕 Pizzas</option>
+                                    <option value="bebidas">🥤 Bebidas</option>
+                                    <option value="sobremesas">🍰 Sobremesas</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label>Vencimento (Dia)</label><input type="number" id="cad-vencimento" class="form-control" min="1" max="31" required></div>
-                            <div class="form-group"><label>Limite Usuários</label><input type="number" id="cad-limite" class="form-control" required></div>
+                            <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" required id="input-new-prod-price"></div>
+                            <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="100" id="input-new-prod-stock"></div>
                         </div>
-                        <div class="flex" style="justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                            <button type="button" class="btn btn-outline" onclick="toggleCadastroForm()">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ph ph-floppy-disk"></i> Salvar no Neon DB</button>
-                        </div>
+                        <div class="form-group"><label>Descrição</label><textarea class="form-control" rows="2" id="textarea-new-prod-desc"></textarea></div>
+                        <div class="flex" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-plus-circle"></i> Cadastrar Produto</button></div>
                     </form>
                 </div>
 
                 <div class="card" style="padding: 0;">
                     <div class="table-responsive">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>Nome Fantasia</th>
-                                    <th>CNPJ</th>
-                                    <th>Plano</th>
-                                    <th>Status</th>
-                                    <th style="text-align: right;">Ações do Master</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-empresas">
-                                <tr><td colspan="5" style="text-align: center;">Carregando dados do Neon DB...</td></tr>
-                            </tbody>
+                            <thead><tr><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th>Estoque</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody id="tbody-products"><tr><td colspan="5" style="text-align: center;">Carregando produtos...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- HELPDESK -->
-            <section id="sec-helpdesk" class="page-section hidden">
-                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk Master</h1></div>
-                <div class="card"><p style="color: var(--text-muted); text-align: center; padding: 40px;">Nenhum chamado pendente.</p></div>
+            <!-- CLIENTES -->
+            <section id="sec-clientes" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-users"></i> Gestão de Clientes</h1></div>
+                <div class="card">
+                    <h3 class="mb-20">Cadastrar Cliente Manual</h3>
+                    <form onsubmit="event.preventDefault(); createClient();">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nome</label><input type="text" class="form-control" required id="input-cli-name"></div>
+                            <div class="form-group"><label>Telefone</label><input type="text" class="form-control" required id="input-cli-phone"></div>
+                            <div class="form-group"><label>Email</label><input type="email" class="form-control" id="input-cli-email"></div>
+                            <div class="form-group"><label>Endereço</label><input type="text" class="form-control" required id="input-cli-address"></div>
+                        </div>
+                        <div class="form-group"><label>Referência</label><input type="text" class="form-control" id="input-cli-ref"></div>
+                        <div class="flex" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cliente</button></div>
+                    </form>
+                </div>
+                <div class="card" style="padding: 0;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nome</th><th>Telefone</th><th>Endereço</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody id="tbody-clients"><tr><td colspan="4" style="text-align: center;">Carregando clientes...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COLABORADORES -->
+            <section id="sec-colaboradores" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1></div>
+                <div class="card">
+                    <h3 class="mb-20">Cadastrar Novo Colaborador</h3>
+                    <form onsubmit="event.preventDefault(); createColab();">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" required id="input-colab-name"></div>
+                            <div class="form-group"><label>Telefone</label><input type="text" class="form-control" required id="input-colab-phone"></div>
+                            <div class="form-group"><label>E-mail</label><input type="email" class="form-control" required id="input-colab-email"></div>
+                            <div class="form-group"><label>CPF</label><input type="text" class="form-control" required id="input-colab-cpf"></div>
+                            <div class="form-group"><label>Nascimento</label><input type="date" class="form-control" required id="input-colab-dob"></div>
+                            <div class="form-group"><label>Endereço</label><input type="text" class="form-control" required id="input-colab-address"></div>
+                            <div class="form-group"><label>Função</label>
+                                <select class="form-control" id="select-funcao" required>
+                                    <option value="Gerente">Gerente</option>
+                                    <option value="Caixa">Caixa</option>
+                                    <option value="Cozinheiro">Cozinheiro</option>
+                                    <option value="Motoboy">Entregador / Motoboy</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Status</label>
+                                <select class="form-control" id="select-colab-status"><option value="Disponível">Disponível</option><option value="Pausado">Pausado</option></select>
+                            </div>
+                        </div>
+                        <div class="flex" style="justify-content: flex-end; margin-top: 20px;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Colaborador</button></div>
+                    </form>
+                </div>
+                <div class="card" style="padding: 0;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nome</th><th>CPF</th><th>Função</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody id="tbody-colaboradores"><tr><td colspan="5" style="text-align: center;">Carregando colaboradores...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RELATÓRIOS -->
+            <section id="sec-relatorios" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1></div>
+                <div class="card">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" onclick="switchTab(this, 'tab-vendas')">Vendas</button>
+                    </div>
+                    <div id="tab-vendas" class="tab-content">
+                        <h3 class="mb-20">Relatórios de Vendas e Faturamento</h3>
+                        <button class="btn btn-outline" onclick="alert('Gerando relatório por período...')"><i class="ph ph-calendar"></i> Vendas por Período</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OUVIDORIA -->
+            <section id="sec-ouvidoria" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
+                <div class="card" style="padding: 0;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody id="tbody-ouvidoria"><tr><td colspan="4" style="text-align: center;">Carregando ouvidoria...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONFIGURAÇÕES -->
+            <section id="sec-configuracoes" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
+                <div class="card">
+                    <h3 class="mb-20">Rotinas de Backup</h3>
+                    <button class="btn btn-primary" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
+                </div>
             </section>
         </div>
     </main>
 
-    <!-- MODAL DE EDIÇÃO -->
-    <div class="modal-overlay" id="modalEditar">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="ph ph-pencil-simple" style="color: var(--brand-primary);"></i> Editar Registro da Empresa</h3>
-                <button class="close-modal" onclick="closeModal('modalEditar')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-editar" onsubmit="salvarEdicao(event)">
-                    <input type="hidden" id="edit-id">
-                    <div class="form-group"><label>Nome Fantasia</label><input type="text" id="edit-fantasia" class="form-control" required></div>
-                    <div class="form-group"><label>Plano</label>
-                        <select id="edit-plano" class="form-control">
-                            <option value="basic">Basic</option>
-                            <option value="pro">Pro</option>
-                            <option value="enterprise">Enterprise</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>Dia de Vencimento</label><input type="number" id="edit-vencimento" class="form-control" required></div>
-                    <div class="form-group"><label>Limite de Usuários</label><input type="number" id="edit-limite" class="form-control" required></div>
-                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 20px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditar')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PIX -->
-    <div class="modal-overlay" id="modalPix">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3><i class="ph ph-qr-code" style="color: var(--brand-primary);"></i> Cobrança PIX</h3>
-                <button class="close-modal" onclick="closeModal('modalPix')">&times;</button>
-            </div>
-            <div class="modal-body" style="text-align: center;">
-                <input type="text" class="form-control" value="00020126580014br.gov.bcb.pix..." readonly style="width: 100%; text-align: center; background: #f9f9f9;">
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="alert('Código Copiado!'); closeModal('modalPix')"><i class="ph ph-copy"></i> Copiar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS -->
     <script>
-        window.onload = autenticarMaster;
+        const API_BASE_URL = "/api";
 
-        async function autenticarMaster() {
-            const tokenExistente = localStorage.getItem('deliveryon_master_token');
-            if (tokenExistente) {
-                liberarPainel();
-                return;
-            }
-
-            const senha = prompt("Chave de Segurança Master (Senha):");
-            if (!senha) {
-                window.location.href = "index.html"; 
-                return;
-            }
-
+        async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
-                const response = await fetch('/api/master/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ senha: senha })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('deliveryon_master_token', data.token);
-                    liberarPainel();
-                } else {
-                    alert("Acesso negado. Senha incorreta.");
-                    window.location.reload();
-                }
+                const options = { method, headers: { 'Content-Type': 'application/json' } };
+                if (data) options.body = JSON.stringify(data);
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                if (!response.ok) throw new Error();
+                return await response.json();
             } catch (error) {
-                alert("Erro ao comunicar com a API.");
-                window.location.reload();
+                console.error("Erro na API Python:", error);
+                return null;
             }
         }
 
-        function liberarPainel() {
-            document.body.style.display = "flex";
-            carregarMetricas();
-            carregarEmpresas();
-        }
-
-        function fazerLogout() {
-            localStorage.removeItem('deliveryon_master_token');
-            window.location.reload();
-        }
-
-        async function carregarMetricas() {
-            try {
-                const res = await fetch('/api/master/metrics');
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('metric-disk').textContent = data.db_disk_usage;
-                    document.getElementById('metric-clientes').textContent = data.total_clientes;
-                    document.getElementById('metric-mrr').textContent = data.mrr;
-                }
-            } catch (err) {
-                console.error("Erro ao carregar métricas", err);
+        async function loadDashboard() {
+            const data = await apiRequest('/dashboard');
+            if (data) {
+                document.getElementById('val-waiting-count').innerText = data.aguardando;
+                document.getElementById('val-delivered-count').innerText = data.entregues;
+                document.getElementById('val-canceled-count').innerText = data.cancelados;
+                document.getElementById('val-revenue-total').innerText = `R$ ${data.receita}`;
             }
+            loadOrders();
         }
 
-        async function carregarEmpresas() {
-            const tbody = document.getElementById('tabela-empresas');
-            try {
-                const res = await fetch('/api/master/empresas');
-                if (res.ok) {
-                    const empresas = await res.json();
-                    tbody.innerHTML = '';
-                    if (empresas.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada.</td></tr>';
-                        return;
-                    }
-                    empresas.forEach(emp => {
-                        const badge = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
-                        const toggleIcon = emp.status === 'ativo' ? 'ph-prohibit' : 'ph-check-circle';
-                        const toggleTitle = emp.status === 'ativo' ? 'Bloquear Empresa' : 'Ativar Empresa';
-                        
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${emp.nome_fantasia}</strong></td>
-                                <td>${emp.cnpj}</td>
-                                <td style="text-transform: uppercase;">${emp.plano}</td>
-                                <td><span class="badge ${badge}">${emp.status}</span></td>
-                                <td class="actions-cell">
-                                    <button class="btn-action" title="Carimbo de Pagamento" onclick="carimbarPagamento(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check" style="color: var(--success);"></i></button>
-                                    <button class="btn-action" title="Editar Registro" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
-                                    <button class="btn-action" title="${toggleTitle}" onclick="toggleStatus(${emp.id})"><i class="ph ${toggleIcon}"></i></button>
-                                    <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
-                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro ao buscar dados do banco.</td></tr>';
+        async function loadOrders() {
+            const orders = await apiRequest('/orders');
+            const tbody = document.getElementById('tbody-recent-orders');
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum pedido encontrado.</td></tr>`;
+                return;
             }
+            tbody.innerHTML = '';
+            orders.forEach(o => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${o.id}</strong><br><span style="font-size:0.8rem; color:#888;">${o.hora}</span></td>
+                        <td>${o.cliente}<br><span style="font-size:0.8rem; color:#888;">${o.endereco}</span></td>
+                        <td>R$ ${o.total}</td>
+                        <td><span class="badge badge-warning">${o.status}</span></td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
+                    </tr>
+                `;
+            });
         }
 
-        async function cadastrarEmpresa(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit');
-            btn.disabled = true;
+        async function loadProducts() {
+            const products = await apiRequest('/products');
+            const tbody = document.getElementById('tbody-products');
+            if (!products || products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum produto cadastrado.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            products.forEach(p => {
+                tbody.innerHTML += `<tr><td>${p.codigo}</td><td><strong>${p.nome}</strong><br><small>${p.descricao || ''}</small></td><td>R$ ${p.preco}</td><td>${p.estoque} un</td><td style="text-align: right;"><button class="btn-action"><i class="ph ph-trash"></i></button></td></tr>`;
+            });
+        }
 
+        async function loadClients() {
+            const clients = await apiRequest('/clients');
+            const tbody = document.getElementById('tbody-clients');
+            if (!clients || clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Nenhum cliente cadastrado.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            clients.forEach(c => {
+                tbody.innerHTML += `<tr><td><strong>${c.nome}</strong></td><td>${c.telefone}</td><td>${c.endereco}</td><td style="text-align: right;"><button class="btn-action"><i class="ph ph-trash"></i></button></td></tr>`;
+            });
+        }
+
+        async function loadColaboradores() {
+            const colabs = await apiRequest('/colaboradores');
+            const tbody = document.getElementById('tbody-colaboradores');
+            if (!colabs || colabs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum colaborador cadastrado.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            colabs.forEach(cb => {
+                tbody.innerHTML += `<tr><td><strong>${cb.nome}</strong></td><td>${cb.cpf}</td><td>${cb.funcao}</td><td><span class="badge badge-success">${cb.status}</span></td><td style="text-align: right;"><button class="btn-action"><i class="ph ph-trash"></i></button></td></tr>`;
+            });
+        }
+
+        async function loadOuvidoria() {
+            const feeds = await apiRequest('/ouvidoria');
+            const tbody = document.getElementById('tbody-ouvidoria');
+            if (!feeds || feeds.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Nenhum feedback.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            feeds.forEach(f => {
+                tbody.innerHTML += `<tr><td>${f.data}<br><strong>${f.cliente}</strong></td><td>${f.avaliacao}</td><td>${f.relato}</td><td style="text-align: right;"><button class="btn-action"><i class="ph ph-check"></i></button></td></tr>`;
+            });
+        }
+
+        async function createProduct() {
             const payload = {
-                razao_social: document.getElementById('cad-razao').value,
-                nome_fantasia: document.getElementById('cad-fantasia').value,
-                cnpj: document.getElementById('cad-cnpj').value,
-                responsavel: document.getElementById('cad-resp').value,
-                contato: document.getElementById('cad-contato').value,
-                email_admin: document.getElementById('cad-email').value,
-                endereco: document.getElementById('cad-endereco').value,
-                plano: document.getElementById('cad-plano').value,
-                vencimento: parseInt(document.getElementById('cad-vencimento').value),
-                limite_usuarios: parseInt(document.getElementById('cad-limite').value)
+                nome: document.getElementById('input-new-prod-name').value,
+                categoria: document.getElementById('categoria').value,
+                preco: parseFloat(document.getElementById('input-new-prod-price').value),
+                estoque: parseInt(document.getElementById('input-new-prod-stock').value),
+                descricao: document.getElementById('textarea-new-prod-desc').value
             };
-
-            try {
-                const res = await fetch('/api/master/empresas', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    alert("Empresa cadastrada com sucesso!");
-                    document.getElementById('form-cad-empresa').reset();
-                    toggleCadastroForm();
-                    carregarEmpresas();
-                    carregarMetricas();
-                } else {
-                    alert("Erro ao cadastrar empresa.");
-                }
-            } catch (err) {
-                alert("Erro de conexão.");
-            } finally {
-                btn.disabled = false;
-            }
+            await apiRequest('/products', 'POST', payload);
+            alert('Produto cadastrado com sucesso!');
+            document.getElementById('form-add-product').reset();
+            loadProducts();
         }
 
-        async function carimbarPagamento(id, nome) {
-            if(confirm(`Deseja carimbar e validar o pagamento da empresa ${nome}?`)) {
-                try {
-                    const res = await fetch(`/api/master/empresas/${id}/carimbar-pagamento`, { method: 'POST' });
-                    if(res.ok) {
-                        const data = await res.json();
-                        alert(data.mensagem);
-                    }
-                } catch(e) {
-                    alert("Erro ao processar carimbo.");
-                }
-            }
-        }
-
-        function abrirEditar(emp) {
-            document.getElementById('edit-id').value = emp.id;
-            document.getElementById('edit-fantasia').value = emp.nome_fantasia;
-            document.getElementById('edit-plano').value = emp.plano;
-            document.getElementById('edit-vencimento').value = emp.vencimento;
-            document.getElementById('edit-limite').value = emp.limite_usuarios;
-            openModal('modalEditar');
-        }
-
-        async function salvarEdicao(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
+        async function createClient() {
             const payload = {
-                nome_fantasia: document.getElementById('edit-fantasia').value,
-                plano: document.getElementById('edit-plano').value,
-                vencimento: parseInt(document.getElementById('edit-vencimento').value),
-                limite_usuarios: parseInt(document.getElementById('edit-limite').value)
+                nome: document.getElementById('input-cli-name').value,
+                telefone: document.getElementById('input-cli-phone').value,
+                email: document.getElementById('input-cli-email').value,
+                endereco: document.getElementById('input-cli-address').value,
+                referencia: document.getElementById('input-cli-ref').value
             };
-
-            try {
-                const res = await fetch(`/api/master/empresas/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if(res.ok) {
-                    alert("Registro atualizado com sucesso!");
-                    closeModal('modalEditar');
-                    carregarEmpresas();
-                } else {
-                    alert("Erro ao atualizar.");
-                }
-            } catch(e) {
-                alert("Erro de conexão.");
-            }
+            await apiRequest('/clients', 'POST', payload);
+            alert('Cliente cadastrado!');
+            loadClients();
         }
 
-        async function toggleStatus(id) {
-            try {
-                const res = await fetch(`/api/master/empresas/${id}/status`, { method: 'PATCH' });
-                if(res.ok) {
-                    carregarEmpresas();
-                } else {
-                    alert("Erro ao alterar status.");
-                }
-            } catch(e) {
-                alert("Erro de conexão.");
-            }
+        async function createColab() {
+            const payload = {
+                nome: document.getElementById('input-colab-name').value,
+                telefone: document.getElementById('input-colab-phone').value,
+                email: document.getElementById('input-colab-email').value,
+                cpf: document.getElementById('input-colab-cpf').value,
+                data_nascimento: document.getElementById('input-colab-dob').value,
+                endereco: document.getElementById('input-colab-address').value,
+                funcao: document.getElementById('select-funcao').value,
+                status: document.getElementById('select-colab-status').value
+            };
+            await apiRequest('/colaboradores', 'POST', payload);
+            alert('Colaborador cadastrado!');
+            loadColaboradores();
         }
 
-        async function deletarEmpresa(id) {
-            if(confirm("Deseja realmente excluir esta empresa?")) {
-                try {
-                    const res = await fetch(`/api/master/empresas/${id}`, { method: 'DELETE' });
-                    if(res.ok) {
-                        carregarEmpresas();
-                        carregarMetricas();
-                    }
-                } catch(e) {
-                    alert("Erro de conexão.");
-                }
-            }
+        async function triggerBackup() {
+            const res = await apiRequest('/backup', 'POST');
+            if (res) alert(res.mensagem);
         }
 
         function navigate(sectionId, clickedElement) {
@@ -478,30 +468,31 @@
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
-            
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                overlay.style.display = 'none';
-            }
-        }
-
-        function toggleCadastroForm() {
-            const card = document.getElementById('card-novo-cliente');
-            card.classList.toggle('hidden');
-            if(!card.classList.contains('hidden')) card.scrollIntoView({ behavior: 'smooth' });
         }
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('open');
-            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            document.getElementById('sidebar').classList.toggle('open');
         }
 
-        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
-        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+        window.onload = function() {
+            loadDashboard();
+            loadProducts();
+            loadClients();
+            loadColaboradores();
+            loadOuvidoria();
+
+            new Chart(document.getElementById('chartFluxo').getContext('2d'), {
+                type: 'line',
+                data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [2, 5, 12, 18, 9], borderColor: '#ff5722', fill: true, backgroundColor: 'rgba(255,87,34,0.1)' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Ótimo', 'Bom', 'Regular'], datasets: [{ data: [10, 3, 1], backgroundColor: ['#28a745', '#17a2b8', '#ffc107'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        };
     </script>
 </body>
 </html>
