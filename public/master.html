@@ -9,7 +9,6 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* ================= VARIÁVEIS GERAIS ================= */
         :root {
             --brand-primary: #ff5722;
             --brand-secondary: #e64a19;
@@ -27,13 +26,11 @@
             --topbar-height: 60px;
         }
 
-        /* ================= RESET E TIPOGRAFIA ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
-        /* O BODY INICIA OCULTO CONFORME O NOVO PADRÃO */
+        /* O BODY INICIA OCULTO ATÉ PASSAR PELA AUTENTICAÇÃO */
         body { display: none; background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; }
 
-        /* ================= UTILITÁRIOS ================= */
         .hidden { display: none !important; }
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }
@@ -47,7 +44,6 @@
         .badge-danger { background-color: var(--danger); }
         .badge-warning { background-color: var(--warning); color: #333; }
 
-        /* ================= BARRA LATERAL ================= */
         .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; }
         .sidebar-header { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 10px; background: #fafafa; }
         .nav-menu { list-style: none; padding: 20px 15px; flex: 1; }
@@ -55,7 +51,6 @@
         .nav-link:hover, .nav-link.active { background-color: #fcece7; color: var(--brand-primary); }
         .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
 
-        /* ================= ÁREA PRINCIPAL ================= */
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
@@ -64,39 +59,30 @@
         .page-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;}
         .page-title { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
 
-        /* ================= COMPONENTES ================= */
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-width: 0; }
 
-        /* Formulários */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
         .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; }
         .form-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(255,87,34,0.2); }
 
-        /* Botões */
         .btn { padding: 9px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn:hover { opacity: 0.85; }
         .btn-primary { background: var(--brand-primary); color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
         .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
         .btn-action { padding: 8px; border-radius: 6px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); border-color: #ccc; }
 
-        /* Tabelas */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; white-space: nowrap; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
         .actions-cell { display: flex; gap: 6px; }
 
-        /* ================= MODAIS OVERLAY ================= */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; backdrop-filter: blur(5px); }
         .modal-overlay.active { opacity: 1; visibility: visible; }
 
-        /* ================= LOGO ANIMADO ================= */
         .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
         .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
         .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; }
@@ -118,10 +104,8 @@
 </head>
 <body>
 
-    <!-- OVERLAY SIDEBAR MOBILE -->
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
 
-    <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo-wrapper">
@@ -148,9 +132,7 @@
         </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL -->
     <main class="main-content">
-        <!-- TOPBAR MOBILE -->
         <header class="topbar">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
             <div class="logo-wrapper" style="transform: scale(0.8);">
@@ -161,8 +143,6 @@
         </header>
 
         <div class="content-container">
-
-            <!-- ================= TELA: 1.1 DASHBOARD ================= -->
             <section id="sec-dashboard" class="page-section">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-chart-pie-slice"></i> Visão Geral da Operação</h1>
@@ -184,7 +164,6 @@
                 </div>
             </section>
 
-            <!-- ================= TELA: 1.3 EMPRESAS & CLIENTES UNIFICADOS ================= -->
             <section id="sec-empresas" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Assinantes (Tenants)</h1>
@@ -194,7 +173,6 @@
                     </div>
                 </div>
 
-                <!-- Formulário de Novo Cliente (COM IDs PADRONIZADOS PARA A API) -->
                 <div class="card hidden" id="mst-form-nova-empresa">
                     <h3 class="mb-20" style="display: flex; align-items: center; gap: 8px; color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Novo Tenant no Neon</h3>
 
@@ -229,7 +207,6 @@
                     </form>
                 </div>
 
-                <!-- Tabela Dinâmica de Clientes -->
                 <div class="card" style="padding: 0;">
                     <div class="table-responsive">
                         <table>
@@ -241,15 +218,12 @@
                                     <th style="text-align: right;">Operações</th>
                                 </tr>
                             </thead>
-                            <tbody id="mst-tabela-empresas">
-                                <!-- Preenchido dinamicamente pelo JS -->
-                            </tbody>
+                            <tbody id="mst-tabela-empresas"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- ================= TELA: 1.5 HELPDESK ================= -->
             <section id="sec-helpdesk" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Suporte e Chamados</h1>
@@ -261,24 +235,20 @@
                     </p>
                 </div>
             </section>
-
         </div>
     </main>
 
-    <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
     <script>
-        // CONFIGURAÇÕES GLOBAIS DA API
-        const API_BASE_URL = '/api/master';
+        // Dispara a autenticação obrigatoriamente ao carregar a página
+        window.onload = autenticarMaster;
 
         async function autenticarMaster() {
-            // Verifica se já possui token na sessão
             const tokenExistente = localStorage.getItem('deliveryon_master_token');
             if (tokenExistente) {
                 liberarPainel();
                 return;
             }
 
-            // Exibe o prompt nativo para digitar a senha
             const senha = prompt("Chave de Segurança Master (Senha):");
 
             if (!senha) {
@@ -287,7 +257,7 @@
             }
 
             try {
-                // Comunicação REAL via POST com o Back-end Python
+                // Comunicação REAL via POST com a API Python
                 const response = await fetch('/api/master/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -311,14 +281,10 @@
         }
 
         function liberarPainel() {
-            // Torna o body visível (display flex para manter o layout lateral)
             document.body.style.display = "flex";
-
-            // Injeção dos dados do Gestor
             document.getElementById('app-company-name').textContent = "Back Informatica";
             document.getElementById('app-user-name').textContent = "Gestor: José Airton";
 
-            // Dispara requisições para preencher o Dashboard
             carregarMetricas();
             carregarEmpresas();
         }
@@ -328,17 +294,13 @@
             window.location.reload();
         }
 
-        // ================= FUNÇÕES DE DADOS (API MOCK) =================
-
         async function carregarMetricas() {
             try {
-                // Simulação da resposta do Vercel/Neon DB
                 const mockMetrics = {
                     db_disk_usage: '12%',
                     total_clientes: 2,
                     mrr: 'R$ 500,00'
                 };
-
                 document.getElementById('mst-metric-disk').textContent = mockMetrics.db_disk_usage;
                 document.getElementById('mst-metric-clientes').textContent = mockMetrics.total_clientes;
                 document.getElementById('mst-metric-mrr').textContent = mockMetrics.mrr;
@@ -394,9 +356,8 @@
                 limite_usuarios: parseInt(document.getElementById('mst-cad-limite-user').value)
             };
 
-            // Simulação de tempo de resposta da API
             setTimeout(() => {
-                alert(`Sucesso! A empresa ${payload.nome_fantasia} foi criada no banco de dados Neon.\nUm email com o acesso ao 'admin.html' foi disparado para ${payload.email_admin}.`);
+                alert(`Sucesso! A empresa ${payload.nome_fantasia} foi criada no banco de dados Neon.`);
                 document.getElementById('form-cad-cliente').reset();
                 toggleCadastroForm();
                 carregarEmpresas();
@@ -406,7 +367,6 @@
             }, 1200);
         }
 
-        // ================= FUNÇÕES DE NAVEGAÇÃO SPA E UI =================
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
