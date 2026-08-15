@@ -395,7 +395,6 @@
             }
         }
 
-        // AÇÃO 1: Carimbo de Pagamento
         async function carimbarPagamento(id, nome) {
             if(confirm(`Deseja carimbar e validar o pagamento da empresa ${nome}?`)) {
                 try {
@@ -410,7 +409,6 @@
             }
         }
 
-        // AÇÃO 2: Abrir Modal de Edição
         function abrirEditar(emp) {
             document.getElementById('edit-id').value = emp.id;
             document.getElementById('edit-fantasia').value = emp.nome_fantasia;
@@ -420,7 +418,6 @@
             openModal('modalEditar');
         }
 
-        // Salvar Alterações da Edição
         async function salvarEdicao(e) {
             e.preventDefault();
             const id = document.getElementById('edit-id').value;
@@ -449,7 +446,6 @@
             }
         }
 
-        // AÇÃO 3: Ativar / Bloquear Status
         async function toggleStatus(id) {
             try {
                 const res = await fetch(`/api/master/empresas/${id}/status`, { method: 'PATCH' });
