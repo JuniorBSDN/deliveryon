@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Gestor - deliveryON</title>
+
+    <!-- Ícones Modernos -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Biblioteca de Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-primary: #ff5722;
+            --brand-secondary: #e64a19;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #333333;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #777777;
+            --border-color: #e0e0e0;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --sidebar-width: 260px;
+            --topbar-height: 60px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: font-size 0.2s ease; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
+
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-success { background-color: var(--success); }
+        .badge-danger { background-color: var(--danger); }
+        .badge-warning { background-color: var(--warning); color: #333; }
+        .badge-info { background-color: var(--info); }
+
+        /* LOGOTIPO EXATO */
+        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        .on-logo-top { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
+        .on-logo-bottom { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; margin-top: 2px; }
+        @keyframes neon-pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
+            100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
+        }
+        .topbar .on-logo-container { transform: scale(0.65); }
+        .sidebar-header .on-logo-container { transform: scale(0.85); margin-top: 10px; }
+
+        /* BARRA LATERAL */
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; border-right: 1px solid var(--border-color); box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
+        .sidebar-header { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 0 20px; background-color: #fafafa; }
+        .nav-menu { list-style: none; padding: 15px 10px; flex: 1; overflow-y: auto; }
+        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(255, 87, 34, 0.1); color: var(--brand-primary); }
+        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; color: var(--brand-primary); }
+        .nav-footer { padding: 15px; border-top: 1px solid var(--border-color); background-color: #fafafa; }
+
+        /* ÁREA PRINCIPAL */
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+        .topbar { display: none; height: var(--topbar-height); background: var(--card-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
+        .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
+        .content-container { padding: 25px; overflow-y: auto; flex: 1; min-width: 0; }
+        .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); min-width: 0; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
+        .form-control:focus { border-color: var(--brand-primary); }
+
+        .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
+        .btn-action { padding: 6px 10px; border-radius: 4px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; transition: all 0.2s; }
+        .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); }
+
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
+
+        .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .tab-btn { background: none; border: none; padding: 10px 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; }
+        .tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
+
+        /* MODAIS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
+
+        .cracha-container { width: 280px; margin: 0 auto; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; text-align: center; background: white; }
+        .cracha-header { background: var(--brand-primary); color: white; padding: 20px 10px; display: flex; justify-content: center; }
+        .cracha-photo { width: 100px; height: 100px; background: #eee; border-radius: 50%; margin: -40px auto 10px; border: 4px solid white; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .cracha-qr { width: 120px; height: 120px; margin: 15px auto; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100vw; }
+            .topbar { display: flex; }
+            .content-container { padding: 15px; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+            .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
+
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="on-logo-container">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> Dashboard</a></li>
+            <li><a class="nav-link" onclick="navigate('produtos', this)"><span class="nav-icon"><i class="ph ph-hamburger"></i></span> Produtos</a></li>
+            <li><a class="nav-link" onclick="navigate('clientes', this)"><span class="nav-icon"><i class="ph ph-users"></i></span> Clientes</a></li>
+            <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> Colaboradores</a></li>
+            <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
+            <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
+            <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
+        </ul>
+        <div class="nav-footer">
+            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;"><span class="nav-icon" style="color: #ff5252;"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-content">
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+            <div class="on-logo-container">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
+            </div>
+            <div style="width: 24px;"></div>
+        </header>
+
+        <div class="content-container">
+
+            <!-- DASHBOARD -->
+            <section id="sec-dashboard" class="page-section">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-storefront"></i> Visão Geral Diária</h1></div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="card" style="border-top: 4px solid var(--warning);"><span style="color: var(--text-muted); font-size: 0.9rem;">Aguardando</span><h2 style="font-size: 1.8rem;">14</h2></div>
+                    <div class="card" style="border-top: 4px solid var(--success);"><span style="color: var(--text-muted); font-size: 0.9rem;">Entregues</span><h2 style="font-size: 1.8rem;">42</h2></div>
+                    <div class="card" style="border-top: 4px solid var(--danger);"><span style="color: var(--text-muted); font-size: 0.9rem;">Cancelados</span><h2 style="font-size: 1.8rem;">2</h2></div>
+                    <div class="card"><span style="color: var(--text-muted); font-size: 0.9rem;">Receita Total</span><h2 style="font-size: 1.8rem;">R$ 1.620</h2></div>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="card">
+                        <h3>Gráfico de Fluxo</h3>
+                        <div style="height: 200px; width: 100%; position: relative;"><canvas id="chartFluxo"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <h3>Ouvidoria (Avaliações)</h3>
+                        <div style="height: 200px; width: 100%; position: relative;"><canvas id="chartOuvidoria"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Últimos Pedidos Recebidos</h3></div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>#1045</strong><br><span style="font-size: 0.8rem; color: #999;">20:15</span></td>
+                                    <td>João Silva<br><span style="font-size: 0.8rem; color: #999;">Rua das Flores, 123</span></td>
+                                    <td>R$ 85,90</td>
+                                    <td>
+                                        <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem; background: #fff3cd; color: #856404;" onchange="notifyStatus(this)">
+                                            <option selected>Aguardando pagamento</option>
+                                            <option>Aprovado / Preparando</option>
+                                            <option>Saiu para entrega</option>
+                                            <option>Entregue</option>
+                                        </select>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-action" title="Visualizar" onclick="openModal('modalVerPedido')"><i class="ph ph-eye"></i></button>
+                                        <button class="btn-action" title="Editar" onclick="openModal('modalEditarPedido')"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-action" title="Cancelar" style="color: var(--danger);" onclick="openModal('modalCancelarPedido')"><i class="ph ph-x"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRODUTOS -->
+            <section id="sec-produtos" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-hamburger"></i> Gestão de Produtos</h1></div>
+
+                <div class="card">
+                    <h3 class="mb-20">Adicionar Novo Produto</h3>
+                    <form onsubmit="event.preventDefault(); alert('Produto Cadastrado!');">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-0042" readonly style="background:#f0f0f0;"></div>
+                            <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control"></div>
+                            <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" required></div>
+                            <div class="form-group">
+                                <label for="categoria">Categoria do Produto</label>
+                                <select class="form-control" id="categoria" name="categoria" required>
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="hamburgueres">🍔 Hambúrgueres</option>
+                                    <option value="pizzas">🍕 Pizzas</option>
+                                    <option value="hot-dogs">🌭 Hot Dogs</option>
+                                    <option value="acompanhamentos">🍟 Acompanhamentos</option>
+                                    <option value="petiscos">🍗 Petiscos</option>
+                                    <option value="salgados">🥟 Salgados</option>
+                                    <option value="refeicoes">🥘 Refeições</option>
+                                    <option value="marmitas">🍱 Marmitas</option>
+                                    <option value="crepes">🥞 Crepes</option>
+                                    <option value="tortas-bolos">🥧 Tortas e Bolos</option>
+                                    <option value="acai">🍧 Açaí</option>
+                                    <option value="sorvetes">🍦 Sorvetes</option>
+                                    <option value="picoles">🍭 Picolés</option>
+                                    <option value="bebidas">🥤 Bebidas</option>
+                                    <option value="cafes-chas">☕ Cafés e Chás</option>
+                                    <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
+                                    <option value="milkshakes">🥛 Milkshakes</option>
+                                    <option value="sobremesas">🍰 Sobremesas</option>
+                                    <option value="combos-promocoes">🎁 Combos e Promoções</option>
+                                    <option value="outra">➕ Outra Categoria</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" required></div>
+                            <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="999"></div>
+                        </div>
+                        <div class="form-group"><label>Descrição</label><textarea class="form-control" rows="2"></textarea></div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-plus-circle"></i> Cadastrar Produto</button></div>
+                    </form>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color);">
+                        <input type="text" class="form-control" placeholder="Buscar por cod/nome/categoria..." style="width: 100%; max-width: 300px;">
+                        <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir Lista</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Foto</th><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div></td>
+                                    <td>PRD-001</td>
+                                    <td><strong>Pizza Calabresa G</strong><br><span style="font-size:0.8rem; color:#888;">Massa fina, borda recheada.</span></td>
+                                    <td>R$ 65,00</td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-action" title="Editar" onclick="openModal('modalEditProduto')"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-action" title="Promocionar" onclick="openModal('modalPromocao')"><i class="ph ph-tag" style="color:var(--warning);"></i></button>
+                                        <button class="btn-action" title="Excluir" style="color:var(--danger);"><i class="ph ph-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CLIENTES -->
+            <section id="sec-clientes" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-users"></i> Gestão de Clientes</h1></div>
+
+                <div class="card">
+                    <h3 class="mb-20">Cadastrar Cliente Manual</h3>
+                    <form onsubmit="event.preventDefault(); alert('Cliente Salvo!');">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" class="form-control"></div>
+                            <div class="form-group"><label>Endereço</label><input type="text" class="form-control" required></div>
+                        </div>
+                        <div class="form-group"><label>Referência Local</label><input type="text" class="form-control"></div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cliente</button></div>
+                    </form>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color);">
+                        <input type="text" class="form-control" placeholder="Buscar nome/telefone/ref..." style="width: 100%;">
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nome</th><th>Telefone</th><th>Referência Local</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Maria Oliveira</strong></td>
+                                    <td>(11) 98888-7777</td>
+                                    <td>Próximo ao mercado central</td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-action" title="Editar" onclick="openModal('modalEditCliente')"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-action" title="Histórico de Compras" onclick="openModal('modalHistCliente')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                        <button class="btn-action" title="Excluir Cliente" style="color: var(--danger);" onclick="if(confirm('Tem certeza que deseja excluir este cliente?')) alert('Cliente excluído com sucesso!');"><i class="ph ph-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COLABORADORES (Com campos de Motoboy completo) -->
+            <section id="sec-colaboradores" class="page-section hidden">
+                <div class="page-header flex justify-between align-center action-bar-mobile">
+                    <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1>
+                </div>
+
+                <div class="card">
+                    <h3 class="mb-20">Cadastrar Novo Colaborador</h3>
+                    <form onsubmit="event.preventDefault(); alert('Colaborador cadastrado com sucesso!');">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control"></div>
+                            <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>E-mail</label><input type="email" class="form-control" required></div>
+                            <div class="form-group"><label>CPF / Documento</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Data de Nascimento</label><input type="date" class="form-control" required></div>
+                            <div class="form-group"><label>Endereço</label><input type="text" class="form-control" required></div>
+
+                            <div class="form-group">
+                                <label>Função</label>
+                                <select class="form-control" id="select-funcao" onchange="toggleMotoboyFields(this.value, 'campos-motoboy')" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Gerente">Gerente</option>
+                                    <option value="Caixa">Caixa</option>
+                                    <option value="Cozinheiro">Cozinheiro</option>
+                                    <option value="Auxiliar">Auxiliar de cozinha</option>
+                                    <option value="Recepcionista">Recepcionista</option>
+                                    <option value="Estoquista">Estoquista</option>
+                                    <option value="Motoboy">Entregador / Motoboy</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Status Inicial</label>
+                                <select class="form-control">
+                                    <option value="Disponível">Disponível</option>
+                                    <option value="Pausado">Pausado</option>
+                                    <option value="Indisponível">Indisponível</option>
+                                    <option value="Em entrega">Em entrega</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CAMPOS CONDICIONAIS EXCLUSIVOS DO MOTOBOY -->
+                        <div id="campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                            <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
+                            <div class="form-grid">
+                                <div class="form-group"><label>Código do Entregador</label><input type="text" class="form-control" placeholder="Gerado automaticamente" readonly></div>
+                                <div class="form-group"><label>Tipo de Veículo</label>
+                                    <select class="form-control"><option>Moto</option><option>Bicicleta</option><option>Carro</option></select>
+                                </div>
+                                <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" placeholder="Ex: Honda CG 160"></div>
+                                <div class="form-group"><label>Cor</label><input type="text" class="form-control" placeholder="Ex: Preta"></div>
+                                <div class="form-group"><label>Placa</label><input type="text" class="form-control" placeholder="AAA-0000"></div>
+                                <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" placeholder="Ex: Zona Sul, Centro"></div>
+                                <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" placeholder="6.50"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-20"><label>Observações Gerais</label><textarea class="form-control" rows="2"></textarea></div>
+                        <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Colaborador</button></div>
+                    </form>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
+                        <div class="flex gap-10 action-bar-mobile" style="flex-wrap: wrap; flex: 1;">
+                            <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 100%;">
+                            <select class="form-control" style="width: 100%;">
+                                <option value="">Filtrar Função...</option>
+                                <option value="Caixa">Caixa</option>
+                                <option value="Motoboy">Entregador / Motoboy</option>
+                            </select>
+                            <input type="date" class="form-control" title="Data de Nascimento">
+                            <button class="btn btn-secondary"><i class="ph ph-magnifying-glass"></i> Buscar</button>
+                        </div>
+                        <button class="btn btn-outline"><i class="ph ph-printer"></i> Imprimir</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Carlos Pereira</strong></td>
+                                    <td>111.222.333-44</td>
+                                    <td>Entregador / Motoboy</td>
+                                    <td>(11) 97777-6666</td>
+                                    <td><span class="badge badge-success">Disponível</span></td>
+                                    <td style="text-align: right; min-width: 150px;">
+                                        <button class="btn-action" title="Editar" onclick="openModal('modalEditColab')"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-action" title="Contrato" onclick="openModal('modalContratoColab')"><i class="ph ph-scroll"></i></button>
+                                        <button class="btn-action" title="Visualizar Crachá" onclick="openModal('modalCracha')"><i class="ph ph-identification-card text-info" style="color: var(--info);"></i></button>
+                                        <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="alert('Excluído!')"><i class="ph ph-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RELATÓRIOS -->
+            <section id="sec-relatorios" class="page-section hidden">
+                <div class="page-header flex justify-between align-center action-bar-mobile">
+                    <h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1>
+                    <button class="btn btn-danger"><i class="ph ph-file-pdf"></i> Imprimir PDF</button>
+                </div>
+
+                <div class="card">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" onclick="switchTab(this, 'tab-vendas')">Vendas</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-pedidos')">Pedidos</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-finan')">Financeiro / Pagamentos</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-estoque')">Estoque / Produtos</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-entregas')">Entregas</button>
+                    </div>
+
+                    <div id="tab-vendas" class="tab-content">
+                        <h3 class="mb-20">Relatórios de Vendas</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-calendar"></i> Vendas por Período / Dia / Hora</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-hamburger"></i> Vendas por Categoria / Produto</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-trend-up"></i> Faturamento Bruto e Líquido</button>
+                        </div>
+                    </div>
+                    <div id="tab-pedidos" class="tab-content hidden">
+                        <h3 class="mb-20">Relatórios de Pedidos</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-list-numbers"></i> Total e Status (Concluídos/Cancelados)</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-clock"></i> Tempos Médios (Preparo e Entrega)</button>
+                        </div>
+                    </div>
+                    <div id="tab-finan" class="tab-content hidden">
+                        <h3 class="mb-20">Financeiro e Pagamentos</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-wallet"></i> Recebimentos por Tipo (PIX, Cartão, Dinheiro)</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-receipt"></i> Taxas, Descontos e Estornos</button>
+                        </div>
+                    </div>
+                    <div id="tab-estoque" class="tab-content hidden">
+                        <h3 class="mb-20">Estoque e Produtos</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-package"></i> Posição Atual / Estoque Baixo</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-chart-line-down"></i> Produtos Esgotados / Sem Venda</button>
+                        </div>
+                    </div>
+                    <div id="tab-entregas" class="tab-content hidden">
+                        <h3 class="mb-20">Entregas e Regiões</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-map-pin"></i> Entregas por Bairro/Região</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;"><i class="ph ph-motorcycle"></i> Desempenho dos Entregadores</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OUVIDORIA -->
+            <section id="sec-ouvidoria" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
+
+                <div class="card" style="border: 1px solid var(--danger); background: #fff5f5;">
+                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 5px;">
+                        <h3 style="color: var(--danger);"><i class="ph ph-warning-circle"></i> Feed Crítico em Destaque</h3>
+                        <span style="font-size: 0.85rem; color: #999;">Ontem, 22:30 • Centro</span>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;"><strong>Avaliação: Péssimo</strong></p>
+                    <p style="color: var(--text-muted); font-style: italic;">"A pizza chegou fria e demorou 2 horas. O entregador não achava o endereço."</p>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color);">
+                        <input type="date" class="form-control" style="width: 100%;">
+                        <button class="btn btn-primary"><i class="ph ph-magnifying-glass"></i> Buscar Feeds</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>Hoje, 12:10<br><strong>Ana Souza</strong></td>
+                                    <td><span style="color: var(--success); font-weight: bold;">Ótimo</span></td>
+                                    <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Melhor lanche da cidade, atendimento super rápido!</td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-action" title="Ver Completo" onclick="openModal('modalVerFeed')"><i class="ph ph-eye"></i></button>
+                                        <button class="btn-action" title="Marcar Verificado (OK)" onclick="alert('E-mail enviado ao cliente: Sua mensagem foi recebida e está sendo analisada.')"><i class="ph ph-check text-success" style="color: var(--success);"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONFIGURAÇÕES -->
+            <section id="sec-configuracoes" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
+
+                <div class="form-grid">
+                    <div class="card">
+                        <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
+                        <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" value="ON delivery"></div>
+                        <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" value="O melhor delivery da região"></div>
+                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" value="Av. Central, 1000"></div>
+                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" value="(11) 99999-9999"></div>
+                        <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" rows="2">Seg a Dom: 18h às 23h</textarea></div>
+                    </div>
+
+                    <div>
+                        <div class="card">
+                            <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
+                            <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>
+                            <div class="flex gap-10" style="flex-wrap: wrap;">
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" value="#ff5722" style="height: 45px; padding: 2px;"></div>
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" value="#e64a19" style="height: 45px; padding: 2px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
+                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="alert('Iniciando compressão de dados...\nBackup gerado e baixado com sucesso no formato .ZIP!')"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
+                            <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                                <div class="form-group"><label>Agendar Backup Automático</label>
+                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
+                                </div>
+                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
+                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
+                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                            <button class="btn btn-success" style="width: 100%;" onclick="alert('Configurações salvas e aplicadas com sucesso!')"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ================= MODAIS COMPLETOS ================= -->
+
+    <!-- Modais Dashboard Pedidos -->
+    <div class="modal-overlay" id="modalVerPedido">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-receipt"></i> Detalhes do Pedido #1045</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
+            <div class="modal-body">
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p><strong>Cliente:</strong> João Silva</p><p><strong>Telefone:</strong> (11) 99999-9999</p>
+                    <p><strong>Local:</strong> Rua das Flores, 123 - Centro</p>
+                </div>
+                <h4 style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Itens</h4>
+                <ul style="list-style: none; margin-bottom: 15px;">
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>1x Pizza Calabresa G</span> <span>R$ 65,00</span></li>
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>1x Guaraná 2L</span> <span>R$ 15,00</span></li>
+                    <li style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9rem;"><span>Taxa de Entrega</span> <span>R$ 5,90</span></li>
+                </ul>
+                <h3 style="text-align: right; color: var(--brand-primary);">Total: R$ 85,90</h3>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button><button class="btn btn-primary" onclick="alert('Imprimindo via...')"><i class="ph ph-printer"></i> Imprimir Via</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalEditarPedido">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Pedido #1045</h3><button class="close-modal" onclick="closeModal('modalEditarPedido')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Nome do Cliente</label><input type="text" class="form-control" value="João Silva" required></div>
+                    <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" value="(11) 99999-9999" required></div>
+                    <div class="form-group"><label>Endereço de Entrega</label><input type="text" class="form-control" value="Rua das Flores, 123 - Centro" required></div>
+                    <div class="form-group"><label>Forma de Pagamento</label>
+                        <select class="form-control">
+                            <option selected>PIX (Aguardando)</option>
+                            <option>Cartão de Crédito na Entrega</option>
+                            <option>Dinheiro (Levar Troco)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h4 class="mt-20 mb-20" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Itens do Pedido</h4>
+
+                <div class="table-responsive mb-20">
+                    <table>
+                        <thead>
+                            <tr><th>Item</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th><th style="text-align: right;">Ação</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Pizza Calabresa G</td>
+                                <td><input type="number" class="form-control" value="1" style="width: 60px; padding: 4px;"></td>
+                                <td>R$ 65,00</td>
+                                <td>R$ 65,00</td>
+                                <td style="text-align: right;"><button class="btn-action" style="color: var(--danger);" title="Remover Item"><i class="ph ph-trash"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td>Guaraná 2L</td>
+                                <td><input type="number" class="form-control" value="1" style="width: 60px; padding: 4px;"></td>
+                                <td>R$ 15,00</td>
+                                <td>R$ 15,00</td>
+                                <td style="text-align: right;"><button class="btn-action" style="color: var(--danger);" title="Remover Item"><i class="ph ph-trash"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group mt-20"><label>Observações do Pedido</label><textarea class="form-control" rows="2">Sem cebola na pizza, por favor.</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalEditarPedido')">Cancelar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalEditarPedido'); alert('Pedido #1045 atualizado com sucesso!')"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalCancelarPedido">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"><h3><i class="ph ph-warning-circle text-danger" style="color: var(--danger);"></i> Cancelar Pedido</h3><button class="close-modal" onclick="closeModal('modalCancelarPedido')">&times;</button></div>
+            <div class="modal-body" style="text-align: center;"><p style="font-size: 1.1rem; margin-bottom: 20px;">Tem certeza que deseja excluir/cancelar este pedido?</p></div>
+            <div class="modal-footer" style="justify-content: center;"><button class="btn btn-outline" onclick="closeModal('modalCancelarPedido')">Não, Voltar</button><button class="btn btn-danger" onclick="closeModal('modalCancelarPedido')">Sim, Cancelar</button></div>
+        </div>
+    </div>
+
+    <!-- Modais Produtos -->
+    <div class="modal-overlay" id="modalPromocao">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"><h3><i class="ph ph-tag" style="color:var(--warning);"></i> Marcar Promoção</h3><button class="close-modal" onclick="closeModal('modalPromocao')">&times;</button></div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px;">Produto: <strong>Pizza Calabresa G</strong></p>
+                <div class="form-group"><label>Valor de Desconto (R$ ou %)</label><input type="text" class="form-control" placeholder="Ex: R$ 10,00"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalPromocao')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalPromocao'); alert('Promoção Ativada!')">Confirmar</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalEditProduto">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Produto</h3><button class="close-modal" onclick="closeModal('modalEditProduto')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-001" readonly style="background:#f0f0f0;"></div>
+                    <div class="form-group"><label>Foto Atual / Nova Foto</label><input type="file" class="form-control"></div>
+                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" value="Pizza Calabresa G" required></div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select class="form-control" required>
+                            <option value="hamburgueres">🍔 Hambúrgueres</option>
+                            <option value="pizzas" selected>🍕 Pizzas</option>
+                            <option value="hot-dogs">🌭 Hot Dogs</option>
+                            <option value="bebidas">🥤 Bebidas</option>
+                            <option value="sobremesas">🍰 Sobremesas</option>
+                            <option value="outra">➕ Outras</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" value="65.00" required></div>
+                    <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="50"></div>
+                </div>
+                <div class="form-group mt-20"><label>Descrição</label><textarea class="form-control" rows="2">Massa fina, borda recheada.</textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditProduto')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditProduto'); alert('Produto atualizado com sucesso!')">Salvar Alterações</button></div>
+        </div>
+    </div>
+
+    <!-- Modais Clientes -->
+    <div class="modal-overlay" id="modalEditCliente">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Cliente</h3><button class="close-modal" onclick="closeModal('modalEditCliente')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" value="Maria Oliveira" required></div>
+                    <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" value="(11) 98888-7777" required></div>
+                    <div class="form-group"><label>Email</label><input type="email" class="form-control" value="maria.oliveira@email.com"></div>
+                    <div class="form-group"><label>Endereço</label><input type="text" class="form-control" value="Rua das Flores, 123" required></div>
+                </div>
+                <div class="form-group mt-20"><label>Referência Local</label><input type="text" class="form-control" value="Próximo ao mercado central"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditCliente')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditCliente'); alert('Cliente atualizado com sucesso!')">Salvar Alterações</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalHistCliente">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><h3><i class="ph ph-clock-counter-clockwise"></i> Histórico de Compras: Maria Oliveira</h3><button class="close-modal" onclick="closeModal('modalHistCliente')">&times;</button></div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Total de Pedidos</span>
+                        <h3 style="font-size: 1.2rem; color: var(--brand-primary);">12 Pedidos</h3>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Valor Gasto Acumulado</span>
+                        <h3 style="font-size: 1.2rem; color: var(--success);">R$ 780,50</h3>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 10px; font-size: 1rem;">Últimas Transações</h4>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Data / ID</th><th>Itens Principais</th><th>Forma de Pagamento</th><th>Total</th><th style="text-align: right;">Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Ontem<br><span style="font-size: 0.75rem; color: #888;">#1022</span></td>
+                                <td>1x Pizza Calabresa G, 1x Guaraná</td>
+                                <td>PIX</td>
+                                <td>R$ 75,00</td>
+                                <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
+                            </tr>
+                            <tr>
+                                <td>10/05/2026<br><span style="font-size: 0.75rem; color: #888;">#0984</span></td>
+                                <td>2x X-Tudo Especial</td>
+                                <td>Cartão de Crédito</td>
+                                <td>R$ 45,00</td>
+                                <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalHistCliente')">Fechar</button>
+                <button class="btn btn-primary" onclick="alert('Exportando histórico completo em PDF...')"><i class="ph ph-file-pdf"></i> Exportar Extrato</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ouvidoria -->
+    <div class="modal-overlay" id="modalVerFeed">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header"><h3><i class="ph ph-megaphone"></i> Feed Detalhado</h3><button class="close-modal" onclick="closeModal('modalVerFeed')">&times;</button></div>
+            <div class="modal-body">
+                <p><strong>Cliente:</strong> Ana Souza</p><p><strong>Data/Hora:</strong> Hoje, 12:10</p><p><strong>Nota:</strong> Ótimo</p>
+                <div style="margin-top: 15px; padding: 15px; background: #f4f7f6; border-radius: 8px; font-style: italic;">"Melhor lanche da cidade, atendimento super rápido e chegou quentinho!"</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalVerFeed')">Fechar</button>
+                <button class="btn btn-success" onclick="closeModal('modalVerFeed'); alert('E-mail automático enviado: Obrigado pelo Feedback!')"><i class="ph ph-check"></i> Marcar OK (Agradecer)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais Colaboradores (Com Lógica do Motoboy Completa) -->
+    <div class="modal-overlay" id="modalEditColab">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Colaborador</h3><button class="close-modal" onclick="closeModal('modalEditColab')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Foto Atual / Arquivo</label><input type="file" class="form-control"></div>
+                    <div class="form-group"><label>Nome</label><input type="text" class="form-control" value="Carlos Pereira" required></div>
+                    <div class="form-group"><label>Telefone</label><input type="text" class="form-control" value="(11) 97777-6666" required></div>
+                    <div class="form-group"><label>E-mail</label><input type="email" class="form-control" value="carlos.moto@email.com" required></div>
+                    <div class="form-group"><label>CPF / Documento</label><input type="text" class="form-control" value="111.222.333-44" required></div>
+                    <div class="form-group"><label>Data de Nascimento</label><input type="date" class="form-control" value="1992-08-15" required></div>
+                    <div class="form-group"><label>Endereço</label><input type="text" class="form-control" value="Rua X, 45 - Bairro Y" required></div>
+
+                    <div class="form-group">
+                        <label>Função</label>
+                        <select class="form-control" onchange="toggleMotoboyFields(this.value, 'campos-motoboy-modal')" required>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Caixa">Caixa</option>
+                            <option value="Cozinheiro">Cozinheiro</option>
+                            <option value="Motoboy" selected>Entregador / Motoboy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status Atual</label>
+                        <select class="form-control">
+                            <option value="Disponível" selected>Disponível</option>
+                            <option value="Pausado">Pausado</option>
+                            <option value="Indisponível">Indisponível</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="campos-motoboy-modal" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Código do Entregador</label><input type="text" class="form-control" value="MOT-045" readonly></div>
+                        <div class="form-group"><label>Tipo de Veículo</label>
+                            <select class="form-control"><option selected>Moto</option><option>Bicicleta</option><option>Carro</option></select>
+                        </div>
+                        <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" value="Honda CG 160"></div>
+                        <div class="form-group"><label>Cor</label><input type="text" class="form-control" value="Preta"></div>
+                        <div class="form-group"><label>Placa</label><input type="text" class="form-control" value="AAA-0000"></div>
+                        <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" value="Zona Sul, Centro"></div>
+                        <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" value="6.50"></div>
+                    </div>
+                </div>
+                <div class="form-group mt-20"><label>Observações Gerais</label><textarea class="form-control" rows="2">Piloto experiente. Preferência por rotas centrais.</textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditColab')">Cancelar</button><button class="btn btn-primary" onclick="closeModal('modalEditColab'); alert('Colaborador atualizado com sucesso!')">Salvar Alterações</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalContratoColab">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><h3><i class="ph ph-scroll"></i> Contrato de Trabalho / Parceria</h3><button class="close-modal" onclick="closeModal('modalContratoColab')">&times;</button></div>
+            <div class="modal-body">
+                <div class="rich-text-editor" contenteditable="true">
+                    <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ENTREGA</h2><br>
+                    <p>Pelo presente instrumento, a empresa <strong>ON delivery</strong> estabelece os termos com <strong>Carlos Pereira</strong>...</p><br>
+                    <p><em style="color: #999;">(Edite o texto do contrato livremente)</em></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalContratoColab')">Cancelar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalContratoColab'); alert('Contrato salvo! Uma notificação e cópia foram enviadas para o e-mail do colaborador.')"><i class="ph ph-paper-plane-tilt"></i> Salvar e Enviar E-mail</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalCracha">
+        <div class="modal-content" style="max-width: 400px; background: transparent; box-shadow: none;">
+            <div class="modal-body" style="padding: 0;">
+                <div class="cracha-container" style="max-width: 100%;">
+                    <div class="cracha-header">
+                        <div class="on-logo-container" style="transform: scale(0.85);">
+                            <span class="on-logo-top" style="color: white; text-shadow: none;">ON</span>
+                            <span class="on-logo-bottom" style="color: white;">delivery</span>
+                        </div>
+                    </div>
+                    <div class="cracha-photo">
+                        <i class="ph-fill ph-user" style="font-size: 4rem; color: #ccc;"></i>
+                    </div>
+                    <h3 style="font-size: 1.3rem; color: var(--text-main); margin-bottom: 5px;">Carlos Pereira</h3>
+                    <p style="color: var(--brand-primary); font-weight: bold; font-size: 0.9rem; text-transform: uppercase;">Entregador / Motoboy</p>
+
+                    <div class="cracha-qr" style="cursor: pointer;" onclick="closeModal('modalCracha'); openModal('modalQROperacoes');" title="Simular Leitura do QR Code">
+                        <i class="ph ph-qr-code" style="font-size: 5rem; color: #333;"></i>
+                    </div>
+                    <p style="font-size: 0.7rem; color: #999; margin-bottom: 20px;">Leia o QR Code para acessar operações</p>
+                </div>
+                <div style="text-align: center; margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('modalCracha')"><i class="ph ph-x"></i> Fechar Crachá</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalQROperacoes">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"><h3><i class="ph ph-motorcycle text-brand-primary"></i> Operações do Entregador</h3><button class="close-modal" onclick="closeModal('modalQROperacoes')">&times;</button></div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h4 style="font-size: 1.2rem;">Carlos Pereira</h4>
+                    <span class="badge badge-success">Disponível para rotas</span>
+                </div>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="margin-bottom: 5px;"><strong>Veículo:</strong> Moto - Honda CG 160</p>
+                    <p style="margin-bottom: 5px;"><strong>Placa:</strong> AAA-0000</p>
+                    <p style="margin-bottom: 5px;"><strong>Entregas Hoje:</strong> 12 concluídas</p>
+                    <p><strong>Avaliação Média:</strong> ⭐ 4.8 / 5.0</p>
+                </div>
+                <div class="action-bar-mobile" style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary" style="width: 100%;"><i class="ph ph-map-pin"></i> Rastrear Localização Atual</button>
+                    <button class="btn btn-outline" style="width: 100%;"><i class="ph ph-receipt"></i> Ver Extrato de Repasses</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= SCRIPTS ================= -->
+    <script>
+
+        // Mostrar campos de Motoboy apenas se a função for selecionada
+        function toggleMotoboyFields(funcao, idContainer) {
+            const camposMotoboy = document.getElementById(idContainer);
+            if (camposMotoboy) {
+                if (funcao === 'Motoboy') {
+                    camposMotoboy.classList.remove('hidden');
+                } else {
+                    camposMotoboy.classList.add('hidden');
+                }
+            }
+        }
+
+        // Navegação entre as telas do Dashboard (SPA)
+        function navigate(sectionId, clickedElement) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            if(clickedElement) clickedElement.classList.add('active');
+
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('mobile-overlay').classList.toggle('active');
+        }
+
+        document.getElementById('mobile-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('mobile-overlay').classList.remove('active');
+        });
+
+        // Alternar Abas (Relatórios)
+        function switchTab(btn, targetId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            btn.classList.add('active');
+            document.getElementById(targetId).classList.remove('hidden');
+        }
+
+        // Controle de Modais
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        // Troca de Cor do Status do Pedido Dinamicamente
+        function notifyStatus(selectElement) {
+            const status = selectElement.value;
+            if(status.includes('Aguardando')) { selectElement.style.background = '#fff3cd'; selectElement.style.color = '#856404'; }
+            else if(status.includes('Preparando')) { selectElement.style.background = '#ffe8cc'; selectElement.style.color = '#d97706'; }
+            else if(status.includes('Saiu')) { selectElement.style.background = '#cce5ff'; selectElement.style.color = '#004085'; }
+            else if(status.includes('Entregue')) { selectElement.style.background = '#d4edda'; selectElement.style.color = '#155724'; }
+        }
+
+        // Inicialização dos Gráficos (Chart.js)
+        window.onload = function() {
+            if(document.getElementById('chartFluxo')) {
+                new Chart(document.getElementById('chartFluxo').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [12, 25, 45, 60, 35], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+            if(document.getElementById('chartOuvidoria')) {
+                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [65, 20, 10, 3, 2], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
+        };
+    </script>
+</body>
+</html>
