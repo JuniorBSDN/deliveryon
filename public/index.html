@@ -63,14 +63,21 @@
         [vw] [vw-access-button] {
             left: 10px !important;
             right: auto !important;
+            bottom: 10px !important;
         }
         [vw] .vw-plugin-wrapper {
             left: 10px !important;
             right: auto !important;
         }
+
+        /* RODAPÉ PROFISSIONAL INTEGRADO */
+        .app-footer { margin-top: auto; padding: 20px 25px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; color: #6b7280; font-size: 0.85rem; flex-wrap: wrap; gap: 10px; background-color: #ffffff; }
+        .app-footer-links { display: flex; gap: 15px; flex-wrap: wrap; }
+        .app-footer-links a { color: #6b7280; text-decoration: none; transition: color 0.2s; }
+        .app-footer-links a:hover { color: var(--brand-primary); }
     </style>
 </head>
-<body class="bg-gray-50 font-sans pb-20 md:pb-0" style="transition: font-size 0.2s ease;">
+<body class="bg-gray-50 font-sans pb-20 md:pb-0 min-h-screen flex flex-col" style="transition: font-size 0.2s ease;">
 
     <!-- Ferramentas de Acessibilidade (A+ / A-) movidas para a ESQUERDA -->
     <div class="accessibility-tools no-print" style="position: fixed; top: 35%; left: 0; transform: translateY(-50%); z-index: 80; background: white; border: 1px solid #ccc; border-left: none; border-radius: 0 8px 8px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
@@ -78,10 +85,10 @@
         <button onclick="changeFontSize(-1)" style="padding: 10px 15px; border: none; background: transparent; cursor: pointer; font-weight: bold; font-size: 1rem; color: #333;" title="Diminuir Fonte">A-</button>
     </div>
 
-    <!-- Header Limpo com botão de Histórico -->
+    <!-- Header Limpo com botões visíveis (Texto forçado a aparecer no mobile) -->
     <header id="app-header" class="bg-white text-gray-900 shadow-sm sticky top-0 z-40 border-b-4" style="border-color: var(--brand-primary);">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center overflow-x-auto scrollbar-hide">
+            <div class="flex items-center space-x-4 shrink-0 pr-2">
                 <div id="logo-container" class="shrink-0 flex items-center justify-center">
                     <div id="default-logo-element" class="logo-wrapper">
                         <span class="logo-on">ON</span>
@@ -91,21 +98,22 @@
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2 md:space-x-3">
-                <button onclick="openTrackerModal()" id="tracker-nav-btn" class="hidden bg-amber-500 hover:bg-amber-600 text-black px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 transition shadow-sm animate-bounce">
+            <div class="flex items-center space-x-2 md:space-x-3 shrink-0">
+                <button onclick="openTrackerModal()" id="tracker-nav-btn" class="hidden bg-amber-500 hover:bg-amber-600 text-black px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 transition shadow-sm animate-bounce whitespace-nowrap">
                     <i class="fas fa-motorcycle"></i> <span>Meu Pedido</span>
                 </button>
 
-                <!-- Botão de Histórico de Pedidos -->
-                <button onclick="openHistoricoModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200">
-                    <i class="fas fa-clock-rotate-left" style="color: var(--brand-primary);"></i> <span class="hidden md:inline">Histórico</span>
+                <!-- Botão de Histórico de Pedidos corrigido para aparecer no celular -->
+                <button onclick="openHistoricoModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200 whitespace-nowrap">
+                    <i class="fas fa-clock-rotate-left" style="color: var(--brand-primary);"></i> <span>Histórico</span>
                 </button>
 
-                <button onclick="openOuvidoriaModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200">
-                    <i class="fas fa-megaphone" style="color: var(--brand-primary);"></i> <span class="hidden md:inline">Ouvidoria</span>
+                <!-- Botão Ouvidoria corrigido para aparecer no celular (Removido o class hidden) -->
+                <button onclick="openOuvidoriaModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200 whitespace-nowrap">
+                    <i class="fas fa-megaphone" style="color: var(--brand-primary);"></i> <span>Ouvidoria</span>
                 </button>
 
-                <button id="cart-btn" class="relative p-2.5 rounded-full text-white transition shadow-md" style="background-color: var(--brand-primary);">
+                <button id="cart-btn" class="relative p-2.5 rounded-full text-white transition shadow-md shrink-0" style="background-color: var(--brand-primary);">
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow">0</span>
                 </button>
@@ -143,9 +151,9 @@
         </div>
     </section>
 
-    <!-- Rodapé Discreto -->
-    <footer class="no-print" style="text-align: center; padding: 20px; color: #999; font-size: 0.8rem; background-color: #f9fafb; border-top: 1px solid #eee; width: 100%;">
-        DeliveryON - soluções para delivery
+    <!-- RODAPÉ PROFISSIONAL -->
+    <footer class="app-footer no-print">
+        <div>&copy; 2026 <strong>ON delivery</strong>. Todos os direitos reservados.</div>
     </footer>
 
     <!-- Modais -->
