@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Gestor - DeliveryON</title>
+    <title>Painel do Gestor - deliveryON</title>
 
     <!-- Ícones Modernos -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -11,13 +11,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* ================= VARIÁVEIS ================= */
         :root {
             --brand-primary: #ff5722;
             --brand-secondary: #e64a19;
             --bg-color: #f4f7f6;
-            --sidebar-bg: #1a1a1a;
-            --sidebar-text: #ffffff;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #333333;
             --card-bg: #ffffff;
             --text-main: #333333;
             --text-muted: #777777;
@@ -30,9 +29,8 @@
             --topbar-height: 60px;
         }
 
-        /* ================= RESET E ESTRUTURA GLOBAL ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: font-size 0.2s ease; }
         .hidden { display: none !important; }
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }
@@ -45,18 +43,27 @@
         .badge-warning { background-color: var(--warning); color: #333; }
         .badge-info { background-color: var(--info); }
 
-        /* ================= BARRA LATERAL ================= */
-        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; }
-        .sidebar-header { height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #333; padding: 10px; }
-        .sidebar-header h2 { font-weight: 800; font-size: 1.2rem; color: white; margin-bottom: 2px;}
-        .sidebar-header span { font-size: 0.8rem; color: #aaa; }
-        .nav-menu { list-style: none; padding: 15px 10px; flex: 1; overflow-y: auto; }
-        .nav-link { display: flex; align-items: center; text-decoration: none; color: #ccc; padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
-        .nav-link:hover, .nav-link.active { background-color: rgba(255, 255, 255, 0.1); color: var(--brand-primary); }
-        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; }
-        .nav-footer { padding: 15px; border-top: 1px solid #333; }
+        /* LOGOTIPO EXATO */
+        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        .on-logo-top { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
+        .on-logo-bottom { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; margin-top: 2px; }
+        @keyframes neon-pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
+            100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
+        }
+        .topbar .on-logo-container { transform: scale(0.65); }
+        .sidebar-header .on-logo-container { transform: scale(0.85); margin-top: 10px; }
 
-        /* ================= ÁREA PRINCIPAL ================= */
+        /* BARRA LATERAL */
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; border-right: 1px solid var(--border-color); box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
+        .sidebar-header { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 0 20px; background-color: #fafafa; }
+        .nav-menu { list-style: none; padding: 15px 10px; flex: 1; overflow-y: auto; }
+        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(255, 87, 34, 0.1); color: var(--brand-primary); }
+        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; color: var(--brand-primary); }
+        .nav-footer { padding: 15px; border-top: 1px solid var(--border-color); background-color: #fafafa; }
+
+        /* ÁREA PRINCIPAL */
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
         .topbar { display: none; height: var(--topbar-height); background: var(--card-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
@@ -64,9 +71,7 @@
         .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .page-title { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-        /* ================= COMPONENTES ================= */
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); min-width: 0; }
-
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
@@ -88,13 +93,12 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
-        /* Tabs */
         .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .tab-btn { background: none; border: none; padding: 10px 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; }
         .tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
         .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
 
-        /* ================= MODAIS ================= */
+        /* MODAIS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
@@ -104,13 +108,11 @@
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
         .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
 
-        /* Crachá Design */
         .cracha-container { width: 280px; margin: 0 auto; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; text-align: center; background: white; }
-        .cracha-header { background: var(--brand-primary); color: white; padding: 20px 10px; }
+        .cracha-header { background: var(--brand-primary); color: white; padding: 20px 10px; display: flex; justify-content: center; }
         .cracha-photo { width: 100px; height: 100px; background: #eee; border-radius: 50%; margin: -40px auto 10px; border: 4px solid white; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .cracha-qr { width: 120px; height: 120px; margin: 15px auto; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
 
-        /* ================= RESPONSIVIDADE ================= */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -119,29 +121,24 @@
             .content-container { padding: 15px; }
             .card { padding: 15px; margin-bottom: 15px; }
             .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
-            .page-title { font-size: 1.4rem; }
             .form-grid { grid-template-columns: 1fr; }
             .chart-grid { grid-template-columns: 1fr; }
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
-            .action-bar-mobile > *:last-child { margin-bottom: 0; }
-            .action-bar-mobile .btn { width: 100%; justify-content: center; }
-            .modal-content { width: 95%; max-height: 90vh; }
-            .modal-footer { flex-direction: column; gap: 10px; }
-            .modal-footer .btn { width: 100%; margin: 0; }
         }
     </style>
 </head>
 <body>
 
-    <!-- OVERLAY MOBILE -->
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
 
-    <!-- ================= BARRA LATERAL ================= -->
+    <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>Bella Napoli</h2>
-            <span>Gestão Retaguarda</span>
+            <div class="on-logo-container">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
+            </div>
         </div>
         <ul class="nav-menu">
             <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> Dashboard</a></li>
@@ -153,39 +150,32 @@
             <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
-            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;"><span class="nav-icon"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
+            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;"><span class="nav-icon" style="color: #ff5252;"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
         </div>
     </aside>
 
-    <!-- ================= ÁREA PRINCIPAL ================= -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="main-content">
         <header class="topbar">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
-            <h3 style="font-size: 1.1rem;">Bella Napoli</h3>
+            <div class="on-logo-container">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
+            </div>
             <div style="width: 24px;"></div>
         </header>
 
         <div class="content-container">
 
-            <!-- ================= 2.1 DASHBOARD ================= -->
+            <!-- DASHBOARD -->
             <section id="sec-dashboard" class="page-section">
-                <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-storefront"></i> Visão Geral Diária</h1>
-                </div>
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-storefront"></i> Visão Geral Diária</h1></div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                    <div class="card" style="border-top: 4px solid var(--warning);">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">Aguardando</span><h2 style="font-size: 1.8rem;">14</h2>
-                    </div>
-                    <div class="card" style="border-top: 4px solid var(--success);">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">Entregues</span><h2 style="font-size: 1.8rem;">42</h2>
-                    </div>
-                    <div class="card" style="border-top: 4px solid var(--danger);">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">Cancelados</span><h2 style="font-size: 1.8rem;">2</h2>
-                    </div>
-                    <div class="card">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">Receita Total</span><h2 style="font-size: 1.8rem;">R$ 1.620</h2>
-                    </div>
+                    <div class="card" style="border-top: 4px solid var(--warning);"><span style="color: var(--text-muted); font-size: 0.9rem;">Aguardando</span><h2 style="font-size: 1.8rem;">14</h2></div>
+                    <div class="card" style="border-top: 4px solid var(--success);"><span style="color: var(--text-muted); font-size: 0.9rem;">Entregues</span><h2 style="font-size: 1.8rem;">42</h2></div>
+                    <div class="card" style="border-top: 4px solid var(--danger);"><span style="color: var(--text-muted); font-size: 0.9rem;">Cancelados</span><h2 style="font-size: 1.8rem;">2</h2></div>
+                    <div class="card"><span style="color: var(--text-muted); font-size: 0.9rem;">Receita Total</span><h2 style="font-size: 1.8rem;">R$ 1.620</h2></div>
                 </div>
 
                 <div class="chart-grid">
@@ -200,14 +190,10 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
-                        <h3>Últimos Pedidos Recebidos</h3>
-                    </div>
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Últimos Pedidos Recebidos</h3></div>
                     <div class="table-responsive">
                         <table>
-                            <thead>
-                                <tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr>
-                            </thead>
+                            <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody>
                                 <tr>
                                     <td><strong>#1045</strong><br><span style="font-size: 0.8rem; color: #999;">20:15</span></td>
@@ -233,7 +219,7 @@
                 </div>
             </section>
 
-            <!-- ================= 2.2 PRODUTOS ================= -->
+            <!-- PRODUTOS -->
             <section id="sec-produtos" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-hamburger"></i> Gestão de Produtos</h1></div>
 
@@ -242,34 +228,34 @@
                     <form onsubmit="event.preventDefault(); alert('Produto Cadastrado!');">
                         <div class="form-grid">
                             <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-0042" readonly style="background:#f0f0f0;"></div>
-                            <div class="form-group"><label>Foto (URL ou Arquivo)</label><input type="file" class="form-control"></div>
+                            <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control"></div>
                             <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" required></div>
-                                <div class="form-group">
-                                    <label for="categoria">Categoria do Produto</label>
-                                    <select class="form-control" id="categoria" name="categoria" required>
-                                        <option value="">Selecione uma categoria</option>
-                                        <option value="hamburgueres">🍔 Hambúrgueres</option>
-                                        <option value="pizzas">🍕 Pizzas</option>
-                                        <option value="hot-dogs">🌭 Hot Dogs</option>
-                                        <option value="acompanhamentos">🍟 Acompanhamentos</option>
-                                        <option value="petiscos">🍗 Petiscos</option>
-                                        <option value="salgados">🥟 Salgados</option>
-                                        <option value="refeicoes">🥘 Refeições</option>
-                                        <option value="marmitas">🍱 Marmitas</option>
-                                        <option value="crepes">🥞 Crepes</option>
-                                        <option value="tortas-bolos">🥧 Tortas e Bolos</option>
-                                        <option value="acai">🍧 Açaí</option>
-                                        <option value="sorvetes">🍦 Sorvetes</option>
-                                        <option value="picoles">🍭 Picolés</option>
-                                        <option value="bebidas">🥤 Bebidas</option>
-                                        <option value="cafes-chas">☕ Cafés e Chás</option>
-                                        <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
-                                        <option value="milkshakes">🥛 Milkshakes</option>
-                                        <option value="sobremesas">🍰 Sobremesas</option>
-                                        <option value="combos-promocoes">🎁 Combos e Promoções</option>
-                                        <option value="outra">➕ Outra Categoria</option>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label for="categoria">Categoria do Produto</label>
+                                <select class="form-control" id="categoria" name="categoria" required>
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="hamburgueres">🍔 Hambúrgueres</option>
+                                    <option value="pizzas">🍕 Pizzas</option>
+                                    <option value="hot-dogs">🌭 Hot Dogs</option>
+                                    <option value="acompanhamentos">🍟 Acompanhamentos</option>
+                                    <option value="petiscos">🍗 Petiscos</option>
+                                    <option value="salgados">🥟 Salgados</option>
+                                    <option value="refeicoes">🥘 Refeições</option>
+                                    <option value="marmitas">🍱 Marmitas</option>
+                                    <option value="crepes">🥞 Crepes</option>
+                                    <option value="tortas-bolos">🥧 Tortas e Bolos</option>
+                                    <option value="acai">🍧 Açaí</option>
+                                    <option value="sorvetes">🍦 Sorvetes</option>
+                                    <option value="picoles">🍭 Picolés</option>
+                                    <option value="bebidas">🥤 Bebidas</option>
+                                    <option value="cafes-chas">☕ Cafés e Chás</option>
+                                    <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
+                                    <option value="milkshakes">🥛 Milkshakes</option>
+                                    <option value="sobremesas">🍰 Sobremesas</option>
+                                    <option value="combos-promocoes">🎁 Combos e Promoções</option>
+                                    <option value="outra">➕ Outra Categoria</option>
+                                </select>
+                            </div>
                             <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" required></div>
                             <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" value="999"></div>
                         </div>
@@ -304,7 +290,7 @@
                 </div>
             </section>
 
-            <!-- ================= 2.3 CLIENTES ================= -->
+            <!-- CLIENTES -->
             <section id="sec-clientes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-users"></i> Gestão de Clientes</h1></div>
 
@@ -337,7 +323,6 @@
                                     <td style="text-align: right;">
                                         <button class="btn-action" title="Editar" onclick="openModal('modalEditCliente')"><i class="ph ph-pencil-simple"></i></button>
                                         <button class="btn-action" title="Histórico de Compras" onclick="openModal('modalHistCliente')"><i class="ph ph-clock-counter-clockwise"></i></button>
-                                        <!-- Botão de Excluir Cliente Adicionado -->
                                         <button class="btn-action" title="Excluir Cliente" style="color: var(--danger);" onclick="if(confirm('Tem certeza que deseja excluir este cliente?')) alert('Cliente excluído com sucesso!');"><i class="ph ph-trash"></i></button>
                                     </td>
                                 </tr>
@@ -347,7 +332,7 @@
                 </div>
             </section>
 
-            <!-- ================= 2.7 COLABORADORES ================= -->
+            <!-- COLABORADORES (Com campos de Motoboy completo) -->
             <section id="sec-colaboradores" class="page-section hidden">
                 <div class="page-header flex justify-between align-center action-bar-mobile">
                     <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1>
@@ -392,7 +377,7 @@
                             </div>
                         </div>
 
-                        <!-- Campos Condicionais para Entregador -->
+                        <!-- CAMPOS CONDICIONAIS EXCLUSIVOS DO MOTOBOY -->
                         <div id="campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
                             <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
                             <div class="form-grid">
@@ -401,10 +386,10 @@
                                     <select class="form-control"><option>Moto</option><option>Bicicleta</option><option>Carro</option></select>
                                 </div>
                                 <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" placeholder="Ex: Honda CG 160"></div>
-                                <div class="form-group"><label>Cor</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label>Cor</label><input type="text" class="form-control" placeholder="Ex: Preta"></div>
                                 <div class="form-group"><label>Placa</label><input type="text" class="form-control" placeholder="AAA-0000"></div>
                                 <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" placeholder="Ex: Zona Sul, Centro"></div>
-                                <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control"></div>
+                                <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" placeholder="6.50"></div>
                             </div>
                         </div>
 
@@ -442,8 +427,7 @@
                                         <button class="btn-action" title="Editar" onclick="openModal('modalEditColab')"><i class="ph ph-pencil-simple"></i></button>
                                         <button class="btn-action" title="Contrato" onclick="openModal('modalContratoColab')"><i class="ph ph-scroll"></i></button>
                                         <button class="btn-action" title="Visualizar Crachá" onclick="openModal('modalCracha')"><i class="ph ph-identification-card text-info" style="color: var(--info);"></i></button>
-                                        <button class="btn-action" title="Bloquear" onclick="alert('Colaborador bloqueado.')"><i class="ph ph-lock"></i></button>
-                                        <button class="btn-action" title="Excluir" style="color: var(--danger);"><i class="ph ph-trash"></i></button>
+                                        <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="alert('Excluído!')"><i class="ph ph-trash"></i></button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -452,7 +436,7 @@
                 </div>
             </section>
 
-            <!-- ================= 2.4 RELATÓRIOS ================= -->
+            <!-- RELATÓRIOS -->
             <section id="sec-relatorios" class="page-section hidden">
                 <div class="page-header flex justify-between align-center action-bar-mobile">
                     <h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1>
@@ -507,7 +491,7 @@
                 </div>
             </section>
 
-            <!-- ================= 2.4 OUVIDORIA ================= -->
+            <!-- OUVIDORIA -->
             <section id="sec-ouvidoria" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
 
@@ -544,15 +528,15 @@
                 </div>
             </section>
 
-            <!-- ================= 2.5 CONFIGURAÇÕES ================= -->
+            <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
 
                 <div class="form-grid">
                     <div class="card">
                         <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
-                        <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" value="Bella Napoli"></div>
-                        <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" value="A melhor pizza da cidade"></div>
+                        <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" value="ON delivery"></div>
+                        <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" value="O melhor delivery da região"></div>
                         <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" value="Av. Central, 1000"></div>
                         <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" value="(11) 99999-9999"></div>
                         <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" rows="2">Seg a Dom: 18h às 23h</textarea></div>
@@ -575,7 +559,7 @@
                                 <div class="form-group"><label>Agendar Backup Automático</label>
                                     <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
                                 </div>
-                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@bellanapoli.com"></div>
+                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
                                 <div class="form-group"><label>Limpeza Automática (LGPD)</label>
                                     <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
                                 </div>
@@ -591,7 +575,7 @@
         </div>
     </main>
 
-    <!-- ================= MODAIS (TODAS AS SEÇÕES) ================= -->
+    <!-- ================= MODAIS COMPLETOS ================= -->
 
     <!-- Modais Dashboard Pedidos -->
     <div class="modal-overlay" id="modalVerPedido">
@@ -657,20 +641,6 @@
                     </table>
                 </div>
 
-                <div class="form-grid" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                    <div class="form-group" style="margin-bottom:0;"><label>Adicionar Novo Produto</label>
-                        <select class="form-control">
-                            <option value="">Selecione um produto...</option>
-                            <option>X-Burger Especial - R$ 25,00</option>
-                            <option>Batata Frita G - R$ 20,00</option>
-                            <option>Coca-Cola 2L - R$ 16,00</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0; justify-content: flex-end;">
-                        <button type="button" class="btn btn-secondary" onclick="alert('Item adicionado ao pedido!')"><i class="ph ph-plus"></i> Inserir Item</button>
-                    </div>
-                </div>
-
                 <div class="form-group mt-20"><label>Observações do Pedido</label><textarea class="form-control" rows="2">Sem cebola na pizza, por favor.</textarea></div>
             </div>
             <div class="modal-footer">
@@ -728,6 +698,7 @@
         </div>
     </div>
 
+    <!-- Modais Clientes -->
     <div class="modal-overlay" id="modalEditCliente">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Cliente</h3><button class="close-modal" onclick="closeModal('modalEditCliente')">&times;</button></div>
@@ -780,13 +751,6 @@
                                 <td>R$ 45,00</td>
                                 <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
                             </tr>
-                            <tr>
-                                <td>28/04/2026<br><span style="font-size: 0.75rem; color: #888;">#0912</span></td>
-                                <td>1x Porção de Batata Frita G</td>
-                                <td>Dinheiro</td>
-                                <td>R$ 32,00</td>
-                                <td style="text-align: right;"><span class="badge badge-success">Entregue</span></td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -813,6 +777,7 @@
         </div>
     </div>
 
+    <!-- Modais Colaboradores (Com Lógica do Motoboy Completa) -->
     <div class="modal-overlay" id="modalEditColab">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Colaborador</h3><button class="close-modal" onclick="closeModal('modalEditColab')">&times;</button></div>
@@ -872,7 +837,7 @@
             <div class="modal-body">
                 <div class="rich-text-editor" contenteditable="true">
                     <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ENTREGA</h2><br>
-                    <p>Pelo presente instrumento, a empresa <strong>Bella Napoli</strong> estabelece os termos com <strong>Carlos Pereira</strong>...</p><br>
+                    <p>Pelo presente instrumento, a empresa <strong>ON delivery</strong> estabelece os termos com <strong>Carlos Pereira</strong>...</p><br>
                     <p><em style="color: #999;">(Edite o texto do contrato livremente)</em></p>
                 </div>
             </div>
@@ -888,8 +853,10 @@
             <div class="modal-body" style="padding: 0;">
                 <div class="cracha-container" style="max-width: 100%;">
                     <div class="cracha-header">
-                        <h2 style="font-size: 1.2rem; margin-bottom: 2px;">Bella Napoli</h2>
-                        <span style="font-size: 0.75rem; font-weight: normal;">A melhor pizza da cidade</span>
+                        <div class="on-logo-container" style="transform: scale(0.85);">
+                            <span class="on-logo-top" style="color: white; text-shadow: none;">ON</span>
+                            <span class="on-logo-bottom" style="color: white;">delivery</span>
+                        </div>
                     </div>
                     <div class="cracha-photo">
                         <i class="ph-fill ph-user" style="font-size: 4rem; color: #ccc;"></i>
@@ -932,17 +899,23 @@
         </div>
     </div>
 
+
     <!-- ================= SCRIPTS ================= -->
     <script>
+
+        // Mostrar campos de Motoboy apenas se a função for selecionada
         function toggleMotoboyFields(funcao, idContainer) {
             const camposMotoboy = document.getElementById(idContainer);
-            if (funcao === 'Motoboy') {
-                camposMotoboy.classList.remove('hidden');
-            } else {
-                camposMotoboy.classList.add('hidden');
+            if (camposMotoboy) {
+                if (funcao === 'Motoboy') {
+                    camposMotoboy.classList.remove('hidden');
+                } else {
+                    camposMotoboy.classList.add('hidden');
+                }
             }
         }
 
+        // Navegação entre as telas do Dashboard (SPA)
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
@@ -958,6 +931,7 @@
             }
         }
 
+        // Mobile Sidebar Toggle
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('mobile-overlay').classList.toggle('active');
@@ -968,6 +942,7 @@
             document.getElementById('mobile-overlay').classList.remove('active');
         });
 
+        // Alternar Abas (Relatórios)
         function switchTab(btn, targetId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -975,9 +950,11 @@
             document.getElementById(targetId).classList.remove('hidden');
         }
 
+        // Controle de Modais
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
+        // Troca de Cor do Status do Pedido Dinamicamente
         function notifyStatus(selectElement) {
             const status = selectElement.value;
             if(status.includes('Aguardando')) { selectElement.style.background = '#fff3cd'; selectElement.style.color = '#856404'; }
@@ -986,6 +963,7 @@
             else if(status.includes('Entregue')) { selectElement.style.background = '#d4edda'; selectElement.style.color = '#155724'; }
         }
 
+        // Inicialização dos Gráficos (Chart.js)
         window.onload = function() {
             if(document.getElementById('chartFluxo')) {
                 new Chart(document.getElementById('chartFluxo').getContext('2d'), {
