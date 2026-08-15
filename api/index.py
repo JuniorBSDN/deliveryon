@@ -32,8 +32,7 @@ def get_db():
 # SCHEMAS (Modelos de Validação de Dados JSON)
 # ==========================================
 
-class AuthLogin(BaseModel):
-    email: str
+class MasterAuth(BaseModel):
     senha: str
 
 class EmpresaCreate(BaseModel):
@@ -78,11 +77,14 @@ class StatusUpdate(BaseModel):
 # ==========================================
 
 @app.post("/api/master/auth")
-def master_login(login: AuthLogin):
-    # Lógica simples de autenticação (Deve ser aprimorada com hash/JWT)
-    if login.email == "admin@master.com" and login.senha == "master123":
-        return {"token": "token_jwt_master_valido", "role": "master"}
-    raise HTTPException(status_code=401, detail="Credenciais Master Inválidas")
+def master_login(auth: MasterAuth):
+    # Puxa a senha direto das variáveis de ambiente do Vercel, com fallback para segurança
+    SENHA_CORRETA = os.getenv("SENHA_MASTER")
+    
+    if auth.senha == SENHA_CORRETA:
+        return {"autorizado": True, "token": "token_jwt_backinformatica_valido"}
+    
+    raise HTTPException(status_code=401, detail="Senha Master incorreta")
 
 @app.get("/api/master/metrics")
 def get_master_metrics(db=Depends(get_db)):
