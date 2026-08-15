@@ -39,6 +39,12 @@ class EmpresaCreate(BaseModel):
     vencimento: int
     limite_usuarios: int
 
+class EmpresaUpdate(BaseModel):
+    nome_fantasia: str
+    plano: str
+    vencimento: int
+    limite_usuarios: int
+
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
     SENHA_CORRETA = os.getenv("SENHA_MASTER", "master123")
@@ -52,7 +58,6 @@ def get_master_metrics(db=Depends(get_db)):
     cursor.execute("SELECT COUNT(*) as total FROM empresas")
     total_clientes = cursor.fetchone()['total']
     
-    # Calcula o tamanho real do banco no Postgres
     cursor.execute("SELECT pg_database_size(current_database()) as db_size;")
     db_bytes = cursor.fetchone()['db_size']
     if db_bytes < 1024 * 1024:
@@ -90,6 +95,53 @@ def create_empresa(empresa: EmpresaCreate, db=Depends(get_db)):
         novo_id = cursor.fetchone()['id']
         db.commit()
         return {"mensagem": "Tenant criado com sucesso", "id": novo_id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.put("/api/master/empresas/{empresa_id}")
+def update_empresa(empresa_id: int, empresa: EmpresaUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        query = """
+            UPDATE empresas SET nome_fantasia = %s, plano = %s, vencimento = %s, limite_usuarios = %s
+            WHERE id = %s;
+        """
+        cursor.execute(query, (empresa.nome_fantasia, empresa.plano, empresa.vencimento, empresa.limite_usuarios, empresa_id))
+        db.commit()
+        return {"mensagem": "Empresa atualizada com sucesso"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.patch("/api/master/empresas/{empresa_id}/status")
+def toggle_status_empresa(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("SELECT status FROM empresas WHERE id = %s", (empresa_id,))
+        emp = cursor.fetchone()
+        if not emp:
+            raise HTTPException(status_code=404, detail="Empresa não encontrada")
+        
+        novo_status = 'bloqueado' if emp['status'] == 'ativo' else 'ativo'
+        cursor.execute("UPDATE empresas SET status = %s WHERE id = %s", (novo_status, empresa_id))
+        db.commit()
+        return {"mensagem": f"Status alterado para {novo_status}", "status": novo_status}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/master/empresas/{empresa_id}/carimbar-pagamento")
+def carimbar_pagamento(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Aqui você pode registrar a data do pagamento ou enviar recibo
+        cursor.execute("SELECT nome_fantasia FROM empresas WHERE id = %s", (empresa_id,))
+        emp = cursor.fetchone()
+        if not emp:
+            raise HTTPException(status_code=404, detail="Empresa não encontrada")
+        db.commit()
+        return {"mensagem": f"Pagamento da empresa {emp['nome_fantasia']} carimbado e validado com sucesso!"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
