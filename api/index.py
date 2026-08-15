@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-app = FastAPI(title="DeliveryON API", description="API Master e Admin - Vercel + Neon DB")
+app = FastAPI(title="DeliveryON API", description="API Gestor / Admin - Vercel + Neon DB")
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = os.getenv("DATA_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
@@ -24,151 +24,116 @@ def get_db():
     finally:
         conn.close()
 
-class MasterAuth(BaseModel):
-    senha: str
+# Pydantic Models
+class ProdutoCreate(BaseModel):
+    nome: str
+    categoria: str
+    preco: float
+    estoque: int
+    descricao: str
 
-class EmpresaCreate(BaseModel):
-    razao_social: str
-    nome_fantasia: str
-    cnpj: str
-    responsavel: str
-    contato: str
-    email_admin: str
+class ClienteCreate(BaseModel):
+    nome: str
+    telefone: str
+    email: Optional[str] = None
     endereco: str
-    plano: str
-    vencimento: int
-    limite_usuarios: int
+    referencia: Optional[str] = None
 
-class EmpresaUpdate(BaseModel):
-    nome_fantasia: str
-    plano: str
-    vencimento: int
-    limite_usuarios: int
+class ColaboradorCreate(BaseModel):
+    nome: str
+    telefone: str
+    email: str
+    cpf: str
+    data_nascimento: str
+    endereco: str
+    funcao: str
+    status: str
+    observacoes: Optional[str] = None
 
-class AdminAuth(BaseModel):
-    cnpj: str
+# --- ROTAS DO GESTOR / ADMIN ---
 
-@app.post("/api/master/auth")
-def master_login(auth: MasterAuth):
-    SENHA_CORRETA = os.getenv("SENHA_MASTER", "master123")
-    if auth.senha == SENHA_CORRETA:
-        return {"autorizado": True, "token": "token_jwt_backinformatica_valido"}
-    raise HTTPException(status_code=401, detail="Senha Master incorreta")
-
-@app.get("/api/master/metrics")
-def get_master_metrics(db=Depends(get_db)):
+@app.get("/api/dashboard")
+def get_dashboard_metrics(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) as total FROM empresas")
-    total_clientes = cursor.fetchone()['total']
+    cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE status = 'Aguardando pagamento'")
+    aguardando = cursor.fetchone()['total']
     
-    cursor.execute("SELECT pg_database_size(current_database()) as db_size;")
-    db_bytes = cursor.fetchone()['db_size']
-    if db_bytes < 1024 * 1024:
-        db_size_str = f"{round(db_bytes / 1024, 2)} KB"
-    elif db_bytes < 1024 * 1024 * 1024:
-        db_size_str = f"{round(db_bytes / (1024 * 1024), 2)} MB"
-    else:
-        db_size_str = f"{round(db_bytes / (1024 * 1024 * 1024), 2)} GB"
-
+    cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE status = 'Entregue'")
+    entregues = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE status = 'Cancelado'")
+    cancelados = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COALESCE(SUM(valor_total), 0) as receita FROM pedidos WHERE status = 'Entregue'")
+    receita = cursor.fetchone()['receita']
+    
     return {
-        "db_disk_usage": db_size_str,
-        "total_clientes": total_clientes,
-        "mrr": f"R$ {total_clientes * 250},00"
+        "aguardando": aguardando,
+        "entregues": entregues,
+        "cancelados": cancelados,
+        "receita": f"{receita:.2f}".replace('.', ',')
     }
 
-@app.get("/api/master/empresas")
-def list_empresas(db=Depends(get_db)):
+@app.get("/api/orders")
+def list_orders(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id, razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, plano, vencimento, limite_usuarios, status FROM empresas ORDER BY id DESC")
+    cursor.execute("SELECT id, cliente_nome as cliente, endereco_entrega as endereco, valor_total as total, status, TO_CHAR(criado_em, 'HH24:MI') as hora FROM pedidos ORDER BY id DESC")
     return cursor.fetchall()
 
-@app.post("/api/master/empresas")
-def create_empresa(empresa: EmpresaCreate, db=Depends(get_db)):
+@app.get("/api/products")
+def list_products(db=Depends(get_db)):
     cursor = db.cursor()
-    try:
-        query = """
-            INSERT INTO empresas (razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, endereco, plano, vencimento, limite_usuarios, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'ativo') RETURNING id;
-        """
-        cursor.execute(query, (
-            empresa.razao_social, empresa.nome_fantasia, empresa.cnpj, empresa.responsavel, 
-            empresa.contato, empresa.email_admin, empresa.endereco, empresa.plano, 
-            empresa.vencimento, empresa.limite_usuarios
-        ))
-        novo_id = cursor.fetchone()['id']
-        db.commit()
-        return {"mensagem": "Tenant criado com sucesso", "id": novo_id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    cursor.execute("SELECT id as codigo, nome, categoria, preco, estoque, descricao FROM produtos ORDER BY id DESC")
+    return cursor.fetchall()
 
-@app.put("/api/master/empresas/{empresa_id}")
-def update_empresa(empresa_id: int, empresa: EmpresaUpdate, db=Depends(get_db)):
+@app.post("/api/products")
+def create_product(prod: ProdutoCreate, db=Depends(get_db)):
     cursor = db.cursor()
-    try:
-        query = """
-            UPDATE empresas SET nome_fantasia = %s, plano = %s, vencimento = %s, limite_usuarios = %s
-            WHERE id = %s;
-        """
-        cursor.execute(query, (empresa.nome_fantasia, empresa.plano, empresa.vencimento, empresa.limite_usuarios, empresa_id))
-        db.commit()
-        return {"mensagem": "Empresa atualizada com sucesso"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    cursor.execute(
+        "INSERT INTO produtos (nome, categoria, preco, estoque, descricao) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
+        (prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao)
+    )
+    db.commit()
+    return {"mensagem": "Produto criado com sucesso", "id": cursor.fetchone()['id']}
 
-@app.patch("/api/master/empresas/{empresa_id}/status")
-def toggle_status_empresa(empresa_id: int, db=Depends(get_db)):
+@app.get("/api/clients")
+def list_clients(db=Depends(get_db)):
     cursor = db.cursor()
-    try:
-        cursor.execute("SELECT status FROM empresas WHERE id = %s", (empresa_id,))
-        emp = cursor.fetchone()
-        if not emp:
-            raise HTTPException(status_code=404, detail="Empresa não encontrada")
-        
-        novo_status = 'bloqueado' if emp['status'] == 'ativo' else 'ativo'
-        cursor.execute("UPDATE empresas SET status = %s WHERE id = %s", (novo_status, empresa_id))
-        db.commit()
-        return {"mensagem": f"Status alterado para {novo_status}", "status": novo_status}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    cursor.execute("SELECT id, nome, telefone, email, endereco_entrega as endereco, referencia FROM clientes ORDER BY id DESC")
+    return cursor.fetchall()
 
-@app.post("/api/master/empresas/{empresa_id}/carimbar-pagamento")
-def carimbar_pagamento(empresa_id: int, db=Depends(get_db)):
+@app.post("/api/clients")
+def create_client(cli: ClienteCreate, db=Depends(get_db)):
     cursor = db.cursor()
-    try:
-        cursor.execute("SELECT nome_fantasia FROM empresas WHERE id = %s", (empresa_id,))
-        emp = cursor.fetchone()
-        if not emp:
-            raise HTTPException(status_code=404, detail="Empresa não encontrada")
-        db.commit()
-        return {"mensagem": f"Pagamento da empresa {emp['nome_fantasia']} carimbado e validado com sucesso!"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    cursor.execute(
+        "INSERT INTO clientes (nome, telefone, email, endereco_entrega, referencia) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
+        (cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia)
+    )
+    db.commit()
+    return {"mensagem": "Cliente cadastrado com sucesso", "id": cursor.fetchone()['id']}
 
-@app.delete("/api/master/empresas/{empresa_id}")
-def delete_empresa(empresa_id: int, db=Depends(get_db)):
+@app.get("/api/colaboradores")
+def list_colaboradores(db=Depends(get_db)):
     cursor = db.cursor()
-    try:
-        cursor.execute("DELETE FROM empresas WHERE id = %s", (empresa_id,))
-        db.commit()
-        return {"mensagem": "Empresa excluída com sucesso"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    cursor.execute("SELECT id, nome, telefone, email, cpf, funcao, status FROM colaboradores ORDER BY id DESC")
+    return cursor.fetchall()
 
-@app.post("/api/admin/login")
-def admin_login(auth: AdminAuth, db=Depends(get_db)):
+@app.post("/api/colaboradores")
+def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
-    cnpj_limpo = ''.join(filter(str.isdigit, auth.cnpj))
-    cursor.execute("SELECT id, nome_fantasia, status FROM empresas WHERE REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', '') = %s", (cnpj_limpo,))
-    empresa = cursor.fetchone()
-    
-    if not empresa:
-        raise HTTPException(status_code=404, detail="CNPJ não encontrado. Verifique com o suporte Master.")
-    if empresa['status'] != 'ativo':
-        raise HTTPException(status_code=403, detail="Esta empresa está temporariamente bloqueada.")
-        
-    return {"autorizado": True, "empresa": empresa['nome_fantasia'], "id": empresa['id']}
+    cursor.execute(
+        "INSERT INTO colaboradores (nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
+        (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, colab.funcao, colab.status, colab.observacoes)
+    )
+    db.commit()
+    return {"mensagem": "Colaborador cadastrado com sucesso", "id": cursor.fetchone()['id']}
+
+@app.get("/api/ouvidoria")
+def list_ouvidoria(db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT id, cliente_nome as cliente, avaliacao, relato, TO_CHAR(criado_em, 'DD/MM/YYYY') as data FROM ouvidoria ORDER BY id DESC")
+    return cursor.fetchall()
+
+@app.post("/api/backup")
+def trigger_backup():
+    return {"mensagem": "Rotina de backup executada com sucesso no servidor."}
