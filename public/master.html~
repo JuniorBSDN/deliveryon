@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Dashboard - DeliveryON</title>
+
+    <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* ================= VARIÁVEIS GERAIS ================= */
+        :root {
+            --brand-primary: #ff5722;
+            --brand-secondary: #e64a19;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #777777;
+            --border-color: #e0e0e0;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --sidebar-width: 260px;
+            --topbar-height: 60px;
+        }
+
+        /* ================= RESET E TIPOGRAFIA ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* ================= UTILITÁRIOS ================= */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .gap-10 { gap: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .badge-success { background-color: var(--success); }
+        .badge-danger { background-color: var(--danger); }
+        .badge-warning { background-color: var(--warning); color: #333; }
+
+        /* ================= BARRA LATERAL ================= */
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; }
+        .sidebar-header { height: 80px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 10px; }
+        .sidebar-header h2 { color: var(--brand-primary); font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; gap: 8px;}
+        .nav-menu { list-style: none; padding: 20px 15px; flex: 1; }
+        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background-color: #fcece7; color: var(--brand-primary); }
+        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
+
+        /* ================= ÁREA PRINCIPAL ================= */
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+        .topbar { display: none; height: var(--topbar-height); background: var(--sidebar-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
+        .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
+        .content-container { padding: 30px; overflow-y: auto; flex: 1; min-width: 0; }
+
+        .page-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .page-title { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        /* ================= COMPONENTES ================= */
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-width: 0; }
+
+        /* Formulários */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; }
+        .form-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(255,87,34,0.2); }
+
+        /* Botões */
+        .btn { padding: 9px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
+        .btn-action { padding: 8px; border-radius: 6px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); border-color: #ccc; }
+
+        /* Tabelas */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
+        .actions-cell { display: flex; gap: 6px; }
+
+        /* ================= LISTA AVANÇADA DE ALERTAS ================= */
+        .adv-list-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-top: 20px; }
+        .adv-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .filter-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-btn { padding: 6px 12px; border: 1px solid var(--border-color); background: #f8f9fa; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover { background: #e2e6ea; }
+        .filter-btn.active { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+        .adv-list-item { display: flex; gap: 15px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; transition: transform 0.2s, box-shadow 0.2s; background: white; align-items: center; }
+        .adv-list-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .item-icon { width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        .icon-danger { background: #ffebee; color: var(--danger); }
+        .icon-warning { background: #fff8e1; color: #ff8f00; }
+        .icon-info { background: #e3f2fd; color: #1976d2; }
+        .item-content { flex: 1; min-width: 0; }
+        .item-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+        .item-top h4 { font-size: 1rem; color: var(--text-main); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-desc { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 5px 0; }
+        .item-meta { font-size: 0.75rem; color: #999; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+        .item-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        .badge-critical { background: var(--danger); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .badge-medium { background: var(--warning); color: #333; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+
+        /* ================= MODAIS ================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+        .close-modal:hover { color: #333; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; }
+
+        /* ================= LOGO ANIMADO ================= */
+        .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
+        .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; }
+        @keyframes neon-pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
+            100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
+        }
+        .topbar .logo-wrapper { flex-direction: row; align-items: baseline; gap: 4px; }
+        .topbar .logo-on { font-size: 1.5rem; -webkit-text-stroke: 1px var(--brand-primary); }
+        .topbar .logo-delivery { font-size: 1rem; }
+
+        /* ================= RESPONSIVIDADE (FIX CELULAR) ================= */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100vw; }
+            .topbar { display: flex; }
+
+            .content-container { padding: 15px; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .page-title { font-size: 1.4rem; }
+
+            .form-grid { grid-template-columns: 1fr; }
+
+            .action-bar-mobile { flex-direction: column; align-items: stretch !important; width: 100%; }
+            .action-bar-mobile > * { width: 100%; margin-bottom: 10px; }
+            .action-bar-mobile > *:last-child { margin-bottom: 0; }
+
+            .adv-list-header { flex-direction: column; align-items: flex-start; }
+            .filter-tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+            .filter-btn { white-space: nowrap; flex-shrink: 0; }
+            .adv-list-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .item-actions { width: 100%; justify-content: flex-start; margin-top: 5px; }
+            .item-actions .btn { flex: 1; }
+
+            .modal-content { width: 95%; max-height: 90vh; }
+            .modal-footer { flex-direction: column; gap: 10px; }
+            .modal-footer .btn { width: 100%; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- OVERLAY SIDEBAR MOBILE -->
+    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
+
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header" style="height: 100px;">
+            <div class="logo-wrapper">
+                <span class="logo-on">ON</span>
+                <span class="logo-delivery">delivery</span>
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li><a class="nav-link active" onclick="navigate('dashboard', this)">
+                <span class="nav-icon"><i class="ph ph-chart-line-up"></i></span> Dashboard
+            </a></li>
+            <li><a class="nav-link" onclick="navigate('empresas', this)">
+                <span class="nav-icon"><i class="ph ph-buildings"></i></span> Empresas & Clientes
+            </a></li>
+            <li><a class="nav-link" onclick="navigate('helpdesk', this)">
+                <span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk Master
+            </a></li>
+        </ul>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="main-content">
+        <!-- TOPBAR MOBILE -->
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+
+            <div class="logo-wrapper">
+                <span class="logo-on">ON</span>
+                <span class="logo-delivery">delivery</span>
+            </div>
+
+            <div style="width: 24px;"></div>
+        </header>
+
+        <div class="content-container">
+
+            <!-- ================= TELA: 1.1 DASHBOARD ================= -->
+            <section id="sec-dashboard" class="page-section">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="ph-duotone ph-chart-pie-slice"></i> Dashboard Master</h1>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="card">
+                        <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="ph ph-hard-drives"></i> DB Disk</h3>
+                        <p style="font-size: 1.8rem; color: var(--success); font-weight: bold; margin-top: 5px;">45%</p>
+                    </div>
+                    <div class="card">
+                        <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="ph ph-users"></i> Total Clientes</h3>
+                        <p style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;">1.284</p>
+                    </div>
+                    <div class="card">
+                        <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="ph ph-activity"></i> Ativos / Bloqueados</h3>
+                        <p style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;"><span style="color:var(--success)">1.250</span> / <span style="color:var(--danger)">34</span></p>
+                    </div>
+                    <div class="card">
+                        <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="ph ph-currency-circle-dollar"></i> Receita (MRR)</h3>
+                        <p style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;">R$ 145.500</p>
+                    </div>
+                </div>
+
+                <!-- Lista Avançada de Alertas -->
+                <div class="adv-list-card">
+                    <div class="adv-list-header">
+                        <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.2rem; margin: 0;">
+                            <i class="ph-duotone ph-bell-ringing" style="color: var(--brand-primary); font-size: 1.5rem;"></i> Central de Alertas
+                        </h3>
+                        <div class="filter-tabs" id="alertFilters">
+                            <button class="filter-btn active" onclick="filterAlerts('all', this)">Todos (4)</button>
+                            <button class="filter-btn" onclick="filterAlerts('infra', this)">Infraestrutura (1)</button>
+                            <button class="filter-btn" onclick="filterAlerts('fin', this)">Financeiro (2)</button>
+                            <button class="filter-btn" onclick="filterAlerts('sup', this)">Helpdesk (1)</button>
+                        </div>
+                    </div>
+
+                    <div id="advancedAlertsList">
+                        <div class="adv-list-item alert-infra">
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <div class="item-icon icon-danger"><i class="ph ph-database"></i></div>
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <h4>Estouro de Banco de Dados</h4>
+                                        <span class="badge-critical">Crítico</span>
+                                    </div>
+                                    <p class="item-desc">O Cluster 01 (Master) atingiu 85% do espaço.</p>
+                                    <div class="item-meta"><i class="ph ph-clock"></i> Há 10 min</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn btn-danger" style="font-size: 0.8rem;"><i class="ph ph-magnifying-glass"></i> Verificar Infra</button>
+                            </div>
+                        </div>
+
+                        <div class="adv-list-item alert-fin">
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <div class="item-icon icon-warning"><i class="ph ph-invoice"></i></div>
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <h4>Bella Napoli - Vence Hoje</h4>
+                                        <span class="badge-medium">Atenção</span>
+                                    </div>
+                                    <p class="item-desc">Plano Pro (20 usuários). Valor: R$ 250,00.</p>
+                                    <div class="item-meta"><i class="ph ph-clock"></i> Hoje, 08:00</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i> Gerar Pix</button>
+                                <button class="btn btn-secondary" style="font-size: 0.8rem;" onclick="dismissListItem(this)"><i class="ph ph-check"></i> Dispensar</button>
+                            </div>
+                        </div>
+
+                        <div class="adv-list-item alert-sup">
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <div class="item-icon icon-info"><i class="ph ph-headset"></i></div>
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <h4>Sushi House - Integração iFood</h4>
+                                        <span class="badge-medium">SLA Ativo</span>
+                                    </div>
+                                    <p class="item-desc">Pedidos do iFood não caem no PDV.</p>
+                                    <div class="item-meta"><i class="ph ph-clock"></i> Há 2 horas</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn btn-primary" style="font-size: 0.8rem;" onclick="navigate('helpdesk', document.querySelectorAll('.nav-link')[2])"><i class="ph ph-wrench"></i> Gerar O.S.</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TELA: 1.3 EMPRESAS & CLIENTES UNIFICADOS ================= -->
+            <section id="sec-empresas" class="page-section hidden">
+                <div class="page-header flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
+                    <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas & Clientes</h1>
+                    <div class="flex gap-10 action-bar-mobile">
+                        <input type="text" class="form-control" placeholder="Busca avançada...">
+                        <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir</button>
+                        <button class="btn btn-primary" onclick="toggleCadastroForm()"><i class="ph ph-plus" id="btn-novo-icon"></i> <span id="btn-novo-text">Novo Cliente</span></button>
+                    </div>
+                </div>
+
+                <!-- Formulário de Novo Cliente / Empresa (Oculto por padrão, aparece ao clicar no botão acima) -->
+                <div class="card hidden" id="card-novo-cliente">
+                    <h3 class="mb-20" style="display: flex; align-items: center; gap: 8px; color: var(--brand-primary);"><i class="ph ph-user-plus"></i> Cadastro de Nova Empresa / Cliente</h3>
+                    <form onsubmit="event.preventDefault(); alert('Cliente/Empresa cadastrado com sucesso!'); toggleCadastroForm();">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Razão Social</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Nome Fantasia</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>CNPJ</label><input type="text" class="form-control" placeholder="00.000.000/0001-00" required></div>
+                            <div class="form-group"><label>Responsável</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Contato (Telefone/WhatsApp)</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" class="form-control" required></div>
+                        </div>
+                        <div class="form-group"><label>Endereço Completo</label><input type="text" class="form-control" required></div>
+
+                        <h3 class="mb-20 mt-20" style="border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="ph-duotone ph-file-text"></i> Contrato e Limites</h3>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Plano Contratado</label>
+                                <select class="form-control">
+                                    <option>Basic (Até 5 usuários)</option>
+                                    <option>Pro (Até 20 usuários)</option>
+                                    <option>Enterprise (Ilimitado)</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Data de Contratação</label><input type="date" class="form-control" required></div>
+                            <div class="form-group"><label>Dia de Vencimento</label><input type="number" class="form-control" min="1" max="31" placeholder="Ex: 15" required></div>
+                            <div class="form-group"><label>Status Inicial</label>
+                                <select class="form-control"><option value="ativo">Ativo</option><option value="bloqueado">Bloqueado</option></select>
+                            </div>
+                            <div class="form-group"><label>Qtd. Usuários Permitidos</label><input type="number" class="form-control" required></div>
+                            <div class="form-group"><label>Qtd. Unidades (Filiais)</label><input type="number" class="form-control" required></div>
+                        </div>
+
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                            <button type="button" class="btn btn-outline" onclick="toggleCadastroForm()"><i class="ph ph-x"></i> Cancelar</button>
+                            <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cadastro</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabela de Empresas / Clientes Existentes -->
+                <div class="card" style="padding: 0;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome Fantasia</th>
+                                    <th>CNPJ / CPF</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Ações do Master</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Pizzaria Bella Napoli</strong></td>
+                                    <td>12.345.678/0001-99</td>
+                                    <td><span class="badge badge-success" id="status-1">Ativo</span></td>
+                                    <td class="actions-cell" style="justify-content: flex-end;">
+                                        <button class="btn-action" title="Carimbo de Pagamento" onclick="actionCarimbo()"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>
+                                        <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
+                                        <button class="btn-action" title="Ativar/Desativar" onclick="actionToggleStatus('status-1')"><i class="ph ph-arrows-clockwise"></i></button>
+                                        <button class="btn-action" title="Editar" onclick="openModal('modalEditar')"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
+                                        <button class="btn-action" title="Histórico" onclick="openModal('modalHistorico')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                        <button class="btn-action" title="Excluir" onclick="actionExcluir(this)"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Burger King - Centro</strong></td>
+                                    <td>98.765.432/0001-11</td>
+                                    <td><span class="badge badge-danger" id="status-2">Bloqueado</span></td>
+                                    <td class="actions-cell" style="justify-content: flex-end;">
+                                        <button class="btn-action" title="Carimbo de Pagamento" onclick="actionCarimbo()"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>
+                                        <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
+                                        <button class="btn-action" title="Ativar/Desativar" onclick="actionToggleStatus('status-2')"><i class="ph ph-arrows-clockwise"></i></button>
+                                        <button class="btn-action" title="Editar" onclick="openModal('modalEditar')"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
+                                        <button class="btn-action" title="Histórico" onclick="openModal('modalHistorico')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                        <button class="btn-action" title="Excluir" onclick="actionExcluir(this)"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TELA: 1.5 HELPDESK ================= -->
+            <section id="sec-helpdesk" class="page-section hidden">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk Master</h1>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="card" style="text-align: center;">
+                        <h4 style="color: var(--text-muted); font-size: 0.9rem;">Abertos</h4>
+                        <h2 style="color:var(--danger); font-size: 2rem;">12</h2>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <h4 style="color: var(--text-muted); font-size: 0.9rem;">Em Atendimento</h4>
+                        <h2 style="color:var(--warning); font-size: 2rem;">5</h2>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <h4 style="color: var(--text-muted); font-size: 0.9rem;">Resolvidos</h4>
+                        <h2 style="color:var(--success); font-size: 2rem;">148</h2>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <h4 style="color: var(--text-muted); font-size: 0.9rem;">SLA / T. Médio</h4>
+                        <h2 style="font-size: 1.6rem; color: var(--text-main); margin-top: 5px;">98% <span style="font-size: 1rem; font-weight: normal;">/ 1h20</span></h2>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex justify-between align-center mb-20 action-bar-mobile" style="gap: 10px;">
+                        <div class="flex gap-10 action-bar-mobile" style="width: 100%;">
+                            <input type="date" class="form-control">
+                            <input type="date" class="form-control">
+                            <button class="btn btn-secondary"><i class="ph ph-funnel"></i> Buscar</button>
+                        </div>
+                        <button class="btn btn-outline" style="width: 100%;"><i class="ph ph-printer"></i> Imprimir Resultado</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente / Empresa</th>
+                                    <th>Informação (Resumo)</th>
+                                    <th>Status (Mudar)</th>
+                                    <th style="text-align: right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Sushi House</strong></td>
+                                    <td>Integração iFood travada no PDV.</td>
+                                    <td>
+                                        <select class="form-control" style="padding: 6px; font-size: 0.85rem;">
+                                            <option>Aberto</option>
+                                            <option selected>Análise/Correções</option>
+                                            <option>Em Produção</option>
+                                        </select>
+                                    </td>
+                                    <td class="actions-cell" style="justify-content: flex-end;">
+                                        <button class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalConcluirChamado')"><i class="ph ph-check"></i></button>
+                                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalCancelarChamado')"><i class="ph ph-x"></i></button>
+                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('modalHistoricoChamado')"><i class="ph ph-clock"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ================= MODAIS ================= -->
+
+    <!-- Modal: PIX -->
+    <div class="modal-overlay" id="modalPix">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-qr-code text-brand-primary" style="color: var(--brand-primary);"></i> Cobrança PIX</h3>
+                <button class="close-modal" onclick="closeModal('modalPix')">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="color: var(--success); font-weight: 500; font-size: 0.9rem; margin-bottom: 15px;"><i class="ph-fill ph-check-circle"></i> Notificação enviada para a tela do cliente.</p>
+                <div style="width: 200px; height: 200px; background: #f8f9fa; margin: 0 auto 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #ccc; border-radius: 8px;">
+                    <i class="ph ph-qr-code" style="font-size: 4rem; color: #ccc;"></i>
+                    <span style="font-size: 0.8rem; color: #999; margin-top: 10px;">Preview do QR Code</span>
+                </div>
+                <input type="text" class="form-control" value="00020126580014br.gov.bcb.pix..." readonly style="width: 100%; text-align: center; background: #f9f9f9;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="alert('Código Copiado!'); closeModal('modalPix')"><i class="ph ph-copy"></i> Copiar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Empresa / Cliente (COMPLETO) -->
+    <div class="modal-overlay" id="modalEditar">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil-simple" style="color: var(--brand-primary);"></i> Editar Empresa / Cliente</h3>
+                <button class="close-modal" onclick="closeModal('modalEditar')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Razão Social</label><input type="text" class="form-control" value="Pizzaria Bella Napoli Ltda"></div>
+                    <div class="form-group"><label>Nome Fantasia</label><input type="text" class="form-control" value="Pizzaria Bella Napoli"></div>
+                    <div class="form-group"><label>CNPJ</label><input type="text" class="form-control" value="12.345.678/0001-99"></div>
+                    <div class="form-group"><label>Responsável</label><input type="text" class="form-control" value="José Airton"></div>
+                    <div class="form-group"><label>Contato (Telefone/WhatsApp)</label><input type="text" class="form-control" value="(11) 99999-9999"></div>
+                    <div class="form-group"><label>Email</label><input type="email" class="form-control" value="contato@bellanapoli.com"></div>
+                </div>
+                <div class="form-group"><label>Endereço Completo</label><input type="text" class="form-control" value="Av. Central, 1000 - Centro"></div>
+
+                <h4 class="mb-20 mt-20" style="border-bottom: 1px solid #eee; padding-bottom: 8px; color: var(--brand-primary);"><i class="ph ph-file-text"></i> Contrato e Limites Atuais</h4>
+                <div class="form-grid">
+                    <div class="form-group"><label>Plano Contratado</label>
+                        <select class="form-control">
+                            <option>Basic (Até 5 usuários)</option>
+                            <option selected>Pro (Até 20 usuários)</option>
+                            <option>Enterprise (Ilimitado)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Dia de Vencimento</label><input type="number" class="form-control" value="15"></div>
+                    <div class="form-group"><label>Status do Sistema</label>
+                        <select class="form-control">
+                            <option value="ativo" selected>Ativo</option>
+                            <option value="bloqueado">Bloqueado</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Qtd. Usuários Permitidos</label><input type="number" class="form-control" value="20"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalEditar')">Cancelar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalEditar'); alert('Alterações salvas com sucesso!')"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Contrato -->
+    <div class="modal-overlay" id="modalContrato">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-scroll" style="color: var(--brand-primary);"></i> Gerar Contrato SaaS</h3>
+                <button class="close-modal" onclick="closeModal('modalContrato')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="rich-text-editor" contenteditable="true">
+                    <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE SOFTWARE (SaaS)</h2>
+                    <br>
+                    <p>Pelo presente instrumento, a <strong>DeliveryON</strong> estabelece os termos de uso com a empresa <strong>[NOME DA EMPRESA]</strong>...</p>
+                    <br><p><em style="color: #999;">(Edite o texto livremente antes de enviar)</em></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalContrato')">Cancelar</button>
+                <button class="btn btn-primary" onclick="closeModal('modalContrato'); alert('Contrato salvo e enviado para o cliente.')"><i class="ph ph-paper-plane-tilt"></i> Salvar e Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Histórico de Pagamentos -->
+    <div class="modal-overlay" id="modalHistorico">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-clock-counter-clockwise" style="color: var(--brand-primary);"></i> Histórico Financeiro</h3>
+                <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table style="width: 100%;">
+                    <tr><th>Data</th><th>Valor</th><th>Status</th></tr>
+                    <tr><td>15/10/2023</td><td>R$ 150,00</td><td><span class="badge badge-success">Pago</span></td></tr>
+                    <tr><td>15/09/2023</td><td>R$ 150,00</td><td><span class="badge badge-success">Pago</span></td></tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais: Helpdesk -->
+    <div class="modal-overlay" id="modalConcluirChamado">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-check-circle text-success" style="color: var(--success);"></i> Concluir Chamado</h3>
+                <button class="close-modal" onclick="closeModal('modalConcluirChamado')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Técnico Responsável</label>
+                    <input type="text" class="form-control" placeholder="Nome do Técnico">
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 15px;">
+                    <input type="checkbox" id="envia-comprovante" checked style="width: 16px; height: 16px;">
+                    <label for="envia-comprovante" style="margin: 0; font-weight: normal; cursor: pointer;">Enviar comprovante de atendimento</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalConcluirChamado')">Cancelar</button>
+                <button class="btn btn-success" onclick="closeModal('modalConcluirChamado'); alert('Chamado concluído!')"><i class="ph ph-check"></i> Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalCancelarChamado">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-warning-circle text-danger" style="color: var(--danger);"></i> Cancelar Chamado</h3>
+                <button class="close-modal" onclick="closeModal('modalCancelarChamado')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Motivo do Cancelamento</label>
+                    <textarea class="form-control" rows="4" placeholder="Reportar motivo..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalCancelarChamado')">Voltar</button>
+                <button class="btn btn-danger" onclick="closeModal('modalCancelarChamado'); alert('Chamado cancelado.')"><i class="ph ph-paper-plane-tilt"></i> Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalHistoricoChamado">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-clock" style="color: var(--brand-primary);"></i> Histórico do Chamado</h3>
+                <button class="close-modal" onclick="closeModal('modalHistoricoChamado')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="flex gap-10 mb-20 action-bar-mobile">
+                    <input type="date" class="form-control">
+                    <button class="btn btn-secondary"><i class="ph ph-funnel"></i> Filtrar</button>
+                </div>
+                <div style="border-left: 2px solid var(--brand-primary); padding-left: 15px; margin-bottom: 20px; position: relative;">
+                    <div style="position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: var(--brand-primary); border-radius: 50%;"></div>
+                    <small class="text-muted"><i class="ph ph-clock"></i> Hoje, 10:30</small>
+                    <p style="margin-top: 5px;">Status alterado para: <strong>Análise/Correções</strong></p>
+                </div>
+                <div style="border-left: 2px solid #ccc; padding-left: 15px; position: relative;">
+                    <div style="position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: #ccc; border-radius: 50%;"></div>
+                    <small class="text-muted"><i class="ph ph-clock"></i> Ontem, 16:45</small>
+                    <p style="margin-top: 5px;">Chamado aberto pelo cliente via painel. Erro no PDV.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script>
+        // Navegação SPA
+        function navigate(sectionId, clickedElement) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            if(clickedElement) clickedElement.classList.add('active');
+
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Toggle do Formulário de Novo Cliente na tela de Empresas
+        function toggleCadastroForm() {
+            const formCard = document.getElementById('card-novo-cliente');
+            const btnText = document.getElementById('btn-novo-text');
+            const btnIcon = document.getElementById('btn-novo-icon');
+
+            formCard.classList.toggle('hidden');
+
+            if(!formCard.classList.contains('hidden')) {
+                btnText.innerText = 'Fechar Formulário';
+                btnIcon.className = 'ph ph-x';
+                formCard.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                btnText.innerText = 'Novo Cliente';
+                btnIcon.className = 'ph ph-plus';
+            }
+        }
+
+        // Toggle Sidebar Mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('mobile-overlay').classList.toggle('active');
+        }
+
+        document.getElementById('mobile-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('mobile-overlay').classList.remove('active');
+        });
+
+        // Modais
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        // Ações da Tabela e Alertas
+        function actionCarimbo() { alert("Autenticando pagamento...\n✅ Carimbado!\n📧 Recibo enviado ao cliente."); }
+
+        function actionToggleStatus(elementId) {
+            const badge = document.getElementById(elementId);
+            if(badge.innerText === 'Ativo') {
+                badge.innerText = 'Bloqueado';
+                badge.className = 'badge badge-danger';
+            } else {
+                badge.innerText = 'Ativo';
+                badge.className = 'badge badge-success';
+            }
+        }
+
+        function actionExcluir(btnElement) {
+            if(confirm("Deseja excluir esta empresa e todos os dados vinculados?")) {
+                const tr = btnElement.closest('tr');
+                tr.style.opacity = '0.5';
+                setTimeout(() => { tr.remove(); }, 300);
+            }
+        }
+
+        function filterAlerts(category, btnElement) {
+            document.querySelectorAll('#alertFilters .filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            document.querySelectorAll('.adv-list-item').forEach(item => {
+                if (category === 'all' || item.classList.contains('alert-' + category)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function dismissListItem(btnElement) {
+            const item = btnElement.closest('.adv-list-item');
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(20px)';
+            setTimeout(() => { item.remove(); }, 300);
+        }
+    </script>
+</body>
+</html>
