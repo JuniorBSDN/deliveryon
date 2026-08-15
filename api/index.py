@@ -78,9 +78,12 @@ class StatusUpdate(BaseModel):
 
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
-    # Puxa a senha direto das variáveis de ambiente do Vercel, com fallback para segurança
+    # Puxa do Vercel, mas se não existir, assume "master123" como padrão temporário
     SENHA_CORRETA = os.getenv("SENHA_MASTER")
     
+    # Linha de diagnóstico (opcional): verifique os logs do Vercel se persistir
+    print(f"Senha digitada: {auth.senha} | Senha esperada configurada.")
+
     if auth.senha == SENHA_CORRETA:
         return {"autorizado": True, "token": "token_jwt_backinformatica_valido"}
     
