@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-        /* ================= VARIÁVEIS GERAIS (Padrão deliveryON Master) ================= */
+        /* ================= VARIÁVEIS GERAIS ================= */
         :root {
             --brand-primary: #ff5722;
             --brand-secondary: #e64a19;
@@ -54,6 +54,7 @@
         .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
         .nav-link:hover, .nav-link.active { background-color: #fcece7; color: var(--brand-primary); }
         .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
+        .nav-footer { padding: 15px; border-top: 1px solid var(--border-color); background-color: #fafafa; }
 
         /* ================= ÁREA PRINCIPAL ================= */
         .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; min-width: 0; }
@@ -66,8 +67,8 @@
 
         /* ================= COMPONENTES ================= */
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-width: 0; }
-
-        /* Formulários */
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
         .form-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(255,87,34,0.2); }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
@@ -86,7 +87,7 @@
         #mapa-rota { height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px; }
 
         /* ================= MODAIS ================= */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; backdrop-filter: blur(5px); }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
@@ -96,7 +97,7 @@
         .modal-body { padding: 20px; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
 
-        /* ================= LOGO ANIMADO IDÊNTICO AO MASTER ================= */
+        /* ================= LOGO ANIMADO ================= */
         .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
         .logo-on { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
         .logo-delivery { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; }
@@ -146,7 +147,34 @@
     <!-- OVERLAY SIDEBAR MOBILE -->
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none;"></div>
 
-    <!-- BARRA LATERAL (Padrão DeliveryON Master) -->
+    <!-- ================= MODAL DE LOGIN DO ENTREGADOR ================= -->
+    <div class="modal-overlay" id="modalLoginEntregador" style="z-index: 9999; display: flex;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-top: 30px;">
+                <div class="logo-wrapper">
+                    <span class="logo-on">ON</span>
+                    <span class="logo-delivery" style="font-size: 1rem;">Painel do Motoboy</span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <form id="ent-form-login" onsubmit="realizarLoginEntregador(event)">
+                    <div class="form-group">
+                        <label>Telefone Cadastrado</label>
+                        <input type="tel" id="ent-login-telefone" class="form-control" required placeholder="(11) 97777-6666">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha / CPF</label>
+                        <input type="password" id="ent-login-senha" class="form-control" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="btn-login-ent" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px;">
+                        <i class="ph ph-motorcycle"></i> Acessar Corridas
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header" style="height: 100px;">
             <div class="logo-wrapper">
@@ -162,6 +190,11 @@
                 <span class="nav-icon"><i class="ph ph-wallet"></i></span> Extrato do Dia
             </a></li>
         </ul>
+        <div class="nav-footer">
+            <button class="btn btn-outline" style="width: 100%; color: var(--danger);" onclick="fazerLogoutEntregador()">
+                <i class="ph ph-sign-out"></i> Encerrar Turno
+            </button>
+        </div>
     </aside>
 
     <!-- ÁREA PRINCIPAL -->
@@ -182,7 +215,7 @@
             <section id="sec-rotas" class="page-section">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-map-pin"></i> Rotas de Entrega Ativas</h1>
-                    <button class="btn btn-secondary" onclick="location.reload()"><i class="ph ph-arrows-clockwise"></i> Atualizar Rotas</button>
+                    <button class="btn btn-secondary" onclick="carregarRotasAtivas()"><i class="ph ph-arrows-clockwise"></i> Atualizar Rotas</button>
                 </div>
 
                 <!-- Indicador do Entregador Logado -->
@@ -190,64 +223,32 @@
                     <div class="flex justify-between align-center" style="flex-wrap: wrap; gap: 10px;">
                         <div>
                             <span style="font-size: 0.8rem; color: #aaa; text-transform: uppercase; font-weight: bold;">Entregador em Turno</span>
-                            <h2 style="font-size: 1.4rem; margin-top: 2px;">Carlos Pereira</h2>
+                            <h2 id="ent-nome-logado" style="font-size: 1.4rem; margin-top: 2px;">Carregando...</h2>
                         </div>
                         <div>
-                            <span class="badge badge-success" style="font-size: 0.9rem; padding: 6px 12px;"><i class="ph ph-check-circle"></i> Disponível</span>
+                            <span class="badge badge-success" style="font-size: 0.9rem; padding: 6px 12px; cursor: pointer;" id="ent-status-badge" onclick="toggleStatusTrabalho()"><i class="ph ph-check-circle"></i> Disponível</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card de Rota Interativa com Mapa Gratuito -->
-                <div class="card" id="card-pedido-1045">
-                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                        <div>
-                            <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #1045</span>
-                            <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: João Silva</h3>
-                        </div>
-                        <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às 20:15</span>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço:</p>
-                        <p style="color: var(--text-muted); font-size: 0.95rem;" id="end-1045">Rua das Flores, 123 - Centro (Próximo à praça central)</p>
-                    </div>
-
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Total a Receber</span>
-                            <h4 style="font-size: 1.1rem; color: var(--text-main);" id="val-1045">R$ 85,90 <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(PIX / Pago)</span></h4>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa (Comissão)</span>
-                            <h4 style="font-size: 1.1rem; color: var(--success);">R$ 6,50</h4>
-                        </div>
-                    </div>
-
-                    <!-- MAPA GRATUITO OPENSTREETMAP -->
-                    <div class="form-group">
-                        <label><i class="ph ph-compass"></i> Rota GPS Integrada (Gratuita)</label>
-                        <div id="mapa-rota"></div>
-                    </div>
-
-                    <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
-                        <a href="https://maps.google.com/?q=Rua+das+Flores+123+Centro" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
-                        <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('1045', 'João Silva', 'R$ 85,90')"><i class="ph ph-check-circle"></i> Concluir / Entregue</button>
-                    </div>
+                <!-- Container Dinâmico de Pedidos -->
+                <div id="ent-lista-rotas">
+                    <!-- Cards injetados via JS -->
                 </div>
+
             </section>
 
             <!-- ================= TELA: EXTRATO DO DIA ================= -->
             <section id="sec-extrato" class="page-section hidden">
                 <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-wallet"></i> Extrato de Repasses e Atendimentos</h1>
+                    <h1 class="page-title"><i class="ph-duotone ph-wallet"></i> Extrato de Repasses</h1>
                     <button class="btn btn-primary no-print" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Relatório</button>
                 </div>
 
-                <!-- Filtros de Busca por Data, Mês e Ano -->
+                <!-- Filtros de Busca -->
                 <div class="card no-print">
                     <h3 style="font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;"><i class="ph ph-funnel"></i> Filtrar Atendimentos</h3>
-                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="form-grid">
                         <div class="form-group">
                             <label>Data Específica</label>
                             <input type="date" id="filtro-data" class="form-control" onchange="filtrarExtrato()">
@@ -321,16 +322,16 @@
                     <div style="width: 60px; height: 60px; background: #e8f5e9; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 10px;">
                         <i class="ph ph-check"></i>
                     </div>
-                    <h4 style="font-size: 1.1rem; color: var(--text-main);">Entrega realizada com sucesso!</h4>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">O cliente precisa de um comprovante digital de pagamento?</p>
+                    <h4 style="font-size: 1.1rem; color: var(--text-main);">Confirmar entrega ao cliente?</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">O sistema notificará a loja e atualizará seu extrato.</p>
                 </div>
                 <input type="hidden" id="modal-pedido-id">
                 <input type="hidden" id="modal-cliente-nome">
                 <input type="hidden" id="modal-pedido-valor">
             </div>
             <div class="modal-footer" style="flex-direction: column; gap: 8px;">
-                <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="executarConclusao(true)"><i class="ph ph-whatsapp-logo"></i> Enviar Comprovante e Concluir</button>
-                <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="executarConclusao(false)">Apenas Concluir</button>
+                <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="executarConclusao(true)"><i class="ph ph-whatsapp-logo"></i> Enviar Comprovante no WhatsApp</button>
+                <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="executarConclusao(false)">Apenas Concluir no Sistema</button>
             </div>
         </div>
     </div>
@@ -338,19 +339,12 @@
     <!-- Leaflet JS (Biblioteca do Mapa Gratuito) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Plugin VLibras -->
-    <div vw class="enabled">
-        <div vw-access-button class="active"></div>
-        <div vw-plugin-wrapper>
-            <div class="vw-plugin-top-wrapper"></div>
-        </div>
-    </div>
-    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
     <script>
-        new window.VLibras.Widget('https://vlibras.gov.br/app');
-    </script>
+        // CONFIGURAÇÕES GLOBAIS DA API
+        const API_BASE_URL = '/api/entregador'; 
+        let mapaInstancia = null;
 
-    <script>
         // Acessibilidade - Tamanho da Fonte
         let currentFontSize = 100;
         function changeFontSize(step) {
@@ -360,7 +354,238 @@
             document.body.style.fontSize = currentFontSize + '%';
         }
 
-        // Navegação SPA entre abas do Motoboy
+        // LÓGICA DE AUTENTICAÇÃO
+        document.addEventListener("DOMContentLoaded", () => {
+            verificarAcessoEntregador();
+        });
+
+        function verificarAcessoEntregador() {
+            const token = localStorage.getItem('deliveryon_entregador_token');
+            const modalLogin = document.getElementById('modalLoginEntregador');
+            
+            if (!token) {
+                modalLogin.classList.add('active');
+            } else {
+                modalLogin.classList.remove('active');
+                inicializarPainelEntregador();
+            }
+        }
+
+        async function realizarLoginEntregador(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login-ent');
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
+            btn.disabled = true;
+
+            const telefone = document.getElementById('ent-login-telefone').value;
+            const senha = document.getElementById('ent-login-senha').value;
+
+            /* FETCH REAL COM A API PYTHON/NEON:
+            const req = await fetch('/api/auth/entregador', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telefone, senha })
+            });
+            ... */
+
+            setTimeout(() => {
+                localStorage.setItem('deliveryon_entregador_token', 'token_motoboy_valido');
+                localStorage.setItem('deliveryon_entregador_nome', 'Carlos Pereira');
+                verificarAcessoEntregador();
+                btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
+                btn.disabled = false;
+            }, 1000);
+        }
+
+        function fazerLogoutEntregador() {
+            localStorage.removeItem('deliveryon_entregador_token');
+            localStorage.removeItem('deliveryon_entregador_nome');
+            window.location.reload();
+        }
+
+        function inicializarPainelEntregador() {
+            const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
+            document.getElementById('ent-nome-logado').textContent = nome;
+            carregarRotasAtivas();
+        }
+
+        function toggleStatusTrabalho() {
+            const badge = document.getElementById('ent-status-badge');
+            if (badge.innerText.includes('Disponível')) {
+                badge.innerHTML = '<i class="ph ph-prohibit"></i> Pausado';
+                badge.className = 'badge badge-warning';
+                // Requisição PUT /api/entregador/status -> 'pausado'
+            } else {
+                badge.innerHTML = '<i class="ph ph-check-circle"></i> Disponível';
+                badge.className = 'badge badge-success';
+                // Requisição PUT /api/entregador/status -> 'disponivel'
+            }
+        }
+
+        // CARREGAR ROTAS DA API
+        async function carregarRotasAtivas() {
+            const container = document.getElementById('ent-lista-rotas');
+            container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando rotas...</div>';
+
+            /* FETCH REAL:
+            const req = await fetch('/api/entregador/rotas', { headers: { Authorization: `Bearer ${token}` }});
+            const rotas = await req.json();
+            */
+
+            setTimeout(() => {
+                const rotasMock = [
+                    { id: '1045', cliente: 'João Silva', endereco: 'Rua das Flores, 123 - Centro', valor: '85,90', status_pag: 'PIX / Pago', taxa: '6,50', hora: '20:15', lat: -0.9270, lng: -48.1390 }
+                ];
+
+                container.innerHTML = '';
+                rotasMock.forEach(rota => {
+                    container.innerHTML += `
+                        <div class="card" id="card-pedido-${rota.id}">
+                            <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                <div>
+                                    <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
+                                    <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
+                                </div>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora}</span>
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
+                                <p style="color: var(--text-muted); font-size: 0.95rem;" id="end-${rota.id}">${rota.endereco}</p>
+                            </div>
+
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
+                                    <h4 style="font-size: 1.1rem; color: var(--text-main);" id="val-${rota.id}">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag})</span></h4>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
+                                    <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa}</h4>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
+                                <div id="mapa-rota" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
+                            </div>
+
+                            <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
+                                <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
+                                <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Inicializa o Mapa após injetar o HTML
+                inicializarMapaGps(rotasMock[0].lat, rotasMock[0].lng, rotasMock[0].endereco);
+
+            }, 800);
+        }
+
+        // INTEGRAÇÃO LEAFLET (Mapa Gratuito OpenStreetMap)
+        function inicializarMapaGps(latCliente, lngCliente, endereco) {
+            // Coordenadas fictícias da Loja (Base na região)
+            const latLoja = -0.9234; 
+            const lngLoja = -48.1321;
+
+            if (mapaInstancia !== null) {
+                mapaInstancia.remove();
+            }
+
+            mapaInstancia = L.map('mapa-rota').setView([latCliente, lngCliente], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapaInstancia);
+
+            // Marcador Loja
+            L.marker([latLoja, lngLoja]).addTo(mapaInstancia)
+                .bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
+
+            // Marcador Cliente
+            L.marker([latCliente, lngCliente]).addTo(mapaInstancia)
+                .bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
+        }
+
+        // FLUXO DE CONCLUSÃO DE ENTREGA (POST PARA API)
+        function abrirModalConclusao(id, cliente, valor) {
+            document.getElementById('modal-pedido-id').value = id;
+            document.getElementById('modal-cliente-nome').value = cliente;
+            document.getElementById('modal-pedido-valor').value = valor;
+            openModal('modalComprovante');
+        }
+
+        async function executarConclusao(enviarComprovante) {
+            const id = document.getElementById('modal-pedido-id').value;
+            const cliente = document.getElementById('modal-cliente-nome').value;
+            const valor = document.getElementById('modal-pedido-valor').value;
+
+            // PREPARA PAYLOAD PARA O PYTHON (Baixa no BD Neon)
+            const payloadBaixa = {
+                pedido_id: id,
+                status: 'entregue',
+                data_conclusao: new Date().toISOString()
+            };
+            console.log("Enviando Baixa para API:", payloadBaixa);
+
+            closeModal('modalComprovante');
+
+            if (enviarComprovante) {
+                const mensagem = `*COMPROVANTE DE ENTREGA - DELIVERYON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso pelo motoboy Carlos.\n\nAgradecemos a preferência!`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
+            }
+
+            alert(`✅ Baixa do Pedido #${id} enviada para o banco de dados com sucesso!`);
+
+            // Remove o card da rota
+            const card = document.getElementById('card-pedido-' + id);
+            if(card) {
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.remove();
+                    if(document.getElementById('ent-lista-rotas').innerHTML.trim() === '') {
+                        document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
+                    }
+                }, 300);
+            }
+        }
+
+        // SISTEMA DE FILTRO DO EXTRATO (Consumo GET /api/entregador/extrato)
+        function filtrarExtrato() {
+            const dataFiltro = document.getElementById('filtro-data').value; 
+            const mesFiltro = document.getElementById('filtro-mes').value;   
+            const anoFiltro = document.getElementById('filtro-ano').value;   
+
+            const linhas = document.querySelectorAll('#tabela-extrato tr');
+            let qtdVisiveis = 0;
+            let valorTotal = 0;
+
+            linhas.forEach(linha => {
+                const dataLinha = linha.getAttribute('data-data'); 
+                const [anoL, mesL, diaL] = dataLinha.split('-');
+
+                let match = true;
+                if (dataFiltro && dataLinha !== dataFiltro) match = false;
+                if (mesFiltro && mesL !== mesFiltro) match = false;
+                if (anoFiltro && anoL !== anoFiltro) match = false;
+
+                if (match) {
+                    linha.style.display = '';
+                    qtdVisiveis++;
+                    valorTotal += 6.50; // Valor fixo simulado
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
+            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+        }
+
+        // NAVEGAÇÃO SPA E MODAIS
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
@@ -376,7 +601,6 @@
             }
         }
 
-        // Toggle Sidebar Mobile
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -389,98 +613,8 @@
             document.getElementById('mobile-overlay').style.display = 'none';
         });
 
-        // Modais
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
-
-        // Inicialização do Mapa Gratuito OpenStreetMap focado na rota
-        document.addEventListener("DOMContentLoaded", function() {
-            const latRestaurante = -0.9234;
-            const lngRestaurante = -48.1321;
-
-            const map = L.map('mapa-rota').setView([latRestaurante, lngRestaurante], 14);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            L.marker([latRestaurante, lngRestaurante]).addTo(map)
-                .bindPopup('<b>Bella Napoli (Retirada)</b>').openPopup();
-
-            L.marker([-0.9270, -48.1390]).addTo(map)
-                .bindPopup('<b>Entrega:</b> João Silva (Rua das Flores, 123)');
-        });
-
-        // Abre o modal perguntando sobre o comprovante
-        function abrirModalConclusao(id, cliente, valor) {
-            document.getElementById('modal-pedido-id').value = id;
-            document.getElementById('modal-cliente-nome').value = cliente;
-            document.getElementById('modal-pedido-valor').value = valor;
-            openModal('modalComprovante');
-        }
-
-        // Executa a conclusão com ou sem envio de comprovante via WhatsApp
-        function executarConclusao(enviarComprovante) {
-            const id = document.getElementById('modal-pedido-id').value;
-            const cliente = document.getElementById('modal-cliente-nome').value;
-            const valor = document.getElementById('modal-pedido-valor').value;
-
-            closeModal('modalComprovante');
-
-            if (enviarComprovante) {
-                const mensagem = `*COMPROVANTE DE ENTREGA - deliveryON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso e verificado.\n\nObrigado pela preferência!`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
-            }
-
-            alert(`✅ Pedido #${id} concluído e registrado no extrato com sucesso!`);
-
-            // Remove o card da rota ativa visualmente
-            const card = document.getElementById('card-pedido-' + id);
-            if(card) {
-                card.style.opacity = '0';
-                setTimeout(() => card.remove(), 300);
-            }
-        }
-
-        // Sistema de Filtro do Extrato por Data, Mês e Ano
-        function filtrarExtrato() {
-            const dataFiltro = document.getElementById('filtro-data').value; // Formato YYYY-MM-DD
-            const mesFiltro = document.getElementById('filtro-mes').value;   // Formato MM
-            const anoFiltro = document.getElementById('filtro-ano').value;   // Formato YYYY
-
-            const linhas = document.querySelectorAll('#tabela-extrato tr');
-            let qtdVisiveis = 0;
-            let valorTotal = 0;
-
-            linhas.forEach(linha => {
-                const dataLinha = linha.getAttribute('data-data'); // YYYY-MM-DD
-                const [anoL, mesL, diaL] = dataLinha.split('-');
-
-                let match = true;
-
-                if (dataFiltro && dataLinha !== dataFiltro) {
-                    match = false;
-                }
-                if (mesFiltro && mesL !== mesFiltro) {
-                    match = false;
-                }
-                if (anoFiltro && anoL !== anoFiltro) {
-                    match = false;
-                }
-
-                if (match) {
-                    linha.style.display = '';
-                    qtdVisiveis++;
-                    valorTotal += 6.50; // Valor fixo da taxa de exemplo
-                } else {
-                    linha.style.display = 'none';
-                }
-            });
-
-            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
-            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-        }
     </script>
 </body>
 </html>
