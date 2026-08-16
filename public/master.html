@@ -427,24 +427,22 @@
     </div>
 
     <!-- MODAL HISTÓRICO -->
-    <div class="modal-overlay" id="modalHistorico">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações</h3>
-                <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>15/08/2026:</strong> Mensalidade paga via PIX</li>
-                    <li style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>01/08/2026:</strong> Alteração de plano para Pro</li>
-                    <li style="padding: 10px 0;"><strong>15/07/2026:</strong> Conta criada no Neon DB</li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
-            </div>
+<div class="modal-overlay" id="modalHistorico">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações - <span id="historico-empresa-nome">Empresa</span></h3>
+            <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul id="lista-historico-modal" style="list-style: none; padding: 0;">
+                <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
         </div>
     </div>
+</div>
 
     <!-- ================= JAVASCRIPT MASTER COMPLETAMENTE INTEGRADO ================= -->
     <script>
@@ -633,8 +631,7 @@
                                     <button class="btn-action" title="Ativar/Desativar" onclick="toggleStatus(${emp.id})"><i class="ph ph-arrows-clockwise"></i></button>
                                     <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
                                     <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
-                                    <button class="btn-action" title="Histórico" onclick="openModal('modalHistorico')"><i class="ph ph-clock-counter-clockwise"></i></button>
-                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoEmpresa(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-clock-counter-clockwise"></i></button>                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
                                 </td>
                             </tr>
                         `;
@@ -818,6 +815,39 @@
                 }
             }
         }
+
+        // Abre o histórico buscando os dados reais do banco para aquela empresa específica
+async function abrirHistoricoEmpresa(id, nome) {
+    document.getElementById('historico-empresa-nome').innerText = nome;
+    const listaContainer = document.getElementById('lista-historico-modal');
+    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
+    
+    openModal('modalHistorico');
+
+    try {
+        const res = await fetch(`/api/master/empresas/${id}/historico`);
+        if (res.ok) {
+            const historicos = await res.json();
+            if (historicos.length === 0) {
+                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico desta empresa.</li>';
+                return;
+            }
+            listaContainer.innerHTML = '';
+            historicos.forEach(h => {
+                listaContainer.innerHTML += `
+                    <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
+                        <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data}</span>
+                        <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao}</span>
+                    </li>
+                `;
+            });
+        } else {
+            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
+        }
+    } catch (e) {
+        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
+    }
+}
     </script>
 </body>
 </html>
