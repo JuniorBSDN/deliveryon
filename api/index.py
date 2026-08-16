@@ -285,9 +285,32 @@ def get_historico_chamado(id: int, db=Depends(get_db)):
 
 # ================= ROTAS DO GESTOR (CLIENTE FINAl) =================
 @app.get("/api/dashboard")
-def get_dashboard(db=Depends(get_db)):
-    return {"aguardando": 5, "entregues": 12, "cancelados": 1, "receita": "1.250,00"}
-
+def get_dashboard(empresa_id: int):
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Exemplo de busca real no Neon DB para a empresa correta
+    cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND status = 'Aguardando pagamento'", (empresa_id,))
+    aguardando = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND status = 'Entregue'", (empresa_id,))
+    entregues = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND status = 'Cancelado'", (empresa_id,))
+    cancelados = cur.fetchone()[0]
+    
+    cur.execute("SELECT SUM(total) FROM pedidos WHERE empresa_id = %s AND status = 'Entregue'", (empresa_id,))
+    receita = cur.fetchone()[0] or 0.00
+    
+    cur.close()
+    conn.close()
+    
+    return {
+        "aguardando": aguardando,
+        "entregues": entregues,
+        "cancelados": cancelados,
+        "receita": f"{receita:.2f}".replace('.', ',')
+    }
 @app.get("/api/orders")
 def list_orders(db=Depends(get_db)):
     return [{"id": "1001", "hora": "18:30", "cliente": "João Silva", "endereco": "Rua A, 123", "total": "45,00", "status": "Aguardando pagamento"}]
