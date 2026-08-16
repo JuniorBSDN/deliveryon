@@ -871,6 +871,36 @@ async function saveConfigurations() {
         alert('Erro ao salvar as configurações.');
     }
 }
+        
+        async function aplicarIdentidadeVisualDaEmpresa() {
+    try {
+        const config = await apiRequest('/configuracoes');
+        if (!config) return;
+
+        // 1. Aplica as Cores Dinamicamente nas Variáveis CSS do Navegador
+        const root = document.documentElement;
+        if (config.cor_primaria) {
+            root.style.setProperty('--brand-primary', config.cor_primaria);
+        }
+        if (config.cor_secundaria) {
+            root.style.setProperty('--brand-secondary', config.cor_secundaria);
+        }
+
+        // 2. Aplica o Título ou Slogan se houver elementos correspondentes
+        if (config.titulo && document.getElementById('empresa-nome-topo')) {
+            document.getElementById('empresa-nome-topo').innerText = config.titulo;
+        }
+
+        // 3. Se houver campo de Logotipo por imagem, atualiza as tags <img> com a classe ou ID de logo
+        if (config.logo_url) {
+            document.querySelectorAll('.empresa-logo-img').forEach(img => {
+                img.src = config.logo_url;
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao aplicar identidade visual:", e);
+    }
+}
         // ================= CONTROLE DE UI =================
         function toggleMotoboyFields(funcao, idContainer) {
             const camposMotoboy = document.getElementById(idContainer);
