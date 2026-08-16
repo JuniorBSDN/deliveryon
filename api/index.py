@@ -69,6 +69,50 @@ class MasterAuth(BaseModel):
 # ==========================================
 # ROTAS DO MASTER (Gestão da Franquia)
 # ==========================================
+# Adicione esta rota junto com as outras rotas do Master no seu api/index.py
+
+@app.get("/api/master/notificacoes")
+def get_master_notificacoes():
+    # Em um cenário real, isso viria de uma tabela 'notificacoes_master' no Neon DB
+    return [
+        {
+            "id": 1, 
+            "tipo": "critico", 
+            "icone": "ph-warning-circle", 
+            "cor": "var(--danger)", 
+            "data": "16/08/2026 08:30", 
+            "titulo": "Falha de Pagamento", 
+            "mensagem": "O tenant 'Burger Delivery' não confirmou o pagamento da mensalidade."
+        },
+        {
+            "id": 2, 
+            "tipo": "alerta", 
+            "icone": "ph-clock", 
+            "cor": "var(--warning)", 
+            "data": "15/08/2026 14:15", 
+            "titulo": "Limite de Usuários Próximo", 
+            "mensagem": "A empresa 'Pizzaria Bella' atingiu 19/20 usuários do plano Pro."
+        },
+        {
+            "id": 3, 
+            "tipo": "sucesso", 
+            "icone": "ph-check-circle", 
+            "cor": "var(--success)", 
+            "data": "15/08/2026 02:00", 
+            "titulo": "Backup Concluído", 
+            "mensagem": "Rotina de backup global do Neon DB executada com sucesso."
+        },
+        {
+            "id": 4, 
+            "tipo": "info", 
+            "icone": "ph-info", 
+            "cor": "var(--info)", 
+            "data": "14/08/2026 10:05", 
+            "titulo": "Novo Tenant Integrado", 
+            "mensagem": "A empresa 'Sushi House' foi cadastrada e ativada no sistema."
+        }
+    ]
+
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
     if auth.senha == os.getenv("SENHA_MASTER", "master123"):
