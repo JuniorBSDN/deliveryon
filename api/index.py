@@ -390,3 +390,27 @@ def list_ouvidoria(db=Depends(get_db)):
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
+
+@app.get("/api/orders")
+def get_orders(empresa_id: int):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, hora, cliente, endereco, total, status FROM pedidos WHERE empresa_id = %s ORDER BY id DESC LIMIT 10",
+        (empresa_id,)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    orders = []
+    for row in rows:
+        orders.append({
+            "id": row[0],
+            "hora": str(row[1]) if row[1] else "",
+            "cliente": row[2],
+            "endereco": row[3],
+            "total": f"{row[4]:.2f}".replace('.', ',') if row[4] else "0,00",
+            "status": row[5]
+        })
+    return orders
