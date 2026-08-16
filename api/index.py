@@ -87,6 +87,23 @@ class GestorAuth(BaseModel):
 class GestorAuth(BaseModel):
     cnpj: str
 
+@app.put("/api/orders/{order_id}/status")
+def update_order_status(order_id: int, data: dict):
+    novo_status = data.get("status")
+    empresa_id = data.get("empresa_id")
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE pedidos SET status = %s WHERE id = %s AND empresa_id = %s",
+        (novo_status, order_id, empresa_id)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return {"success": True, "message": "Status atualizado com sucesso!"}
+
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
