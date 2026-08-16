@@ -411,12 +411,13 @@ def get_orders(empresa_id: int):
             "status": row[5]
         })
     return orders
+
 @app.get("/api/configuracoes")
 def get_configuracoes(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
         SELECT nome_fantasia as titulo, endereco, contato as telefone, 
-               cor_primaria, cor_secundaria, slogan, horario_funcionamento 
+               slogan, horario_funcionamento, cor_primaria, cor_secundaria
         FROM empresas WHERE id = %s
     """, (empresa_id,))
     res = cursor.fetchone()
@@ -424,16 +425,19 @@ def get_configuracoes(empresa_id: int, db=Depends(get_db)):
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
     return res
 
-@app.get("/api/configuracoes")
-def get_configuracoes(empresa_id: int, db=Depends(get_db)):
+@app.put("/api/configuracoes")
+def update_configuracoes(data: dict, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
-        SELECT nome_fantasia as titulo, endereco, contato as telefone, 
-               cor_primaria, cor_secundaria, slogan, horario_funcionamento,
-               qrcode_imagem as logo_url
-        FROM empresas WHERE id = %s
-    """, (empresa_id,))
-    res = cursor.fetchone()
-    if not res:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    return res
+        UPDATE empresas 
+        SET nome_fantasia = %s, endereco = %s, contato = %s, 
+            slogan = %s, horario_funcionamento = %s, 
+            cor_primaria = %s, cor_secundaria = %s 
+        WHERE id = %s
+    """, (
+        data.get("titulo"), data.get("endereco"), data.get("telefone"),
+        data.get("slogan"), data.get("horario_funcionamento"),
+        data.get("cor_primaria"), data.get("cor_secundaria"), data.get("empresa_id")
+    ))
+    db.commit()
+    return {"mensagem": "Configurações atualizadas com sucesso!"}
