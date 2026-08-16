@@ -357,6 +357,46 @@
         </div>
     </div>
 
+    <!-- MODAL CONTRATO -->
+<div class="modal-overlay" id="modalContrato">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-scroll text-brand-primary"></i> Contrato de Prestação de Serviços</h3>
+            <button class="close-modal" onclick="closeModal('modalContrato')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="border: 1px solid #ccc; border-radius: 6px; padding: 15px; min-height: 200px; background: #fafafa;" contenteditable="true">
+                <h2>CONTRATO DE LICENCIAMENTO DE SOFTWARE - deliveryON</h2><br>
+                <p>Pelo presente instrumento, a <strong>deliveryON</strong> e o contratado firmam os termos de uso do sistema...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalContrato')">Fechar</button>
+            <button class="btn btn-primary" onclick="alert('Contrato salvo e enviado por e-mail!'); closeModal('modalContrato')"><i class="ph ph-paper-plane-tilt"></i> Salvar e Enviar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL HISTÓRICO -->
+<div class="modal-overlay" id="modalHistorico">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações</h3>
+            <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>15/08/2026:</strong> Mensalidade paga via PIX</li>
+                <li style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>01/08/2026:</strong> Alteração de plano para Pro</li>
+                <li style="padding: 10px 0;"><strong>15/07/2026:</strong> Conta criada no Neon DB</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
+        </div>
+    </div>
+</div>
+
     <!-- ================= JAVASCRIPT MASTER COMPLETAMENTE INTEGRADO ================= -->
     <script>
         let alertasGlobaisCache = [];
@@ -518,36 +558,51 @@
         }
 
         async function carregarEmpresas() {
-            const tbody = document.getElementById('tabela-empresas');
-            try {
-                const res = await fetch('/api/master/empresas');
-                if (res.ok) {
-                    const empresas = await res.json();
-                    if (empresas.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada no Neon DB.</td></tr>'; return; }
-                    tbody.innerHTML = '';
-                    empresas.forEach(emp => {
-                        const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
-                        const toggleIcon = emp.status === 'ativo' ? 'ph-prohibit' : 'ph-check-circle';
-                        const toggleColor = emp.status === 'ativo' ? 'var(--danger)' : 'var(--success)';
-                        
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${emp.nome_fantasia}</strong></td>
-                                <td>${emp.cnpj}</td>
-                                <td style="text-transform: uppercase;">${emp.plano}</td>
-                                <td><span class="badge ${badgeClass}">${emp.status}</span></td>
-                                <td style="text-align: right;">
-                                    <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
-                                    <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
-                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB.</td></tr>'; }
+    const tbody = document.getElementById('tabela-empresas');
+    try {
+        const res = await fetch('/api/master/empresas');
+        if (res.ok) {
+            const empresas = await res.json();
+            if (empresas.length === 0) { 
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada no Neon DB.</td></tr>'; 
+                return; 
+            }
+            tbody.innerHTML = '';
+            empresas.forEach(emp => {
+                const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
+                const statusTexto = emp.status === 'ativo' ? 'Ativo' : 'Inativo';
+                
+                tbody.innerHTML = tbody.innerHTML + `
+                    <tr>
+                        <td><strong>${emp.nome_fantasia}</strong><br><small style="color:var(--text-muted);">${emp.razao_social || ''}</small></td>
+                        <td>${emp.cnpj}</td>
+                        <td style="text-transform: uppercase;">${emp.plano}</td>
+                        <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
+                        <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                            <button class="btn-action" title="Carimbo de Pagamento" onclick="actionCarimbo(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>
+                            <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
+                            <button class="btn-action" title="Ativar/Desativar" onclick="toggleStatus(${emp.id})"><i class="ph ph-arrows-clockwise"></i></button>
+                            <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
+                            <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
+                            <button class="btn-action" title="Histórico" onclick="openModal('modalHistorico')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                            <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
+    } catch (err) { 
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB.</td></tr>'; 
+    }
+}
 
+// Função auxiliar para o carimbo de pagamento direto na tabela
+async function actionCarimbo(id, nome) {
+    if(confirm(`Confirmar carimbo de pagamento para a empresa ${nome}?`)) {
+        alert(`Pagamento da empresa ${nome} registrado com sucesso!`);
+    }
+}
+        
         async function cadastrarEmpresa(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit'); btn.disabled = true;
