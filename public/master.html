@@ -350,19 +350,38 @@
         </div>
     </div>
     
-    <!-- MODAL DE CONFIGURAÇÃO DE PIX NO MASTER -->
+   
+    
+<!-- ================= MODAL DE CONFIGURAÇÃO DE PIX NO MASTER ================= -->
     <div class="modal-overlay" id="modalPixMaster">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header">
-                <h3><i class="ph ph-qr-code" style="color: var(--warning);"></i> Configurar Pix - Competência: <span id="pix-mes-vigente"></span></h3>
+                <h3><i class="ph ph-qr-code" style="color: var(--warning);"></i> Configurar Fatura e Pix</h3>
                 <button class="close-modal" onclick="closeModal('modalPixMaster')">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="pix-empresa-id">
-                <div class="form-group">
-                    <label>URL ou Arquivo da Imagem do QR Code</label>
-                    <input type="text" id="input-url-qrcode" class="form-control" placeholder="Cole o link da imagem do QR Code gerado...">
+                
+                <!-- Especificação Clara do Mês Referente -->
+                <div class="form-group" style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <label style="color: var(--brand-primary); margin-bottom: 0;">Mês de Referência da Cobrança:</label>
+                    <span id="pix-mes-referencia-texto" style="font-size: 1.1rem; font-weight: bold; color: var(--text-main);">--</span>
                 </div>
+
+                <!-- Botão para Buscar Imagem do Código QR no Dispositivo -->
+                <div class="form-group">
+                    <label>Selecionar Imagem do QR Code (Arquivo do Dispositivo)</label>
+                    <input type="file" id="input-arquivo-qrcode" class="form-control" accept="image/*" onchange="converterImagemParaBase64(event)" style="padding: 6px;">
+                    <small style="color: var(--text-muted); margin-top: 4px;">A imagem selecionada será enviada e exibida no painel do Gestor.</small>
+                    
+                    <!-- Pré-visualização da Imagem -->
+                    <div id="preview-qrcode-container" style="margin-top: 10px; display: none; text-align: center;">
+                        <img id="preview-qrcode-img" src="" alt="Pré-visualização QR Code" style="max-width: 140px; max-height: 140px; border: 1px solid #ccc; border-radius: 6px; padding: 4px;">
+                    </div>
+                </div>
+                
+                <input type="hidden" id="input-url-qrcode-base64">
+
                 <div class="form-group">
                     <label>Código Pix (Copia e Cola)</label>
                     <textarea id="input-copia-cola-master" class="form-control" rows="3" placeholder="00020126580014br.gov.bcb.pix..."></textarea>
@@ -375,22 +394,34 @@
         </div>
     </div>
     
-    <!-- MODAL CONTRATO -->
+    <!-- ================= MODAL CONTRATO REFORMULADO E PROFISSIONAL ================= -->
     <div class="modal-overlay" id="modalContrato">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content" style="max-width: 750px;">
             <div class="modal-header">
-                <h3><i class="ph ph-scroll text-brand-primary"></i> Contrato de Prestação de Serviços</h3>
+                <h3><i class="ph ph-scroll text-brand-primary"></i> Contrato de Licenciamento de Software - deliveryON</h3>
                 <button class="close-modal" onclick="closeModal('modalContrato')">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="border: 1px solid #ccc; border-radius: 6px; padding: 15px; min-height: 200px; background: #fafafa;" contenteditable="true">
-                    <h2>CONTRATO DE LICENCIAMENTO DE SOFTWARE - deliveryON</h2><br>
-                    <p>Pelo presente instrumento, a <strong>deliveryON</strong> e o contratado firmam os termos de uso do sistema...</p>
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; min-height: 320px; background: #fff; font-size: 0.95rem; line-height: 1.6;" contenteditable="true" id="conteudo-contrato-texto">
+                    <h2 style="text-align: center; color: var(--brand-primary); margin-bottom: 15px;">INSTRUMENTO PARTICULAR DE LICENCIAMENTO DE USO DE SOFTWARE</h2>
+                    <p><strong>CONTRATANTE:</strong> <span id="contrato-nome-cliente">[Nome da Empresa / Cliente]</span></p>
+                    <p><strong>CONTRATADA:</strong> deliveryON - Soluções Tecnológicas Ltda.</p>
+                    <br>
+                    <p>As partes acima qualificadas celebram o presente Contrato de Licenciamento de Software, que se regirá pelas cláusulas e condições seguintes:</p>
+                    <br>
+                    <p><strong>CLÁUSULA PRIMEIRA – DO OBJETO:</strong> O presente contrato tem por objeto o licenciamento de uso da plataforma digital <em>deliveryON</em>, compreendendo os módulos de gestão operacional, financeiro e central de pedidos, conforme o plano contratado.</p>
+                    <br>
+                    <p><strong>CLÁUSULA SEGUNDA – DA VIGÊNCIA E RENOVAÇÃO:</strong> O prazo de vigência desta licença é mensal, renovando-se automaticamente mediante a quitação da taxa de recorrência (mensalidade) até a data de vencimento estipulada.</p>
+                    <br>
+                    <p><strong>CLÁUSULA TERCEIRA – DO SUPORTE TÉCNICO E INFRAESTRUTURA:</strong> A CONTRATADA assegura suporte técnico remoto em horário comercial e a manutenção da infraestrutura de banco de dados e servidores, garantindo alta disponibilidade do sistema.</p>
+                    <br>
+                    <p><strong>CLÁUSULA QUARTA – DO INADIMPLEMENTO:</strong> O atraso superior a 05 (cinco) dias corridos na quitação da mensalidade poderá acarretar a suspensão temporária (bloqueio) do acesso ao sistema até a regularização financeira.</p>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalContrato')">Fechar</button>
-                <button class="btn btn-primary" onclick="alert('Contrato salvo e enviado por e-mail!'); closeModal('modalContrato')"><i class="ph ph-paper-plane-tilt"></i> Salvar e Enviar</button>
+                <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Contrato</button>
+                <button class="btn btn-primary" onclick="alert('Contrato formalizado, salvo no histórico e enviado por e-mail ao Gestor!'); closeModal('modalContrato')"><i class="ph ph-paper-plane-tilt"></i> Salvar e Enviar</button>
             </div>
         </div>
     </div>
