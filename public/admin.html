@@ -659,20 +659,29 @@
 
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
-        const API_BASE_URL = "http://localhost:5000/api"; // Endpoint base da API Python (FastAPI/Flask)
-        let currentActiveId = null;
+       const API_BASE_URL = "http://localhost:5000/api"; 
 
-        // Função genérica para comunicação com a API REST em Python
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
+                // Recupera o ID da empresa salvo no login por CNPJ
+                const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+                
+                // Adiciona o empresa_id nos parâmetros da URL (GET) ou no corpo (POST/PUT)
+                let url = `${API_BASE_URL}${endpoint}`;
                 const options = {
                     method: method,
                     headers: { 'Content-Type': 'application/json' }
                 };
-                if (data) {
+
+                if (method === 'GET') {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url += `${separator}empresa_id=${empresaId}`;
+                } else if (data) {
+                    data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+
+                const response = await fetch(url, options);
                 if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
                 return await response.json();
             } catch (error) {
@@ -680,6 +689,23 @@
                 return null;
             }
         }
+
+
+        async function fazerLoginGestor(cnpjinpt) {
+    const res = await fetch('http://localhost:5000/api/gestor/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpj: cnpjinpt })
+    });
+    if(res.ok) {
+        const dados = await res.json();
+        localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
+        localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
+        window.location.href = "admin.html"; // Abre o painel do gestor isolado daquela empresa
+    } else {
+        alert("CNPJ não encontrado ou empresa inativa.");
+    }
+}
 
         // ================= CARREGAMENTO DE DADOS (GET) =================
         async function loadDashboardData() {
@@ -1037,6 +1063,14 @@
 
         // Inicialização dos Gráficos e requisições para a API Python ao abrir a página
         window.onload = function() {
+            // Verifica se o gestor está autenticado via CNPJ
+            const empresaId = localStorage.getItem('deliveryon_empresa_id');
+            if (!empresaId) {
+                alert("Sessão expirada ou acesso não autorizado. Faça login com seu CNPJ.");
+                window.location.href = "login.html"; // Redireciona para a tela de autenticação por CNPJ
+                return;
+            }
+
             loadDashboardData();
             loadProducts();
             loadClients();
