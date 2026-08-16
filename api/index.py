@@ -80,7 +80,28 @@ class ChamadoConcluir(BaseModel):
 class ChamadoCancelar(BaseModel):
     motivo: str
 
+class GestorAuth(BaseModel):
+    cnpj: str
+
 # ================= ROTAS DO MASTER =================
+class GestorAuth(BaseModel):
+    cnpj: str
+
+@app.post("/api/gestor/auth")
+def gestor_login(auth: GestorAuth, db=Depends(get_db)):
+    cursor = db.cursor()
+    # Remove formatações do CNPJ para comparar apenas os números, se preferir, ou busca exata
+    cursor.execute("SELECT id, nome_fantasia, cnpj, status FROM empresas WHERE REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', '') = REPLACE(REPLACE(REPLACE(%s, '.', ''), '/', ''), '-', '')", (auth.cnpj,))
+    empresa = cursor.fetchone()
+    
+    if not empresa:
+        raise HTTPException(status_code=404, detail="CNPJ não encontrado na base de dados.")
+    
+    if empresa['status'] != 'ativo':
+        raise HTTPException(status_code=403, detail="Esta empresa está inativa ou com o acesso suspenso.")
+        
+    return {"autorizado": True, "empresa_id": empresa['id'], "nome_fantasia": empresa['nome_fantasia']}
+
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
     if auth.senha == os.getenv("SENHA_MASTER", "master123"):
@@ -130,11 +151,13 @@ def configurar_pix_empresa(id: int, pix: PixConfigUpdate, db=Depends(get_db)):
 
 # Rota para o Painel do Gestor consultar os dados de pagamento atuais
 @app.get("/api/gestor/faturamento")
-def get_faturamento_gestor(db=Depends(get_db)):
+def get_faturamento_gestor(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
-    # Aqui você busca os dados da empresa logada (exemplo ID 1 ou por sessão)
-    cursor.execute("SELECT nome_fantasia, plano, vencimento, qrcode_imagem, copia_e_cola, status FROM empresas LIMIT 1")
-    return cursor.fetchone()
+    cursor.execute("SELECT nome_fantasia, plano, vencimento, qrcode_imagem, copia_e_cola, status FROM empresas WHERE id = %s", (empresa_id,))
+    res = cursor.fetchone()
+    if not res:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+    return res
 
 @app.get("/api/master/notificacoes")
 def get_master_notificacoes(data: Optional[str] = None, db=Depends(get_db)):
