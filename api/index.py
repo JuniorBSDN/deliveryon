@@ -207,13 +207,16 @@ def update_configuracoes(data: dict, db=Depends(get_db)):
 def get_dashboard(empresa_id: int, db=Depends(get_db)):
     cur = db.cursor()
     cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND status = 'Aguardando pagamento'", (empresa_id,))
-    aguardando = cur.fetchone()['count'] if isinstance(cur.fetchone(), dict) else cur.fetchone()[0]
+    res_ag = cur.fetchone()
+    aguardando = res_ag[list(res_ag.keys())[0]] if isinstance(res_ag, dict) and res_ag else 0
 
     cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND status = 'Entregue'", (empresa_id,))
-    entregues = cur.fetchone()[0]
+    res_ent = cur.fetchone()
+    entregues = res_ent[list(res_ent.keys())[0]] if isinstance(res_ent, dict) and res_ent else 0
 
     cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND status = 'Cancelado'", (empresa_id,))
-    cancelados = cur.fetchone()[0]
+    res_can = cur.fetchone()
+    cancelados = res_can[list(res_can.keys())[0]] if isinstance(res_can, dict) and res_can else 0
 
     cur.execute("SELECT SUM(total) FROM pedidos WHERE empresa_id = %s AND status = 'Entregue'", (empresa_id,))
     row_receita = cur.fetchone()
