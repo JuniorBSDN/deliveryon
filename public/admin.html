@@ -636,36 +636,37 @@
 }
 
         async function loadOrders() {
-            const orders = await apiRequest('/orders');
-            const tbody = document.getElementById('tbody-recent-orders');
-            tbody.innerHTML = '';
-            
-            if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado na API.</td></tr>`;
-                return;
-            }
+    const orders = await apiRequest('/orders');
+    const tbody = document.getElementById('tbody-recent-orders');
+    tbody.innerHTML = '';
+    
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
+        return;
+    }
 
-            orders.forEach(order => {
-                tbody.innerHTML += `
-                    <tr data-id="${order.id}">
-                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora}</span></td>
-                        <td>${order.cliente}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco}</span></td>
-                        <td>R$ ${order.total}</td>
-                        <td>
-                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                                <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                                <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                                <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                                <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                            </select>
-                        </td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+    orders.forEach(order => {
+        tbody.innerHTML += `
+            <tr data-id="${order.id}">
+                <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
+                <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
+                <td>R$ ${order.total || '0,00'}</td>
+                <td>
+                    <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
+                        <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
+                        <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
+                        <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
+                        <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                        <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                    </select>
+                </td>
+                <td style="text-align: right;">
+                    <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
 
         async function loadProducts() {
             const products = await apiRequest('/products');
