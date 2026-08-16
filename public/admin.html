@@ -611,16 +611,16 @@
         }
 
         // ================= CARREGAMENTO DE DADOS (GET) =================
-        async function loadDashboardData() {
-            const data = await apiRequest('/dashboard');
-            if (data) {
-                document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
-                document.getElementById('val-delivered-count').innerText = data.entregues || 0;
-                document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
-                document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
-            }
-            loadOrders();
-        }
+       async function loadDashboardData() {
+    const data = await apiRequest('/dashboard');
+    if (data) {
+        document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
+        document.getElementById('val-delivered-count').innerText = data.entregues || 0;
+        document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
+        document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
+    }
+    loadOrders();
+}
 
         async function loadOrders() {
             const orders = await apiRequest('/orders');
