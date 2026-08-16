@@ -6,7 +6,7 @@ from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-app = FastAPI(title="DeliveryON API Completa", description="API Master + Gestor integrados ao Neon DB")
+app = FastAPI(title="DeliveryON API - Master & Gestor", description="API completa integrada ao Neon DB")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +25,7 @@ def get_db():
     finally:
         conn.close()
 
-# --- MODELOS PYDANTIC ---
+# ================= MODELOS =================
 class EmpresaCreate(BaseModel):
     razao_social: str
     nome_fantasia: str
@@ -66,53 +66,7 @@ class ColaboradorCreate(BaseModel):
 class MasterAuth(BaseModel):
     senha: str
 
-# ==========================================
-# ROTAS DO MASTER (Gestão da Franquia)
-# ==========================================
-# Adicione esta rota junto com as outras rotas do Master no seu api/index.py
-
-@app.get("/api/master/notificacoes")
-def get_master_notificacoes():
-    # Em um cenário real, isso viria de uma tabela 'notificacoes_master' no Neon DB
-    return [
-        {
-            "id": 1, 
-            "tipo": "critico", 
-            "icone": "ph-warning-circle", 
-            "cor": "var(--danger)", 
-            "data": "16/08/2026 08:30", 
-            "titulo": "Falha de Pagamento", 
-            "mensagem": "O tenant 'Burger Delivery' não confirmou o pagamento da mensalidade."
-        },
-        {
-            "id": 2, 
-            "tipo": "alerta", 
-            "icone": "ph-clock", 
-            "cor": "var(--warning)", 
-            "data": "15/08/2026 14:15", 
-            "titulo": "Limite de Usuários Próximo", 
-            "mensagem": "A empresa 'Pizzaria Bella' atingiu 19/20 usuários do plano Pro."
-        },
-        {
-            "id": 3, 
-            "tipo": "sucesso", 
-            "icone": "ph-check-circle", 
-            "cor": "var(--success)", 
-            "data": "15/08/2026 02:00", 
-            "titulo": "Backup Concluído", 
-            "mensagem": "Rotina de backup global do Neon DB executada com sucesso."
-        },
-        {
-            "id": 4, 
-            "tipo": "info", 
-            "icone": "ph-info", 
-            "cor": "var(--info)", 
-            "data": "14/08/2026 10:05", 
-            "titulo": "Novo Tenant Integrado", 
-            "mensagem": "A empresa 'Sushi House' foi cadastrada e ativada no sistema."
-        }
-    ]
-
+# ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
     if auth.senha == os.getenv("SENHA_MASTER", "master123"):
@@ -125,9 +79,28 @@ def get_master_metrics(db=Depends(get_db)):
     cursor.execute("SELECT COUNT(*) as total FROM empresas")
     total_clientes = cursor.fetchone()['total']
     cursor.execute("SELECT pg_database_size(current_database()) as db_size;")
-    db_bytes = cursor.fetchone()['db_size']
-    db_size_str = f"{round(db_bytes / (1024 * 1024), 2)} MB"
+    db_size_str = f"{round(cursor.fetchone()['db_size'] / (1024 * 1024), 2)} MB"
     return {"db_disk_usage": db_size_str, "total_clientes": total_clientes, "mrr": f"R$ {total_clientes * 250},00"}
+
+@app.get("/api/master/notificacoes")
+def get_master_notificacoes(data: Optional[str] = None, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        query = "SELECT id, tipo, icone, cor, TO_CHAR(criado_em, 'DD/MM/YYYY HH24:MI') as data_hora, titulo, mensagem FROM notificacoes_master"
+        if data:
+            query += f" WHERE DATE(criado_em) = '{data}'"
+        query += " ORDER BY id DESC LIMIT 50"
+        cursor.execute(query)
+        return cursor.fetchall()
+    except Exception:
+        return [] # Retorna vazio se a tabela não existir
+
+@app.delete("/api/master/notificacoes/{id}")
+def delete_notificacao(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM notificacoes_master WHERE id = %s", (id,))
+    db.commit()
+    return {"mensagem": "Notificação resolvida"}
 
 @app.get("/api/master/empresas")
 def list_empresas(db=Depends(get_db)):
@@ -136,36 +109,38 @@ def list_empresas(db=Depends(get_db)):
     return cursor.fetchall()
 
 @app.post("/api/master/empresas")
-def create_empresa(empresa: EmpresaCreate, db=Depends(get_db)):
+def create_empresa(emp: EmpresaCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
         INSERT INTO empresas (razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, endereco, plano, vencimento, limite_usuarios, status)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'ativo') RETURNING id;
-    """, (empresa.razao_social, empresa.nome_fantasia, empresa.cnpj, empresa.responsavel, empresa.contato, empresa.email_admin, empresa.endereco, empresa.plano, empresa.vencimento, empresa.limite_usuarios))
+    """, (emp.razao_social, emp.nome_fantasia, emp.cnpj, emp.responsavel, emp.contato, emp.email_admin, emp.endereco, emp.plano, emp.vencimento, emp.limite_usuarios))
     db.commit()
     return {"mensagem": "Tenant criado", "id": cursor.fetchone()['id']}
+
+@app.put("/api/master/empresas/{id}")
+def update_empresa(id: int, emp: dict, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("UPDATE empresas SET nome_fantasia=%s, plano=%s, vencimento=%s, limite_usuarios=%s WHERE id=%s",
+                   (emp.get('nome_fantasia'), emp.get('plano'), emp.get('vencimento'), emp.get('limite_usuarios'), id))
+    db.commit()
+    return {"mensagem": "Atualizado com sucesso"}
 
 @app.delete("/api/master/empresas/{id}")
 def delete_empresa(id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("DELETE FROM empresas WHERE id = %s", (id,))
     db.commit()
-    return {"mensagem": "Empresa excluída"}
+    return {"mensagem": "Excluído com sucesso"}
 
-# ==========================================
-# ROTAS DO GESTOR (Painel do Cliente)
-# ==========================================
+# ================= ROTAS DO GESTOR (CLIENTE FINAl) =================
 @app.get("/api/dashboard")
 def get_dashboard(db=Depends(get_db)):
-    # Simulação rápida ou query real
     return {"aguardando": 5, "entregues": 12, "cancelados": 1, "receita": "1.250,00"}
 
 @app.get("/api/orders")
 def list_orders(db=Depends(get_db)):
-    # Exemplo simulado para alimentar a tabela
-    return [
-        {"id": "1001", "hora": "18:30", "cliente": "João Silva", "endereco": "Rua A, 123", "total": "45,00", "status": "Aguardando pagamento"}
-    ]
+    return [{"id": "1001", "hora": "18:30", "cliente": "João Silva", "endereco": "Rua A, 123", "total": "45,00", "status": "Aguardando pagamento"}]
 
 @app.get("/api/products")
 def list_products(db=Depends(get_db)):
@@ -179,14 +154,14 @@ def create_product(prod: ProdutoCreate, db=Depends(get_db)):
     cursor.execute("INSERT INTO produtos (nome, categoria, preco, estoque, descricao) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
                    (prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao))
     db.commit()
-    return {"mensagem": "Produto salvo", "id": cursor.fetchone()['id']}
+    return {"mensagem": "Produto salvo"}
 
 @app.delete("/api/products/{id}")
 def delete_product(id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("DELETE FROM produtos WHERE id = %s", (id,))
     db.commit()
-    return {"mensagem": "Produto excluído"}
+    return {"mensagem": "Excluído"}
 
 @app.get("/api/clients")
 def list_clients(db=Depends(get_db)):
@@ -200,7 +175,7 @@ def create_client(cli: ClienteCreate, db=Depends(get_db)):
     cursor.execute("INSERT INTO clientes (nome, telefone, email, endereco_entrega, referencia) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
                    (cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia))
     db.commit()
-    return {"mensagem": "Cliente salvo", "id": cursor.fetchone()['id']}
+    return {"mensagem": "Cliente salvo"}
 
 @app.get("/api/colaboradores")
 def list_colaboradores(db=Depends(get_db)):
@@ -214,7 +189,7 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor.execute("INSERT INTO colaboradores (nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
                    (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, colab.funcao, colab.status, colab.observacoes))
     db.commit()
-    return {"mensagem": "Colaborador salvo", "id": cursor.fetchone()['id']}
+    return {"mensagem": "Colaborador salvo"}
 
 @app.get("/api/ouvidoria")
 def list_ouvidoria(db=Depends(get_db)):
@@ -224,4 +199,4 @@ def list_ouvidoria(db=Depends(get_db)):
 
 @app.post("/api/backup")
 def backup():
-    return {"mensagem": "Backup efetuado com sucesso no servidor Cloud."}
+    return {"mensagem": "Backup efetuado com sucesso no servidor."}
