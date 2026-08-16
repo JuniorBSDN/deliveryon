@@ -491,49 +491,49 @@
                 </div>
             </section>
 
-            <!-- CONFIGURAÇÕES -->
-            <section id="sec-configuracoes" class="page-section hidden">
-                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
+           <!-- CONFIGURAÇÕES -->
+<section id="sec-configuracoes" class="page-section hidden">
+    <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
 
-                <div class="form-grid">
-                    <div class="card">
-                        <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
-                        <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" id="input-config-title" value="ON delivery"></div>
-                        <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
-                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
-                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
-                        <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
+    <div class="form-grid">
+        <div class="card">
+            <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
+            <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" id="input-config-title" value="ON delivery"></div>
+            <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
+            <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
+            <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
+            <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
+                <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>
+                <div class="flex gap-10" style="flex-wrap: wrap;">
+                    <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" id="input-config-cor1" value="#ff5722" style="height: 45px; padding: 2px;"></div>
+                    <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
+                <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
+                <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                    <div class="form-group"><label>Agendar Backup Automático</label>
+                        <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
                     </div>
-
-                    <div>
-                        <div class="card">
-                            <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
-                            <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>
-                            <div class="flex gap-10" style="flex-wrap: wrap;">
-                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" value="#ff5722" style="height: 45px; padding: 2px;"></div>
-                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" value="#e64a19" style="height: 45px; padding: 2px;"></div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
-                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
-                            <div style="border-top: 1px solid #eee; padding-top: 15px;">
-                                <div class="form-group"><label>Agendar Backup Automático</label>
-                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
-                                </div>
-                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
-                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
-                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
-                        </div>
+                    <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
+                    <div class="form-group"><label>Limpeza Automática (LGPD)</label>
+                        <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
                     </div>
                 </div>
-            </section>
+            </div>
+            <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+            </div>
+        </div>
+    </div>
+</section>
 
         </div>
     </main>
@@ -942,6 +942,7 @@ async function saveConfigurations() {
             loadClients();
             loadColaboradores();
             loadOuvidoria();
+            loadConfigurations();
 
             if(document.getElementById('chartFluxo')) {
                 new Chart(document.getElementById('chartFluxo').getContext('2d'), {
