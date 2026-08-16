@@ -86,6 +86,22 @@ def get_master_metrics(db=Depends(get_db)):
     db_size_str = f"{round(cursor.fetchone()['db_size'] / (1024 * 1024), 2)} MB"
     return {"db_disk_usage": db_size_str, "total_clientes": total_clientes, "mrr": f"R$ {total_clientes * 250},00"}
 
+@app.get("/api/master/empresas/{id}/historico")
+def get_historico_empresa(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Busca interações registradas para esta empresa
+        cursor.execute("""
+            SELECT TO_CHAR(criado_em, 'DD/MM/YYYY') as data, descricao 
+            FROM historico_empresas 
+            WHERE empresa_id = %s 
+            ORDER BY id DESC
+        """, (id,))
+        return cursor.fetchall()
+    except Exception:
+        # Retorna uma lista vazia caso a tabela ainda esteja sendo criada
+        return []
+
 # Rota para o Master salvar/atualizar o QR Code e a chave Pix da empresa
 @app.put("/api/master/empresas/{id}/pix")
 def configurar_pix_empresa(id: int, pix: PixConfigUpdate, db=Depends(get_db)):
