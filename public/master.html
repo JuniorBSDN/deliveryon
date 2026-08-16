@@ -28,7 +28,6 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        /* Ocultar o body até autenticar */
         body { background-color: var(--bg-color); color: var(--text-main); display: none; height: 100vh; overflow: hidden; transition: font-size 0.2s ease; }
         
         .hidden { display: none !important; }
@@ -94,6 +93,9 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
+        /* Icon Container para Notificações */
+        .icon-box { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+
         /* MODAIS DO PROTÓTIPO */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
@@ -110,6 +112,14 @@
             .topbar { display: flex; }
             .content-container { padding: 15px; }
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+        }
+        
+        /* Estilo para impressão */
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao-notificacoes, #area-impressao-notificacoes * { visibility: visible; }
+            #area-impressao-notificacoes { position: absolute; left: 0; top: 0; width: 100%; }
+            .btn-action, .btn { display: none !important; }
         }
     </style>
 </head>
@@ -149,12 +159,13 @@
 
         <div class="content-container">
 
-            <!-- DASHBOARD MASTER -->
+            <!-- ================= DASHBOARD MASTER ================= -->
             <section id="sec-dashboard" class="page-section">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-chart-line-up"></i> Visão Geral (Master)</h1>
                 </div>
 
+                <!-- CARDS DE MÉTRICAS -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="card" style="border-top: 4px solid var(--info);">
                         <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-hard-drives"></i> DB Disk (Neon DB)</span>
@@ -169,16 +180,45 @@
                         <h2 style="font-size: 1.8rem; color: var(--success);" id="metric-mrr">--</h2>
                     </div>
                 </div>
+
+                <!-- LISTA DE NOTIFICAÇÕES (NOVIDADE) -->
+                <div class="card" style="padding: 0;" id="area-impressao-notificacoes">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 15px;">
+                        <h3 style="display: flex; align-items: center; gap: 8px;">
+                            <i class="ph-duotone ph-bell-ringing" style="color: var(--brand-primary); font-size: 1.4rem;"></i> 
+                            Notificações e Alertas
+                        </h3>
+                        <div class="flex gap-10 align-center action-bar-mobile">
+                            <input type="date" id="filtro-data-notificacoes" class="form-control" style="margin-bottom: 0; width: auto;" onchange="filtrarNotificacoesPorData()">
+                            <button class="btn btn-secondary" onclick="imprimirRelatorioNotificacoes()"><i class="ph ph-printer"></i> Imprimir</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Tipo</th>
+                                    <th>Data / Hora</th>
+                                    <th>Detalhes do Alerta</th>
+                                    <th style="text-align: right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-notificacoes">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Carregando notificações...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
-            <!-- EMPRESAS (TENANTS) -->
+            <!-- ================= EMPRESAS (TENANTS) ================= -->
             <section id="sec-empresas" class="page-section hidden">
                 <div class="page-header flex justify-between align-center action-bar-mobile">
                     <h1 class="page-title"><i class="ph-duotone ph-buildings"></i> Gestão de Empresas</h1>
                     <button class="btn btn-primary" onclick="toggleCadastroForm()"><i class="ph ph-plus-circle"></i> Novo Cliente</button>
                 </div>
 
-                <!-- Formulário de Cadastro com Layout do Protótipo -->
+                <!-- Formulário de Cadastro -->
                 <div class="card hidden" id="card-novo-cliente" style="border-top: 4px solid var(--brand-primary);">
                     <h3 class="mb-20">Cadastrar Nova Empresa (Tenant) no Banco</h3>
                     <form id="form-cad-empresa" onsubmit="cadastrarEmpresa(event)">
@@ -233,7 +273,7 @@
                 </div>
             </section>
 
-            <!-- HELPDESK MASTER -->
+            <!-- ================= HELPDESK MASTER ================= -->
             <section id="sec-helpdesk" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> HD e Suporte aos Clientes</h1></div>
                 <div class="card">
@@ -246,8 +286,7 @@
         </div>
     </main>
 
-    <!-- ================= MODAIS MASTER COM VISUAL DO PROTÓTIPO ================= -->
-    
+    <!-- ================= MODAIS ================= -->
     <div class="modal-overlay" id="modalEditar">
         <div class="modal-content">
             <div class="modal-header">
@@ -293,9 +332,8 @@
     </div>
 
 
-    <!-- ================= SCRIPTS LÓGICA MASTER ================= -->
+    <!-- ================= SCRIPTS MASTER LÓGICA ================= -->
     <script>
-        // Lógica de Autenticação inicial (Exclusiva do Master)
         window.onload = autenticarMaster;
 
         async function autenticarMaster() {
@@ -312,7 +350,6 @@
             }
 
             try {
-                // Rota do back-end Python FastAPI
                 const response = await fetch('/api/master/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -336,6 +373,7 @@
         function liberarPainel() {
             document.body.style.display = "flex";
             carregarMetricas();
+            carregarNotificacoes();
             carregarEmpresas();
         }
 
@@ -344,7 +382,70 @@
             window.location.reload();
         }
 
-        // Busca os dados do Dashboard (MRR, Disco) no Postgres Neon DB
+        // ================= NOTIFICAÇÕES (DASHBOARD) =================
+        async function carregarNotificacoes() {
+            const tbody = document.getElementById('tabela-notificacoes');
+            try {
+                const res = await fetch('/api/master/notificacoes');
+                if (res.ok) {
+                    const notificacoes = await res.json();
+                    
+                    if (notificacoes.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhuma notificação recente.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    notificacoes.forEach(notif => {
+                        // Aplica cor de fundo sutil baseada na cor do ícone
+                        const bgSutil = notif.cor.replace(')', ', 0.15)').replace('var(', 'rgba('); 
+                        
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>
+                                    <div class="icon-box" style="color: ${notif.cor}; background-color: ${notif.cor === 'var(--danger)' ? '#ffebee' : notif.cor === 'var(--warning)' ? '#fff8e1' : notif.cor === 'var(--success)' ? '#e8f5e9' : '#e3f2fd'};">
+                                        <i class="ph ${notif.icone}"></i>
+                                    </div>
+                                </td>
+                                <td style="font-size: 0.85rem; color: #666; font-weight: 500;">${notif.data}</td>
+                                <td>
+                                    <strong style="color: ${notif.cor};">${notif.titulo}</strong><br>
+                                    <span style="font-size: 0.85rem; color: var(--text-muted);">${notif.mensagem}</span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <button class="btn-action" title="Resolver / Marcar como Lido" onclick="resolverNotificacao(this, ${notif.id})"><i class="ph ph-check" style="color: var(--success);"></i></button>
+                                    <button class="btn-action" title="Ver Detalhes" onclick="alert('Detalhes do Alerta ID: ${notif.id}')"><i class="ph ph-eye"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Erro ao carregar notificações.</td></tr>';
+            }
+        }
+
+        function resolverNotificacao(btnElement, id) {
+            // Simula a resolução do alerta no front-end
+            const tr = btnElement.closest('tr');
+            tr.style.opacity = '0.4';
+            tr.style.pointerEvents = 'none';
+            // Aqui seria feito um fetch('.../notificacoes/'+id, {method: 'DELETE'})
+        }
+
+        function filtrarNotificacoesPorData() {
+            const dataFiltro = document.getElementById('filtro-data-notificacoes').value;
+            if(dataFiltro) {
+                alert("Filtrando alertas pela data selecionada: " + dataFiltro);
+                // Aqui você passaria a data via query params para a API
+            }
+        }
+
+        function imprimirRelatorioNotificacoes() {
+            window.print();
+        }
+
+        // ================= OUTRAS ROTAS =================
         async function carregarMetricas() {
             try {
                 const res = await fetch('/api/master/metrics');
@@ -354,23 +455,20 @@
                     document.getElementById('metric-clientes').textContent = data.total_clientes;
                     document.getElementById('metric-mrr').textContent = data.mrr;
                 }
-            } catch (err) {
-                console.error("Erro ao carregar métricas", err);
-            }
+            } catch (err) { console.error("Erro ao carregar métricas"); }
         }
 
-        // Tabela de Tenants do Master
         async function carregarEmpresas() {
             const tbody = document.getElementById('tabela-empresas');
             try {
                 const res = await fetch('/api/master/empresas');
                 if (res.ok) {
                     const empresas = await res.json();
-                    tbody.innerHTML = '';
                     if (empresas.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada no Neon DB.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada.</td></tr>';
                         return;
                     }
+                    tbody.innerHTML = '';
                     empresas.forEach(emp => {
                         const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
                         const toggleIcon = emp.status === 'ativo' ? 'ph-prohibit' : 'ph-check-circle';
@@ -387,14 +485,14 @@
                                     <button class="btn-action" title="Editar Registro" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
                                     <button class="btn-action" title="Alterar Status" onclick="toggleStatus(${emp.id})"><i class="ph ${toggleIcon}" style="color: ${toggleColor};"></i></button>
                                     <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
-                                    <button class="btn-action" title="Excluir Definitivamente" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
                                 </td>
                             </tr>
                         `;
                     });
                 }
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro ao buscar dados do banco de dados (Neon).</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB.</td></tr>';
             }
         }
 
@@ -417,39 +515,23 @@
             };
 
             try {
-                const res = await fetch('/api/master/empresas', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
+                const res = await fetch('/api/master/empresas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (res.ok) {
                     alert("Cliente cadastrado com sucesso!");
                     document.getElementById('form-cad-empresa').reset();
                     toggleCadastroForm();
                     carregarEmpresas();
                     carregarMetricas();
-                } else {
-                    alert("Erro ao cadastrar.");
-                }
-            } catch (err) {
-                alert("Erro de conexão com a API.");
-            } finally {
-                btn.disabled = false;
-            }
+                } else { alert("Erro ao cadastrar."); }
+            } catch (err) { alert("Erro de API."); } finally { btn.disabled = false; }
         }
 
         async function carimbarPagamento(id, nome) {
             if(confirm(`Confirmar o recebimento do pagamento do cliente ${nome}?`)) {
                 try {
                     const res = await fetch(`/api/master/empresas/${id}/carimbar-pagamento`, { method: 'POST' });
-                    if(res.ok) {
-                        const data = await res.json();
-                        alert(data.mensagem);
-                    }
-                } catch(e) {
-                    alert("Erro ao registrar carimbo.");
-                }
+                    if(res.ok) { alert((await res.json()).mensagem); }
+                } catch(e) { alert("Erro ao registrar carimbo."); }
             }
         }
 
@@ -465,66 +547,31 @@
         async function salvarEdicao(e) {
             e.preventDefault();
             const id = document.getElementById('edit-id').value;
-            const payload = {
-                nome_fantasia: document.getElementById('edit-fantasia').value,
-                plano: document.getElementById('edit-plano').value,
-                vencimento: parseInt(document.getElementById('edit-vencimento').value),
-                limite_usuarios: parseInt(document.getElementById('edit-limite').value)
-            };
-
+            const payload = { nome_fantasia: document.getElementById('edit-fantasia').value, plano: document.getElementById('edit-plano').value, vencimento: parseInt(document.getElementById('edit-vencimento').value), limite_usuarios: parseInt(document.getElementById('edit-limite').value) };
             try {
-                const res = await fetch(`/api/master/empresas/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if(res.ok) {
-                    alert("Registro atualizado.");
-                    closeModal('modalEditar');
-                    carregarEmpresas();
-                }
-            } catch(e) {
-                alert("Erro ao editar.");
-            }
+                const res = await fetch(`/api/master/empresas/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if(res.ok) { alert("Registro atualizado."); closeModal('modalEditar'); carregarEmpresas(); }
+            } catch(e) {}
         }
 
         async function toggleStatus(id) {
-            try {
-                const res = await fetch(`/api/master/empresas/${id}/status`, { method: 'PATCH' });
-                if(res.ok) carregarEmpresas();
-            } catch(e) {
-                alert("Erro de conexão.");
-            }
+            try { const res = await fetch(`/api/master/empresas/${id}/status`, { method: 'PATCH' }); if(res.ok) carregarEmpresas(); } catch(e) {}
         }
 
         async function deletarEmpresa(id) {
             if(confirm("ATENÇÃO: Deseja realmente excluir este cliente do Neon DB?")) {
-                try {
-                    const res = await fetch(`/api/master/empresas/${id}`, { method: 'DELETE' });
-                    if(res.ok) {
-                        carregarEmpresas();
-                        carregarMetricas();
-                    }
-                } catch(e) {
-                    alert("Erro de conexão.");
-                }
+                try { const res = await fetch(`/api/master/empresas/${id}`, { method: 'DELETE' }); if(res.ok) { carregarEmpresas(); carregarMetricas(); } } catch(e) {}
             }
         }
 
-        // Navegação e UI Auxiliares
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
-            
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
-            
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
-            if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-            }
+            if (sidebar.classList.contains('open')) { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
         }
 
         function toggleCadastroForm() {
@@ -533,11 +580,7 @@
             if(!card.classList.contains('hidden')) card.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('mobile-overlay').classList.toggle('active');
-        }
-
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-overlay').classList.toggle('active'); }
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
     </script>
