@@ -450,7 +450,7 @@ def update_configuracoes(data: dict, db=Depends(get_db)):
         """, (
             data.get("titulo"), data.get("endereco"), data.get("telefone"),
             data.get("slogan"), data.get("horario_funcionamento"),
-            data.get("cor_primaria"), data.get("cor_secundaria"), 
+            data.get("cor_primaria"), data.get("cor_secundaria"),
             data.get("logo_url"), data.get("empresa_id")
         ))
         db.commit()
@@ -460,3 +460,46 @@ def update_configuracoes(data: dict, db=Depends(get_db)):
         db.rollback()
         cursor.close()
         raise HTTPException(status_code=400, detail=str(e))
+```[cite: 7]
+
+---
+
+### 2. A função `saveConfigurations()` otimizada no Front-end (`admin_5.html`)
+Garanta que a sua função de salvamento no script do painel esteja exatamente assim, preservando todos os dados preenchidos na tela:
+
+```javascript
+async function saveConfigurations() {
+    const configAtual = await apiRequest('/configuracoes') || {};
+
+    let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+    const fileInput = document.getElementById('input-config-logo-file');
+    
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        try {
+            logoBase64 = await convertFileToBase64(fileInput.files[0]);
+        } catch (err) {
+            console.error("Erro ao converter imagem:", err);
+        }
+    }
+
+    const payload = {
+        titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
+        slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
+        endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
+        telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
+        horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
+        cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
+        cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
+        logo_url: logoBase64
+    };
+
+    const res = await apiRequest('/configuracoes', 'PUT', payload);
+    if (res) {
+        alert('Configurações, cores e logotipo salvos com sucesso!');
+        loadConfigurations();
+        aplicarIdentidadeVisualDaEmpresa();
+    } else {
+        alert('Erro ao salvar as configurações.');
+    }
+}
+```[cite: 8]
