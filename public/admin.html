@@ -43,16 +43,17 @@
         .badge-warning { background-color: var(--warning); color: #333; }
         .badge-info { background-color: var(--info); }
 
-        /* LOGOTIPO EXATO */
-        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        /* LOGOTIPO DINÂMICO */
+        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; max-height: 50px; }
+        .on-logo-container img { max-height: 45px; max-width: 140px; object-fit: contain; }
         .on-logo-top { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
         .on-logo-bottom { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; margin-top: 2px; }
         @keyframes neon-pulse {
             0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
             100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
         }
-        .topbar .on-logo-container { transform: scale(0.65); }
-        .sidebar-header .on-logo-container { transform: scale(0.85); margin-top: 10px; }
+        .topbar .on-logo-container { transform: scale(0.85); }
+        .sidebar-header .on-logo-container { transform: scale(1); margin-top: 10px; }
 
         /* TELA DE LOGIN INTEGRADA */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 9999; display: flex; justify-content: center; align-items: center; }
@@ -132,13 +133,13 @@
     <!-- TELA DE LOGIN POR CNPJ INTEGRADA -->
     <div id="auth-overlay">
         <div class="auth-card">
-            <div class="on-logo-container mb-20" style="margin-bottom: 20px;">
+            <div class="on-logo-container mb-20 logo-preview-box" style="margin-bottom: 20px;">
                 <span class="on-logo-top">ON</span>
                 <span class="on-logo-bottom">delivery</span>
             </div>
             <h3 style="margin-bottom: 8px; font-size: 1.3rem;">Painel do Gestor</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Digite o CNPJ da sua empresa cadastrada para acessar o sistema.</p>
-            
+
             <form onsubmit="event.preventDefault(); fazerLoginGestor();">
                 <div class="form-group" style="text-align: left;">
                     <label>CNPJ da Empresa</label>
@@ -154,7 +155,7 @@
     <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="on-logo-container">
+            <div class="on-logo-container logo-preview-box">
                 <span class="on-logo-top">ON</span>
                 <span class="on-logo-bottom">delivery</span>
             </div>
@@ -177,7 +178,7 @@
     <main class="main-content">
         <header class="topbar">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
-            <div class="on-logo-container">
+            <div class="on-logo-container logo-preview-box">
                 <span class="on-logo-top">ON</span>
                 <span class="on-logo-bottom">delivery</span>
             </div>
@@ -498,7 +499,7 @@
     <div class="form-grid">
         <div class="card">
             <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
-            <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>            
+            <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control" id="input-config-logo-file"></div>
             <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
             <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
             <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
@@ -508,7 +509,6 @@
         <div>
             <div class="card">
                 <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
-                <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>
                 <div class="flex gap-10" style="flex-wrap: wrap;">
                     <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" id="input-config-cor1" value="#ff5722" style="height: 45px; padding: 2px;"></div>
                     <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
@@ -549,10 +549,10 @@
 
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
-        const API_BASE_URL = "/api";       
+        const API_BASE_URL = "/api";
         let currentActiveId = null;
 
-        
+
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
@@ -588,12 +588,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cnpj: cnpjInput })
                 });
-                
+
                 if (res.ok) {
                     const dados = await res.json();
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
                     localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
-                    
+
                     // Esconde a tela de login e inicializa o painel
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
@@ -611,68 +611,67 @@
             location.reload();
         }
 
-        
+
         async function updateOrderStatus(orderId, selectElement) {
-    const novoStatus = selectElement.value;
-    const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
-    
-    if (response) {
-        // Atualiza o painel para refletir os novos contadores e dados reais do banco
-        loadDashboardData();
-    } else {
-        alert("Erro ao atualizar o status do pedido.");
-    }
-}
-        // ================= CARREGAMENTO DE DADOS (GET) =================
-       async function loadDashboardData() {
-    const data = await apiRequest('/dashboard');
-    if (data) {
-        document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
-        document.getElementById('val-delivered-count').innerText = data.entregues || 0;
-        document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
-        document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
-    }
-    loadOrders();
-}
+            const novoStatus = selectElement.value;
+            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+
+            if (response) {
+                loadDashboardData();
+            } else {
+                alert("Erro ao atualizar o status do pedido.");
+            }
+        }
+
+        async function loadDashboardData() {
+            const data = await apiRequest('/dashboard');
+            if (data) {
+                document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
+                document.getElementById('val-delivered-count').innerText = data.entregues || 0;
+                document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
+                document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
+            }
+            loadOrders();
+        }
 
         async function loadOrders() {
-    const orders = await apiRequest('/orders');
-    const tbody = document.getElementById('tbody-recent-orders');
-    tbody.innerHTML = '';
-    
-    if (!orders || orders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
-        return;
-    }
+            const orders = await apiRequest('/orders');
+            const tbody = document.getElementById('tbody-recent-orders');
+            tbody.innerHTML = '';
 
-    orders.forEach(order => {
-        tbody.innerHTML += `
-            <tr data-id="${order.id}">
-                <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
-                <td>R$ ${order.total || '0,00'}</td>
-                <td>
-                    <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                        <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                        <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                        <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                        <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                        <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
-                    </select>
-                </td>
-                <td style="text-align: right;">
-                    <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-}
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
+                return;
+            }
+
+            orders.forEach(order => {
+                tbody.innerHTML += `
+                    <tr data-id="${order.id}">
+                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
+                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
+                        <td>R$ ${order.total || '0,00'}</td>
+                        <td>
+                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
+                                <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
+                                <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
+                                <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
+                                <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                            </select>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         async function loadProducts() {
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
             tbody.innerHTML = '';
-            
+
             if (!products || products.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
                 return;
@@ -761,7 +760,6 @@
             });
         }
 
-        // ================= CADASTRO / CRIAÇÃO (POST) =================
         async function createProduct() {
             const payload = {
                 nome: document.getElementById('input-new-prod-name').value,
@@ -826,7 +824,6 @@
             }
         }
 
-
         async function triggerBackup() {
             await apiRequest('/backup', 'POST');
             alert('Backup executado com sucesso.');
@@ -836,81 +833,97 @@
             alert(`Gerando relatório de [${tipo}]...`);
         }
 
-      async function loadConfigurations() {
-    const config = await apiRequest('/configuracoes');
-    if (config) {
-        document.getElementById('input-config-title').value = config.titulo || '';
-        document.getElementById('input-config-slogan').value = config.slogan || '';
-        document.getElementById('input-config-address').value = config.endereco || '';
-        document.getElementById('input-config-phone').value = config.telefone || '';
-        document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
-        if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
-        if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
-        
-        // Se houver logo salva, podemos guardar temporariamente ou exibir uma prévia se houver elemento img
-        window.currentLogoBase64 = config.logo_url || '';
-    }
-}
-
-// Função auxiliar para converter o arquivo de imagem enviado em Base64
-function convertFileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-}
-
-async function saveConfigurations() {
-    let logoBase64 = window.currentLogoBase64 || '';
-    const fileInput = document.getElementById('input-config-logo-file');
-    
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        try {
-            logoBase64 = await convertFileToBase64(fileInput.files[0]);
-        } catch (err) {
-            console.error("Erro ao converter imagem:", err);
+        async function loadConfigurations() {
+            const config = await apiRequest('/configuracoes');
+            if (config) {
+                document.getElementById('input-config-title').value = config.titulo || '';
+                document.getElementById('input-config-slogan').value = config.slogan || '';
+                document.getElementById('input-config-address').value = config.endereco || '';
+                document.getElementById('input-config-phone').value = config.telefone || '';
+                document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
+                if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
+                if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
+                
+                window.currentLogoBase64 = config.logo_url || '';
+                
+                // Atualiza a logo visualmente na interface se existir salva
+                atualizarExibicaoLogotipo(window.currentLogoBase64);
+            }
         }
-    }
 
-    const payload = {
-        titulo: document.getElementById('input-config-title').value,
-        slogan: document.getElementById('input-config-slogan').value,
-        endereco: document.getElementById('input-config-address').value,
-        telefone: document.getElementById('input-config-phone').value,
-        horario_funcionamento: document.getElementById('textarea-config-hours').value,
-        cor_primaria: document.getElementById('input-config-cor1').value,
-        cor_secundaria: document.getElementById('input-config-cor2').value,
-        logo_url: logoBase64
-    };
-
-    const res = await apiRequest('/configuracoes', 'PUT', payload);
-    if (res) {
-        alert('Configurações, cores e logotipo salvos com sucesso!');
-        loadConfigurations();
-        aplicarIdentidadeVisualDaEmpresa();
-    } else {
-        alert('Erro ao salvar as configurações.');
-    }
-}
-async function aplicarIdentidadeVisualDaEmpresa() {
-    try {
-        const config = await apiRequest('/configuracoes');
-        if (!config) return;
-
-        const root = document.documentElement;
-        if (config.cor_primaria) {
-            root.style.setProperty('--brand-primary', config.cor_primaria);
+        function atualizarExibicaoLogotipo(logoBase64) {
+            const containers = document.querySelectorAll('.logo-preview-box');
+            containers.forEach(container => {
+                if (logoBase64 && logoBase64.trim() !== '') {
+                    container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
+                } else {
+                    container.innerHTML = `
+                        <span class="on-logo-top">ON</span>
+                        <span class="on-logo-bottom">delivery</span>
+                    `;
+                }
+            });
         }
-        if (config.cor_secundaria) {
-            root.style.setProperty('--brand-secondary', config.cor_secundaria);
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
         }
-    } catch (e) {
-        console.error("Erro ao aplicar identidade visual:", e);
-    }
-}
-        // ================= CONTROLE DE UI =================
+
+        async function saveConfigurations() {
+            let logoBase64 = window.currentLogoBase64 || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+            
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    logoBase64 = await convertFileToBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Erro ao converter imagem:", err);
+                }
+            }
+
+            const payload = {
+                titulo: document.getElementById('input-config-title').value,
+                slogan: document.getElementById('input-config-slogan').value,
+                endereco: document.getElementById('input-config-address').value,
+                telefone: document.getElementById('input-config-phone').value,
+                horario_funcionamento: document.getElementById('textarea-config-hours').value,
+                cor_primaria: document.getElementById('input-config-cor1').value,
+                cor_secundaria: document.getElementById('input-config-cor2').value,
+                logo_url: logoBase64
+            };
+
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações, cores e logotipo salvos com sucesso!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            } else {
+                alert('Erro ao salvar as configurações.');
+            }
+        }
+
+        async function aplicarIdentidadeVisualDaEmpresa() {
+            try {
+                const config = await apiRequest('/configuracoes');
+                if (!config) return;
+
+                const root = document.documentElement;
+                if (config.cor_primaria) {
+                    root.style.setProperty('--brand-primary', config.cor_primaria);
+                }
+                if (config.cor_secundaria) {
+                    root.style.setProperty('--brand-secondary', config.cor_secundaria);
+                }
+            } catch (e) {
+                console.error("Erro ao aplicar identidade visual:", e);
+            }
+        }
+
         function toggleMotoboyFields(funcao, idContainer) {
             const camposMotoboy = document.getElementById(idContainer);
             if (camposMotoboy) {
@@ -924,7 +937,7 @@ async function aplicarIdentidadeVisualDaEmpresa() {
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
-            
+
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
             if (sidebar.classList.contains('open')) {
@@ -973,15 +986,12 @@ async function aplicarIdentidadeVisualDaEmpresa() {
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
-                // Se já estiver logado, esconde a tela de login e inicia
                 document.getElementById('auth-overlay').style.display = 'none';
                 inicializarPainel();
             } else {
-                // Mantém a tela de login visível
                 document.getElementById('auth-overlay').style.display = 'flex';
             }
         };
-        
     </script>
 </body>
 </html>
