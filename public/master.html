@@ -280,6 +280,10 @@
                     <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
                         <input type="text" class="form-control" placeholder="Buscar empresa..." style="width: 100%; max-width: 400px;">
                     </div>
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0; flex-wrap: wrap; gap: 15px;">
+                        <input type="text" class="form-control" placeholder="Buscar empresa por nome ou CNPJ..." style="width: 100%; max-width: 400px; margin-bottom: 0;">
+                        <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Relatório</button>
+                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead>
@@ -313,16 +317,24 @@
     </main>
 
     <!-- ================= MODAIS ================= -->
-    <div class="modal-overlay" id="modalEditar">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="ph ph-pencil-simple text-brand-primary"></i> Editar Empresa</h3>
-                <button class="close-modal" onclick="closeModal('modalEditar')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-editar" onsubmit="salvarEdicao(event)">
-                    <input type="hidden" id="edit-id">
+   <div class="modal-overlay" id="modalEditar">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-pencil-simple text-brand-primary"></i> Editar Informações Completas da Empresa</h3>
+            <button class="close-modal" onclick="closeModal('modalEditar')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-editar" onsubmit="salvarEdicao(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-grid">
+                    <!-- 10 Campos de Atualização -->
+                    <div class="form-group"><label>Razão Social</label><input type="text" id="edit-razao" class="form-control" required></div>
                     <div class="form-group"><label>Nome Fantasia</label><input type="text" id="edit-fantasia" class="form-control" required></div>
+                    <div class="form-group"><label>CNPJ</label><input type="text" id="edit-cnpj" class="form-control" required></div>
+                    <div class="form-group"><label>Responsável</label><input type="text" id="edit-resp" class="form-control" required></div>
+                    <div class="form-group"><label>Contato / WhatsApp</label><input type="text" id="edit-contato" class="form-control" required></div>
+                    <div class="form-group"><label>E-mail Admin</label><input type="email" id="edit-email" class="form-control" required></div>
+                    <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo</label><input type="text" id="edit-endereco" class="form-control" required></div>
                     <div class="form-group"><label>Plano</label>
                         <select id="edit-plano" class="form-control">
                             <option value="basic">Basic</option>
@@ -330,16 +342,17 @@
                             <option value="enterprise">Enterprise</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Dia de Vencimento</label><input type="number" id="edit-vencimento" class="form-control" required></div>
+                    <div class="form-group"><label>Dia de Vencimento</label><input type="number" id="edit-vencimento" class="form-control" min="1" max="31" required></div>
                     <div class="form-group"><label>Limite de Usuários</label><input type="number" id="edit-limite" class="form-control" required></div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalEditar')">Cancelar</button>
-                <button class="btn btn-primary" onclick="document.getElementById('form-editar').requestSubmit()"><i class="ph ph-floppy-disk"></i> Salvar</button>
-            </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalEditar')">Cancelar</button>
+            <button class="btn btn-primary" onclick="document.getElementById('form-editar').requestSubmit()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Alterações</button>
         </div>
     </div>
+</div>
 
     <div class="modal-overlay" id="modalPix">
         <div class="modal-content" style="max-width: 400px;">
@@ -616,15 +629,53 @@ async function actionCarimbo(id, nome) {
         }
 
         function abrirEditar(emp) {
-            document.getElementById('edit-id').value = emp.id; document.getElementById('edit-fantasia').value = emp.nome_fantasia; document.getElementById('edit-plano').value = emp.plano; document.getElementById('edit-vencimento').value = emp.vencimento; document.getElementById('edit-limite').value = emp.limite_usuarios; openModal('modalEditar');
-        }
+    document.getElementById('edit-id').value = emp.id;
+    document.getElementById('edit-razao').value = emp.razao_social || '';
+    document.getElementById('edit-fantasia').value = emp.nome_fantasia || '';
+    document.getElementById('edit-cnpj').value = emp.cnpj || '';
+    document.getElementById('edit-resp').value = emp.responsavel || '';
+    document.getElementById('edit-contato').value = emp.contato || '';
+    document.getElementById('edit-email').value = emp.email_admin || '';
+    document.getElementById('edit-endereco').value = emp.endereco || '';
+    document.getElementById('edit-plano').value = emp.plano || 'basic';
+    document.getElementById('edit-vencimento').value = emp.vencimento || 10;
+    document.getElementById('edit-limite').value = emp.limite_usuarios || 5;
+    openModal('modalEditar');
+}
 
-        async function salvarEdicao(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            const payload = { nome_fantasia: document.getElementById('edit-fantasia').value, plano: document.getElementById('edit-plano').value, vencimento: parseInt(document.getElementById('edit-vencimento').value), limite_usuarios: parseInt(document.getElementById('edit-limite').value) };
-            try { const res = await fetch(`/api/master/empresas/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if(res.ok) { alert("Atualizado."); closeModal('modalEditar'); carregarEmpresas(); } } catch(e) {}
+      async function salvarEdicao(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-id').value;
+    const payload = {
+        razao_social: document.getElementById('edit-razao').value,
+        nome_fantasia: document.getElementById('edit-fantasia').value,
+        cnpj: document.getElementById('edit-cnpj').value,
+        responsavel: document.getElementById('edit-resp').value,
+        contato: document.getElementById('edit-contato').value,
+        email_admin: document.getElementById('edit-email').value,
+        endereco: document.getElementById('edit-endereco').value,
+        plano: document.getElementById('edit-plano').value,
+        vencimento: parseInt(document.getElementById('edit-vencimento').value),
+        limite_usuarios: parseInt(document.getElementById('edit-limite').value)
+    };
+
+    try {
+        const res = await fetch(`/api/master/empresas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            alert("Dados atualizados com sucesso no Neon DB!");
+            closeModal('modalEditar');
+            carregarEmpresas();
+        } else {
+            alert("Erro ao salvar alterações.");
         }
+    } catch(err) {
+        alert("Erro de conexão com o servidor.");
+    }
+}
 
         async function deletarEmpresa(id) {
             if(confirm("Deseja realmente excluir este cliente do Neon DB?")) {
