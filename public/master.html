@@ -444,6 +444,132 @@
     </div>
 </div>
 
+    <!-- ================= HELPDESK MASTER COMPLETO ================= -->
+<section id="sec-helpdesk" class="page-section hidden">
+    <div class="page-header flex justify-between align-center action-bar-mobile">
+        <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk & Suporte Master</h1>
+    </div>
+
+    <!-- Indicadores de SLA e Chamados -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div class="card" style="border-top: 4px solid var(--info); text-align: center; padding: 15px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Abertos</span>
+            <h2 id="ind-abertos" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--warning); text-align: center; padding: 15px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Em Atendimento</span>
+            <h2 id="ind-atendimento" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+        </div>
+        <div class="card" style="border-top: 4px solid #6c757d; text-align: center; padding: 15px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Pendentes</span>
+            <h2 id="ind-pendentes" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--success); text-align: center; padding: 15px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Resolvidos</span>
+            <h2 id="ind-resolvidos" style="font-size: 1.5rem; color: var(--success); margin-top: 5px;">0</h2>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--brand-primary); text-align: center; padding: 15px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Tempo Médio (SLA)</span>
+            <h2 style="font-size: 1.4rem; color: var(--brand-primary); margin-top: 5px;">42 min</h2>
+        </div>
+    </div>
+
+    <!-- Lista de Chamados com Filtros e Impressão -->
+    <div class="card" id="area-impressao-helpdesk" style="padding: 0;">
+        <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0; flex-wrap: wrap; gap: 15px;">
+            <div class="flex gap-10 align-center" style="width: 100%; max-width: 500px;">
+                <input type="text" id="filtro-busca-hd" class="form-control" placeholder="Buscar por empresa ou assunto..." style="margin-bottom: 0;">
+                <input type="date" id="filtro-data-hd" class="form-control" style="width: auto; margin-bottom: 0;" onchange="carregarHelpdesk()">
+            </div>
+            <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Resultado</button>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente / Empresa</th>
+                        <th>Resumo do Problema</th>
+                        <th>Status</th>
+                        <th>Técnico</th>
+                        <th style="text-align: right;">Ações e Modificações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-chamados">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ================= MODAIS DE AÇÃO DO HELPDESK ================= -->
+
+<!-- Modal Concluir Chamado -->
+<div class="modal-overlay" id="modalConcluirChamado">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-check-circle" style="color: var(--success);"></i> Concluir Atendimento</h3>
+            <button class="close-modal" onclick="closeModal('modalConcluirChamado')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="concluir-chamado-id">
+            <div class="form-group">
+                <label>Informar Técnico Responsável</label>
+                <input type="text" id="input-tecnico-nome" class="form-control" placeholder="Ex: Suporte Nível 2 - Carlos" required>
+            </div>
+            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 15px;">
+                <input type="checkbox" id="check-envia-comprovante" checked style="width: 18px; height: 18px;">
+                <label style="margin-bottom: 0; cursor: pointer;" for="check-envia-comprovante">Enviar comprovante de atendimento automático ao cliente</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalConcluirChamado')">Cancelar</button>
+            <button class="btn btn-success" onclick="salvarConclusaoChamado()"><i class="ph ph-paper-plane-tilt"></i> Enviar e Concluir</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar Chamado -->
+<div class="modal-overlay" id="modalCancelarChamado">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-x-circle" style="color: var(--danger);"></i> Cancelar Chamado</h3>
+            <button class="close-modal" onclick="closeModal('modalCancelarChamado')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="cancelar-chamado-id">
+            <div class="form-group">
+                <label>Motivo do Cancelamento</label>
+                <textarea id="textarea-motivo-cancelamento" class="form-control" rows="3" placeholder="Informe o motivo detalhado..." required></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalCancelarChamado')">Voltar</button>
+            <button class="btn btn-danger" onclick="salvarCancelamentoChamado()"><i class="ph ph-trash"></i> Confirmar Cancelamento</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Histórico do Chamado -->
+<div class="modal-overlay" id="modalHistoricoChamado">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico do Chamado #<span id="hist-chamado-id"></span></h3>
+            <button class="close-modal" onclick="closeModal('modalHistoricoChamado')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul id="lista-historico-chamado" style="list-style: none; padding: 0;">
+                <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Histórico</button>
+            <button class="btn btn-outline" onclick="closeModal('modalHistoricoChamado')">Fechar</button>
+        </div>
+    </div>
+</div>
+
     <!-- ================= JAVASCRIPT MASTER COMPLETAMENTE INTEGRADO ================= -->
     <script>
         let alertasGlobaisCache = [];
@@ -848,6 +974,159 @@ async function abrirHistoricoEmpresa(id, nome) {
         listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
     }
 }
+
+        // Carrega indicadores e chamados ao abrir a aba
+        async function carregarHelpdesk() {
+            try {
+                // Indicadores
+                const resInd = await fetch('/api/master/helpdesk/indicadores');
+                if(resInd.ok) {
+                    const ind = await resInd.json();
+                    document.getElementById('ind-abertos').innerText = ind.abertos || 0;
+                    document.getElementById('ind-atendimento').innerText = ind.em_atendimento || 0;
+                    document.getElementById('ind-pendentes').innerText = ind.pendentes || 0;
+                    document.getElementById('ind-resolvidos').innerText = ind.resolvidos || 0;
+                }
+
+                // Lista de Chamados
+                const dataFiltro = document.getElementById('filtro-data-hd').value;
+                const url = dataFiltro ? `/api/master/helpdesk/chamados?data=${dataFiltro}` : '/api/master/helpdesk/chamados';
+                
+                const resList = await fetch(url);
+                const tbody = document.getElementById('tabela-chamados');
+                
+                if(resList.ok) {
+                    const chamados = await resList.json();
+                    if(chamados.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum chamado registrado.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = '';
+                    chamados.forEach(c => {
+                        let badgeCls = 'badge-warning';
+                        if(c.status === 'resolvido') badgeCls = 'badge-success';
+                        if(c.status === 'cancelado') badgeCls = 'badge-danger';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${c.empresa_nome}</strong><br><small>${c.data_criacao}</small></td>
+                                <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${c.resumo_problema}</td>
+                                <td>
+                                    <select class="form-control" style="padding: 4px; font-size: 0.8rem; width: auto;" onchange="alterarStatusChamado(${c.id}, this.value)">
+                                        <option value="aberto" ${c.status === 'aberto' ? 'selected' : ''}>Aberto</option>
+                                        <option value="em_atendimento" ${c.status === 'em_atendimento' ? 'selected' : ''}>Análise / Em Atendimento</option>
+                                        <option value="em_producao" ${c.status === 'em_producao' ? 'selected' : ''}>Em Produção</option>
+                                        <option value="pendente" ${c.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                                        <option value="resolvido" ${c.status === 'resolvido' ? 'selected' : ''}>Resolvido</option>
+                                    </select>
+                                </td>
+                                <td>${c.tecnico_responsavel || 'Não atribuído'}</td>
+                                <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                                    <button class="btn-action" title="Concluir Chamado e Enviar Comprovante" onclick="abrirModalConcluir(${c.id})"><i class="ph ph-seal-check" style="color: var(--success);"></i></button>
+                                    <button class="btn-action" title="Histórico do Chamado" onclick="abrirHistoricoChamado(${c.id})"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                    <button class="btn-action" title="Cancelar Chamado" onclick="abrirModalCancelar(${c.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch(e) {
+                console.error("Erro ao carregar Helpdesk");
+            }
+        }
+
+        async function alterarStatusChamado(id, novoStatus) {
+            try {
+                await fetch(`/api/master/helpdesk/chamados/${id}/status`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ status: novoStatus })
+                });
+                carregarHelpdesk();
+            } catch(e) { alert("Erro ao atualizar status."); }
+        }
+
+        function abrirModalConcluir(id) {
+            document.getElementById('concluir-chamado-id').value = id;
+            document.getElementById('input-tecnico-nome').value = '';
+            openModal('modalConcluirChamado');
+        }
+
+        async function salvarConclusaoChamado() {
+            const id = document.getElementById('concluir-chamado-id').value;
+            const tecnico = document.getElementById('input-tecnico-nome').value;
+            const enviarComp = document.getElementById('check-envia-comprovante').checked;
+
+            if(!tecnico) { alert("Informe o nome do técnico responsável."); return; }
+
+            try {
+                const res = await fetch(`/api/master/helpdesk/chamados/${id}/concluir`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tecnico: tecnico, enviar_comprovante: enviarComp })
+                });
+                if(res.ok) {
+                    alert("Chamado concluído com sucesso! Comprovante automático gerado e disparado.");
+                    closeModal('modalConcluirChamado');
+                    carregarHelpdesk();
+                }
+            } catch(e) { alert("Erro ao concluir chamado."); }
+        }
+
+        function abrirModalCancelar(id) {
+            document.getElementById('cancelar-chamado-id').value = id;
+            document.getElementById('textarea-motivo-cancelamento').value = '';
+            openModal('modalCancelarChamado');
+        }
+
+        async function salvarCancelamentoChamado() {
+            const id = document.getElementById('cancelar-chamado-id').value;
+            const motivo = document.getElementById('textarea-motivo-cancelamento').value;
+
+            if(!motivo) { alert("Informe o motivo do cancelamento."); return; }
+
+            try {
+                const res = await fetch(`/api/master/helpdesk/chamados/${id}/cancelar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ motivo: motivo })
+                });
+                if(res.ok) {
+                    alert("Chamado cancelado e registrado no histórico.");
+                    closeModal('modalCancelarChamado');
+                    carregarHelpdesk();
+                }
+            } catch(e) { alert("Erro ao cancelar chamado."); }
+        }
+
+        async function abrirHistoricoChamado(id) {
+            document.getElementById('hist-chamado-id').innerText = id;
+            const lista = document.getElementById('lista-historico-chamado');
+            lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando...</li>';
+            openModal('modalHistoricoChamado');
+
+            try {
+                const res = await fetch(`/api/master/helpdesk/chamados/${id}/historico`);
+                if(res.ok) {
+                    const historicos = await res.json();
+                    if(historicos.length === 0) {
+                        lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico deste chamado.</li>';
+                        return;
+                    }
+                    lista.innerHTML = '';
+                    historicos.forEach(h => {
+                        lista.innerHTML += `
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
+                                <span style="font-size: 0.8rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 3px 6px; border-radius: 4px;">${h.data}</span>
+                                <span style="font-size: 0.9rem;">${h.descricao}</span>
+                            </li>
+                        `;
+                    });
+                }
+            } catch(e) {
+                lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar histórico.</li>';
+            }
+        }
     </script>
 </body>
 </html>
