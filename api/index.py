@@ -66,6 +66,10 @@ class ColaboradorCreate(BaseModel):
 class MasterAuth(BaseModel):
     senha: str
 
+class PixConfigUpdate(BaseModel):
+    qrcode_imagem: str # Pode ser a URL da imagem ou base64 enviado pelo Master
+    copia_e_cola: str
+
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
@@ -81,6 +85,30 @@ def get_master_metrics(db=Depends(get_db)):
     cursor.execute("SELECT pg_database_size(current_database()) as db_size;")
     db_size_str = f"{round(cursor.fetchone()['db_size'] / (1024 * 1024), 2)} MB"
     return {"db_disk_usage": db_size_str, "total_clientes": total_clientes, "mrr": f"R$ {total_clientes * 250},00"}
+
+# Rota para o Master salvar/atualizar o QR Code e a chave Pix da empresa
+@app.put("/api/master/empresas/{id}/pix")
+def configurar_pix_empresa(id: int, pix: PixConfigUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            UPDATE empresas 
+            SET qrcode_imagem = %s, copia_e_cola = %s 
+            WHERE id = %s
+        """, (pix.qrcode_imagem, pix.copia_e_cola, id))
+        db.commit()
+        return {"mensagem": "QR Code e Chave Pix configurados com sucesso para o Gestor."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+# Rota para o Painel do Gestor consultar os dados de pagamento atuais
+@app.get("/api/gestor/faturamento")
+def get_faturamento_gestor(db=Depends(get_db)):
+    cursor = db.cursor()
+    # Aqui você busca os dados da empresa logada (exemplo ID 1 ou por sessão)
+    cursor.execute("SELECT nome_fantasia, plano, vencimento, qrcode_imagem, copia_e_cola, status FROM empresas LIMIT 1")
+    return cursor.fetchone()
 
 @app.get("/api/master/notificacoes")
 def get_master_notificacoes(data: Optional[str] = None, db=Depends(get_db)):
