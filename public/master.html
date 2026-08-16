@@ -728,19 +728,58 @@
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
         // Define automaticamente o mês atual no título do modal PIX ao abrir
+       // Converte a imagem do QR Code selecionada no dispositivo para Base64
+        function converterImagemParaBase64(event) {
+            const arquivo = event.target.files[0];
+            if (arquivo) {
+                const leitor = new FileReader();
+                leitor.onload = function(e) {
+                    const base64String = e.target.result;
+                    document.getElementById('input-url-qrcode-base64').value = base64String;
+                    
+                    // Exibe a pré-visualização para o Master conferir
+                    const previewImg = document.getElementById('preview-qrcode-img');
+                    previewImg.src = base64String;
+                    document.getElementById('preview-qrcode-container').style.display = 'block';
+                };
+                leitor.readAsDataURL(arquivo);
+            }
+        }
+
+        // Abre o modal de configuração de Pix já formatando o mês atual de referência
         function abrirModalConfigurarPix(id, nome) {
             document.getElementById('pix-empresa-id').value = id;
+            
+            // Define o mês e ano atual por extenso (ex: "Agosto de 2026")
             const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             const d = new Date();
-            document.getElementById('pix-mes-vigente').innerText = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
+            const mesAnoAtual = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
+            
+            document.getElementById('pix-mes-referencia-texto').innerText = mesAnoAtual;
+            
+            // Limpa campos anteriores
+            document.getElementById('input-arquivo-qrcode').value = '';
+            document.getElementById('input-url-qrcode-base64').value = '';
+            document.getElementById('preview-qrcode-container').style.display = 'none';
+            document.getElementById('input-copia-cola-master').value = '';
+
             openModal('modalPixMaster');
         }
 
+        // Salva a configuração de Pix com a imagem em Base64 e o mês de referência
         async function salvarConfiguracaoPix() {
             const id = document.getElementById('pix-empresa-id').value;
+            const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
+            const copiaECola = document.getElementById('input-copia-cola-master').value;
+
+            if(!imagemBase64) {
+                alert("Por favor, selecione a imagem do QR Code no seu dispositivo.");
+                return;
+            }
+
             const payload = {
-                qrcode_imagem: document.getElementById('input-url-qrcode').value,
-                copia_e_cola: document.getElementById('input-copia-cola-master').value
+                qrcode_imagem: imagemBase64,
+                copia_e_cola: copiaECola
             };
 
             try {
@@ -751,7 +790,7 @@
                 });
 
                 if(res.ok) {
-                    alert("QR Code e Código Pix enviados com sucesso para o painel do Gestor!");
+                    alert("QR Code do dispositivo e Código Pix enviados com sucesso para o painel do Gestor!");
                     closeModal('modalPixMaster');
                 } else {
                     alert("Erro ao salvar configuração.");
