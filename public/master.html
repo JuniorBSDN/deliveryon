@@ -351,21 +351,35 @@
     </div>
 </div>
 
-    <div class="modal-overlay" id="modalPix">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3><i class="ph ph-qr-code" style="color: var(--warning);"></i> Cobrança PIX Master</h3>
-                <button class="close-modal" onclick="closeModal('modalPix')">&times;</button>
+    
+<!-- MODAL PIX ATUALIZADO COM QR CODE E MÊS ATUAL -->
+<div class="modal-overlay" id="modalPix">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
+        <div class="modal-header">
+            <h3><i class="ph ph-qr-code" style="color: var(--warning);"></i> Cobrança PIX - Referente a <span id="pix-mes-atual"></span></h3>
+            <button class="close-modal" onclick="closeModal('modalPix')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Escaneie o QR Code abaixo ou copie a chave PIX para efetuar a quitação da mensalidade.</p>
+            
+            <!-- Imagem do Código QR do PIX Gerado -->
+            <div style="background: #f9f9f9; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; display: inline-block; margin-bottom: 15px;">
+                <img id="img-qrcode-pix" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=00020126580014br.gov.bcb.pix..." alt="QR Code PIX" style="width: 160px; height: 160px; display: block; margin: 0 auto;">
             </div>
-            <div class="modal-body" style="text-align: center;">
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Copie a chave aleatória abaixo.</p>
-                <input type="text" class="form-control" value="00020126580014br.gov.bcb.pix..." readonly style="width: 100%; text-align: center; background: #f0f0f0; font-weight: bold;">
-            </div>
-            <div class="modal-footer" style="justify-content: center;">
-                <button class="btn btn-success" style="width: 100%;" onclick="alert('Código Copiado!'); closeModal('modalPix')"><i class="ph ph-copy"></i> Copiar Código PIX</button>
+
+            <div class="form-group" style="text-align: left;">
+                <label>Chave PIX (Copia e Cola)</label>
+                <div class="flex gap-10">
+                    <input type="text" id="input-copia-pix" class="form-control" value="00020126580014br.gov.bcb.pix.copiaecola..." readonly style="background: #f0f0f0; font-size: 0.85rem;">
+                    <button class="btn btn-primary" onclick="copiarChavePix()"><i class="ph ph-copy"></i> Copiar</button>
+                </div>
             </div>
         </div>
+        <div class="modal-footer" style="justify-content: center;">
+            <button class="btn btn-outline" onclick="closeModal('modalPix')">Fechar</button>
+        </div>
     </div>
+</div>
 
     <!-- MODAL CONTRATO -->
 <div class="modal-overlay" id="modalContrato">
@@ -589,7 +603,7 @@
                         <td style="text-transform: uppercase;">${emp.plano}</td>
                         <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
                         <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Carimbo de Pagamento" onclick="actionCarimbo(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>
+                            <button class="btn-action" title="Carimbar e Autenticar Pagamento" onclick="carimbarPagamentoMaster(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>                            
                             <button class="btn-action" title="Gerar Pix" onclick="openModal('modalPix')"><i class="ph ph-qr-code"></i></button>
                             <button class="btn-action" title="Ativar/Desativar" onclick="toggleStatus(${emp.id})"><i class="ph ph-arrows-clockwise"></i></button>
                             <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
@@ -694,6 +708,50 @@ async function actionCarimbo(id, nome) {
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-overlay').classList.toggle('active'); }
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+
+        // Define automaticamente o mês atual no título do modal PIX ao abrir
+function abrirModalPix(nomeEmpresa, chavePayload) {
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const dataAtual = new Date();
+    const mesAno = `${meses[dataAtual.getMonth()]} de ${dataAtual.getFullYear()}`;
+    
+    document.getElementById('pix-mes-atual').innerText = mesAno;
+    if(chavePayload) {
+        document.getElementById('input-copia-pix').value = chavePayload;
+    }
+    openModal('modalPix');
+}
+
+// Botão para copiar a chave PIX com feedback visual
+function copiarChavePix() {
+    const inputPix = document.getElementById('input-copia-pix');
+    inputPix.select();
+    inputPix.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(inputPix.value);
+    alert("Chave PIX copiada para a área de transferência!");
+}
+
+// Função executada ao clicar no carimbo de pagamento na tabela de empresas
+async function carimbarPagamentoMaster(id, nome) {
+    if(confirm(`Deseja autenticar e carimbar o pagamento da empresa "${nome}"?\n\nIsso mudará o status para ATIVO e enviará o comprovante ao Gestor.`)) {
+        try {
+            const res = await fetch(`/api/master/empresas/${id}/carimbar-pagamento`, { method: 'POST' });
+            if(res.ok) {
+                const data = await res.json();
+                alert(data.mensagem);
+                carregarEmpresas();       // Atualiza a tabela (passa de Bloqueado/Inativo para Ativo)
+                carregarNotificacoesReais(); // Remove o alerta da central
+            } else {
+                alert("Erro ao processar autenticação.");
+            }
+        } catch(e) {
+            alert("Erro de comunicação com o servidor.");
+        }
+    }
+}
+    
     </script>
+    
 </body>
 </html>
