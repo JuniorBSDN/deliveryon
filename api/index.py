@@ -328,9 +328,6 @@ def get_dashboard(empresa_id: int):
         "cancelados": cancelados,
         "receita": f"{receita:.2f}".replace('.', ',')
     }
-@app.get("/api/orders")
-def list_orders(db=Depends(get_db)):
-    return [{"id": "1001", "hora": "18:30", "cliente": "João Silva", "endereco": "Rua A, 123", "total": "45,00", "status": "Aguardando pagamento"}]
 
 @app.get("/api/products")
 def list_products(db=Depends(get_db)):
