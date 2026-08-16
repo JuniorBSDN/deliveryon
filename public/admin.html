@@ -552,6 +552,7 @@
         const API_BASE_URL = "/api";       
         let currentActiveId = null;
 
+        
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
@@ -610,6 +611,18 @@
             location.reload();
         }
 
+        
+        async function updateOrderStatus(orderId, selectElement) {
+    const novoStatus = selectElement.value;
+    const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+    
+    if (response) {
+        // Atualiza o painel para refletir os novos contadores e dados reais do banco
+        loadDashboardData();
+    } else {
+        alert("Erro ao atualizar o status do pedido.");
+    }
+}
         // ================= CARREGAMENTO DE DADOS (GET) =================
        async function loadDashboardData() {
     const data = await apiRequest('/dashboard');
@@ -894,6 +907,7 @@
                 document.getElementById('auth-overlay').style.display = 'flex';
             }
         };
+        
     </script>
 </body>
 </html>
