@@ -417,15 +417,14 @@ def get_configuracoes(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
         SELECT nome_fantasia as titulo, endereco, contato as telefone, 
-               slogan, horario_funcionamento, cor_primaria, cor_secundaria
+               slogan, horario_funcionamento, cor_primaria, cor_secundaria,
+               qrcode_imagem as logo_url
         FROM empresas WHERE id = %s
     """, (empresa_id,))
     res = cursor.fetchone()
     cursor.close()
     if not res:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    
-    # Retorna com valores padrão caso estejam NULL no banco
     return {
         "titulo": res.get("titulo") or "",
         "slogan": res.get("slogan") or "",
@@ -433,7 +432,8 @@ def get_configuracoes(empresa_id: int, db=Depends(get_db)):
         "telefone": res.get("telefone") or "",
         "horario_funcionamento": res.get("horario_funcionamento") or "",
         "cor_primaria": res.get("cor_primaria") or "#ff5722",
-        "cor_secundaria": res.get("cor_secundaria") or "#e64a19"
+        "cor_secundaria": res.get("cor_secundaria") or "#e64a19",
+        "logo_url": res.get("logo_url") or ""
     }
 
 
@@ -445,12 +445,13 @@ def update_configuracoes(data: dict, db=Depends(get_db)):
             UPDATE empresas 
             SET nome_fantasia = %s, endereco = %s, contato = %s, 
                 slogan = %s, horario_funcionamento = %s, 
-                cor_primaria = %s, cor_secundaria = %s 
+                cor_primaria = %s, cor_secundaria = %s, qrcode_imagem = %s
             WHERE id = %s
         """, (
             data.get("titulo"), data.get("endereco"), data.get("telefone"),
             data.get("slogan"), data.get("horario_funcionamento"),
-            data.get("cor_primaria"), data.get("cor_secundaria"), data.get("empresa_id")
+            data.get("cor_primaria"), data.get("cor_secundaria"), 
+            data.get("logo_url"), data.get("empresa_id")
         ))
         db.commit()
         cursor.close()
