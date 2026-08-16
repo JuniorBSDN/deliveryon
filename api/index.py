@@ -421,23 +421,41 @@ def get_configuracoes(empresa_id: int, db=Depends(get_db)):
         FROM empresas WHERE id = %s
     """, (empresa_id,))
     res = cursor.fetchone()
+    cursor.close()
     if not res:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    return res
+    
+    # Retorna com valores padrão caso estejam NULL no banco
+    return {
+        "titulo": res.get("titulo") or "",
+        "slogan": res.get("slogan") or "",
+        "endereco": res.get("endereco") or "",
+        "telefone": res.get("telefone") or "",
+        "horario_funcionamento": res.get("horario_funcionamento") or "",
+        "cor_primaria": res.get("cor_primaria") or "#ff5722",
+        "cor_secundaria": res.get("cor_secundaria") or "#e64a19"
+    }
+
 
 @app.put("/api/configuracoes")
 def update_configuracoes(data: dict, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        UPDATE empresas 
-        SET nome_fantasia = %s, endereco = %s, contato = %s, 
-            slogan = %s, horario_funcionamento = %s, 
-            cor_primaria = %s, cor_secundaria = %s 
-        WHERE id = %s
-    """, (
-        data.get("titulo"), data.get("endereco"), data.get("telefone"),
-        data.get("slogan"), data.get("horario_funcionamento"),
-        data.get("cor_primaria"), data.get("cor_secundaria"), data.get("empresa_id")
-    ))
-    db.commit()
-    return {"mensagem": "Configurações atualizadas com sucesso!"}
+    try:
+        cursor.execute("""
+            UPDATE empresas 
+            SET nome_fantasia = %s, endereco = %s, contato = %s, 
+                slogan = %s, horario_funcionamento = %s, 
+                cor_primaria = %s, cor_secundaria = %s 
+            WHERE id = %s
+        """, (
+            data.get("titulo"), data.get("endereco"), data.get("telefone"),
+            data.get("slogan"), data.get("horario_funcionamento"),
+            data.get("cor_primaria"), data.get("cor_secundaria"), data.get("empresa_id")
+        ))
+        db.commit()
+        cursor.close()
+        return {"mensagem": "Configurações atualizadas com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        cursor.close()
+        raise HTTPException(status_code=400, detail=str(e))
