@@ -839,6 +839,38 @@
             alert(`Gerando relatório de [${tipo}]...`);
         }
 
+        async function loadConfigurations() {
+    const config = await apiRequest('/configuracoes');
+    if (config) {
+        document.getElementById('input-config-title').value = config.titulo || '';
+        document.getElementById('input-config-slogan').value = config.slogan || '';
+        document.getElementById('input-config-address').value = config.endereco || '';
+        document.getElementById('input-config-phone').value = config.telefone || '';
+        document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
+        if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
+        if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
+    }
+}
+
+async function saveConfigurations() {
+    const payload = {
+        titulo: document.getElementById('input-config-title').value,
+        slogan: document.getElementById('input-config-slogan').value,
+        endereco: document.getElementById('input-config-address').value,
+        telefone: document.getElementById('input-config-phone').value,
+        horario_funcionamento: document.getElementById('textarea-config-hours').value,
+        cor_primaria: document.getElementById('input-config-cor1').value,
+        cor_secundaria: document.getElementById('input-config-cor2').value
+    };
+    
+    const res = await apiRequest('/configuracoes', 'PUT', payload);
+    if (res) {
+        alert('Configurações e identidade visual salvas com sucesso!');
+        loadConfigurations();
+    } else {
+        alert('Erro ao salvar as configurações.');
+    }
+}
         // ================= CONTROLE DE UI =================
         function toggleMotoboyFields(funcao, idContainer) {
             const camposMotoboy = document.getElementById(idContainer);
