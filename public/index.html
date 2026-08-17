@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>deliveryON - Delivery</title>
+    <title id="app-title">deliveryON - Delivery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -72,9 +72,6 @@
 
         /* RODAPÉ PROFISSIONAL INTEGRADO */
         .app-footer { margin-top: auto; padding: 20px 25px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; color: #6b7280; font-size: 0.85rem; flex-wrap: wrap; gap: 10px; background-color: #ffffff; }
-        .app-footer-links { display: flex; gap: 15px; flex-wrap: wrap; }
-        .app-footer-links a { color: #6b7280; text-decoration: none; transition: color 0.2s; }
-        .app-footer-links a:hover { color: var(--brand-primary); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans pb-20 md:pb-0 min-h-screen flex flex-col" style="transition: font-size 0.2s ease;">
@@ -85,7 +82,7 @@
         <button onclick="changeFontSize(-1)" style="padding: 10px 15px; border: none; background: transparent; cursor: pointer; font-weight: bold; font-size: 1rem; color: #333;" title="Diminuir Fonte">A-</button>
     </div>
 
-    <!-- Header Limpo com botões visíveis (Texto forçado a aparecer no mobile) -->
+    <!-- Header Limpo com botões visíveis -->
     <header id="app-header" class="bg-white text-gray-900 shadow-sm sticky top-0 z-40 border-b-4" style="border-color: var(--brand-primary);">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center overflow-x-auto scrollbar-hide">
             <div class="flex items-center space-x-4 shrink-0 pr-2">
@@ -103,12 +100,10 @@
                     <i class="fas fa-motorcycle"></i> <span>Meu Pedido</span>
                 </button>
 
-                <!-- Botão de Histórico de Pedidos corrigido para aparecer no celular -->
                 <button onclick="openHistoricoModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200 whitespace-nowrap">
                     <i class="fas fa-clock-rotate-left" style="color: var(--brand-primary);"></i> <span>Histórico</span>
                 </button>
 
-                <!-- Botão Ouvidoria corrigido para aparecer no celular (Removido o class hidden) -->
                 <button onclick="openOuvidoriaModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200 whitespace-nowrap">
                     <i class="fas fa-megaphone" style="color: var(--brand-primary);"></i> <span>Ouvidoria</span>
                 </button>
@@ -131,21 +126,19 @@
     <!-- Menu Section -->
     <section id="menu" class="py-10 bg-gray-50 flex-1">
         <div class="container mx-auto px-4 relative">
-
             <div class="flex md:justify-center justify-start items-center mb-8 overflow-x-auto pb-3 scrollbar-hide relative">
                 <div class="flex space-x-2 bg-white p-1 rounded-full shadow-sm whitespace-nowrap border border-gray-200 items-center">
                     <button class="category-btn px-6 py-2 rounded-full text-white font-bold transition" style="background-color: var(--brand-primary);" data-category="all">Todos</button>
                     <button class="category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="hamburgueres">Hambúrgueres</button>
                     <button class="category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="pizzas">Pizzas</button>
                     <button class="category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="bebidas">Bebidas</button>
-                    <i class="fas fa-hand-point-right text-gray-300 pr-3 md:hidden animate-pulse"></i>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="menu-items">
                 <div class="col-span-full text-center py-10">
                     <i class="fas fa-spinner fa-spin text-4xl mb-4" style="color: var(--brand-primary);"></i>
-                    <p class="text-gray-500 font-bold">Carregando cardápio fresquinho...</p>
+                    <p class="text-gray-500 font-bold">Carregando cardápio online...</p>
                 </div>
             </div>
         </div>
@@ -175,9 +168,7 @@
         <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
             <button onclick="closeHistoricoModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"><i class="fas fa-times"></i></button>
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-clock-rotate-left" style="color: var(--brand-primary);"></i> Seu Histórico</h3>
-            <div id="historico-content" class="overflow-y-auto pr-2 space-y-3 flex-1 scrollbar-hide">
-                <!-- Os pedidos do localStorage entrarão aqui via JS -->
-            </div>
+            <div id="historico-content" class="overflow-y-auto pr-2 space-y-3 flex-1 scrollbar-hide"></div>
             <div class="pt-4 mt-2 border-t text-center">
                 <button onclick="closeHistoricoModal()" class="text-sm font-bold text-gray-500 hover:text-gray-800">Fechar</button>
             </div>
@@ -189,7 +180,7 @@
         <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
             <button onclick="closeOuvidoriaModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"><i class="fas fa-times"></i></button>
             <h3 class="text-lg font-bold text-gray-900 mb-2">Ouvidoria</h3>
-            <form onsubmit="event.preventDefault(); enviarOuvidoria();" class="mt-4 space-y-3">
+            <form onsubmit="event.preventDefault(); enviarOuvidoriaAPI();" class="mt-4 space-y-3">
                 <input type="text" id="ouv-nome" placeholder="Seu Nome" class="w-full p-2.5 border rounded-lg text-sm" required>
                 <select id="ouv-atendimento" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-700" required>
                     <option value="">Escolha o setor avaliado...</option>
@@ -198,14 +189,14 @@
                     <option value="Entregador">Entregador</option>
                 </select>
                 <select id="ouv-nota" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-700" required>
-                    <option value="Ótimo"> Ótimo</option>
-                    <option value=" Bom"> Bom</option>
-                    <option value=" Regular"> Regular</option>
-                    <option value=" Ruim"> Ruim</option>
-                    <option value=" Pessimo"> Pessimo</option>
+                    <option value="Ótimo">Ótimo</option>
+                    <option value="Bom">Bom</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Ruim">Ruim</option>
+                    <option value="Péssimo">Péssimo</option>
                 </select>
                 <textarea id="ouv-relato" rows="3" class="w-full p-2.5 border rounded-lg text-sm" placeholder="Relato..." required></textarea>
-                <button type="submit" class="w-full text-white font-bold py-3 rounded-xl transition text-sm shadow-md" style="background-color: var(--brand-primary);">Enviar</button>
+                <button type="submit" class="w-full text-white font-bold py-3 rounded-xl transition text-sm shadow-md" style="background-color: var(--brand-primary);">Enviar para API</button>
             </form>
         </div>
     </div>
@@ -250,9 +241,6 @@
     </div>
 
     <div id="backdrop" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden backdrop-blur-sm transition-opacity"></div>
-    <div id="success-notification" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center translate-y-24 transition-transform duration-300 z-50">
-        <i class="fas fa-check text-green-400 mr-2 text-xl"></i> Adicionado!
-    </div>
 
     <!-- Script de Tradutor VLibras -->
     <div vw class="enabled">
@@ -266,13 +254,47 @@
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
 
+    <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
-        const NUMERO_WHATSAPP = "5511999999999";
+        const API_BASE_URL = "/api"; // Aponta diretamente para a rota hospedada
+        
+        // Pega o ID da loja via URL (?loja=1) ou usa 1 como padrão (Multi-tenant SaaS)
+        const urlParams = new URLSearchParams(window.location.search);
+        const lojaId = urlParams.get('loja') || 1; 
+
+        let telefoneWhatsapp = "5511999999999"; // Fallback caso não venha da API
         const TAXA_ENTREGA = 5.00;
         let menuItems = [];
         let cart = [];
         let pedidoAtual = null;
         let currentFontSize = 100;
+
+        // Função genérica para comunicação com a API REST em Python
+        async function apiRequest(endpoint, method = 'GET', data = null) {
+            try {
+                let url = `${API_BASE_URL}${endpoint}`;
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                
+                // Envia o ID da empresa em todas as requisições
+                if (method === 'GET') {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url += `${separator}empresa_id=${lojaId}`;
+                } else if (data) {
+                    data.empresa_id = parseInt(lojaId);
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+                return await response.json();
+            } catch (error) {
+                console.error("Falha na comunicação com a API Python:", error);
+                return null;
+            }
+        }
 
         // Função de Acessibilidade: Aumentar/Diminuir Fonte
         function changeFontSize(step) {
@@ -284,34 +306,39 @@
 
         function init() {
             carregarConfiguracoesGestor();
-            carregarProdutos();
+            carregarProdutosAPI();
             setupEventListeners();
             verificarPedidoSalvo();
         }
 
-        function carregarConfiguracoesGestor() {
-            const configSalva = localStorage.getItem('deliveryon_config');
-            if (configSalva) {
-                try {
-                    const cfg = JSON.parse(configSalva);
-                    if(cfg.titulo) {
-                        document.getElementById('app-title').textContent = cfg.titulo;
-                        document.title = cfg.titulo + " - Delivery";
-                    }
-                    if(cfg.slogan) {
-                        document.getElementById('app-slogan').textContent = cfg.slogan;
-                    }
-                    if(cfg.logoUrl) {
-                        document.getElementById('default-logo-element').classList.add('hidden');
-                        const img = document.getElementById('app-logo-img');
-                        img.src = cfg.logoUrl;
-                        img.classList.remove('hidden');
-                    }
-                    if(cfg.corPrincipal) {
-                        document.documentElement.style.setProperty('--brand-primary', cfg.corPrincipal);
-                        document.getElementById('app-header').style.borderColor = cfg.corPrincipal;
-                    }
-                } catch(e) { console.error(e); }
+        async function carregarConfiguracoesGestor() {
+            const config = await apiRequest('/configuracoes');
+            if (config) {
+                // Título da aba
+                if(config.titulo) {
+                    document.getElementById('app-title').textContent = config.titulo;
+                    document.title = config.titulo + " - Delivery";
+                }
+                // Slogan
+                if(config.slogan) {
+                    document.getElementById('app-slogan').textContent = config.slogan;
+                }
+                // Identidade Visual
+                if(config.cor_primaria) {
+                    document.documentElement.style.setProperty('--brand-primary', config.cor_primaria);
+                    document.getElementById('app-header').style.borderColor = config.cor_primaria;
+                }
+                // Telefone do WhatsApp dinâmico
+                if(config.telefone) {
+                    telefoneWhatsapp = config.telefone.replace(/\D/g, ''); // Extrai apenas números
+                }
+                // Logotipo customizado
+                if(config.logo_url && config.logo_url.trim() !== '') {
+                    document.getElementById('default-logo-element').classList.add('hidden');
+                    const imgLogo = document.getElementById('app-logo-img');
+                    imgLogo.src = config.logo_url;
+                    imgLogo.classList.remove('hidden');
+                }
             }
         }
 
@@ -363,9 +390,17 @@
             container.innerHTML = html;
         }
 
-        function enviarOuvidoria() {
-            alert("Feedback enviado com sucesso!");
+        async function enviarOuvidoriaAPI() {
+            const payload = {
+                cliente_nome: document.getElementById('ouv-nome').value, // Ajustado para bater com banco
+                atendimento: document.getElementById('ouv-atendimento').value,
+                avaliacao: document.getElementById('ouv-nota').value, // Ajustado para bater com banco
+                relato: document.getElementById('ouv-relato').value
+            };
+            await apiRequest('/ouvidoria', 'POST', payload);
+            alert("Feedback enviado com sucesso para a nossa equipe. Obrigado!");
             closeOuvidoriaModal();
+            document.getElementById('ouv-relato').value = '';
         }
 
         function verificarPedidoSalvo() {
@@ -379,32 +414,30 @@
         function openTrackerModal() {
             const container = document.getElementById('tracker-content');
             if (pedidoAtual) {
-                container.innerHTML = `<h3 class="text-lg font-bold mb-3">Pedido #${pedidoAtual.id} em andamento</h3><p class="text-sm text-gray-600 mb-4">Endereço: ${pedidoAtual.endereco}</p><button onclick="closeTrackerModal()" class="w-full bg-gray-900 text-white py-2 rounded-lg">Fechar</button>`;
+                container.innerHTML = `<h3 class="text-lg font-bold mb-3">Pedido #${pedidoAtual.id} em andamento</h3><p class="text-sm text-gray-600 mb-4">Aguardando no Endereço: ${pedidoAtual.endereco}</p><button onclick="closeTrackerModal()" class="w-full bg-gray-900 text-white py-2 rounded-lg">Fechar Status</button>`;
             }
             document.getElementById('tracker-modal').classList.remove('hidden');
         }
         function closeTrackerModal() { document.getElementById('tracker-modal').classList.add('hidden'); }
 
-        async function carregarProdutos() {
-            try {
-                const response = await fetch('/api/produtos');
-                const produtosDB = await response.json();
+        async function carregarProdutosAPI() {
+            const produtosDB = await apiRequest('/products');
+            if (produtosDB && produtosDB.length > 0) {
                 menuItems = produtosDB.map(p => ({
-                    id: p.id.toString(),
+                    id: (p.codigo || p.id).toString(),
                     name: p.nome,
-                    description: p.descricao,
+                    description: p.descricao || '',
                     price: parseFloat(p.preco),
                     category: p.categoria ? p.categoria.toLowerCase() : 'hamburgueres',
-                    img: p.foto
+                    img: p.foto || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd'
                 }));
-                renderMenuItems('all');
-            } catch (error) {
+            } else {
                 menuItems = [
                     { id: '1', name: 'Pizza Calabresa G', description: 'Massa fina, calabresa selecionada e cebola.', price: 65.00, category: 'pizzas', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591' },
                     { id: '2', name: 'X-Burger Especial', description: 'Pão artesanal, carne 160g e cheddar.', price: 25.00, category: 'hamburgueres', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd' }
                 ];
-                renderMenuItems('all');
             }
+            renderMenuItems('all');
         }
 
         function renderMenuItems(category = 'all') {
@@ -507,40 +540,59 @@
             document.getElementById('backdrop').classList.toggle('hidden');
         }
 
-        function finalizarPedidoWhatsApp() {
+        async function finalizarPedidoWhatsApp() {
             const nome = document.getElementById('cli-nome').value;
+            const tel = document.getElementById('cli-tel').value;
             const end = document.getElementById('cli-end').value;
-            if(!nome || !end) { alert("Preencha os campos obrigatórios."); return; }
+            const ref = document.getElementById('cli-ref').value;
+            const pag = document.getElementById('cli-pag').value;
+            if(!nome || !end || !pag || !tel) { alert("Preencha os campos obrigatórios (Nome, WhatsApp, Endereço e Pagamento)."); return; }
 
-            // Criação dos dados para salvar na memória
             let resumoItens = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
-            let totalVal = document.getElementById('cart-total').textContent;
+            let totalVal = document.getElementById('cart-total').textContent.replace('R$ ', '');
 
+            // Gera o pedido para enviar à API de Gestão
             pedidoAtual = {
                 id: Math.floor(1000 + Math.random() * 9000),
-                endereco: end,
+                cliente: nome,
+                telefone: tel,
+                endereco: `${end} (Ref: ${ref})`,
+                pagamento: pag,
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
                 data: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
                 itens: resumoItens,
-                total: totalVal
+                total: parseFloat(totalVal.replace(',', '.')),
+                status: 'Aguardando pagamento'
             };
 
-            // Salva pedido ativo
-            localStorage.setItem('deliveryon_pedido_ativo', JSON.stringify(pedidoAtual));
+            // 1. Salva o pedido no Painel do Gestor (Neon DB)
+            await apiRequest('/orders', 'POST', pedidoAtual);
 
-            // Salva pedido no Histórico
+            // 2. Salva localmente para Histórico e Rastreamento
+            localStorage.setItem('deliveryon_pedido_ativo', JSON.stringify(pedidoAtual));
             let historico = JSON.parse(localStorage.getItem('deliveryon_historico_pedidos') || '[]');
-            historico.unshift(pedidoAtual); // Adiciona no começo da lista
+            historico.unshift(pedidoAtual);
             localStorage.setItem('deliveryon_historico_pedidos', JSON.stringify(historico));
 
-            // Envio do WhatsApp
-            window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=` + encodeURIComponent(`Pedido #${pedidoAtual.id} de ${nome}`), '_blank');
+            // 3. Monta e envia a mensagem para o WhatsApp do restaurante
+            let textoWhats = `*NOVO PEDIDO #${pedidoAtual.id}*\n\n`;
+            textoWhats += `*Cliente:* ${nome}\n`;
+            textoWhats += `*Endereço:* ${end} (Ref: ${ref})\n`;
+            textoWhats += `*Itens:* ${resumoItens}\n`;
+            textoWhats += `*Total:* R$ ${totalVal}\n`;
+            textoWhats += `*Formato de Pagamento:* ${pag}\n`;
+            if (pag === 'Dinheiro') {
+                const troco = document.getElementById('cli-troco').value;
+                if(troco) textoWhats += `*Troco para:* R$ ${troco}\n`;
+            }
 
-            // Limpa o carrinho
+            window.open(`https://wa.me/${telefoneWhatsapp}?text=` + encodeURIComponent(textoWhats), '_blank');
+
+            // 4. Limpa o carrinho
             cart = [];
             updateCartUI();
             toggleCart();
 
-            // Exibe o botão de rastrear
             document.getElementById('tracker-nav-btn').classList.remove('hidden');
         }
 
