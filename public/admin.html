@@ -553,33 +553,31 @@
         const API_BASE_URL = "/api";
         let currentActiveId = null;
 
-       async function apiRequest(endpoint, method = 'GET', data = null) {
-    try {
-        const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
-        let url = `${API_BASE_URL}${endpoint}`;
-        const options = {
-            method: method,
-            headers: { 'Content-Type': 'application/json' }
-        };
+        async function apiRequest(endpoint, method = 'GET', data = null) {
+            try {
+                const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+                let url = `${API_BASE_URL}${endpoint}`;
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
 
-        if (method === 'GET') {
-            const separator = url.includes('?') ? '&' : '?';
-            url += `${separator}empresa_id=${empresaId}`;
-        } else if (data) {
-            data.empresa_id = parseInt(empresaId);
-            options.body = JSON.stringify(data);
+                if (method === 'GET') {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url += `${separator}empresa_id=${empresaId}`;
+                } else if (data) {
+                    data.empresa_id = parseInt(empresaId);
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+                return await response.json();
+            } catch (error) {
+                console.error("Falha na comunicação com a API Python:", error);
+                return null;
+            }
         }
-
-        const response = await fetch(url, options);
-        if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
-        
-        const text = await response.text();
-        return text ? JSON.parse(text) : { success: true };
-    } catch (error) {
-        console.error("Falha na comunicação com a API Python:", error);
-        return null;
-    }
-}
 
         // Função de Login Integrada por CNPJ
         async function fazerLoginGestor() {
@@ -762,68 +760,47 @@
         }
 
         async function createProduct() {
-    const payload = {
-        nome: document.getElementById('input-new-prod-name').value,
-        categoria: document.getElementById('categoria').value,
-        preco: parseFloat(document.getElementById('input-new-prod-price').value),
-        estoque: parseInt(document.getElementById('input-new-prod-stock').value),
-        descricao: document.getElementById('textarea-new-prod-desc').value
-    };
-    const res = await apiRequest('/products', 'POST', payload);
-    if (res) {
-        alert('Produto cadastrado com sucesso!');
-        document.getElementById('input-new-prod-name').value = '';
-        document.getElementById('input-new-prod-price').value = '';
-        document.getElementById('textarea-new-prod-desc').value = '';
-        loadProducts();
-    } else {
-        alert('Erro ao cadastrar produto.');
-    }
-}
+            const payload = {
+                nome: document.getElementById('input-new-prod-name').value,
+                categoria: document.getElementById('categoria').value,
+                preco: document.getElementById('input-new-prod-price').value,
+                estoque: document.getElementById('input-new-prod-stock').value,
+                descricao: document.getElementById('textarea-new-prod-desc').value
+            };
+            await apiRequest('/products', 'POST', payload);
+            alert('Produto cadastrado com sucesso!');
+            loadProducts();
+        }
 
         async function createClient() {
-    const payload = {
-        nome: document.getElementById('input-cli-name').value,
-        telefone: document.getElementById('input-cli-phone').value,
-        email: document.getElementById('input-cli-email').value,
-        endereco: document.getElementById('input-cli-address').value,
-        referencia: document.getElementById('input-cli-ref').value
-    };
-    const res = await apiRequest('/clients', 'POST', payload);
-    if (res) {
-        alert('Cliente salvo com sucesso!');
-        document.getElementById('input-cli-name').value = '';
-        document.getElementById('input-cli-phone').value = '';
-        document.getElementById('input-cli-email').value = '';
-        document.getElementById('input-cli-address').value = '';
-        document.getElementById('input-cli-ref').value = '';
-        loadClients();
-    } else {
-        alert('Erro ao salvar cliente.');
-    }
-}
+            const payload = {
+                nome: document.getElementById('input-cli-name').value,
+                telefone: document.getElementById('input-cli-phone').value,
+                email: document.getElementById('input-cli-email').value,
+                endereco: document.getElementById('input-cli-address').value,
+                referencia: document.getElementById('input-cli-ref').value
+            };
+            await apiRequest('/clients', 'POST', payload);
+            alert('Cliente salvo com sucesso!');
+            loadClients();
+        }
+
         async function createColab() {
-    const payload = {
-        nome: document.getElementById('input-colab-name').value,
-        telefone: document.getElementById('input-colab-phone').value,
-        email: document.getElementById('input-colab-email').value,
-        cpf: document.getElementById('input-colab-cpf').value,
-        data_nascimento: document.getElementById('input-colab-dob').value,
-        endereco: document.getElementById('input-colab-address').value,
-        funcao: document.getElementById('select-funcao').value,
-        status: document.getElementById('select-colab-status').value,
-        observacoes: document.getElementById('textarea-colab-obs').value
-    };
-    
-    const res = await apiRequest('/colaboradores', 'POST', payload);
-    if (res) {
-        alert('Colaborador cadastrado com sucesso!');
-        loadColaboradores();
-    } else {
-        alert('Erro ao cadastrar colaborador.');
-    }
-}
-```[cite: 4]
+            const payload = {
+                nome: document.getElementById('input-colab-name').value,
+                telefone: document.getElementById('input-colab-phone').value,
+                email: document.getElementById('input-colab-email').value,
+                cpf: document.getElementById('input-colab-cpf').value,
+                data_nascimento: document.getElementById('input-colab-dob').value,
+                endereco: document.getElementById('input-colab-address').value,
+                funcao: document.getElementById('select-funcao').value,
+                status: document.getElementById('select-colab-status').value,
+                observacoes: document.getElementById('textarea-colab-obs').value
+            };
+            await apiRequest('/colaboradores', 'POST', payload);
+            alert('Colaborador cadastrado com sucesso!');
+            loadColaboradores();
+        }
 
         async function deleteProduct(code) {
             if(confirm("Deseja excluir este produto?")) {
