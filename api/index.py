@@ -150,20 +150,41 @@ def delete_empresa(id: int, db=Depends(get_db)):
 # ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT id, nome_fantasia, cnpj, status FROM empresas WHERE REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', '') = REPLACE(REPLACE(REPLACE(%s, '.', ''), '/', ''), '-', '')",
-        (auth.cnpj,))
-    empresa = cursor.fetchone()
-    cursor.close()
+  cursor = db.cursor()
+  # Limpa pontuações para aceitar tanto CPF quanto CNPJ cadastrados
+  documento_limpado = (
+      auth.cnpj.replace(".", "")
+      .replace("/", "")
+      .replace("-", "")
+      .replace(" ", "")
+  )
 
-    if not empresa:
-        raise HTTPException(status_code=404, detail="CNPJ não encontrado na base de dados.")
-    if empresa['status'] != 'ativo':
-        raise HTTPException(status_code=403, detail="Esta empresa está inativa ou com o acesso suspenso.")
+  cursor.execute(
+      """
+        SELECT id, nome_fantasia, cnpj, status FROM empresas 
+        WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s
+    """,
+      (documento_limpado,),
+  )
+  empresa = cursor.fetchone()
+  cursor.close()
 
-    return {"autorizado": True, "empresa_id": empresa['id'], "nome_fantasia": empresa['nome_fantasia']}
+  if not empresa:
+    raise HTTPException(
+        status_code=404,
+        detail="CPF/CNPJ não encontrado na base de dados.",
+    )
+  if empresa["status"] != "ativo":
+    raise HTTPException(
+        status_code=403,
+        detail="Esta empresa está inativa ou com o acesso suspenso.",
+    )
 
+  return {
+      "autorizado": True,
+      "empresa_id": empresa["id"],
+      "nome_fantasia": empresa["nome_fantasia"],
+  }
 @app.get("/api/configuracoes")
 def get_configuracoes(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
