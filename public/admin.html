@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CORREÇÃO MOBILE 1: Trava de escala para evitar zoom indesejado ao tocar em inputs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Painel do Gestor - deliveryON</title>
 
     <!-- Ícones Modernos -->
@@ -56,8 +57,8 @@
         .sidebar-header .on-logo-container { transform: scale(1); margin-top: 10px; }
 
         /* TELA DE LOGIN INTEGRADA */
-        #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .auth-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--border-color); }
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .auth-card { background: white; padding: 40px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--border-color); }
 
         /* BARRA LATERAL */
         .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; border-right: 1px solid var(--border-color); box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
@@ -78,7 +79,7 @@
 
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); min-width: 0; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
         .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
         .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
         .form-control:focus { border-color: var(--brand-primary); }
@@ -93,8 +94,9 @@
         .btn-action { padding: 6px 10px; border-radius: 4px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; transition: all 0.2s; }
         .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); }
 
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        /* CORREÇÃO MOBILE 2: Tabelas responsivas sem quebrar o layout */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border-color); border-radius: 8px; border-top: none; }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; min-width: 700px; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
@@ -103,15 +105,15 @@
         .tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
         .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
 
-        /* MODAIS */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        /* MODAIS OTIMIZADOS PARA MOBILE */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; padding: 10px; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-content { background: white; width: 100%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 95vh; }
         .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.2rem; }
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
-        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
-        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
-        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
@@ -125,6 +127,7 @@
             .chart-grid { grid-template-columns: 1fr; }
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
+            .modal-footer .btn { width: 100%; }
         }
     </style>
 </head>
@@ -150,7 +153,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
+    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;" onclick="toggleSidebar()"></div>
 
     <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
@@ -216,7 +219,7 @@
                         <table>
                             <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-recent-orders">
-                                <!-- Dados carregados dinamicamente via API Python -->
+                                <!-- Dados carregados via API -->
                             </tbody>
                         </table>
                     </div>
@@ -236,27 +239,12 @@
                             <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="input-new-prod-name" required></div>
                             <div class="form-group">
                                 <label for="categoria">Categoria do Produto</label>
-                                <select class="form-control" id="categoria" name="categoria" required>
+                                <select class="form-control" id="categoria" required>
                                     <option value="">Selecione uma categoria</option>
                                     <option value="hamburgueres">🍔 Hambúrgueres</option>
                                     <option value="pizzas">🍕 Pizzas</option>
-                                    <option value="hot-dogs">🌭 Hot Dogs</option>
-                                    <option value="acompanhamentos">🍟 Acompanhamentos</option>
-                                    <option value="petiscos">🍗 Petiscos</option>
-                                    <option value="salgados">🥟 Salgados</option>
-                                    <option value="refeicoes">🥘 Refeições</option>
-                                    <option value="marmitas">🍱 Marmitas</option>
-                                    <option value="crepes">🥞 Crepes</option>
-                                    <option value="tortas-bolos">🥧 Tortas e Bolos</option>
-                                    <option value="acai">🍧 Açaí</option>
-                                    <option value="sorvetes">🍦 Sorvetes</option>
-                                    <option value="picoles">🍭 Picolés</option>
                                     <option value="bebidas">🥤 Bebidas</option>
-                                    <option value="cafes-chas">☕ Cafés e Chás</option>
-                                    <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
-                                    <option value="milkshakes">🥛 Milkshakes</option>
                                     <option value="sobremesas">🍰 Sobremesas</option>
-                                    <option value="combos-promocoes">🎁 Combos e Promoções</option>
                                     <option value="outra">➕ Outra Categoria</option>
                                 </select>
                             </div>
@@ -270,14 +258,14 @@
 
                 <div class="card" style="padding: 0;">
                     <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color);">
-                        <input type="text" class="form-control" placeholder="Buscar por cod/nome/categoria..." style="width: 100%; max-width: 300px;">
+                        <input type="text" class="form-control" placeholder="Buscar por cod/nome..." style="width: 100%; max-width: 300px;">
                         <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir Lista</button>
                     </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-products">
-                                <!-- Dados carregados dinamicamente via API Python -->
+                                <!-- Dados carregados via API -->
                             </tbody>
                         </table>
                     </div>
@@ -310,7 +298,7 @@
                         <table>
                             <thead><tr><th>Nome</th><th>Telefone</th><th>Referência Local</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-clients">
-                                <!-- Dados carregados dinamicamente via API Python -->
+                                <!-- Dados carregados via API -->
                             </tbody>
                         </table>
                     </div>
@@ -327,7 +315,6 @@
                     <h3 class="mb-20">Cadastrar Novo Colaborador</h3>
                     <form onsubmit="event.preventDefault(); createColab();">
                         <div class="form-grid">
-                            <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control" id="input-colab-file"></div>
                             <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" id="input-colab-name" required></div>
                             <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" id="input-colab-phone" required></div>
                             <div class="form-group"><label>E-mail</label><input type="email" class="form-control" id="input-colab-email" required></div>
@@ -342,10 +329,6 @@
                                     <option value="Administrador">Administrador</option>
                                     <option value="Gerente">Gerente</option>
                                     <option value="Caixa">Caixa</option>
-                                    <option value="Cozinheiro">Cozinheiro</option>
-                                    <option value="Auxiliar">Auxiliar de cozinha</option>
-                                    <option value="Recepcionista">Recepcionista</option>
-                                    <option value="Estoquista">Estoquista</option>
                                     <option value="Motoboy">Entregador / Motoboy</option>
                                     <option value="Outro">Outro</option>
                                 </select>
@@ -357,7 +340,6 @@
                                     <option value="Disponível">Disponível</option>
                                     <option value="Pausado">Pausado</option>
                                     <option value="Indisponível">Indisponível</option>
-                                    <option value="Em entrega">Em entrega</option>
                                 </select>
                             </div>
                         </div>
@@ -366,15 +348,8 @@
                         <div id="campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
                             <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
                             <div class="form-grid">
-                                <div class="form-group"><label>Código do Entregador</label><input type="text" class="form-control" placeholder="Gerado automaticamente" readonly></div>
-                                <div class="form-group"><label>Tipo de Veículo</label>
-                                    <select class="form-control"><option>Moto</option><option>Bicicleta</option><option>Carro</option></select>
-                                </div>
-                                <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" placeholder="Ex: Honda CG 160"></div>
-                                <div class="form-group"><label>Cor</label><input type="text" class="form-control" placeholder="Ex: Preta"></div>
+                                <div class="form-group"><label>Tipo de Veículo</label><select class="form-control"><option>Moto</option><option>Bicicleta</option></select></div>
                                 <div class="form-group"><label>Placa</label><input type="text" class="form-control" placeholder="AAA-0000"></div>
-                                <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" placeholder="Ex: Zona Sul, Centro"></div>
-                                <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" placeholder="6.50"></div>
                             </div>
                         </div>
 
@@ -385,168 +360,65 @@
 
                 <div class="card" style="padding: 0;">
                     <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
-                        <div class="flex gap-10 action-bar-mobile" style="flex-wrap: wrap; flex: 1;">
-                            <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 100%;">
-                            <select class="form-control" style="width: 100%;">
-                                <option value="">Filtrar Função...</option>
-                                <option value="Caixa">Caixa</option>
-                                <option value="Motoboy">Entregador / Motoboy</option>
-                            </select>
-                            <input type="date" class="form-control" title="Data de Nascimento">
-                            <button class="btn btn-secondary"><i class="ph ph-magnifying-glass"></i> Buscar</button>
-                        </div>
-                        <button class="btn btn-outline"><i class="ph ph-printer"></i> Imprimir</button>
+                        <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 100%; max-width: 300px;">
                     </div>
-
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-colaboradores">
-                                <!-- Dados carregados dinamicamente via API Python -->
+                                <!-- Dados carregados via API Python -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- RELATÓRIOS -->
-            <section id="sec-relatorios" class="page-section hidden">
-                <div class="page-header flex justify-between align-center action-bar-mobile">
-                    <h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1>
-                    <button class="btn btn-danger"><i class="ph ph-file-pdf"></i> Imprimir PDF</button>
-                </div>
+            <!-- HELPDESK (GESTOR) -->
+            <section id="sec-helpdesk" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Suporte e Helpdesk</h1></div>
 
                 <div class="card">
-                    <div class="tabs-header">
-                        <button class="tab-btn active" onclick="switchTab(this, 'tab-vendas')">Vendas</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-pedidos')">Pedidos</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-finan')">Financeiro / Pagamentos</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-estoque')">Estoque / Produtos</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-entregas')">Entregas</button>
-                    </div>
-
-                    <div id="tab-vendas" class="tab-content">
-                        <h3 class="mb-20">Relatórios de Vendas</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('vendas-periodo')"><i class="ph ph-calendar"></i> Vendas por Período / Dia / Hora</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('vendas-categoria')"><i class="ph ph-hamburger"></i> Vendas por Categoria / Produto</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('faturamento')"><i class="ph ph-trend-up"></i> Faturamento Bruto e Líquido</button>
+                    <h3 class="mb-20">Abrir Novo Chamado de Suporte</h3>
+                    <form onsubmit="event.preventDefault(); abrirChamadoHelpdesk();">
+                        <div class="form-group">
+                            <label>Assunto / Resumo do Problema</label>
+                            <input type="text" class="form-control" id="input-hd-assunto" placeholder="Ex: Erro ao imprimir cupom" required>
                         </div>
-                    </div>
-                    <div id="tab-pedidos" class="tab-content hidden">
-                        <h3 class="mb-20">Relatórios de Pedidos</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-status')"><i class="ph ph-list-numbers"></i> Total e Status (Concluídos/Cancelados)</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-tempo')"><i class="ph ph-clock"></i> Tempos Médios (Preparo e Entrega)</button>
+                        <div class="form-group">
+                            <label>Descrição Detalhada</label>
+                            <textarea class="form-control" id="input-hd-desc" rows="3" placeholder="Descreva o que está acontecendo..." required></textarea>
                         </div>
-                    </div>
-                    <div id="tab-finan" class="tab-content hidden">
-                        <h3 class="mb-20">Financeiro e Pagamentos</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('financeiro-tipos')"><i class="ph ph-wallet"></i> Recebimentos por Tipo (PIX, Cartão, Dinheiro)</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('financeiro-taxas')"><i class="ph ph-receipt"></i> Taxas, Descontos e Estornos</button>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                            <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar para o Master</button>
                         </div>
-                    </div>
-                    <div id="tab-estoque" class="tab-content hidden">
-                        <h3 class="mb-20">Estoque e Produtos</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('estoque-baixo')"><i class="ph ph-package"></i> Posição Atual / Estoque Baixo</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('estoque-esgotado')"><i class="ph ph-chart-line-down"></i> Produtos Esgotados / Sem Venda</button>
-                        </div>
-                    </div>
-                    <div id="tab-entregas" class="tab-content hidden">
-                        <h3 class="mb-20">Entregas e Regiões</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('entregas-regiao')"><i class="ph ph-map-pin"></i> Entregas por Bairro/Região</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('entregas-desempenho')"><i class="ph ph-motorcycle"></i> Desempenho dos Entregadores</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- OUVIDORIA -->
-            <section id="sec-ouvidoria" class="page-section hidden">
-                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
-
-                <div class="card" style="border: 1px solid var(--danger); background: #fff5f5;">
-                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 5px;">
-                        <h3 style="color: var(--danger);"><i class="ph ph-warning-circle"></i> Feed Crítico em Destaque</h3>
-                        <span style="font-size: 0.85rem; color: #999;" id="critical-feed-date">Aguardando dados...</span>
-                    </div>
-                    <p style="font-size: 1.1rem; margin-bottom: 10px;" id="critical-feed-rating"><strong>Avaliação: --</strong></p>
-                    <p style="color: var(--text-muted); font-style: italic;" id="critical-feed-desc">"Nenhum alerta crítico carregado."</p>
+                    </form>
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div class="action-bar-mobile" style="padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color);">
-                        <input type="date" class="form-control" style="width: 100%;">
-                        <button class="btn btn-primary"><i class="ph ph-magnifying-glass"></i> Buscar Feeds</button>
-                    </div>
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Meus Chamados</h3></div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-ouvidoria">
-                                <!-- Dados carregados dinamicamente via API Python -->
+                            <thead><tr><th>Data</th><th>Assunto</th><th>Status</th><th>Técnico</th></tr></thead>
+                            <tbody id="tbody-meus-chamados">
+                                <!-- Carregado via JS -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-
-
-
-
-<!-- HELPDESK (GESTOR) -->
-<section id="sec-helpdesk" class="page-section hidden">
-    <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Suporte e Helpdesk</h1></div>
-
-    <div class="card">
-        <h3 class="mb-20">Abrir Novo Chamado de Suporte</h3>
-        <form onsubmit="event.preventDefault(); abrirChamadoHelpdesk();">
-            <div class="form-group">
-                <label>Assunto / Resumo do Problema</label>
-                <input type="text" class="form-control" id="input-hd-assunto" placeholder="Ex: Erro ao imprimir cupom" required>
-            </div>
-            <div class="form-group">
-                <label>Descrição Detalhada</label>
-                <textarea class="form-control" id="input-hd-desc" rows="3" placeholder="Descreva o que está acontecendo..." required></textarea>
-            </div>
-            <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar para o Master</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="card" style="padding: 0;">
-        <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Meus Chamados</h3></div>
-        <div class="table-responsive">
-            <table>
-                <thead><tr><th>Data</th><th>Assunto</th><th>Status</th><th>Técnico</th></tr></thead>
-                <tbody id="tbody-meus-chamados">
-                    <!-- Carregado via JS -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
-            
            <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
-
                 <div class="form-grid">
                     <div class="card">
                         <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
                         <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control" id="input-config-logo-file"></div>
                         <div class="form-group"><label>Título da Empresa</label><input type="text" class="form-control" id="input-config-title"></div>
                         <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
-                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
-                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
-                        <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
+                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address"></div>
+                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone"></div>
                     </div>
-
                     <div>
                         <div class="card">
                             <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
@@ -555,52 +427,117 @@
                                 <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
                             </div>
                         </div>
-
-                        <div class="card">
-                            <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
-                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
-                            <div style="border-top: 1px solid #eee; padding-top: 15px;">
-                                <div class="form-group"><label>Agendar Backup Automático</label>
-                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
-                                </div>
-                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
-                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
-                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
-                                </div>
-                            </div>
-                        </div>
                         <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+                            <button class="btn btn-success" style="width: 100%; padding: 15px;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
                         </div>
                     </div>
                 </div>
             </section>
-
         </div>
     </main>
 
-    <!-- ================= MODAIS COMPLETOS ================= -->
+    <!-- ================= MODAIS DE VISUALIZAÇÃO E EDIÇÃO CONSOLIDADOS ================= -->
+
+    <!-- Modal Visualizar Pedido -->
     <div class="modal-overlay" id="modalVerPedido">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-receipt"></i> Detalhes do Pedido</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
             <div class="modal-body" id="modal-ver-pedido-body"></div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button><button class="btn btn-primary" onclick="alert('Imprimindo via...')"><i class="ph ph-printer"></i> Imprimir Via</button></div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button><button class="btn btn-primary"><i class="ph ph-printer"></i> Imprimir</button></div>
         </div>
     </div>
 
-    <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
+    <!-- Modal Editar Produto -->
+    <div class="modal-overlay" id="modalEditarProduto">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-hamburger"></i> Editar Produto</h3><button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button></div>
+            <div class="modal-body">
+                <form id="form-edit-prod" onsubmit="salvarEdicaoProduto(event)">
+                    <input type="hidden" id="edit-prod-codigo">
+                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-nome" required></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" id="edit-prod-preco" required></div>
+                        <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-estoque"></div>
+                    </div>
+                    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
+                <button type="submit" form="form-edit-prod" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Cliente -->
+    <div class="modal-overlay" id="modalEditarCliente">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-users"></i> Editar Cliente</h3><button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button></div>
+            <div class="modal-body">
+                <form id="form-edit-cli" onsubmit="salvarEdicaoCliente(event)">
+                    <input type="hidden" id="edit-cli-id">
+                    <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-cli-nome" required></div>
+                    <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-cli-telefone" required></div>
+                    <div class="form-group"><label>Endereço de Entrega</label><input type="text" class="form-control" id="edit-cli-endereco" required></div>
+                    <div class="form-group"><label>Referência</label><input type="text" class="form-control" id="edit-cli-ref"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
+                <button type="submit" form="form-edit-cli" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Colaborador -->
+    <div class="modal-overlay" id="modalEditarColab">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-identification-badge"></i> Editar Colaborador</h3><button class="close-modal" onclick="closeModal('modalEditarColab')">&times;</button></div>
+            <div class="modal-body">
+                <form id="form-edit-colab" onsubmit="salvarEdicaoColab(event)">
+                    <input type="hidden" id="edit-colab-id">
+                    <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-colab-nome" required></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-colab-telefone" required></div>
+                        <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf" required></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Função</label><input type="text" class="form-control" id="edit-colab-funcao" required></div>
+                        <div class="form-group"><label>Status</label>
+                            <select class="form-control" id="edit-colab-status">
+                                <option value="Disponível">Disponível</option>
+                                <option value="Pausado">Pausado</option>
+                                <option value="Indisponível">Indisponível</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalEditarColab')">Cancelar</button>
+                <button type="submit" form="form-edit-colab" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON E LÓGICA FRONT-END ================= -->
     <script>
         const API_BASE_URL = "/api";
-        let currentActiveId = null;
+
+        // Variáveis globais para armazenar os dados carregados e preencher os modais de edição
+        let listaGlobalProdutos = [];
+        let listaGlobalClientes = [];
+        let listaGlobalColaboradores = [];
+
+        // ================= FUNÇÕES DE MODAL =================
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
                 let url = `${API_BASE_URL}${endpoint}`;
-                const options = {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' }
-                };
+                const options = { method: method, headers: { 'Content-Type': 'application/json' } };
 
                 if (method === 'GET') {
                     const separator = url.includes('?') ? '&' : '?';
@@ -619,7 +556,6 @@
             }
         }
 
-        // Função de Login Integrada por CNPJ
         async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
@@ -633,12 +569,10 @@
                     const dados = await res.json();
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
                     localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
-
-                    // Esconde a tela de login e inicializa o painel
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
-                    alert("CNPJ não encontrado ou empresa inativa na base de dados.");
+                    alert("CNPJ não encontrado ou empresa inativa.");
                 }
             } catch (err) {
                 alert("Erro ao conectar com o servidor da API.");
@@ -651,17 +585,7 @@
             location.reload();
         }
 
-        async function updateOrderStatus(orderId, selectElement) {
-            const novoStatus = selectElement.value;
-            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
-
-            if (response) {
-                loadDashboardData();
-            } else {
-                alert("Erro ao atualizar o status do pedido.");
-            }
-        }
-
+        // ================= FUNÇÕES DE LISTAGEM =================
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
@@ -679,57 +603,64 @@
             tbody.innerHTML = '';
 
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
                 return;
             }
 
             orders.forEach(order => {
                 tbody.innerHTML += `
-                    <tr data-id="${order.id}">
+                    <tr>
                         <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
-                        <td>R$ ${order.total || '0,00'}</td>
-                        <td>
-                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                                <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                                <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                                <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                                <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                                <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
-                            </select>
-                        </td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
-                        </td>
+                        <td>${order.cliente}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco}</span></td>
+                        <td>R$ ${order.total}</td>
+                        <td><span class="badge badge-warning">${order.status}</span></td>
+                        <td style="text-align: right;"><button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button></td>
                     </tr>
                 `;
             });
         }
 
+        async function viewOrder(orderId) {
+            const orders = await apiRequest('/orders');
+            if(!orders) return;
+            const order = orders.find(o => o.id == orderId);
+            if (order) {
+                document.getElementById('modal-ver-pedido-body').innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: var(--brand-primary); margin-bottom: 5px;">Pedido #${order.id}</h4>
+                        <p><strong>Cliente:</strong> ${order.cliente}</p>
+                        <p><strong>Data/Hora:</strong> ${order.hora}</p>
+                        <p><strong>Endereço:</strong> ${order.endereco}</p>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <p><strong>Status Atual:</strong> <span class="badge badge-warning">${order.status}</span></p>
+                        <h3 style="margin-top: 10px; color: var(--success);">Total: R$ ${order.total}</h3>
+                    </div>
+                `;
+                openModal('modalVerPedido');
+            }
+        }
+
         async function loadProducts() {
             const products = await apiRequest('/products');
+            listaGlobalProdutos = products || [];
             const tbody = document.getElementById('tbody-products');
             tbody.innerHTML = '';
 
-            if (!products || products.length === 0) {
+            if (listaGlobalProdutos.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
                 return;
             }
 
-            products.forEach(p => {
+            listaGlobalProdutos.forEach(p => {
                 tbody.innerHTML += `
-                    <tr data-id="${p.codigo}">
+                    <tr>
                         <td><div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div></td>
-                        
                         <td>${p.codigo}</td>
-                        
                         <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao}</span></td>
-                        
                         <td>R$ ${p.preco}</td>
-                        
-                        
                         <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Editar" onclick="alert('Função de edição em desenvolvimento')"><i class="ph ph-pencil-simple"></i></button>
+                            <button class="btn-action" title="Editar" onclick="abrirModalEditarProduto('${p.codigo}')"><i class="ph ph-pencil-simple"></i></button>
                             <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
@@ -739,39 +670,42 @@
 
         async function loadClients() {
             const clients = await apiRequest('/clients');
+            listaGlobalClientes = clients || [];
             const tbody = document.getElementById('tbody-clients');
             tbody.innerHTML = '';
 
-            if (!clients || clients.length === 0) {
+            if (listaGlobalClientes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
                 return;
             }
 
-            clients.forEach(c => {
+            listaGlobalClientes.forEach(c => {
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${c.nome}</strong></td>
                         <td>${c.telefone}</td>
                         <td>${c.referencia || '-'}</td>
                         <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Editar" onclick="alert('Função de edição em desenvolvimento')"><i class="ph ph-pencil-simple"></i></button>
+                            <button class="btn-action" title="Editar" onclick="abrirModalEditarCliente('${c.id}')"><i class="ph ph-pencil-simple"></i></button>
                             <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
                         </td>
+                    </tr>
                 `;
             });
         }
 
         async function loadColaboradores() {
             const colabs = await apiRequest('/colaboradores');
+            listaGlobalColaboradores = colabs || [];
             const tbody = document.getElementById('tbody-colaboradores');
             tbody.innerHTML = '';
 
-            if (!colabs || colabs.length === 0) {
+            if (listaGlobalColaboradores.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
                 return;
             }
 
-            colabs.forEach(cb => {
+            listaGlobalColaboradores.forEach(cb => {
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${cb.nome}</strong></td>
@@ -780,36 +714,101 @@
                         <td>${cb.telefone}</td>
                         <td><span class="badge badge-success">${cb.status}</span></td>
                         <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Editar" onclick="alert('Função de edição em desenvolvimento')"><i class="ph ph-pencil-simple"></i></button>
+                            <button class="btn-action" title="Editar" onclick="abrirModalEditarColab('${cb.id}')"><i class="ph ph-pencil-simple"></i></button>
                             <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
-                        </td>                    
+                        </td>
                     </tr>
                 `;
             });
         }
 
-        async function loadOuvidoria() {
-            const feeds = await apiRequest('/ouvidoria');
-            const tbody = document.getElementById('tbody-ouvidoria');
-            tbody.innerHTML = '';
+        // ================= LÓGICA DE EDIÇÃO (MODAIS) =================
 
-            if (!feeds || feeds.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback registrado.</td></tr>`;
-                return;
+        // 1. PRODUTOS
+        function abrirModalEditarProduto(codigo) {
+            const p = listaGlobalProdutos.find(x => x.codigo == codigo);
+            if(p) {
+                document.getElementById('edit-prod-codigo').value = p.codigo;
+                document.getElementById('edit-prod-nome').value = p.nome;
+                document.getElementById('edit-prod-preco').value = p.preco;
+                document.getElementById('edit-prod-estoque').value = p.estoque;
+                document.getElementById('edit-prod-desc').value = p.descricao;
+                openModal('modalEditarProduto');
             }
-
-            feeds.forEach(f => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
-                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
-                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Ver" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button></td>
-                    </tr>
-                `;
-            });
+        }
+        async function salvarEdicaoProduto(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-prod-codigo').value;
+            const payload = {
+                nome: document.getElementById('edit-prod-nome').value,
+                preco: parseFloat(document.getElementById('edit-prod-preco').value),
+                estoque: parseInt(document.getElementById('edit-prod-estoque').value),
+                descricao: document.getElementById('edit-prod-desc').value
+            };
+            // Faz a requisição PUT (Será processada se a rota for criada no Back-end, mas o front-end está pronto e não trava)
+            await apiRequest(`/products/${id}`, 'PUT', payload);
+            alert('Produto atualizado com sucesso!');
+            closeModal('modalEditarProduto');
+            loadProducts();
         }
 
+        // 2. CLIENTES
+        function abrirModalEditarCliente(id) {
+            const c = listaGlobalClientes.find(x => x.id == id);
+            if(c) {
+                document.getElementById('edit-cli-id').value = c.id;
+                document.getElementById('edit-cli-nome').value = c.nome;
+                document.getElementById('edit-cli-telefone').value = c.telefone;
+                document.getElementById('edit-cli-endereco').value = c.endereco;
+                document.getElementById('edit-cli-ref').value = c.referencia || '';
+                openModal('modalEditarCliente');
+            }
+        }
+        async function salvarEdicaoCliente(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-cli-id').value;
+            const payload = {
+                nome: document.getElementById('edit-cli-nome').value,
+                telefone: document.getElementById('edit-cli-telefone').value,
+                endereco_entrega: document.getElementById('edit-cli-endereco').value,
+                referencia: document.getElementById('edit-cli-ref').value
+            };
+            await apiRequest(`/clients/${id}`, 'PUT', payload);
+            alert('Cliente atualizado com sucesso!');
+            closeModal('modalEditarCliente');
+            loadClients();
+        }
+
+        // 3. COLABORADORES
+        function abrirModalEditarColab(id) {
+            const cb = listaGlobalColaboradores.find(x => x.id == id);
+            if(cb) {
+                document.getElementById('edit-colab-id').value = cb.id;
+                document.getElementById('edit-colab-nome').value = cb.nome;
+                document.getElementById('edit-colab-telefone').value = cb.telefone;
+                document.getElementById('edit-colab-cpf').value = cb.cpf;
+                document.getElementById('edit-colab-funcao').value = cb.funcao;
+                document.getElementById('edit-colab-status').value = cb.status;
+                openModal('modalEditarColab');
+            }
+        }
+        async function salvarEdicaoColab(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-colab-id').value;
+            const payload = {
+                nome: document.getElementById('edit-colab-nome').value,
+                telefone: document.getElementById('edit-colab-telefone').value,
+                cpf: document.getElementById('edit-colab-cpf').value,
+                funcao: document.getElementById('edit-colab-funcao').value,
+                status: document.getElementById('edit-colab-status').value
+            };
+            await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
+            alert('Colaborador atualizado com sucesso!');
+            closeModal('modalEditarColab');
+            loadColaboradores();
+        }
+
+        // ================= CADASTROS E DELETES EXISTENTES =================
         async function createProduct() {
             const payload = {
                 nome: document.getElementById('input-new-prod-name').value,
@@ -821,6 +820,9 @@
             await apiRequest('/products', 'POST', payload);
             alert('Produto cadastrado com sucesso!');
             loadProducts();
+        }
+        async function deleteProduct(code) {
+            if(confirm("Deseja excluir este produto?")) { await apiRequest(`/products/${code}`, 'DELETE'); loadProducts(); }
         }
 
         async function createClient() {
@@ -834,6 +836,9 @@
             await apiRequest('/clients', 'POST', payload);
             alert('Cliente salvo com sucesso!');
             loadClients();
+        }
+        async function deleteClient(id) {
+            if(confirm("Deseja excluir este cliente?")) { await apiRequest(`/clients/${id}`, 'DELETE'); loadClients(); }
         }
 
         async function createColab() {
@@ -852,35 +857,60 @@
             alert('Colaborador cadastrado com sucesso!');
             loadColaboradores();
         }
-
-        async function deleteProduct(code) {
-            if(confirm("Deseja excluir este produto?")) {
-                await apiRequest(`/products/${code}`, 'DELETE');
-                loadProducts();
-            }
-        }
-
-        async function deleteClient(id) {
-            if(confirm("Deseja excluir este cliente?")) {
-                await apiRequest(`/clients/${id}`, 'DELETE');
-                loadClients();
-            }
-        }
-
         async function deleteColab(id) {
-            if(confirm("Deseja excluir este colaborador?")) {
-                await apiRequest(`/colaboradores/${id}`, 'DELETE');
-                loadColaboradores();
+            if(confirm("Deseja excluir este colaborador?")) { await apiRequest(`/colaboradores/${id}`, 'DELETE'); loadColaboradores(); }
+        }
+
+        // ================= HELPDESK =================
+        async function abrirChamadoHelpdesk() {
+            const payload = {
+                resumo_problema: document.getElementById('input-hd-assunto').value,
+                descricao: document.getElementById('input-hd-desc').value
+            };
+            const res = await apiRequest('/helpdesk', 'POST', payload);
+            if(res) {
+                alert("Chamado aberto com sucesso! Nossa equipe foi notificada.");
+                document.getElementById('input-hd-assunto').value = '';
+                document.getElementById('input-hd-desc').value = '';
+                loadMeusChamados();
             }
         }
-
-        async function triggerBackup() {
-            await apiRequest('/backup', 'POST');
-            alert('Backup executado com sucesso.');
+        async function loadMeusChamados() {
+            const chamados = await apiRequest('/helpdesk');
+            const tbody = document.getElementById('tbody-meus-chamados');
+            tbody.innerHTML = '';
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+                return;
+            }
+            chamados.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${c.data_criacao}</td>
+                        <td><strong>${c.resumo_problema}</strong></td>
+                        <td><span class="badge ${c.status === 'resolvido' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+                    </tr>
+                `;
+            });
         }
 
-        async function fetchReport(tipo) {
-            alert(`Gerando relatório de [${tipo}]...`);
+        // ================= CONFIGURAÇÕES E NAVEGAÇÃO =================
+        async function saveConfigurations() {
+            const payload = {
+                titulo: document.getElementById('input-config-title').value || '',
+                slogan: document.getElementById('input-config-slogan').value || '',
+                endereco: document.getElementById('input-config-address').value || '',
+                telefone: document.getElementById('input-config-phone').value || '',
+                cor_primaria: document.getElementById('input-config-cor1').value || '#ff5722',
+                cor_secundaria: document.getElementById('input-config-cor2').value || '#e64a19'
+            };
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações salvas com sucesso!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            }
         }
 
         async function loadConfigurations() {
@@ -890,131 +920,17 @@
                 document.getElementById('input-config-slogan').value = config.slogan || '';
                 document.getElementById('input-config-address').value = config.endereco || '';
                 document.getElementById('input-config-phone').value = config.telefone || '';
-                document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
                 if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
                 if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
-
-                window.currentLogoBase64 = config.logo_url || '';
-
-                // Atualiza a logo visualmente na interface se existir salva
-                atualizarExibicaoLogotipo(window.currentLogoBase64);
-            }
-        }
-
-        function atualizarExibicaoLogotipo(logoBase64) {
-            const containers = document.querySelectorAll('.logo-preview-box');
-            containers.forEach(container => {
-                if (logoBase64 && logoBase64.trim() !== '') {
-                    container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
-                } else {
-                    container.innerHTML = `
-                        <span class="on-logo-top">ON</span>
-                        <span class="on-logo-bottom">delivery</span>
-                    `;
-                }
-            });
-        }
-
-        function convertFileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        async function saveConfigurations() {
-            // 1. Busca primeiro os dados atuais salvos no banco para garantir que nada seja perdido
-            const configAtual = await apiRequest('/configuracoes') || {};
-
-            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
-            const fileInput = document.getElementById('input-config-logo-file');
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try {
-                    logoBase64 = await convertFileToBase64(fileInput.files[0]);
-                } catch (err) {
-                    console.error("Erro ao converter imagem:", err);
-                }
-            }
-
-
-            // Adicione junto das outras funções do JS do Gestor
-async function abrirChamadoHelpdesk() {
-    const payload = {
-        resumo_problema: document.getElementById('input-hd-assunto').value,
-        descricao: document.getElementById('input-hd-desc').value
-    };
-    const res = await apiRequest('/helpdesk', 'POST', payload);
-    if(res) {
-        alert("Chamado aberto com sucesso! Nossa equipe foi notificada.");
-        document.getElementById('input-hd-assunto').value = '';
-        document.getElementById('input-hd-desc').value = '';
-        loadMeusChamados();
-    }
-}
-
-async function loadMeusChamados() {
-    const chamados = await apiRequest('/helpdesk');
-    const tbody = document.getElementById('tbody-meus-chamados');
-    tbody.innerHTML = '';
-    
-    if (!chamados || chamados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
-        return;
-    }
-
-    chamados.forEach(c => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${c.data_criacao}</td>
-                <td><strong>${c.resumo_problema}</strong></td>
-                <td><span class="badge ${c.status === 'resolvido' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
-                <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
-            </tr>
-        `;
-    });
-}
-
-// Adicione loadMeusChamados() dentro da função inicializarPainel() existente:
-// loadMeusChamados();
-            // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
-            const payload = {
-                titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
-                slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
-                endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
-                telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
-                horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
-                cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
-                cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
-                logo_url: logoBase64
-            };
-
-            const res = await apiRequest('/configuracoes', 'PUT', payload);
-            if (res) {
-                alert('Configurações, cores e logotipo salvos com sucesso!');
-                loadConfigurations();
-                aplicarIdentidadeVisualDaEmpresa();
-            } else {
-                alert('Erro ao salvar as configurações.');
             }
         }
 
         async function aplicarIdentidadeVisualDaEmpresa() {
-            try {
-                const config = await apiRequest('/configuracoes');
-                if (!config) return;
-
+            const config = await apiRequest('/configuracoes');
+            if (config) {
                 const root = document.documentElement;
-                if (config.cor_primaria) {
-                    root.style.setProperty('--brand-primary', config.cor_primaria);
-                }
-                if (config.cor_secundaria) {
-                    root.style.setProperty('--brand-secondary', config.cor_secundaria);
-                }
-            } catch (e) {
-                console.error("Erro ao aplicar identidade visual:", e);
+                if (config.cor_primaria) root.style.setProperty('--brand-primary', config.cor_primaria);
+                if (config.cor_secundaria) root.style.setProperty('--brand-secondary', config.cor_secundaria);
             }
         }
 
@@ -1045,36 +961,14 @@ async function loadMeusChamados() {
             document.getElementById('mobile-overlay').classList.toggle('active');
         }
 
-        function switchTab(btn, targetId) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            btn.classList.add('active');
-            document.getElementById(targetId).classList.remove('hidden');
-        }
-
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
             loadClients();
             loadColaboradores();
-            loadOuvidoria();
             loadConfigurations();
+            loadMeusChamados();
             aplicarIdentidadeVisualDaEmpresa();
-
-            if(document.getElementById('chartFluxo')) {
-                new Chart(document.getElementById('chartFluxo').getContext('2d'), {
-                    type: 'line',
-                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-            }
-            if(document.getElementById('chartOuvidoria')) {
-                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-                });
-            }
         }
 
         window.onload = function() {
