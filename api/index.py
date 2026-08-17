@@ -27,12 +27,11 @@ def get_db():
         conn.close()
 
 # ================= MODELOS =================
-
-
 class ChamadoCreate(BaseModel):
     empresa_id: int
     resumo_problema: str
     descricao: str
+
 class EmpresaCreate(BaseModel):
     razao_social: str
     nome_fantasia: str
@@ -46,22 +45,23 @@ class EmpresaCreate(BaseModel):
     limite_usuarios: int
 
 class ProdutoCreate(BaseModel):
-  empresa_id: Optional[int] = None
-  nome: str
-  categoria: str
-  preco: float
-  estoque: int
-  descricao: str
+    empresa_id: Optional[int] = None
+    nome: str
+    categoria: str
+    preco: float
+    estoque: int
+    descricao: str
 
 class ClienteCreate(BaseModel):
-  empresa_id: Optional[int] = None
-  nome: str
-  telefone: str
-  email: Optional[str] = None
-  endereco: str
-  referencia: Optional[str] = None
+    empresa_id: Optional[int] = None
+    nome: str
+    telefone: str
+    email: Optional[str] = None
+    endereco: str
+    referencia: Optional[str] = None
 
 class ColaboradorCreate(BaseModel):
+    empresa_id: Optional[int] = None
     nome: str
     telefone: str
     email: str
@@ -91,6 +91,7 @@ class ChamadoCancelar(BaseModel):
 
 class GestorAuth(BaseModel):
     cnpj: str
+
 
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
@@ -147,44 +148,26 @@ def delete_empresa(id: int, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
+
 # ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
-  cursor = db.cursor()
-  # Limpa pontuações para aceitar tanto CPF quanto CNPJ cadastrados
-  documento_limpado = (
-      auth.cnpj.replace(".", "")
-      .replace("/", "")
-      .replace("-", "")
-      .replace(" ", "")
-  )
-
-  cursor.execute(
-      """
-        SELECT id, nome_fantasia, cnpj, status FROM empresas 
-        WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s
-    """,
-      (documento_limpado,),
-  )
-  empresa = cursor.fetchone()
-  cursor.close()
-
-  if not empresa:
-    raise HTTPException(
-        status_code=404,
-        detail="CPF/CNPJ não encontrado na base de dados.",
+    cursor = db.cursor()
+    # Restaura a lógica original para validar por CPF/CNPJ removendo pontuações
+    cursor.execute(
+        "SELECT id, nome_fantasia, cnpj, status FROM empresas WHERE REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', '') = REPLACE(REPLACE(REPLACE(%s, '.', ''), '/', ''), '-', '')",
+        (auth.cnpj,)
     )
-  if empresa["status"] != "ativo":
-    raise HTTPException(
-        status_code=403,
-        detail="Esta empresa está inativa ou com o acesso suspenso.",
-    )
+    empresa = cursor.fetchone()
+    cursor.close()
 
-  return {
-      "autorizado": True,
-      "empresa_id": empresa["id"],
-      "nome_fantasia": empresa["nome_fantasia"],
-  }
+    if not empresa:
+        raise HTTPException(status_code=404, detail="CNPJ/CPF não encontrado na base de dados.")
+    if empresa['status'] != 'ativo':
+        raise HTTPException(status_code=403, detail="Esta empresa está inativa ou com o acesso suspenso.")
+
+    return {"autorizado": True, "empresa_id": empresa['id'], "nome_fantasia": empresa['nome_fantasia']}
+
 @app.get("/api/configuracoes")
 def get_configuracoes(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -283,6 +266,28 @@ def get_orders(empresa_id: int, db=Depends(get_db)):
         })
     return orders
 
+@app.post("/api/orders")
+def create_order(order: dict, db=Depends(get_db)):
+    cur = db.cursor()
+    cur.execute("""
+        INSERT INTO pedidos (empresa_id, cliente, telefone, endereco, pagamento, hora, itens, total, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
+    """, (
+        order.get("empresa_id", 1),
+        order.get("cliente"),
+        order.get("telefone"),
+        order.get("endereco"),
+        order.get("pagamento"),
+        order.get("hora"),
+        order.get("itens"),
+        order.get("total"),
+        order.get("status", "Aguardando pagamento")
+    ))
+    db.commit()
+    novo_id = cur.fetchone()['id']
+    cur.close()
+    return {"mensagem": "Pedido registrado com sucesso", "id": novo_id}
+
 @app.put("/api/orders/{order_id}/status")
 def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     novo_status = data.get("status")
@@ -298,34 +303,22 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     return {"success": True, "message": "Status atualizado com sucesso!"}
 
 @app.get("/api/products")
-def list_products(db=Depends(get_db)):
+def list_products(empresa_id: Optional[int] = 1, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id as codigo, nome, categoria, preco, estoque, descricao FROM produtos ORDER BY id DESC")
+    cursor.execute("SELECT id as codigo, nome, categoria, preco, estoque, descricao FROM produtos WHERE empresa_id = %s OR empresa_id IS NULL ORDER BY id DESC", (empresa_id,))
     res = cursor.fetchall()
     cursor.close()
     return res
 
 @app.post("/api/products")
 def create_product(prod: ProdutoCreate, db=Depends(get_db)):
-  cursor = db.cursor()
-  cursor.execute(
-      """
-        INSERT INTO produtos (empresa_id, nome, categoria, preco, estoque,
-        descricao) 
-        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
-    """,
-      (
-          prod.empresa_id,
-          prod.nome,
-          prod.categoria,
-          prod.preco,
-          prod.estoque,
-          prod.descricao,
-      ),
-  )
-  db.commit()
-  cursor.close()
-  return {"mensagem": "Produto salvo"}
+    cursor = db.cursor()
+    cursor.execute(
+        "INSERT INTO produtos (empresa_id, nome, categoria, preco, estoque, descricao) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;",
+        (prod.empresa_id, prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao))
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Produto salvo"}
 
 @app.delete("/api/products/{id}")
 def delete_product(id: int, db=Depends(get_db)):
@@ -336,9 +329,10 @@ def delete_product(id: int, db=Depends(get_db)):
     return {"mensagem": "Excluído"}
 
 @app.get("/api/clients")
-def list_clients(db=Depends(get_db)):
+def list_clients(empresa_id: Optional[int] = 1, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id, nome, telefone, email, endereco_entrega as endereco, referencia FROM clientes ORDER BY id DESC")
+    cursor.execute(
+        "SELECT id, nome, telefone, email, endereco_entrega as endereco, referencia FROM clientes WHERE empresa_id = %s OR empresa_id IS NULL ORDER BY id DESC", (empresa_id,))
     res = cursor.fetchall()
     cursor.close()
     return res
@@ -347,16 +341,16 @@ def list_clients(db=Depends(get_db)):
 def create_client(cli: ClienteCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO clientes (nome, telefone, email, endereco_entrega, referencia) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
-        (cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia))
+        "INSERT INTO clientes (empresa_id, nome, telefone, email, endereco_entrega, referencia) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;",
+        (cli.empresa_id, cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia))
     db.commit()
     cursor.close()
     return {"mensagem": "Cliente salvo"}
 
 @app.get("/api/colaboradores")
-def list_colaboradores(db=Depends(get_db)):
+def list_colaboradores(empresa_id: Optional[int] = 1, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id, nome, telefone, email, cpf, funcao, status FROM colaboradores ORDER BY id DESC")
+    cursor.execute("SELECT id, nome, telefone, email, cpf, funcao, status FROM colaboradores WHERE empresa_id = %s OR empresa_id IS NULL ORDER BY id DESC", (empresa_id,))
     res = cursor.fetchall()
     cursor.close()
     return res
@@ -365,27 +359,43 @@ def list_colaboradores(db=Depends(get_db)):
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO colaboradores (nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
-        (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, colab.funcao,
+        "INSERT INTO colaboradores (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
+        (colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, colab.funcao,
          colab.status, colab.observacoes))
     db.commit()
     cursor.close()
     return {"mensagem": "Colaborador salvo"}
 
 @app.get("/api/ouvidoria")
-def list_ouvidoria(db=Depends(get_db)):
+def list_ouvidoria(empresa_id: Optional[int] = 1, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id, cliente_nome as cliente, avaliacao, relato, TO_CHAR(criado_em, 'DD/MM/YYYY') as data FROM ouvidoria ORDER BY id DESC")
+    cursor.execute(
+        "SELECT id, cliente_nome as cliente, avaliacao, relato, TO_CHAR(criado_em, 'DD/MM/YYYY') as data FROM ouvidoria WHERE empresa_id = %s OR empresa_id IS NULL ORDER BY id DESC", (empresa_id,))
     res = cursor.fetchall()
     cursor.close()
     return res
+
+@app.post("/api/ouvidoria")
+def create_ouvidoria(data: dict, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        INSERT INTO ouvidoria (empresa_id, cliente_nome, atendimento, avaliacao, relato, criado_em)
+        VALUES (%s, %s, %s, %s, %s, NOW()) RETURNING id;
+    """, (
+        data.get("empresa_id", 1),
+        data.get("cliente_nome", "Anônimo"),
+        data.get("atendimento", "Geral"),
+        data.get("avaliacao", "Bom"),
+        data.get("relato", "")
+    ))
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Ouvidoria registrada com sucesso"}
 
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
 
-
-# Rota para o Gestor criar um chamado
 @app.post("/api/helpdesk")
 def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -394,18 +404,16 @@ def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
         VALUES (%s, %s, %s, 'aberto', NOW()) RETURNING id;
     """, (chamado.empresa_id, chamado.resumo_problema, chamado.descricao))
     novo_id = cursor.fetchone()['id']
-    
-    # Cria uma notificação automática para o Master ver no Dashboard dele
+
     cursor.execute("""
         INSERT INTO notificacoes_master (tipo, titulo, mensagem, data_hora)
         VALUES ('sup', 'Novo Chamado Aberto', %s, NOW())
     """, (f"A empresa ID {chamado.empresa_id} abriu um chamado: {chamado.resumo_problema}",))
-    
+
     db.commit()
     cursor.close()
     return {"mensagem": "Chamado aberto com sucesso", "id": novo_id}
 
-# Rota para o Gestor ver os SEUS próprios chamados
 @app.get("/api/helpdesk")
 def listar_chamados_gestor(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
