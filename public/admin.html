@@ -167,6 +167,7 @@
             <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> Colaboradores</a></li>
             <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
             <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
+            <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Suporte / Helpdesk</a></li>
             <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
@@ -492,6 +493,45 @@
                 </div>
             </section>
 
+
+
+
+
+<!-- HELPDESK (GESTOR) -->
+<section id="sec-helpdesk" class="page-section hidden">
+    <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Suporte e Helpdesk</h1></div>
+
+    <div class="card">
+        <h3 class="mb-20">Abrir Novo Chamado de Suporte</h3>
+        <form onsubmit="event.preventDefault(); abrirChamadoHelpdesk();">
+            <div class="form-group">
+                <label>Assunto / Resumo do Problema</label>
+                <input type="text" class="form-control" id="input-hd-assunto" placeholder="Ex: Erro ao imprimir cupom" required>
+            </div>
+            <div class="form-group">
+                <label>Descrição Detalhada</label>
+                <textarea class="form-control" id="input-hd-desc" rows="3" placeholder="Descreva o que está acontecendo..." required></textarea>
+            </div>
+            <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar para o Master</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" style="padding: 0;">
+        <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Meus Chamados</h3></div>
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>Data</th><th>Assunto</th><th>Status</th><th>Técnico</th></tr></thead>
+                <tbody id="tbody-meus-chamados">
+                    <!-- Carregado via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+            
            <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
@@ -680,10 +720,16 @@
                 tbody.innerHTML += `
                     <tr data-id="${p.codigo}">
                         <td><div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div></td>
+                        
                         <td>${p.codigo}</td>
+                        
                         <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao}</span></td>
+                        
                         <td>R$ ${p.preco}</td>
-                        <td style="text-align: right;">
+                        
+                        
+                        <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                            <button class="btn-action" title="Editar" onclick="alert('Função de edição em desenvolvimento')"><i class="ph ph-pencil-simple"></i></button>
                             <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
@@ -707,8 +753,10 @@
                         <td><strong>${c.nome}</strong></td>
                         <td>${c.telefone}</td>
                         <td>${c.referencia || '-'}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button></td>
-                    </tr>
+                        <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                            <button class="btn-action" title="Editar" onclick="alert('Função de edição em desenvolvimento')"><i class="ph ph-pencil-simple"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
                 `;
             });
         }
@@ -731,7 +779,10 @@
                         <td>${cb.funcao}</td>
                         <td>${cb.telefone}</td>
                         <td><span class="badge badge-success">${cb.status}</span></td>
-                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button></td>
+                        <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                            <button class="btn-action" title="Editar" onclick="alert('Função de edição em desenvolvimento')"><i class="ph ph-pencil-simple"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
+                        </td>                    
                     </tr>
                 `;
             });
@@ -888,6 +939,46 @@
                 }
             }
 
+
+            // Adicione junto das outras funções do JS do Gestor
+async function abrirChamadoHelpdesk() {
+    const payload = {
+        resumo_problema: document.getElementById('input-hd-assunto').value,
+        descricao: document.getElementById('input-hd-desc').value
+    };
+    const res = await apiRequest('/helpdesk', 'POST', payload);
+    if(res) {
+        alert("Chamado aberto com sucesso! Nossa equipe foi notificada.");
+        document.getElementById('input-hd-assunto').value = '';
+        document.getElementById('input-hd-desc').value = '';
+        loadMeusChamados();
+    }
+}
+
+async function loadMeusChamados() {
+    const chamados = await apiRequest('/helpdesk');
+    const tbody = document.getElementById('tbody-meus-chamados');
+    tbody.innerHTML = '';
+    
+    if (!chamados || chamados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+        return;
+    }
+
+    chamados.forEach(c => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${c.data_criacao}</td>
+                <td><strong>${c.resumo_problema}</strong></td>
+                <td><span class="badge ${c.status === 'resolvido' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+                <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+            </tr>
+        `;
+    });
+}
+
+// Adicione loadMeusChamados() dentro da função inicializarPainel() existente:
+// loadMeusChamados();
             // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
             const payload = {
                 titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
