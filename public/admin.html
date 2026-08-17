@@ -493,47 +493,48 @@
             </section>
 
            <!-- CONFIGURAÇÕES -->
-<section id="sec-configuracoes" class="page-section hidden">
-    <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
+            <section id="sec-configuracoes" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
 
-    <div class="form-grid">
-        <div class="card">
-            <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
-            <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control" id="input-config-logo-file"></div>
-            <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
-            <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
-            <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
-            <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
-        </div>
-
-        <div>
-            <div class="card">
-                <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
-                <div class="flex gap-10" style="flex-wrap: wrap;">
-                    <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" id="input-config-cor1" value="#ff5722" style="height: 45px; padding: 2px;"></div>
-                    <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
-                <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
-                <div style="border-top: 1px solid #eee; padding-top: 15px;">
-                    <div class="form-group"><label>Agendar Backup Automático</label>
-                        <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
+                <div class="form-grid">
+                    <div class="card">
+                        <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
+                        <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control" id="input-config-logo-file"></div>
+                        <div class="form-group"><label>Título da Empresa</label><input type="text" class="form-control" id="input-config-title"></div>
+                        <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
+                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
+                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
+                        <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
                     </div>
-                    <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
-                    <div class="form-group"><label>Limpeza Automática (LGPD)</label>
-                        <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
+
+                    <div>
+                        <div class="card">
+                            <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
+                            <div class="flex gap-10" style="flex-wrap: wrap;">
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" id="input-config-cor1" value="#ff5722" style="height: 45px; padding: 2px;"></div>
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
+                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
+                            <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                                <div class="form-group"><label>Agendar Backup Automático</label>
+                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
+                                </div>
+                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
+                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
+                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
-            </div>
-        </div>
-    </div>
-</section>
+            </section>
 
         </div>
     </main>
@@ -551,7 +552,6 @@
     <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
-
 
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
@@ -610,7 +610,6 @@
             localStorage.removeItem('deliveryon_empresa_nome');
             location.reload();
         }
-
 
         async function updateOrderStatus(orderId, selectElement) {
             const novoStatus = selectElement.value;
@@ -843,9 +842,9 @@
                 document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
                 if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
                 if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
-                
+
                 window.currentLogoBase64 = config.logo_url || '';
-                
+
                 // Atualiza a logo visualmente na interface se existir salva
                 atualizarExibicaoLogotipo(window.currentLogoBase64);
             }
@@ -874,42 +873,43 @@
             });
         }
 
-      async function saveConfigurations() {
-    // 1. Busca primeiro os dados atuais salvos no banco para garantir que nada seja perdido
-    const configAtual = await apiRequest('/configuracoes') || {};
+        async function saveConfigurations() {
+            // 1. Busca primeiro os dados atuais salvos no banco para garantir que nada seja perdido
+            const configAtual = await apiRequest('/configuracoes') || {};
 
-    let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
-    const fileInput = document.getElementById('input-config-logo-file');
-    
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        try {
-            logoBase64 = await convertFileToBase64(fileInput.files[0]);
-        } catch (err) {
-            console.error("Erro ao converter imagem:", err);
+            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    logoBase64 = await convertFileToBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Erro ao converter imagem:", err);
+                }
+            }
+
+            // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
+            const payload = {
+                titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
+                slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
+                endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
+                telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
+                horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
+                cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
+                cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
+                logo_url: logoBase64
+            };
+
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações, cores e logotipo salvos com sucesso!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            } else {
+                alert('Erro ao salvar as configurações.');
+            }
         }
-    }
 
-    // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
-    const payload = {
-        titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
-        slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
-        endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
-        telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
-        horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
-        cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
-        cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
-        logo_url: logoBase64
-    };
-
-    const res = await apiRequest('/configuracoes', 'PUT', payload);
-    if (res) {
-        alert('Configurações, cores e logotipo salvos com sucesso!');
-        loadConfigurations();
-        aplicarIdentidadeVisualDaEmpresa();
-    } else {
-        alert('Erro ao salvar as configurações.');
-    }
-}
         async function aplicarIdentidadeVisualDaEmpresa() {
             try {
                 const config = await apiRequest('/configuracoes');
