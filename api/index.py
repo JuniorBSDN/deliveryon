@@ -46,18 +46,20 @@ class EmpresaCreate(BaseModel):
     limite_usuarios: int
 
 class ProdutoCreate(BaseModel):
-    nome: str
-    categoria: str
-    preco: float
-    estoque: int
-    descricao: str
+  empresa_id: Optional[int] = None
+  nome: str
+  categoria: str
+  preco: float
+  estoque: int
+  descricao: str
 
 class ClienteCreate(BaseModel):
-    nome: str
-    telefone: str
-    email: Optional[str] = None
-    endereco: str
-    referencia: Optional[str] = None
+  empresa_id: Optional[int] = None
+  nome: str
+  telefone: str
+  email: Optional[str] = None
+  endereco: str
+  referencia: Optional[str] = None
 
 class ColaboradorCreate(BaseModel):
     nome: str
@@ -284,13 +286,25 @@ def list_products(db=Depends(get_db)):
 
 @app.post("/api/products")
 def create_product(prod: ProdutoCreate, db=Depends(get_db)):
-    cursor = db.cursor()
-    cursor.execute(
-        "INSERT INTO produtos (nome, categoria, preco, estoque, descricao) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
-        (prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao))
-    db.commit()
-    cursor.close()
-    return {"mensagem": "Produto salvo"}
+  cursor = db.cursor()
+  cursor.execute(
+      """
+        INSERT INTO produtos (empresa_id, nome, categoria, preco, estoque,
+        descricao) 
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
+    """,
+      (
+          prod.empresa_id,
+          prod.nome,
+          prod.categoria,
+          prod.preco,
+          prod.estoque,
+          prod.descricao,
+      ),
+  )
+  db.commit()
+  cursor.close()
+  return {"mensagem": "Produto salvo"}
 
 @app.delete("/api/products/{id}")
 def delete_product(id: int, db=Depends(get_db)):
