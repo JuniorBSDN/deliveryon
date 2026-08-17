@@ -43,16 +43,21 @@
         .badge-warning { background-color: var(--warning); color: #333; }
         .badge-info { background-color: var(--info); }
 
-        /* LOGOTIPO EXATO */
-        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
+        /* LOGOTIPO DINÂMICO */
+        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; max-height: 50px; }
+        .on-logo-container img { max-height: 45px; max-width: 140px; object-fit: contain; }
         .on-logo-top { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
         .on-logo-bottom { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; margin-top: 2px; }
         @keyframes neon-pulse {
             0% { text-shadow: 0 0 5px rgba(255, 87, 34, 0.4), 0 0 10px rgba(255, 87, 34, 0.2); }
             100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
         }
-        .topbar .on-logo-container { transform: scale(0.65); }
-        .sidebar-header .on-logo-container { transform: scale(0.85); margin-top: 10px; }
+        .topbar .on-logo-container { transform: scale(0.85); }
+        .sidebar-header .on-logo-container { transform: scale(1); margin-top: 10px; }
+
+        /* TELA DE LOGIN INTEGRADA */
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .auth-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--border-color); }
 
         /* BARRA LATERAL */
         .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; border-right: 1px solid var(--border-color); box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
@@ -108,11 +113,6 @@
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
         .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
 
-        .cracha-container { width: 280px; margin: 0 auto; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; text-align: center; background: white; }
-        .cracha-header { background: var(--brand-primary); color: white; padding: 20px 10px; display: flex; justify-content: center; }
-        .cracha-photo { width: 100px; height: 100px; background: #eee; border-radius: 50%; margin: -40px auto 10px; border: 4px solid white; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .cracha-qr { width: 120px; height: 120px; margin: 15px auto; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
-
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -130,12 +130,32 @@
 </head>
 <body>
 
+    <!-- TELA DE LOGIN POR CNPJ INTEGRADA -->
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <div class="on-logo-container mb-20 logo-preview-box" style="margin-bottom: 20px;">
+                <span class="on-logo-top">ON</span>
+                <span class="on-logo-bottom">delivery</span>
+            </div>
+            <h3 style="margin-bottom: 8px; font-size: 1.3rem;">Painel do Gestor</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Digite o CNPJ da sua empresa cadastrada para acessar o sistema.</p>
+
+            <form onsubmit="event.preventDefault(); fazerLoginGestor();">
+                <div class="form-group" style="text-align: left;">
+                    <label>CNPJ da Empresa</label>
+                    <input type="text" class="form-control" id="input-login-cnpj" placeholder="00.000.000/0001-00" required style="text-align: center; font-size: 1.1rem; letter-spacing: 1px;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;"><i class="ph ph-sign-in"></i> Entrar no Painel</button>
+            </form>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;"></div>
 
     <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="on-logo-container">
+            <div class="on-logo-container logo-preview-box">
                 <span class="on-logo-top">ON</span>
                 <span class="on-logo-bottom">delivery</span>
             </div>
@@ -150,7 +170,7 @@
             <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
-            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;"><span class="nav-icon" style="color: #ff5252;"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
+            <a href="#" class="nav-link" onclick="logoutGestor()" style="color: #ff5252; margin: 0;"><span class="nav-icon" style="color: #ff5252;"><i class="ph ph-sign-out"></i></span> Sair da Conta</a>
         </div>
     </aside>
 
@@ -158,7 +178,7 @@
     <main class="main-content">
         <header class="topbar">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
-            <div class="on-logo-container">
+            <div class="on-logo-container logo-preview-box">
                 <span class="on-logo-top">ON</span>
                 <span class="on-logo-bottom">delivery</span>
             </div>
@@ -472,14 +492,15 @@
                 </div>
             </section>
 
-            <!-- CONFIGURAÇÕES -->
+           <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
 
                 <div class="form-grid">
                     <div class="card">
                         <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
-                        <div class="form-group"><label>Título da Página</label><input type="text" class="form-control" id="input-config-title" value="ON delivery"></div>
+                        <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control" id="input-config-logo-file"></div>
+                        <div class="form-group"><label>Título da Empresa</label><input type="text" class="form-control" id="input-config-title"></div>
                         <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
                         <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
                         <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
@@ -489,10 +510,9 @@
                     <div>
                         <div class="card">
                             <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
-                            <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control"></div>
                             <div class="flex gap-10" style="flex-wrap: wrap;">
-                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" value="#ff5722" style="height: 45px; padding: 2px;"></div>
-                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" value="#e64a19" style="height: 45px; padding: 2px;"></div>
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" id="input-config-cor1" value="#ff5722" style="height: 45px; padding: 2px;"></div>
+                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
                             </div>
                         </div>
 
@@ -520,159 +540,37 @@
     </main>
 
     <!-- ================= MODAIS COMPLETOS ================= -->
-
-    <!-- Modais Dashboard Pedidos -->
     <div class="modal-overlay" id="modalVerPedido">
         <div class="modal-content">
             <div class="modal-header"><h3><i class="ph ph-receipt"></i> Detalhes do Pedido</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
-            <div class="modal-body" id="modal-ver-pedido-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
+            <div class="modal-body" id="modal-ver-pedido-body"></div>
             <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button><button class="btn btn-primary" onclick="alert('Imprimindo via...')"><i class="ph ph-printer"></i> Imprimir Via</button></div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalEditarPedido">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Pedido</h3><button class="close-modal" onclick="closeModal('modalEditarPedido')">&times;</button></div>
-            <div class="modal-body" id="modal-editar-pedido-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalEditarPedido')">Cancelar</button>
-                <button class="btn btn-primary" onclick="updateOrderChanges()"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalCancelarPedido">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header"><h3><i class="ph ph-warning-circle text-danger" style="color: var(--danger);"></i> Cancelar Pedido</h3><button class="close-modal" onclick="closeModal('modalCancelarPedido')">&times;</button></div>
-            <div class="modal-body" style="text-align: center;"><p style="font-size: 1.1rem; margin-bottom: 20px;">Tem certeza que deseja cancelar este pedido?</p></div>
-            <div class="modal-footer" style="justify-content: center;"><button class="btn btn-outline" onclick="closeModal('modalCancelarPedido')">Não, Voltar</button><button class="btn btn-danger" onclick="confirmCancelOrder()">Sim, Cancelar</button></div>
-        </div>
-    </div>
-
-    <!-- Modais Produtos -->
-    <div class="modal-overlay" id="modalPromocao">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header"><h3><i class="ph ph-tag" style="color:var(--warning);"></i> Marcar Promoção</h3><button class="close-modal" onclick="closeModal('modalPromocao')">&times;</button></div>
-            <div class="modal-body">
-                <div class="form-group"><label>Valor de Desconto (R$ ou %)</label><input type="text" class="form-control" placeholder="Ex: R$ 10,00" id="input-promo-value"></div>
-            </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalPromocao')">Cancelar</button><button class="btn btn-primary" onclick="applyPromotion()">Confirmar</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalEditProduto">
-        <div class="modal-content">
-            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Produto</h3><button class="close-modal" onclick="closeModal('modalEditProduto')">&times;</button></div>
-            <div class="modal-body" id="modal-edit-product-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditProduto')">Cancelar</button><button class="btn btn-primary" onclick="updateProduct()">Salvar Alterações</button></div>
-        </div>
-    </div>
-
-    <!-- Modais Clientes -->
-    <div class="modal-overlay" id="modalEditCliente">
-        <div class="modal-content">
-            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Cliente</h3><button class="close-modal" onclick="closeModal('modalEditCliente')">&times;</button></div>
-            <div class="modal-body" id="modal-edit-client-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditCliente')">Cancelar</button><button class="btn btn-primary" onclick="updateClient()">Salvar Alterações</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalHistCliente">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><h3><i class="ph ph-clock-counter-clockwise"></i> Histórico de Compras</h3><button class="close-modal" onclick="closeModal('modalHistCliente')">&times;</button></div>
-            <div class="modal-body" id="modal-client-history-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalHistCliente')">Fechar</button>
-                <button class="btn btn-primary" onclick="alert('Exportando histórico completo em PDF...')"><i class="ph ph-file-pdf"></i> Exportar Extrato</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Ouvidoria -->
-    <div class="modal-overlay" id="modalVerFeed">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header"><h3><i class="ph ph-megaphone"></i> Feed Detalhado</h3><button class="close-modal" onclick="closeModal('modalVerFeed')">&times;</button></div>
-            <div class="modal-body" id="modal-ver-feed-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalVerFeed')">Fechar</button>
-                <button class="btn btn-success" onclick="verifyFeed()"><i class="ph ph-check"></i> Marcar OK (Agradecer)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modais Colaboradores -->
-    <div class="modal-overlay" id="modalEditColab">
-        <div class="modal-content">
-            <div class="modal-header"><h3><i class="ph ph-pencil-simple"></i> Editar Colaborador</h3><button class="close-modal" onclick="closeModal('modalEditColab')">&times;</button></div>
-            <div class="modal-body" id="modal-edit-colab-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalEditColab')">Cancelar</button><button class="btn btn-primary" onclick="updateColab()">Salvar Alterações</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalContratoColab">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><h3><i class="ph ph-scroll"></i> Contrato de Trabalho / Parceria</h3><button class="close-modal" onclick="closeModal('modalContratoColab')">&times;</button></div>
-            <div class="modal-body">
-                <div class="rich-text-editor" contenteditable="true" id="contract-editor-colab">
-                    <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ENTREGA</h2><br>
-                    <p>Pelo presente instrumento, a empresa <strong>ON delivery</strong> estabelece os termos acordados...</p><br>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalContratoColab')">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveAndSendContract()"><i class="ph ph-paper-plane-tilt"></i> Salvar e Enviar E-mail</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalCracha">
-        <div class="modal-content" style="max-width: 400px; background: transparent; box-shadow: none;">
-            <div class="modal-body" style="padding: 0;" id="modal-cracha-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalQROperacoes">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header"><h3><i class="ph ph-motorcycle text-brand-primary"></i> Operações do Entregador</h3><button class="close-modal" onclick="closeModal('modalQROperacoes')">&times;</button></div>
-            <div class="modal-body" id="modal-qr-ops-body">
-                <!-- Conteúdo carregado via API -->
-            </div>
-        </div>
-    </div>
-
-
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
-        const API_BASE_URL = "http://localhost:5000/api"; // Endpoint base da API Python (FastAPI/Flask)
+        const API_BASE_URL = "/api";
         let currentActiveId = null;
 
-        // Função genérica para comunicação com a API REST em Python
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
+                const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+                let url = `${API_BASE_URL}${endpoint}`;
                 const options = {
                     method: method,
                     headers: { 'Content-Type': 'application/json' }
                 };
-                if (data) {
+
+                if (method === 'GET') {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url += `${separator}empresa_id=${empresaId}`;
+                } else if (data) {
+                    data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+
+                const response = await fetch(url, options);
                 if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
                 return await response.json();
             } catch (error) {
@@ -681,7 +579,49 @@
             }
         }
 
-        // ================= CARREGAMENTO DE DADOS (GET) =================
+        // Função de Login Integrada por CNPJ
+        async function fazerLoginGestor() {
+            const cnpjInput = document.getElementById('input-login-cnpj').value;
+            try {
+                const res = await fetch(`${API_BASE_URL}/gestor/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cnpj: cnpjInput })
+                });
+
+                if (res.ok) {
+                    const dados = await res.json();
+                    localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
+                    localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
+
+                    // Esconde a tela de login e inicializa o painel
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    inicializarPainel();
+                } else {
+                    alert("CNPJ não encontrado ou empresa inativa na base de dados.");
+                }
+            } catch (err) {
+                alert("Erro ao conectar com o servidor da API.");
+            }
+        }
+
+        function logoutGestor() {
+            localStorage.removeItem('deliveryon_empresa_id');
+            localStorage.removeItem('deliveryon_empresa_nome');
+            location.reload();
+        }
+
+        async function updateOrderStatus(orderId, selectElement) {
+            const novoStatus = selectElement.value;
+            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+
+            if (response) {
+                loadDashboardData();
+            } else {
+                alert("Erro ao atualizar o status do pedido.");
+            }
+        }
+
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
@@ -697,30 +637,29 @@
             const orders = await apiRequest('/orders');
             const tbody = document.getElementById('tbody-recent-orders');
             tbody.innerHTML = '';
-            
+
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado na API.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
                 return;
             }
 
             orders.forEach(order => {
                 tbody.innerHTML += `
                     <tr data-id="${order.id}">
-                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora}</span></td>
-                        <td>${order.cliente}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco}</span></td>
-                        <td>R$ ${order.total}</td>
+                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
+                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
+                        <td>R$ ${order.total || '0,00'}</td>
                         <td>
                             <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
                                 <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
                                 <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
                                 <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
                                 <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
                             </select>
                         </td>
                         <td style="text-align: right;">
                             <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
-                            <button class="btn-action" title="Editar" onclick="editOrder('${order.id}')"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Cancelar" style="color: var(--danger);" onclick="prepareCancelOrder('${order.id}')"><i class="ph ph-x"></i></button>
                         </td>
                     </tr>
                 `;
@@ -731,7 +670,7 @@
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
             tbody.innerHTML = '';
-            
+
             if (!products || products.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
                 return;
@@ -745,8 +684,6 @@
                         <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao}</span></td>
                         <td>R$ ${p.preco}</td>
                         <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="editProduct('${p.codigo}')"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Promocionar" onclick="openPromoModal('${p.codigo}')"><i class="ph ph-tag" style="color:var(--warning);"></i></button>
                             <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
@@ -770,11 +707,7 @@
                         <td><strong>${c.nome}</strong></td>
                         <td>${c.telefone}</td>
                         <td>${c.referencia || '-'}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="editClient('${c.id}')"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Histórico de Compras" onclick="viewClientHistory('${c.id}')"><i class="ph ph-clock-counter-clockwise"></i></button>
-                            <button class="btn-action" title="Excluir Cliente" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
-                        </td>
+                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button></td>
                     </tr>
                 `;
             });
@@ -798,12 +731,7 @@
                         <td>${cb.funcao}</td>
                         <td>${cb.telefone}</td>
                         <td><span class="badge badge-success">${cb.status}</span></td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="editColab('${cb.id}')"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Contrato" onclick="openContract('${cb.id}')"><i class="ph ph-scroll"></i></button>
-                            <button class="btn-action" title="Visualizar Crachá" onclick="openBadge('${cb.id}')"><i class="ph ph-identification-card text-info" style="color: var(--info);"></i></button>
-                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
-                        </td>
+                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button></td>
                     </tr>
                 `;
             });
@@ -825,16 +753,12 @@
                         <td>${f.data}<br><strong>${f.cliente}</strong></td>
                         <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
                         <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Ver Completo" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button>
-                            <button class="btn-action" title="Marcar Verificado (OK)" onclick="verifyFeedApi('${f.id}')"><i class="ph ph-check text-success" style="color: var(--success);"></i></button>
-                        </td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button></td>
                     </tr>
                 `;
             });
         }
 
-        // ================= CADASTRO / CRIAÇÃO (POST) =================
         async function createProduct() {
             const payload = {
                 nome: document.getElementById('input-new-prod-name').value,
@@ -844,7 +768,7 @@
                 descricao: document.getElementById('textarea-new-prod-desc').value
             };
             await apiRequest('/products', 'POST', payload);
-            alert('Produto cadastrado com sucesso via API Python!');
+            alert('Produto cadastrado com sucesso!');
             loadProducts();
         }
 
@@ -857,7 +781,7 @@
                 referencia: document.getElementById('input-cli-ref').value
             };
             await apiRequest('/clients', 'POST', payload);
-            alert('Cliente salvo com sucesso via API Python!');
+            alert('Cliente salvo com sucesso!');
             loadClients();
         }
 
@@ -874,67 +798,8 @@
                 observacoes: document.getElementById('textarea-colab-obs').value
             };
             await apiRequest('/colaboradores', 'POST', payload);
-            alert('Colaborador cadastrado com sucesso via API Python!');
+            alert('Colaborador cadastrado com sucesso!');
             loadColaboradores();
-        }
-
-        // ================= AÇÕES E MUTAÇÕES DE DADOS =================
-        async function updateOrderStatus(orderId, selectEl) {
-            const status = selectEl.value;
-            notifyStatus(selectEl);
-            await apiRequest(`/orders/${orderId}/status`, 'PATCH', { status });
-        }
-
-        async function viewOrder(orderId) {
-            currentActiveId = orderId;
-            const data = await apiRequest(`/orders/${orderId}`);
-            if (data) {
-                document.getElementById('modal-ver-pedido-body').innerHTML = `
-                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <p><strong>Cliente:</strong> ${data.cliente}</p><p><strong>Telefone:</strong> ${data.telefone}</p>
-                        <p><strong>Local:</strong> ${data.endereco}</p>
-                    </div>
-                    <h3 style="text-align: right; color: var(--brand-primary);">Total: R$ ${data.total}</h3>
-                `;
-            }
-            openModal('modalVerPedido');
-        }
-
-        async function editOrder(orderId) {
-            currentActiveId = orderId;
-            const data = await apiRequest(`/orders/${orderId}`);
-            if (data) {
-                document.getElementById('modal-editar-pedido-body').innerHTML = `
-                    <div class="form-grid">
-                        <div class="form-group"><label>Nome do Cliente</label><input type="text" class="form-control" id="edit-ord-cli" value="${data.cliente}"></div>
-                        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-ord-tel" value="${data.telefone}"></div>
-                    </div>
-                `;
-            }
-            openModal('modalEditarPedido');
-        }
-
-        async function updateOrderChanges() {
-            const payload = {
-                cliente: document.getElementById('edit-ord-cli').value,
-                telefone: document.getElementById('edit-ord-tel').value
-            };
-            await apiRequest(`/orders/${currentActiveId}`, 'PUT', payload);
-            closeModal('modalEditarPedido');
-            alert('Pedido atualizado via API Python!');
-            loadOrders();
-        }
-
-        function prepareCancelOrder(orderId) {
-            currentActiveId = orderId;
-            openModal('modalCancelarPedido');
-        }
-
-        async function confirmCancelOrder() {
-            await apiRequest(`/orders/${currentActiveId}`, 'DELETE');
-            closeModal('modalCancelarPedido');
-            alert('Pedido cancelado com sucesso!');
-            loadOrders();
         }
 
         async function deleteProduct(code) {
@@ -958,44 +823,121 @@
             }
         }
 
-        async function saveConfigurations() {
-            const payload = {
-                titulo: document.getElementById('input-config-title').value,
-                slogan: document.getElementById('input-config-slogan').value,
-                endereco: document.getElementById('input-config-address').value,
-                telefone: document.getElementById('input-config-phone').value,
-                horarios: document.getElementById('textarea-config-hours').value
-            };
-            await apiRequest('/configuracoes', 'PUT', payload);
-            alert('Configurações salvas e sincronizadas com a API Python!');
-        }
-
         async function triggerBackup() {
             await apiRequest('/backup', 'POST');
-            alert('Backup executado com sucesso no servidor Python.');
+            alert('Backup executado com sucesso.');
         }
 
         async function fetchReport(tipo) {
-            alert(`Gerando relatório de [${tipo}] via endpoint da API Python...`);
-            await apiRequest(`/reports/${tipo}`);
+            alert(`Gerando relatório de [${tipo}]...`);
         }
 
-        // ================= FUNÇÕES DE CONTROLE DE UI =================
+        async function loadConfigurations() {
+            const config = await apiRequest('/configuracoes');
+            if (config) {
+                document.getElementById('input-config-title').value = config.titulo || '';
+                document.getElementById('input-config-slogan').value = config.slogan || '';
+                document.getElementById('input-config-address').value = config.endereco || '';
+                document.getElementById('input-config-phone').value = config.telefone || '';
+                document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
+                if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
+                if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
+
+                window.currentLogoBase64 = config.logo_url || '';
+
+                // Atualiza a logo visualmente na interface se existir salva
+                atualizarExibicaoLogotipo(window.currentLogoBase64);
+            }
+        }
+
+        function atualizarExibicaoLogotipo(logoBase64) {
+            const containers = document.querySelectorAll('.logo-preview-box');
+            containers.forEach(container => {
+                if (logoBase64 && logoBase64.trim() !== '') {
+                    container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
+                } else {
+                    container.innerHTML = `
+                        <span class="on-logo-top">ON</span>
+                        <span class="on-logo-bottom">delivery</span>
+                    `;
+                }
+            });
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function saveConfigurations() {
+            // 1. Busca primeiro os dados atuais salvos no banco para garantir que nada seja perdido
+            const configAtual = await apiRequest('/configuracoes') || {};
+
+            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    logoBase64 = await convertFileToBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Erro ao converter imagem:", err);
+                }
+            }
+
+            // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
+            const payload = {
+                titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
+                slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
+                endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
+                telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
+                horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
+                cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
+                cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
+                logo_url: logoBase64
+            };
+
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações, cores e logotipo salvos com sucesso!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            } else {
+                alert('Erro ao salvar as configurações.');
+            }
+        }
+
+        async function aplicarIdentidadeVisualDaEmpresa() {
+            try {
+                const config = await apiRequest('/configuracoes');
+                if (!config) return;
+
+                const root = document.documentElement;
+                if (config.cor_primaria) {
+                    root.style.setProperty('--brand-primary', config.cor_primaria);
+                }
+                if (config.cor_secundaria) {
+                    root.style.setProperty('--brand-secondary', config.cor_secundaria);
+                }
+            } catch (e) {
+                console.error("Erro ao aplicar identidade visual:", e);
+            }
+        }
+
         function toggleMotoboyFields(funcao, idContainer) {
             const camposMotoboy = document.getElementById(idContainer);
             if (camposMotoboy) {
-                if (funcao === 'Motoboy') {
-                    camposMotoboy.classList.remove('hidden');
-                } else {
-                    camposMotoboy.classList.add('hidden');
-                }
+                if (funcao === 'Motoboy') camposMotoboy.classList.remove('hidden');
+                else camposMotoboy.classList.add('hidden');
             }
         }
 
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
-
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
 
@@ -1012,11 +954,6 @@
             document.getElementById('mobile-overlay').classList.toggle('active');
         }
 
-        document.getElementById('mobile-overlay').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('mobile-overlay').classList.remove('active');
-        });
-
         function switchTab(btn, targetId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -1024,24 +961,14 @@
             document.getElementById(targetId).classList.remove('hidden');
         }
 
-        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
-        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
-
-        function notifyStatus(selectElement) {
-            const status = selectElement.value;
-            if(status.includes('Aguardando')) { selectElement.style.background = '#fff3cd'; selectElement.style.color = '#856404'; }
-            else if(status.includes('Preparando')) { selectElement.style.background = '#ffe8cc'; selectElement.style.color = '#d97706'; }
-            else if(status.includes('Saiu')) { selectElement.style.background = '#cce5ff'; selectElement.style.color = '#004085'; }
-            else if(status.includes('Entregue')) { selectElement.style.background = '#d4edda'; selectElement.style.color = '#155724'; }
-        }
-
-        // Inicialização dos Gráficos e requisições para a API Python ao abrir a página
-        window.onload = function() {
+        function inicializarPainel() {
             loadDashboardData();
             loadProducts();
             loadClients();
             loadColaboradores();
             loadOuvidoria();
+            loadConfigurations();
+            aplicarIdentidadeVisualDaEmpresa();
 
             if(document.getElementById('chartFluxo')) {
                 new Chart(document.getElementById('chartFluxo').getContext('2d'), {
@@ -1056,6 +983,16 @@
                     data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
+            }
+        }
+
+        window.onload = function() {
+            const empresaId = localStorage.getItem('deliveryon_empresa_id');
+            if (empresaId) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                inicializarPainel();
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
             }
         };
     </script>
