@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from datetime import datetime
 
 app = FastAPI(title="DeliveryON API - Master & Gestor", description="API completa integrada ao Neon DB")
 
@@ -26,6 +27,12 @@ def get_db():
         conn.close()
 
 # ================= MODELOS =================
+
+
+class ChamadoCreate(BaseModel):
+    empresa_id: int
+    resumo_problema: str
+    descricao: str
 class EmpresaCreate(BaseModel):
     razao_social: str
     nome_fantasia: str
@@ -341,3 +348,36 @@ def list_ouvidoria(db=Depends(get_db)):
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
+
+
+# Rota para o Gestor criar um chamado
+@app.post("/api/helpdesk")
+def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        INSERT INTO chamados (empresa_id, resumo_problema, descricao, status, data_criacao) 
+        VALUES (%s, %s, %s, 'aberto', NOW()) RETURNING id;
+    """, (chamado.empresa_id, chamado.resumo_problema, chamado.descricao))
+    novo_id = cursor.fetchone()['id']
+    
+    # Cria uma notificação automática para o Master ver no Dashboard dele
+    cursor.execute("""
+        INSERT INTO notificacoes_master (tipo, titulo, mensagem, data_hora)
+        VALUES ('sup', 'Novo Chamado Aberto', %s, NOW())
+    """, (f"A empresa ID {chamado.empresa_id} abriu um chamado: {chamado.resumo_problema}",))
+    
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Chamado aberto com sucesso", "id": novo_id}
+
+# Rota para o Gestor ver os SEUS próprios chamados
+@app.get("/api/helpdesk")
+def listar_chamados_gestor(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, resumo_problema, status, tecnico_responsavel, TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI') as data_criacao 
+        FROM chamados WHERE empresa_id = %s ORDER BY id DESC
+    """, (empresa_id,))
+    res = cursor.fetchall()
+    cursor.close()
+    return res
