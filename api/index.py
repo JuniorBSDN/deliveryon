@@ -370,14 +370,18 @@ def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Chamado aberto com sucesso", "id": novo_id}
 
+
 # Rota para o Gestor ver os SEUS próprios chamados
 @app.get("/api/helpdesk")
 def listar_chamados_gestor(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
-        SELECT id, resumo_problema, status, tecnico_responsavel, TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI') as data_criacao 
-        FROM chamados WHERE empresa_id = %s ORDER BY id DESC
+        SELECT id, resumo_problema, descricao, status, 
+               TO_CHAR(data_criacao, 'YYYY-MM-DD HH24:MI:SS') as data_criacao 
+        FROM chamados 
+        WHERE empresa_id = %s 
+        ORDER BY data_criacao DESC;
     """, (empresa_id,))
-    res = cursor.fetchall()
+    chamados = cursor.fetchall()
     cursor.close()
-    return res
+    return chamados
