@@ -566,7 +566,6 @@
             const separator = url.includes('?') ? '&' : '?';
             url += `${separator}empresa_id=${empresaId}`;
         } else if (data) {
-            // Garante que o empresa_id vai junto no corpo da requisição POST/PUT
             data.empresa_id = parseInt(empresaId);
             options.body = JSON.stringify(data);
         }
@@ -574,7 +573,6 @@
         const response = await fetch(url, options);
         if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
         
-        // Retorna JSON se houver conteúdo, senão retorna true
         const text = await response.text();
         return text ? JSON.parse(text) : { success: true };
     } catch (error) {
@@ -771,15 +769,12 @@
         estoque: parseInt(document.getElementById('input-new-prod-stock').value),
         descricao: document.getElementById('textarea-new-prod-desc').value
     };
-    
     const res = await apiRequest('/products', 'POST', payload);
     if (res) {
         alert('Produto cadastrado com sucesso!');
-        // Limpa os campos do formulário
         document.getElementById('input-new-prod-name').value = '';
         document.getElementById('input-new-prod-price').value = '';
         document.getElementById('textarea-new-prod-desc').value = '';
-        // Atualiza a tabela imediatamente na tela do celular/PC
         loadProducts();
     } else {
         alert('Erro ao cadastrar produto.');
@@ -794,11 +789,9 @@
         endereco: document.getElementById('input-cli-address').value,
         referencia: document.getElementById('input-cli-ref').value
     };
-    
     const res = await apiRequest('/clients', 'POST', payload);
     if (res) {
         alert('Cliente salvo com sucesso!');
-        // Limpa os campos e atualiza a tabela
         document.getElementById('input-cli-name').value = '';
         document.getElementById('input-cli-phone').value = '';
         document.getElementById('input-cli-email').value = '';
@@ -809,7 +802,6 @@
         alert('Erro ao salvar cliente.');
     }
 }
-
         async function createColab() {
     const payload = {
         nome: document.getElementById('input-colab-name').value,
