@@ -167,6 +167,7 @@
             <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> Colaboradores</a></li>
             <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
             <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
+            <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk</a></li>
             <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
@@ -486,6 +487,51 @@
                             <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-ouvidoria">
                                 <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HELPDESK DO GESTOR -->
+            <section id="sec-helpdesk" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk e Suporte</h1></div>
+
+                <div class="card">
+                    <h3 class="mb-20">Abrir Novo Chamado</h3>
+                    <form onsubmit="event.preventDefault(); abrirChamadoHelpdesk();">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Resumo do Problema</label>
+                                <input type="text" class="form-control" id="input-hd-resumo" placeholder="Ex: Erro ao imprimir pedido" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição Detalhada</label>
+                            <textarea class="form-control" id="textarea-hd-desc" rows="3" placeholder="Explique o que está acontecendo..." required></textarea>
+                        </div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                            <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar Chamado ao Master</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                        <h3>Meus Chamados</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID / Data</th>
+                                    <th>Resumo</th>
+                                    <th>Status</th>
+                                    <th>Técnico Responsável</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-gestor-helpdesk">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -968,6 +1014,7 @@
             loadColaboradores();
             loadOuvidoria();
             loadConfigurations();
+            loadHelpdeskGestor();
             aplicarIdentidadeVisualDaEmpresa();
 
             if(document.getElementById('chartFluxo')) {
@@ -983,6 +1030,49 @@
                     data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
+            }
+        }
+        async function loadHelpdeskGestor() {
+            const chamados = await apiRequest('/helpdesk');
+            const tbody = document.getElementById('tbody-gestor-helpdesk');
+            tbody.innerHTML = '';
+
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+                return;
+            }
+
+            chamados.forEach(c => {
+                let badgeClass = 'badge-warning';
+                if(c.status === 'resolvido' || c.status === 'concluido') badgeClass = 'badge-success';
+                if(c.status === 'cancelado') badgeClass = 'badge-danger';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
+                        <td>${c.resumo_problema}</td>
+                        <td><span class="badge ${badgeClass}" style="text-transform: uppercase;">${c.status}</span></td>
+                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function abrirChamadoHelpdesk() {
+            const payload = {
+                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')),
+                resumo_problema: document.getElementById('input-hd-resumo').value,
+                descricao: document.getElementById('textarea-hd-desc').value
+            };
+            
+            const res = await apiRequest('/helpdesk', 'POST', payload);
+            if (res) {
+                alert('Chamado aberto com sucesso! Nossa equipe foi notificada.');
+                document.getElementById('input-hd-resumo').value = '';
+                document.getElementById('textarea-hd-desc').value = '';
+                loadHelpdeskGestor();
+            } else {
+                alert('Erro ao abrir o chamado.');
             }
         }
 
