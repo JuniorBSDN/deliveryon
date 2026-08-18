@@ -435,3 +435,44 @@ def get_chamado_historico(id: int, db=Depends(get_db)):
         
     cursor.close()
     return res
+
+# ================= ROTAS DE NOTIFICAÇÕES (MASTER) =================
+
+@app.get("/api/master/notificacoes")
+def get_notificacoes_master(data: Optional[str] = None, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Se o Master filtrou por data
+        if data:
+            cursor.execute("""
+                SELECT id, tipo, titulo, mensagem, TO_CHAR(data_hora, 'DD/MM/YYYY HH24:MI') as data_hora 
+                FROM notificacoes_master 
+                WHERE DATE(data_hora) = %s
+                ORDER BY id DESC LIMIT 50
+            """, (data,))
+        else:
+            cursor.execute("""
+                SELECT id, tipo, titulo, mensagem, TO_CHAR(data_hora, 'DD/MM/YYYY HH24:MI') as data_hora 
+                FROM notificacoes_master 
+                ORDER BY id DESC LIMIT 50
+            """)
+        res = cursor.fetchall()
+    except Exception as e:
+        db.rollback()
+        res = []
+    finally:
+        cursor.close()
+    
+    return res
+
+@app.delete("/api/master/notificacoes/{id}")
+def delete_notificacao(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("DELETE FROM notificacoes_master WHERE id = %s", (id,))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+    finally:
+        cursor.close()
+    return {"mensagem": "Notificação resolvida."}
