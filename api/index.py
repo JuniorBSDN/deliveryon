@@ -385,3 +385,53 @@ def listar_chamados_gestor(empresa_id: int, db=Depends(get_db)):
     chamados = cursor.fetchall()
     cursor.close()
     return chamados
+
+# ================= ROTAS DE HELPDESK DO MASTER =================
+
+@app.get("/api/master/helpdesk/indicadores")
+def get_master_helpdesk_indicadores(db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'aberto'")
+    abertos = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'em_andamento'")
+    andamento = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'concluido'")
+    concluidos = cursor.fetchone()['total']
+    
+    cursor.close()
+    return {"abertos": abertos, "em_andamento": andamento, "concluidos": concluidos}
+
+@app.get("/api/master/helpdesk/chamados")
+def list_master_helpdesk_chamados(db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT c.id, c.empresa_id, e.nome_fantasia as empresa, c.resumo_problema, c.status, 
+               TO_CHAR(c.data_criacao, 'DD/MM/YYYY HH24:MI') as data
+        FROM chamados c
+        LEFT JOIN empresas e ON c.empresa_id = e.id
+        ORDER BY c.id DESC
+    """)
+    res = cursor.fetchall()
+    cursor.close()
+    return res
+
+@app.get("/api/master/helpdesk/chamados/{id}/historico")
+def get_chamado_historico(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    # Usamos try/except para não quebrar o painel caso a tabela de histórico ainda não exista
+    try:
+        cursor.execute("""
+            SELECT descricao, TO_CHAR(data_hora, 'DD/MM/YYYY HH24:MI') as data 
+            FROM historico_chamados 
+            WHERE chamado_id = %s ORDER BY data_hora DESC
+        """, (id,))
+        res = cursor.fetchall()
+    except:
+        db.rollback()
+        res = []
+        
+    cursor.close()
+    return res
