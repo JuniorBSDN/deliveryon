@@ -614,6 +614,7 @@
             carregarMetricas();
             carregarNotificacoesReais();
             carregarEmpresas();
+            carregarHelpdesk();
         }
 
         function fazerLogout() {
@@ -689,7 +690,9 @@
         function gerarBotoesAcao(alerta) {
             if (alerta.tipo === 'infra') return `<button class="btn btn-danger" style="font-size: 0.8rem;" onclick="alert('Verificando...')"><i class="ph ph-magnifying-glass"></i> Verificar Infra</button>`;
             if (alerta.tipo === 'fin') return `<button class="btn btn-outline" style="font-size: 0.8rem;" onclick="openModal('modalPixMaster')"><i class="ph ph-qr-code"></i> Gerar Pix</button>`;
-            if (alerta.tipo === 'sup') return `<button class="btn btn-primary" style="font-size: 0.8rem;" onclick="navigate('helpdesk', document.querySelectorAll('.nav-link')[2])"><i class="ph ph-wrench"></i> Gerar O.S.</button>`;
+            if (alerta.tipo === 'sup') {
+                return `<button class="btn btn-primary" style="font-size: 0.8rem;" onclick="const linkHd = Array.from(document.querySelectorAll('.nav-link')).find(el => el.textContent.includes('Helpdesk')); navigate('helpdesk', linkHd); carregarHelpdesk();"><i class="ph ph-wrench"></i> Gerar O.S.</button>`;
+            }
             return '';
         }
 
@@ -975,16 +978,16 @@ async function abrirHistoricoEmpresa(id, nome) {
 }
 
         // Carrega indicadores e chamados ao abrir a aba
-        async function carregarHelpdesk() {
+      async function carregarHelpdesk() {
             try {
-                // Indicadores
+                // Indicadores (Ajustado para bater exatamente com as chaves do index.py)
                 const resInd = await fetch('/api/master/helpdesk/indicadores');
                 if(resInd.ok) {
                     const ind = await resInd.json();
                     document.getElementById('ind-abertos').innerText = ind.abertos || 0;
-                    document.getElementById('ind-atendimento').innerText = ind.em_atendimento || 0;
+                    document.getElementById('ind-atendimento').innerText = ind.em_andamento || 0; // index.py envia 'em_andamento'
                     document.getElementById('ind-pendentes').innerText = ind.pendentes || 0;
-                    document.getElementById('ind-resolvidos').innerText = ind.resolvidos || 0;
+                    document.getElementById('ind-resolvidos').innerText = ind.concluidos || 0; // index.py envia 'concluidos'
                 }
 
                 // Lista de Chamados
@@ -1003,20 +1006,20 @@ async function abrirHistoricoEmpresa(id, nome) {
                     tbody.innerHTML = '';
                     chamados.forEach(c => {
                         let badgeCls = 'badge-warning';
-                        if(c.status === 'resolvido') badgeCls = 'badge-success';
+                        if(c.status === 'resolvido' || c.status === 'concluido') badgeCls = 'badge-success';
                         if(c.status === 'cancelado') badgeCls = 'badge-danger';
 
+                        // Mapeamento corrigido: c.empresa e c.data vêm direto da query do index.py
                         tbody.innerHTML += `
                             <tr>
-                                <td><strong>${c.empresa_nome}</strong><br><small>${c.data_criacao}</small></td>
+                                <td><strong>${c.empresa || 'Empresa Desconhecida'}</strong><br><small>${c.data || ''}</small></td>
                                 <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${c.resumo_problema}</td>
                                 <td>
                                     <select class="form-control" style="padding: 4px; font-size: 0.8rem; width: auto;" onchange="alterarStatusChamado(${c.id}, this.value)">
                                         <option value="aberto" ${c.status === 'aberto' ? 'selected' : ''}>Aberto</option>
-                                        <option value="em_atendimento" ${c.status === 'em_atendimento' ? 'selected' : ''}>Análise / Em Atendimento</option>
-                                        <option value="em_producao" ${c.status === 'em_producao' ? 'selected' : ''}>Em Produção</option>
+                                        <option value="em_atendimento" ${c.status === 'em_atendimento' || c.status === 'em_andamento' ? 'selected' : ''}>Análise / Em Atendimento</option>
                                         <option value="pendente" ${c.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-                                        <option value="resolvido" ${c.status === 'resolvido' ? 'selected' : ''}>Resolvido</option>
+                                        <option value="concluido" ${c.status === 'concluido' || c.status === 'resolvido' ? 'selected' : ''}>Concluído</option>
                                     </select>
                                 </td>
                                 <td>${c.tecnico_responsavel || 'Não atribuído'}</td>
@@ -1030,7 +1033,7 @@ async function abrirHistoricoEmpresa(id, nome) {
                     });
                 }
             } catch(e) {
-                console.error("Erro ao carregar Helpdesk");
+                console.error("Erro ao carregar Helpdesk", e);
             }
         }
 
