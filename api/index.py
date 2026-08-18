@@ -145,6 +145,100 @@ def delete_empresa(id: int, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
+# ================= ROTAS DE HELPDESK E AÇÕES (MASTER) =================
+
+@app.get("/api/master/helpdesk/indicadores")
+def get_master_helpdesk_indicadores(db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'aberto'")
+    abertos = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('em_atendimento', 'em_andamento')")
+    andamento = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('resolvido', 'concluido')")
+    concluidos = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'pendente'")
+    pendentes = cursor.fetchone()['total']
+    
+    cursor.close()
+    return {"abertos": abertos, "em_atendimento": andamento, "concluidos": concluidos, "pendentes": pendentes}
+
+@app.get("/api/master/helpdesk/chamados")
+def list_master_helpdesk_chamados(db=Depends(get_db)):
+    cursor = db.cursor()
+    # Fazemos um JOIN com a tabela empresas para pegar o nome_fantasia
+    cursor.execute("""
+        SELECT c.id, c.empresa_id, e.nome_fantasia as empresa_nome, c.resumo_problema, c.status, 
+               c.tecnico_responsavel, TO_CHAR(c.data_criacao, 'DD/MM/YYYY HH24:MI') as data_criacao
+        FROM chamados c
+        LEFT JOIN empresas e ON c.empresa_id = e.id
+        ORDER BY c.id DESC
+    """)
+    res = cursor.fetchall()
+    cursor.close()
+    return res
+
+@app.put("/api/master/helpdesk/chamados/{id}/status")
+def update_chamado_status(id: int, data: ChamadoStatusUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("UPDATE chamados SET status = %s WHERE id = %s", (data.status, id))
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Status atualizado com sucesso"}
+
+@app.post("/api/master/helpdesk/chamados/{id}/concluir")
+def concluir_chamado(id: int, data: ChamadoConcluir, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # Atualiza o status e o técnico
+    cursor.execute("""
+        UPDATE chamados 
+        SET status = 'resolvido', tecnico_responsavel = %s 
+        WHERE id = %s
+    """, (data.tecnico, id))
+    
+    # Grava no histórico para auditoria futura
+    cursor.execute("""
+        INSERT INTO historico_chamados (chamado_id, descricao, data_hora)
+        VALUES (%s, %s, NOW())
+    """, (id, f"Chamado concluído pelo técnico: {data.tecnico}"))
+    
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Chamado concluído"}
+
+@app.post("/api/master/helpdesk/chamados/{id}/cancelar")
+def cancelar_chamado(id: int, data: ChamadoCancelar, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("UPDATE chamados SET status = 'cancelado' WHERE id = %s", (id,))
+    
+    cursor.execute("""
+        INSERT INTO historico_chamados (chamado_id, descricao, data_hora)
+        VALUES (%s, %s, NOW())
+    """, (id, f"Chamado cancelado. Motivo: {data.motivo}"))
+    
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Chamado cancelado"}
+
+@app.get("/api/master/helpdesk/chamados/{id}/historico")
+def get_chamado_historico(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT descricao, TO_CHAR(data_hora, 'DD/MM/YYYY HH24:MI') as data 
+            FROM historico_chamados 
+            WHERE chamado_id = %s ORDER BY data_hora DESC
+        """, (id,))
+        res = cursor.fetchall()
+    except Exception:
+        db.rollback()
+        res = []
+    cursor.close()
+    return res
+
 # ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
