@@ -495,8 +495,8 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
 
     cur = db.cursor()
     cur.execute(
-        "UPDATE pedidos SET status = %s WHERE id = %s AND empresa_id = %s",
-        (novo_status, order_id, empresa_id)
+        "UPDATE pedidos SET status = %s WHERE id = %s",
+        (novo_status, order_id)
     )
     db.commit()
     cur.close()
@@ -528,7 +528,6 @@ def list_ouvidoria(empresa_id: int, db=Depends(get_db)):
 @app.put("/api/products/{id}")
 def update_product(id: int, prod: ProdutoUpdate, db=Depends(get_db)):
     cursor = db.cursor()
-    # Se uma nova foto foi enviada, atualiza com a foto. Senão, mantém a foto antiga.
     if prod.foto and prod.foto.strip() != "":
         cursor.execute(
             "UPDATE produtos SET nome=%s, categoria=%s, preco=%s, estoque=%s, descricao=%s, foto=%s WHERE id=%s AND empresa_id=%s;",
