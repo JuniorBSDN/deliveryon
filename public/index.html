@@ -257,10 +257,10 @@
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
         const API_BASE_URL = "/api"; // Aponta diretamente para a rota hospedada
-        
+
         // Pega o ID da loja via URL (?loja=1) ou usa 1 como padrão (Multi-tenant SaaS)
         const urlParams = new URLSearchParams(window.location.search);
-        const lojaId = urlParams.get('loja') || 1; 
+        const lojaId = urlParams.get('loja') || 1;
 
         let telefoneWhatsapp = "5511999999999"; // Fallback caso não venha da API
         const TAXA_ENTREGA = 5.00;
@@ -277,7 +277,7 @@
                     method: method,
                     headers: { 'Content-Type': 'application/json' }
                 };
-                
+
                 // Envia o ID da empresa em todas as requisições
                 if (method === 'GET') {
                     const separator = url.includes('?') ? '&' : '?';
