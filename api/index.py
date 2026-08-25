@@ -53,6 +53,15 @@ class ProdutoCreate(BaseModel):
     estoque: int
     descricao: str
     foto: Optional[str] = None
+    
+class ProdutoUpdate(BaseModel):
+    empresa_id: int
+    nome: str
+    categoria: str
+    preco: float
+    estoque: int
+    descricao: str
+    foto: Optional[str] = None
 
 class ClienteCreate(BaseModel):
     empresa_id: int
@@ -516,6 +525,24 @@ def list_ouvidoria(empresa_id: int, db=Depends(get_db)):
 
 
 # ================= ROTAS DE PRODUTOS, CLIENTES E COLABORADORES =================
+@app.put("/api/products/{id}")
+def update_product(id: int, prod: ProdutoUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    # Se uma nova foto foi enviada, atualiza com a foto. Senão, mantém a foto antiga.
+    if prod.foto and prod.foto.strip() != "":
+        cursor.execute(
+            "UPDATE produtos SET nome=%s, categoria=%s, preco=%s, estoque=%s, descricao=%s, foto=%s WHERE id=%s AND empresa_id=%s;",
+            (prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao, prod.foto, id, prod.empresa_id)
+        )
+    else:
+        cursor.execute(
+            "UPDATE produtos SET nome=%s, categoria=%s, preco=%s, estoque=%s, descricao=%s WHERE id=%s AND empresa_id=%s;",
+            (prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao, id, prod.empresa_id)
+        )
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Produto atualizado com sucesso"}
+
 @app.get("/api/products")
 def list_products(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -540,7 +567,7 @@ def delete_product(id: int, db=Depends(get_db)):
     cursor.execute("DELETE FROM produtos WHERE id = %s", (id,))
     db.commit()
     cursor.close()
-    return {"mensagem": "Excluído"}
+    return {"mensagem": "Excluído com sucesso"}
 
 @app.get("/api/clients")
 def list_clients(empresa_id: int, db=Depends(get_db)):
