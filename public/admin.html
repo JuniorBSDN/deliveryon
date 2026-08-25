@@ -594,6 +594,42 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO DE PRODUTO -->
+<div class="modal-overlay" id="modalEditarProduto">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="ph ph-pencil"></i> Editar Produto</h3>
+            <button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-editar-produto" onsubmit="event.preventDefault(); salvarEdicaoProduto();">
+                <input type="hidden" id="edit-prod-id">
+                <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-name" required></div>
+                <div class="form-group"><label>Categoria</label>
+                    <select class="form-control" id="edit-prod-cat" required>
+                        <option value="hamburgueres">Hambúrgueres</option>
+                        <option value="pizzas">Pizzas</option>
+                        <option value="salgados">Salgados</option>
+                        <option value="bebidas">Bebidas</option>
+                        <option value="sobremesas">Sobremesas</option>
+                        <option value="outra">Outra Categoria</option>
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="edit-prod-price" required></div>
+                    <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-stock" required></div>
+                </div>
+                <div class="form-group"><label>Nova Foto (Opcional)</label><input type="file" class="form-control" id="edit-prod-file"></div>
+                <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
+                <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
         const API_BASE_URL = "/api";
@@ -724,9 +760,13 @@
 
             products.forEach(p => {
                 let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
-                if (p.foto && p.foto.trim() !== '') {
+                
+                if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
                     imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
                 }
+
+                // Empacota o objeto do produto de forma segura para abrir no modal
+                const produtoJson = encodeURIComponent(JSON.stringify(p));
 
                 tbody.innerHTML += `
                     <tr data-id="${p.codigo}">
@@ -735,12 +775,80 @@
                         <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
                         <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
                         <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicao('${produtoJson}')"><i class="ph ph-pencil"></i></button>
                             <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
+
+function abrirModalEdicao(produtoStr) {
+            const p = JSON.parse(decodeURIComponent(produtoStr));
+            document.getElementById('edit-prod-id').value = p.codigo;
+            document.getElementById('edit-prod-name').value = p.nome;
+            document.getElementById('edit-prod-cat').value = p.categoria || 'outra';
+            document.getElementById('edit-prod-price').value = p.preco;
+            document.getElementById('edit-prod-stock').value = p.estoque || 100;
+            document.getElementById('edit-prod-desc').value = p.descricao || '';
+            
+            document.getElementById('modalEditarProduto').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        async function salvarEdicaoProduto() {
+            const id = document.getElementById('edit-prod-id').value;
+            const fileInput = document.getElementById('edit-prod-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    fotoBase64 = await convertFileToBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Erro ao converter nova foto:", err);
+                }
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-prod-name').value,
+                categoria: document.getElementById('edit-prod-cat').value,
+                preco: parseFloat(document.getElementById('edit-prod-price').value.replace(',', '.')),
+                estoque: parseInt(document.getElementById('edit-prod-stock').value) || 0,
+                descricao: document.getElementById('edit-prod-desc').value,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/products/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Produto atualizado com sucesso!');
+                closeModal('modalEditarProduto');
+                loadProducts();
+            } else {
+                alert('Erro ao atualizar o produto.');
+            }
+        }
+
+        async function deleteProduct(code) {
+            if(confirm("Deseja realmente excluir este produto?")) {
+                const res = await apiRequest(`/products/${code}`, 'DELETE');
+                if (res) {
+                    alert('Produto excluído com sucesso!');
+                    loadProducts();
+                } else {
+                    alert('Erro ao excluir o produto.');
+                }
+            }
+        }
+
+
+
+
+
+
+        
 
         async function loadClients() {
             const clients = await apiRequest('/clients');
