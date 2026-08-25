@@ -1064,7 +1064,7 @@
                 resumo_problema: document.getElementById('input-hd-resumo').value,
                 descricao: document.getElementById('textarea-hd-desc').value
             };
-            
+
             const res = await apiRequest('/helpdesk', 'POST', payload);
             if (res) {
                 alert('Chamado aberto com sucesso! Nossa equipe foi notificada.');
@@ -1077,7 +1077,7 @@
         }
 
         window.onload = function() {
-        const empresaId = localStorage.getItem('deliveryon_empresa_id');          
+        const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 inicializarPainel();
