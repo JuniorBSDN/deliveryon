@@ -723,12 +723,17 @@
             }
 
             products.forEach(p => {
+                let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
+                if (p.foto && p.foto.trim() !== '') {
+                    imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
+                }
+
                 tbody.innerHTML += `
                     <tr data-id="${p.codigo}">
-                        <td><div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div></td>
+                        <td>${imagemHtml}</td>
                         <td>${p.codigo}</td>
-                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao}</span></td>
-                        <td>R$ ${p.preco}</td>
+                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
+                        <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
                         <td style="text-align: right;">
                             <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
                         </td>
@@ -805,28 +810,37 @@
             });
         }
 
-        // --- CORREÇÕES APLICADAS AQUI: TRATAMENTO DE ERROS, NUMEROS E LIMPEZA (RESET) ---
-        
         async function createProduct() {
             const form = document.getElementById('form-produto');
             const precoInput = document.getElementById('input-new-prod-price').value;
-            const precoFormatado = parseFloat(precoInput.replace(',', '.')); // Corrige vírgula para ponto
+            const precoFormatado = parseFloat(precoInput.replace(',', '.'));
+            
+            const fileInput = document.getElementById('input-new-prod-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    fotoBase64 = await convertFileToBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Erro ao converter imagem do produto:", err);
+                }
+            }
 
             const payload = {
                 nome: document.getElementById('input-new-prod-name').value,
                 categoria: document.getElementById('categoria').value,
                 preco: precoFormatado,
-                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0, // Garante número inteiro
-                descricao: document.getElementById('textarea-new-prod-desc').value
+                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
+                descricao: document.getElementById('textarea-new-prod-desc').value,
+                foto: fotoBase64
             };
             
-            // Só exibe sucesso e limpa se a API retornar os dados corretamente
             const res = await apiRequest('/products', 'POST', payload);
             
             if (res) {
                 alert('Produto cadastrado com sucesso!');
-                form.reset(); // Limpa o formulário instantaneamente
-                loadProducts(); // Atualiza a lista abaixo
+                form.reset();
+                loadProducts();
             } else {
                 alert('Falha ao cadastrar o produto. Ocorreu um erro no servidor.');
             }
@@ -846,7 +860,7 @@
             
             if (res) {
                 alert('Cliente salvo com sucesso!');
-                form.reset(); // Limpa o formulário instantaneamente
+                form.reset();
                 loadClients();
             } else {
                 alert('Falha ao cadastrar o cliente. Ocorreu um erro no servidor.');
@@ -871,14 +885,12 @@
             
             if (res) {
                 alert('Colaborador cadastrado com sucesso!');
-                form.reset(); // Limpa o formulário instantaneamente
+                form.reset();
                 loadColaboradores();
             } else {
                 alert('Falha ao cadastrar o colaborador. Ocorreu um erro no servidor.');
             }
         }
-
-        // --- FIM DAS CORREÇÕES DE CRIAÇÃO ---
 
         async function deleteProduct(code) {
             if(confirm("Deseja excluir este produto?")) {
@@ -922,8 +934,6 @@
                 if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
 
                 window.currentLogoBase64 = config.logo_url || '';
-
-                // Atualiza a logo visualmente na interface se existir salva
                 atualizarExibicaoLogotipo(window.currentLogoBase64);
             }
         }
@@ -952,9 +962,7 @@
         }
 
         async function saveConfigurations() {
-            // 1. Busca primeiro os dados atuais salvos no banco para garantir que nada seja perdido
             const configAtual = await apiRequest('/configuracoes') || {};
-
             let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
             const fileInput = document.getElementById('input-config-logo-file');
 
@@ -966,7 +974,6 @@
                 }
             }
 
-            // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
             const payload = {
                 titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
                 slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
