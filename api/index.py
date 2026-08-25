@@ -52,6 +52,7 @@ class ProdutoCreate(BaseModel):
     preco: float
     estoque: int
     descricao: str
+    foto: Optional[str] = None
 
 class ClienteCreate(BaseModel):
     empresa_id: int
@@ -518,7 +519,7 @@ def list_ouvidoria(empresa_id: int, db=Depends(get_db)):
 @app.get("/api/products")
 def list_products(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id as codigo, nome, categoria, preco, estoque, descricao FROM produtos WHERE empresa_id = %s ORDER BY id DESC", (empresa_id,))
+    cursor.execute("SELECT id as codigo, nome, categoria, preco, estoque, descricao, foto FROM produtos WHERE empresa_id = %s ORDER BY id DESC", (empresa_id,))
     res = cursor.fetchall()
     cursor.close()
     return res
@@ -527,8 +528,8 @@ def list_products(empresa_id: int, db=Depends(get_db)):
 def create_product(prod: ProdutoCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO produtos (empresa_id, nome, categoria, preco, estoque, descricao) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;",
-        (prod.empresa_id, prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao))
+        "INSERT INTO produtos (empresa_id, nome, categoria, preco, estoque, descricao, foto) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id;",
+        (prod.empresa_id, prod.nome, prod.categoria, prod.preco, prod.estoque, prod.descricao, prod.foto))
     db.commit()
     cursor.close()
     return {"mensagem": "Produto salvo"}
@@ -540,7 +541,6 @@ def delete_product(id: int, db=Depends(get_db)):
     db.commit()
     cursor.close()
     return {"mensagem": "Excluído"}
-
 
 @app.get("/api/clients")
 def list_clients(empresa_id: int, db=Depends(get_db)):
@@ -560,7 +560,6 @@ def create_client(cli: ClienteCreate, db=Depends(get_db)):
     db.commit()
     cursor.close()
     return {"mensagem": "Cliente salvo"}
-
 
 @app.get("/api/colaboradores")
 def list_colaboradores(empresa_id: int, db=Depends(get_db)):
@@ -585,7 +584,6 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
 @app.post("/api/auth/entregador")
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
-    # Verifica o telefone e senha (aqui simplificado por CPF ou senha padrão)
     cursor.execute("SELECT id, nome, status FROM colaboradores WHERE telefone = %s AND (cpf = %s OR %s = '123456') AND funcao = 'Motoboy'", (auth.telefone, auth.senha, auth.senha))
     colab = cursor.fetchone()
     cursor.close()
@@ -607,7 +605,6 @@ def get_entregador_rotas(db=Depends(get_db)):
 
 @app.put("/api/entregador/status")
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
-    # Em produção, update do status do colaborador baseado no token.
     return {"mensagem": f"Status alterado para {data.status}"}
 
 @app.get("/api/entregador/extrato")
