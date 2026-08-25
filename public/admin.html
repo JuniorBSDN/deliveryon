@@ -229,7 +229,7 @@
 
                 <div class="card">
                     <h3 class="mb-20">Adicionar Novo Produto</h3>
-                    <form onsubmit="event.preventDefault(); createProduct();">
+                    <form id="form-produto" onsubmit="event.preventDefault(); createProduct();">
                         <div class="form-grid">
                             <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-AUTO" readonly style="background:#f0f0f0;"></div>
                             <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control" id="input-new-prod-file"></div>
@@ -260,7 +260,7 @@
                                     <option value="outra">➕ Outra Categoria</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" id="input-new-prod-price" required></div>
+                            <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="input-new-prod-price" placeholder="Ex: 25,90" required></div>
                             <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" id="input-new-prod-stock" value="100"></div>
                         </div>
                         <div class="form-group"><label>Descrição</label><textarea class="form-control" id="textarea-new-prod-desc" rows="2"></textarea></div>
@@ -290,7 +290,7 @@
 
                 <div class="card">
                     <h3 class="mb-20">Cadastrar Cliente Manual</h3>
-                    <form onsubmit="event.preventDefault(); createClient();">
+                    <form id="form-cliente" onsubmit="event.preventDefault(); createClient();">
                         <div class="form-grid">
                             <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" id="input-cli-name" required></div>
                             <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" id="input-cli-phone" required></div>
@@ -325,7 +325,7 @@
 
                 <div class="card">
                     <h3 class="mb-20">Cadastrar Novo Colaborador</h3>
-                    <form onsubmit="event.preventDefault(); createColab();">
+                    <form id="form-colaborador" onsubmit="event.preventDefault(); createColab();">
                         <div class="form-grid">
                             <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control" id="input-colab-file"></div>
                             <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" id="input-colab-name" required></div>
@@ -805,20 +805,35 @@
             });
         }
 
+        // --- CORREÇÕES APLICADAS AQUI: TRATAMENTO DE ERROS, NUMEROS E LIMPEZA (RESET) ---
+        
         async function createProduct() {
+            const form = document.getElementById('form-produto');
+            const precoInput = document.getElementById('input-new-prod-price').value;
+            const precoFormatado = parseFloat(precoInput.replace(',', '.')); // Corrige vírgula para ponto
+
             const payload = {
                 nome: document.getElementById('input-new-prod-name').value,
                 categoria: document.getElementById('categoria').value,
-                preco: document.getElementById('input-new-prod-price').value,
-                estoque: document.getElementById('input-new-prod-stock').value,
+                preco: precoFormatado,
+                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0, // Garante número inteiro
                 descricao: document.getElementById('textarea-new-prod-desc').value
             };
-            await apiRequest('/products', 'POST', payload);
-            alert('Produto cadastrado com sucesso!');
-            loadProducts();
+            
+            // Só exibe sucesso e limpa se a API retornar os dados corretamente
+            const res = await apiRequest('/products', 'POST', payload);
+            
+            if (res) {
+                alert('Produto cadastrado com sucesso!');
+                form.reset(); // Limpa o formulário instantaneamente
+                loadProducts(); // Atualiza a lista abaixo
+            } else {
+                alert('Falha ao cadastrar o produto. Ocorreu um erro no servidor.');
+            }
         }
 
         async function createClient() {
+            const form = document.getElementById('form-cliente');
             const payload = {
                 nome: document.getElementById('input-cli-name').value,
                 telefone: document.getElementById('input-cli-phone').value,
@@ -826,12 +841,20 @@
                 endereco: document.getElementById('input-cli-address').value,
                 referencia: document.getElementById('input-cli-ref').value
             };
-            await apiRequest('/clients', 'POST', payload);
-            alert('Cliente salvo com sucesso!');
-            loadClients();
+            
+            const res = await apiRequest('/clients', 'POST', payload);
+            
+            if (res) {
+                alert('Cliente salvo com sucesso!');
+                form.reset(); // Limpa o formulário instantaneamente
+                loadClients();
+            } else {
+                alert('Falha ao cadastrar o cliente. Ocorreu um erro no servidor.');
+            }
         }
 
         async function createColab() {
+            const form = document.getElementById('form-colaborador');
             const payload = {
                 nome: document.getElementById('input-colab-name').value,
                 telefone: document.getElementById('input-colab-phone').value,
@@ -843,10 +866,19 @@
                 status: document.getElementById('select-colab-status').value,
                 observacoes: document.getElementById('textarea-colab-obs').value
             };
-            await apiRequest('/colaboradores', 'POST', payload);
-            alert('Colaborador cadastrado com sucesso!');
-            loadColaboradores();
+            
+            const res = await apiRequest('/colaboradores', 'POST', payload);
+            
+            if (res) {
+                alert('Colaborador cadastrado com sucesso!');
+                form.reset(); // Limpa o formulário instantaneamente
+                loadColaboradores();
+            } else {
+                alert('Falha ao cadastrar o colaborador. Ocorreu um erro no servidor.');
+            }
         }
+
+        // --- FIM DAS CORREÇÕES DE CRIAÇÃO ---
 
         async function deleteProduct(code) {
             if(confirm("Deseja excluir este produto?")) {
@@ -1032,6 +1064,7 @@
                 });
             }
         }
+        
         async function loadHelpdeskGestor() {
             const chamados = await apiRequest('/helpdesk');
             const tbody = document.getElementById('tbody-gestor-helpdesk');
