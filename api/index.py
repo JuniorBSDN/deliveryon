@@ -75,10 +75,10 @@ class ColaboradorCreate(BaseModel):
     empresa_id: int
     nome: str
     telefone: str
-    email: Optional[str] = ""
-    cpf: Optional[str] = ""
+    email: Optional[str] = None
+    cpf: Optional[str] = None
     data_nascimento: Optional[str] = None
-    endereco: Optional[str] = ""
+    endereco: Optional[str] = None
     funcao: str
     status: str
     observacoes: Optional[str] = None
@@ -88,6 +88,9 @@ class ColaboradorCreate(BaseModel):
     veiculo_placa: Optional[str] = None
     area_atuacao: Optional[str] = None
     valor_entrega: Optional[float] = None
+
+
+
 
 class OrderCreate(BaseModel):
     empresa_id: int
@@ -383,6 +386,42 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 
 
 # ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
+
+@app.post("/api/colaboradores")
+def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Tratamento para limpar strings vazias e evitar erros de tipo
+        email = colab.email if colab.email and colab.email.strip() != "" else None
+        cpf = colab.cpf if colab.cpf and colab.cpf.strip() != "" else None
+        data_nasc = colab.data_nascimento if colab.data_nascimento and colab.data_nascimento.strip() != "" else None
+        endereco = colab.endereco if colab.endereco and colab.endereco.strip() != "" else None
+        obs = colab.observacoes if colab.observacoes and colab.observacoes.strip() != "" else None
+        t_veiculo = colab.tipo_veiculo if colab.tipo_veiculo and colab.tipo_veiculo.strip() != "" else None
+        v_modelo = colab.veiculo_modelo if colab.veiculo_modelo and colab.veiculo_modelo.strip() != "" else None
+        v_cor = colab.veiculo_cor if colab.veiculo_cor and colab.veiculo_cor.strip() != "" else None
+        v_placa = colab.veiculo_placa if colab.veiculo_placa and colab.veiculo_placa.strip() != "" else None
+        area = colab.area_atuacao if colab.area_atuacao and colab.area_atuacao.strip() != "" else None
+        v_entrega = colab.valor_entrega if colab.valor_entrega is not None else 0.00
+
+        cursor.execute(
+            """INSERT INTO colaboradores 
+               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
+            (colab.empresa_id, colab.nome, colab.telefone, email, cpf, data_nasc, endereco, 
+             colab.funcao, colab.status, obs, t_veiculo, v_modelo, 
+             v_cor, v_placa, area, v_entrega))
+        db.commit()
+        novo_id = cursor.fetchone()['id']
+    except Exception as e:
+        db.rollback()
+        print("ERRO DETALHADO EM COLABORADORES:", str(e))
+        raise HTTPException(status_code=400, detail=f"Erro interno ao salvar colaborador: {str(e)}")
+    finally:
+        cursor.close()
+    return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
+
+
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
