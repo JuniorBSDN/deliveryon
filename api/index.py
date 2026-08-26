@@ -391,7 +391,7 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Tratamento para limpar strings vazias e evitar erros de tipo
+        # Tratamento seguro para nulos e strings vazias
         email = colab.email if colab.email and colab.email.strip() != "" else None
         cpf = colab.cpf if colab.cpf and colab.cpf.strip() != "" else None
         data_nasc = colab.data_nascimento if colab.data_nascimento and colab.data_nascimento.strip() != "" else None
@@ -402,7 +402,12 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
         v_cor = colab.veiculo_cor if colab.veiculo_cor and colab.veiculo_cor.strip() != "" else None
         v_placa = colab.veiculo_placa if colab.veiculo_placa and colab.veiculo_placa.strip() != "" else None
         area = colab.area_atuacao if colab.area_atuacao and colab.area_atuacao.strip() != "" else None
-        v_entrega = colab.valor_entrega if colab.valor_entrega is not None else 0.00
+        
+        # Garante que valor_entrega seja numérico válido ou 0.00
+        try:
+            v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
+        except (ValueError, TypeError):
+            v_entrega = 0.00
 
         cursor.execute(
             """INSERT INTO colaboradores 
@@ -415,11 +420,12 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
         novo_id = cursor.fetchone()['id']
     except Exception as e:
         db.rollback()
-        print("ERRO DETALHADO EM COLABORADORES:", str(e))
-        raise HTTPException(status_code=400, detail=f"Erro interno ao salvar colaborador: {str(e)}")
+        print("ERRO EM /api/colaboradores:", str(e))
+        raise HTTPException(status_code=400, detail=f"Erro ao salvar colaborador: {str(e)}")
     finally:
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
+
 
 
 @app.post("/api/gestor/auth")
