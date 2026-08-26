@@ -227,6 +227,23 @@ def get_empresa_historico(id: int, db=Depends(get_db)):
     return res
 
 
+# ================= ROTA AUXILIAR PARA O CARDÁPIO (INDEX.HTML) =================
+@app.get("/api/empresas/por-nome")
+def get_empresa_por_nome(nome: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, nome_fantasia, cnpj, status 
+        FROM empresas 
+        WHERE LOWER(REPLACE(REPLACE(nome_fantasia, ' ', '-'), 'á', 'a')) = LOWER(%s)
+    """, (nome,))
+    empresa = cursor.fetchone()
+    cursor.close()
+    
+    if not empresa:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada.")
+    return empresa
+
+
 # ================= ROTAS DE HELPDESK E AÇÕES (MASTER) =================
 @app.get("/api/master/helpdesk/indicadores")
 def get_master_helpdesk_indicadores(db=Depends(get_db)):
@@ -491,8 +508,6 @@ def get_orders(empresa_id: int, db=Depends(get_db)):
 @app.put("/api/orders/{order_id}/status")
 def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     novo_status = data.get("status")
-    empresa_id = data.get("empresa_id")
-
     cur = db.cursor()
     cur.execute(
         "UPDATE pedidos SET status = %s WHERE id = %s",
