@@ -605,13 +605,14 @@ def create_client(cli: ClienteCreate, db=Depends(get_db)):
         cursor.execute(
             """INSERT INTO clientes (empresa_id, nome, telefone, email, endereco_entrega, referencia) 
                VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;""",
-            (cli.empresa_id, cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia)
+            (cli.empresa_id, cli.nome, cli.telefone, cli.email or '', cli.endereco, cli.referencia or '')
         )
         db.commit()
         novo_id = cursor.fetchone()['id']
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        print("ERRO EM /api/clients:", str(e))
+        raise HTTPException(status_code=400, detail=f"Erro no banco: {str(e)}")
     finally:
         cursor.close()
     return {"mensagem": "Cliente salvo com sucesso", "id": novo_id}
