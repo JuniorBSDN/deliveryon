@@ -601,12 +601,20 @@ def list_clients(empresa_id: int, db=Depends(get_db)):
 @app.post("/api/clients")
 def create_client(cli: ClienteCreate, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute(
-        "INSERT INTO clientes (empresa_id, nome, telefone, email, endereco_entrega, referencia) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;",
-        (cli.empresa_id, cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia))
-    db.commit()
-    cursor.close()
-    return {"mensagem": "Cliente salvo"}
+    try:
+        cursor.execute(
+            """INSERT INTO clientes (empresa_id, nome, telefone, email, endereco_entrega, referencia) 
+               VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;""",
+            (cli.empresa_id, cli.nome, cli.telefone, cli.email, cli.endereco, cli.referencia)
+        )
+        db.commit()
+        novo_id = cursor.fetchone()['id']
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+    return {"mensagem": "Cliente salvo com sucesso", "id": novo_id}
 
 @app.get("/api/colaboradores")
 def list_colaboradores(empresa_id: int, db=Depends(get_db)):
