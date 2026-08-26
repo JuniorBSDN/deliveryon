@@ -144,6 +144,42 @@ class ChamadoCancelar(BaseModel):
     motivo: str
 
 
+#------------ATUALIZAR BANCO---------------------
+@app.get("/api/atualizar-banco")
+def atualizar_banco_de_dados(db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # Comandos para criar as colunas novas caso elas ainda não existam no banco
+    queries = [
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS cpf VARCHAR(50);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS data_nascimento VARCHAR(50);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS endereco TEXT;",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS observacoes TEXT;",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(50);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS veiculo_modelo VARCHAR(100);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS veiculo_cor VARCHAR(50);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS veiculo_placa VARCHAR(50);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS area_atuacao VARCHAR(150);",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS valor_entrega NUMERIC(10,2) DEFAULT 0;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS hora VARCHAR(20);",
+        "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
+        "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
+        "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
+    ]
+    
+    resultados = []
+    for q in queries:
+        try:
+            cursor.execute(q)
+            db.commit()
+            resultados.append(f"Sucesso: {q}")
+        except Exception as e:
+            db.rollback()
+            resultados.append(f"Ignorado (já existe ou erro): {str(e)}")
+            
+    cursor.close()
+    return {"status": "Banco atualizado com sucesso!", "logs": resultados}
+
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
