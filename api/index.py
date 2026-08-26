@@ -87,9 +87,7 @@ class ColaboradorCreate(BaseModel):
     veiculo_cor: Optional[str] = None
     veiculo_placa: Optional[str] = None
     area_atuacao: Optional[str] = None
-    valor_entrega: Optional[float] = None
-
-
+    valor_entrega: Optional[float] = 0.00
 
 
 class OrderCreate(BaseModel):
