@@ -976,29 +976,56 @@ function abrirModalEdicao(produtoStr) {
         }
 
         async function createColab() {
-            const form = document.getElementById('form-colaborador');
-            const payload = {
-                nome: document.getElementById('input-colab-name').value,
-                telefone: document.getElementById('input-colab-phone').value,
-                email: document.getElementById('input-colab-email').value,
-                cpf: document.getElementById('input-colab-cpf').value,
-                data_nascimento: document.getElementById('input-colab-dob').value,
-                endereco: document.getElementById('input-colab-address').value,
-                funcao: document.getElementById('select-funcao').value,
-                status: document.getElementById('select-colab-status').value,
-                observacoes: document.getElementById('textarea-colab-obs').value
-            };
-            
-            const res = await apiRequest('/colaboradores', 'POST', payload);
-            
-            if (res) {
-                alert('Colaborador cadastrado com sucesso!');
-                form.reset();
-                loadColaboradores();
-            } else {
-                alert('Falha ao cadastrar o colaborador. Ocorreu um erro no servidor.');
-            }
-        }
+    const form = document.getElementById('form-colaborador');
+    const funcao = document.getElementById('select-funcao').value;
+    
+    let tipoVeiculo = null;
+    let veiculoModelo = null;
+    let veiculoCor = null;
+    let veiculoPlaca = null;
+    let areaAtuacao = null;
+    let valorEntrega = 0.00;
+
+    if (funcao === 'Motoboy') {
+        const containerMotoboy = document.getElementById('campos-motoboy');
+        const inputsMoto = containerMotoboy.querySelectorAll('input, select');
+        tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
+        veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
+        veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
+        veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
+        areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
+        valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
+    }
+
+    const payload = {
+        nome: document.getElementById('input-colab-name').value,
+        telefone: document.getElementById('input-colab-phone').value,
+        email: document.getElementById('input-colab-email').value,
+        cpf: document.getElementById('input-colab-cpf').value,
+        data_nascimento: document.getElementById('input-colab-dob').value,
+        endereco: document.getElementById('input-colab-address').value,
+        funcao: funcao,
+        status: document.getElementById('select-colab-status').value,
+        observacoes: document.getElementById('textarea-colab-obs').value,
+        tipo_veiculo: tipoVeiculo,
+        veiculo_modelo: veiculoModelo,
+        veiculo_cor: veiculoCor,
+        veiculo_placa: veiculoPlaca,
+        area_atuacao: areaAtuacao,
+        valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega
+    };
+    
+    const res = await apiRequest('/colaboradores', 'POST', payload);
+    
+    if (res) {
+        alert('Colaborador cadastrado com sucesso!');
+        form.reset();
+        document.getElementById('campos-motoboy').classList.add('hidden');
+        loadColaboradores();
+    } else {
+        alert('Falha ao cadastrar o colaborador. Ocorreu um erro no servidor.');
+    }
+}
 
         async function deleteProduct(code) {
             if(confirm("Deseja excluir este produto?")) {
