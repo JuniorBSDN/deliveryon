@@ -75,10 +75,10 @@ class ColaboradorCreate(BaseModel):
     empresa_id: int
     nome: str
     telefone: str
-    email: str
-    cpf: str
-    data_nascimento: str
-    endereco: str
+    email: Optional[str] = ""
+    cpf: Optional[str] = ""
+    data_nascimento: Optional[str] = None
+    endereco: Optional[str] = ""
     funcao: str
     status: str
     observacoes: Optional[str] = None
@@ -616,6 +616,14 @@ def create_client(cli: ClienteCreate, db=Depends(get_db)):
         cursor.close()
     return {"mensagem": "Cliente salvo com sucesso", "id": novo_id}
 
+@app.delete("/api/clients/{id}")
+def delete_client(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM clientes WHERE id = %s", (id,))
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Excluído com sucesso"}
+
 @app.get("/api/colaboradores")
 def list_colaboradores(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -627,16 +635,30 @@ def list_colaboradores(empresa_id: int, db=Depends(get_db)):
 @app.post("/api/colaboradores")
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute(
-        """INSERT INTO colaboradores 
-           (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega) 
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
-        (colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, 
-         colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo, 
-         colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, colab.valor_entrega))
+    try:
+        cursor.execute(
+            """INSERT INTO colaboradores 
+               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
+            (colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, 
+             colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo, 
+             colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, colab.valor_entrega))
+        db.commit()
+        novo_id = cursor.fetchone()['id']
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+    return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
+
+@app.delete("/api/colaboradores/{id}")
+def delete_colaborador(id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM colaboradores WHERE id = %s", (id,))
     db.commit()
     cursor.close()
-    return {"mensagem": "Colaborador salvo"}
+    return {"mensagem": "Excluído com sucesso"}
 
 
 # ================= ROTAS DE ENTREGADOR =================
