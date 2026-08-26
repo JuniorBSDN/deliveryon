@@ -151,6 +151,7 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
     
     # Comandos para criar as colunas novas caso elas ainda não existam no banco
     queries = [
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS empresa_id INTEGER DEFAULT 1;",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS cpf VARCHAR(50);",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS data_nascimento VARCHAR(50);",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS endereco TEXT;",
@@ -175,11 +176,10 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
             resultados.append(f"Sucesso: {q}")
         except Exception as e:
             db.rollback()
-            resultados.append(f"Ignorado (já existe ou erro): {str(e)}")
+            resultados.append(f"Erro ao executar ({q}): {str(e)}")
             
     cursor.close()
-    return {"status": "Banco atualizado com sucesso!", "logs": resultados}
-
+    return {"status": "Banco atualizado!", "logs": resultados}
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
