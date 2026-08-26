@@ -82,6 +82,12 @@ class ColaboradorCreate(BaseModel):
     funcao: str
     status: str
     observacoes: Optional[str] = None
+    tipo_veiculo: Optional[str] = None
+    veiculo_modelo: Optional[str] = None
+    veiculo_cor: Optional[str] = None
+    veiculo_placa: Optional[str] = None
+    area_atuacao: Optional[str] = None
+    valor_entrega: Optional[float] = None
 
 class OrderCreate(BaseModel):
     empresa_id: int
@@ -614,8 +620,12 @@ def list_colaboradores(empresa_id: int, db=Depends(get_db)):
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO colaboradores (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
-        (colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, colab.funcao, colab.status, colab.observacoes))
+        """INSERT INTO colaboradores 
+           (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega) 
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
+        (colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, 
+         colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo, 
+         colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, colab.valor_entrega))
     db.commit()
     cursor.close()
     return {"mensagem": "Colaborador salvo"}
