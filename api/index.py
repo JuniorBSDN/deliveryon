@@ -391,19 +391,17 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Tratamento seguro para nulos e strings vazias
-        email = colab.email if colab.email and colab.email.strip() != "" else None
-        cpf = colab.cpf if colab.cpf and colab.cpf.strip() != "" else None
-        data_nasc = colab.data_nascimento if colab.data_nascimento and colab.data_nascimento.strip() != "" else None
-        endereco = colab.endereco if colab.endereco and colab.endereco.strip() != "" else None
-        obs = colab.observacoes if colab.observacoes and colab.observacoes.strip() != "" else None
-        t_veiculo = colab.tipo_veiculo if colab.tipo_veiculo and colab.tipo_veiculo.strip() != "" else None
-        v_modelo = colab.veiculo_modelo if colab.veiculo_modelo and colab.veiculo_modelo.strip() != "" else None
-        v_cor = colab.veiculo_cor if colab.veiculo_cor and colab.veiculo_cor.strip() != "" else None
-        v_placa = colab.veiculo_placa if colab.veiculo_placa and colab.veiculo_placa.strip() != "" else None
-        area = colab.area_atuacao if colab.area_atuacao and colab.area_atuacao.strip() != "" else None
+        email = colab.email if colab.email and str(colab.email).strip() != "" else None
+        cpf = colab.cpf if colab.cpf and str(colab.cpf).strip() != "" else None
+        data_nasc = colab.data_nascimento if colab.data_nascimento and str(colab.data_nascimento).strip() != "" else None
+        endereco = colab.endereco if colab.endereco and str(colab.endereco).strip() != "" else None
+        obs = colab.observacoes if colab.observacoes and str(colab.observacoes).strip() != "" else None
+        t_veiculo = colab.tipo_veiculo if colab.tipo_veiculo and str(colab.tipo_veiculo).strip() != "" else None
+        v_modelo = colab.veiculo_modelo if colab.veiculo_modelo and str(colab.veiculo_modelo).strip() != "" else None
+        v_cor = colab.veiculo_cor if colab.veiculo_cor and str(colab.veiculo_cor).strip() != "" else None
+        v_placa = colab.veiculo_placa if colab.veiculo_placa and str(colab.veiculo_placa).strip() != "" else None
+        area = colab.area_atuacao if colab.area_atuacao and str(colab.area_atuacao).strip() != "" else None
         
-        # Garante que valor_entrega seja numérico válido ou 0.00
         try:
             v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
         except (ValueError, TypeError):
@@ -425,8 +423,6 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     finally:
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
-
-
 
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
