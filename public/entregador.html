@@ -340,10 +340,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
+   <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
     <script>
         // CONFIGURAÇÕES GLOBAIS DA API
         const API_BASE_URL = '/api/entregador'; 
-        let mapaInstancia = null;
+        let mapaInstancias = {};
 
         // Acessibilidade - Tamanho da Fonte
         let currentFontSize = 100;
@@ -371,51 +372,75 @@
             }
         }
 
-       async function realizarLoginEntregador(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-login-ent');
-    btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
-    btn.disabled = true;
+        async function realizarLoginEntregador(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login-ent');
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
+            btn.disabled = true;
 
-    const telefone = document.getElementById('ent-login-telefone').value;
-    const senha = document.getElementById('ent-login-senha').value;
+            const telefone = document.getElementById('ent-login-telefone').value;
+            const senha = document.getElementById('ent-login-senha').value;
 
-    try {
-        const response = await fetch('/api/auth/entregador', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ telefone, senha })
-        });
+            try {
+                const response = await fetch('/api/auth/entregador', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telefone, senha })
+                });
 
-        const data = await response.json();
+                const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.detail || 'Erro ao autenticar');
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Erro ao autenticar');
+                }
+
+                localStorage.setItem('deliveryon_entregador_token', data.token);
+                localStorage.setItem('deliveryon_entregador_nome', data.nome);
+                localStorage.setItem('deliveryon_entregador_id', data.id);
+                localStorage.setItem('deliveryon_empresa_id', data.empresa_id);
+                
+                verificarAcessoEntregador();
+            } catch (error) {
+                alert('Erro no login: ' + error.message);
+            } finally {
+                btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
+                btn.disabled = false;
+            }
         }
-
-        localStorage.setItem('deliveryon_entregador_token', data.token);
-        localStorage.setItem('deliveryon_entregador_nome', data.nome);
-        localStorage.setItem('deliveryon_entregador_id', data.id);
-        
-        verificarAcessoEntregador();
-    } catch (error) {
-        alert('Erro no login: ' + error.message);
-    } finally {
-        btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
-        btn.disabled = false;
-    }
-}
 
         function fazerLogoutEntregador() {
             localStorage.removeItem('deliveryon_entregador_token');
             localStorage.removeItem('deliveryon_entregador_nome');
+            localStorage.removeItem('deliveryon_entregador_id');
+            localStorage.removeItem('deliveryon_empresa_id');
             window.location.reload();
         }
 
         function inicializarPainelEntregador() {
             const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
+            carregarIdentidadeVisualEmpresa();
             carregarRotasAtivas();
+        }
+
+        // CARREGA CORES E IDENTIDADE VISUAL DA EMPRESA VINCULADA
+        async function carregarIdentidadeVisualEmpresa() {
+            const empresaId = localStorage.getItem('deliveryon_empresa_id');
+            if (!empresaId) return;
+
+            try {
+                const response = await fetch(`/api/configuracoes?empresa_id=${empresaId}`);
+                const config = await response.json();
+
+                if (config.cor_primaria) {
+                    document.documentElement.style.setProperty('--brand-primary', config.cor_primaria);
+                }
+                if (config.cor_secundaria) {
+                    document.documentElement.style.setProperty('--brand-secondary', config.cor_secundaria);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar identidade visual:", error);
+            }
         }
 
         function toggleStatusTrabalho() {
@@ -423,98 +448,95 @@
             if (badge.innerText.includes('Disponível')) {
                 badge.innerHTML = '<i class="ph ph-prohibit"></i> Pausado';
                 badge.className = 'badge badge-warning';
-                // Requisição PUT /api/entregador/status -> 'pausado'
             } else {
                 badge.innerHTML = '<i class="ph ph-check-circle"></i> Disponível';
                 badge.className = 'badge badge-success';
-                // Requisição PUT /api/entregador/status -> 'disponivel'
             }
         }
 
-        // CARREGAR ROTAS DA API
-      async function carregarRotasAtivas() {
-    const container = document.getElementById('ent-lista-rotas');
-    container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando rotas...</div>';
+        // CARREGAR ROTAS DA API FILTRADAS POR EMPRESA
+        async function carregarRotasAtivas() {
+            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+            const container = document.getElementById('ent-lista-rotas');
+            container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Sincronizando rotas da loja...</div>';
 
-    try {
-        const response = await fetch('/api/entregador/rotas');
-        const rotas = await response.json();
+            try {
+                const response = await fetch(`/api/entregador/rotas?empresa_id=${empresaId}`);
+                const rotas = await response.json();
 
-        container.innerHTML = '';
-        if (!rotas || rotas.length === 0) {
-            container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
-            return;
+                container.innerHTML = '';
+                if (!rotas || rotas.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
+                    return;
+                }
+
+                rotas.forEach(rota => {
+                    container.innerHTML += `
+                        <div class="card" id="card-pedido-${rota.id}">
+                            <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                <div>
+                                    <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
+                                    <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
+                                </div>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
+                                <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
+                            </div>
+
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
+                                    <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag})</span></h4>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
+                                    <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa || '6,50'}</h4>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
+                                <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
+                            </div>
+
+                            <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
+                                <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
+                                <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                            </div>
+                        </div>
+                    `;
+                    setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
+                });
+
+            } catch (error) {
+                container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--danger);">Erro ao carregar rotas do servidor.</p>';
+            }
         }
 
-        rotas.forEach(rota => {
-            container.innerHTML += `
-                <div class="card" id="card-pedido-${rota.id}">
-                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                        <div>
-                            <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
-                            <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
-                        </div>
-                        <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
-                        <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
-                    </div>
-
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
-                            <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag})</span></h4>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
-                            <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa}</h4>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
-                        <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
-                    </div>
-
-                    <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
-                        <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
-                        <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
-                    </div>
-                </div>
-            `;
-            // Inicializa o mapa para cada rota renderizada se necessário
-            setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
-        });
-
-    } catch (error) {
-        container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--danger);">Erro ao carregar rotas do servidor.</p>';
-    }
-}
-        // INTEGRAÇÃO LEAFLET (Mapa Gratuito OpenStreetMap)
-        function inicializarMapaGps(latCliente, lngCliente, endereco) {
-            // Coordenadas fictícias da Loja (Base na região)
+        // INTEGRAÇÃO LEAFLET (Mapa por ID dinâmico)
+        function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
             const latLoja = -0.9234; 
             const lngLoja = -48.1321;
 
-            if (mapaInstancia !== null) {
-                mapaInstancia.remove();
+            if (mapaInstancias[elementoId]) {
+                mapaInstancias[elementoId].remove();
             }
 
-            mapaInstancia = L.map('mapa-rota').setView([latCliente, lngCliente], 14);
+            const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
+            mapaInstancias[elementoId] = mapa;
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
-            }).addTo(mapaInstancia);
+            }).addTo(mapa);
 
-            // Marcador Loja
-            L.marker([latLoja, lngLoja]).addTo(mapaInstancia)
+            L.marker([latLoja, lngLoja]).addTo(mapa)
                 .bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
 
-            // Marcador Cliente
-            L.marker([latCliente, lngCliente]).addTo(mapaInstancia)
+            L.marker([latCliente, lngCliente]).addTo(mapa)
                 .bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
         }
 
@@ -531,66 +553,43 @@
             const cliente = document.getElementById('modal-cliente-nome').value;
             const valor = document.getElementById('modal-pedido-valor').value;
 
-            // PREPARA PAYLOAD PARA O PYTHON (Baixa no BD Neon)
             const payloadBaixa = {
                 pedido_id: id,
-                status: 'entregue',
+                status: 'Entregue',
                 data_conclusao: new Date().toISOString()
             };
-            console.log("Enviando Baixa para API:", payloadBaixa);
 
-            closeModal('modalComprovante');
+            try {
+                const response = await fetch('/api/entregador/baixa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadBaixa)
+                });
 
-            if (enviarComprovante) {
-                const mensagem = `*COMPROVANTE DE ENTREGA - DELIVERYON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso pelo motoboy Carlos.\n\nAgradecemos a preferência!`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
-            }
+                if (!response.ok) throw new Error("Erro ao registrar baixa no servidor");
 
-            alert(`✅ Baixa do Pedido #${id} enviada para o banco de dados com sucesso!`);
+                closeModal('modalComprovante');
 
-            // Remove o card da rota
-            const card = document.getElementById('card-pedido-' + id);
-            if(card) {
-                card.style.opacity = '0';
-                setTimeout(() => {
-                    card.remove();
-                    if(document.getElementById('ent-lista-rotas').innerHTML.trim() === '') {
-                        document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
-                    }
-                }, 300);
-            }
-        }
-
-        // SISTEMA DE FILTRO DO EXTRATO (Consumo GET /api/entregador/extrato)
-        function filtrarExtrato() {
-            const dataFiltro = document.getElementById('filtro-data').value; 
-            const mesFiltro = document.getElementById('filtro-mes').value;   
-            const anoFiltro = document.getElementById('filtro-ano').value;   
-
-            const linhas = document.querySelectorAll('#tabela-extrato tr');
-            let qtdVisiveis = 0;
-            let valorTotal = 0;
-
-            linhas.forEach(linha => {
-                const dataLinha = linha.getAttribute('data-data'); 
-                const [anoL, mesL, diaL] = dataLinha.split('-');
-
-                let match = true;
-                if (dataFiltro && dataLinha !== dataFiltro) match = false;
-                if (mesFiltro && mesL !== mesFiltro) match = false;
-                if (anoFiltro && anoL !== anoFiltro) match = false;
-
-                if (match) {
-                    linha.style.display = '';
-                    qtdVisiveis++;
-                    valorTotal += 6.50; // Valor fixo simulado
-                } else {
-                    linha.style.display = 'none';
+                if (enviarComprovante) {
+                    const mensagem = `*COMPROVANTE DE ENTREGA - DELIVERYON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso.\n\nAgradecemos a preferência!`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
                 }
-            });
 
-            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
-            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+                alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
+
+                const card = document.getElementById('card-pedido-' + id);
+                if(card) {
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        if(document.getElementById('ent-lista-rotas').innerHTML.trim() === '') {
+                            document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
+                        }
+                    }, 300);
+                }
+            } catch (error) {
+                alert("Erro ao concluir entrega: " + error.message);
+            }
         }
 
         // NAVEGAÇÃO SPA E MODAIS
