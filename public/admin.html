@@ -697,6 +697,47 @@
     </div>
 </div>
 
+    <!-- MODAL DE EDIÇÃO DE CLIENTE -->
+<div class="modal-overlay" id="modalEditarCliente">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-pencil"></i> Editar Cliente</h3>
+            <button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
+                <input type="hidden" id="edit-cli-id">
+                
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" class="form-control" id="edit-cli-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Telefone / WhatsApp</label>
+                    <input type="text" class="form-control" id="edit-cli-phone" required>
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" class="form-control" id="edit-cli-email">
+                </div>
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" class="form-control" id="edit-cli-address" required>
+                </div>
+                <div class="form-group">
+                    <label>Referência Local</label>
+                    <input type="text" class="form-control" id="edit-cli-ref">
+                </div>
+
+                <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
         const API_BASE_URL = "/api";
