@@ -71,6 +71,14 @@ class ClienteCreate(BaseModel):
     endereco: str
     referencia: Optional[str] = None
 
+class ClienteUpdate(BaseModel):
+    empresa_id: int
+    nome: str
+    telefone: str
+    email: Optional[str] = None
+    endereco: str
+    referencia: Optional[str] = None
+
 class ColaboradorCreate(BaseModel):
     empresa_id: int
     nome: str
@@ -627,6 +635,9 @@ def delete_product(id: int, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
+
+
+
 @app.get("/api/clients")
 def list_clients(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -707,6 +718,24 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     finally:
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
+
+
+@app.put("/api/clients/{client_id}")
+def update_client(client_id: int, cli: ClienteUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            """UPDATE clientes SET nome=%s, telefone=%s, email=%s, endereco_entrega=%s, referencia=%s 
+               WHERE id=%s AND empresa_id=%s""",
+            (cli.nome, cli.telefone, cli.email or '', cli.endereco, cli.referencia or '', client_id, cli.empresa_id)
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao atualizar cliente: {str(e)}")
+    finally:
+        cursor.close()
+    return {"mensagem": "Cliente atualizado com sucesso"}
 
 @app.put("/api/colaboradores/{colab_id}")
 def update_colaborador(colab_id: int, colab: ColaboradorCreate, db=Depends(get_db)):
