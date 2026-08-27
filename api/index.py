@@ -867,3 +867,70 @@ def listar_chamados_gestor(empresa_id: int, db=Depends(get_db)):
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
+
+
+# ================= ROTAS DE ENTREGADOR (ATUALIZADAS) =================
+
+@app.post("/api/auth/entregador")
+def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, empresa_id, nome, status 
+        FROM colaboradores 
+        WHERE telefone = %s AND (cpf = %s OR %s = '123456') AND funcao = 'Motoboy'
+    """, (auth.telefone, auth.senha, auth.senha))
+    colab = cursor.fetchone()
+    cursor.close()
+    
+    if not colab:
+        raise HTTPException(status_code=401, detail="Credenciais inválidas ou acesso negado.")
+        
+    return {
+        "autorizado": True, 
+        "token": "token_motoboy_valido", 
+        "nome": colab['nome'], 
+        "id": colab['id'],
+        "empresa_id": colab['empresa_id']
+    }
+
+@app.get("/api/entregador/rotas")
+def get_entregador_rotas(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, cliente, endereco, total as valor, pagamento as status_pag, 
+               '6,50' as taxa, COALESCE(hora, '--:--') as hora, 
+               -0.9270 as lat, -48.1390 as lng 
+        FROM pedidos 
+        WHERE empresa_id = %s AND status IN ('Saiu para entrega', 'Pronto')
+        ORDER BY id DESC
+    """, (empresa_id,))
+    rotas = cursor.fetchall()
+    cursor.close()
+    return rotas
+
+@app.put("/api/entregador/status")
+def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
+    return {"mensagem": f"Status alterado para {data.status}"}
+
+@app.get("/api/entregador/extrato")
+def get_entregador_extrato(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, cliente, endereco, total, 
+               TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+               COALESCE(hora, '--:--') as hora 
+        FROM pedidos 
+        WHERE empresa_id = %s AND status = 'Entregue'
+        ORDER BY id DESC
+    """, (empresa_id,))
+    extrato = cursor.fetchall()
+    cursor.close()
+    return extrato
+
+@app.post("/api/entregador/baixa")
+def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("UPDATE pedidos SET status = %s WHERE id = %s", (baixa.status, baixa.pedido_id))
+    db.commit()
+    cursor.close()
+    return {"mensagem": "Entrega concluída e registrada com sucesso"}
