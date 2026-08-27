@@ -435,6 +435,7 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
         v_cor = colab.veiculo_cor if colab.veiculo_cor and str(colab.veiculo_cor).strip() != "" else None
         v_placa = colab.veiculo_placa if colab.veiculo_placa and str(colab.veiculo_placa).strip() != "" else None
         area = colab.area_atuacao if colab.area_atuacao and str(colab.area_atuacao).strip() != "" else None
+        foto_base64 = colab.foto if colab.foto and str(colab.foto).strip() != "" else None
         
         try:
             v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
@@ -443,11 +444,11 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
 
         cursor.execute(
             """INSERT INTO colaboradores 
-               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega) 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
+               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega, foto) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
             (colab.empresa_id, colab.nome, colab.telefone, email, cpf, data_nasc, endereco, 
              colab.funcao, colab.status, obs, t_veiculo, v_modelo, 
-             v_cor, v_placa, area, v_entrega))
+             v_cor, v_placa, area, v_entrega, foto_base64))
         db.commit()
         novo_id = cursor.fetchone()['id']
     except Exception as e:
@@ -457,7 +458,7 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     finally:
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
-
+    
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
