@@ -958,27 +958,63 @@ function abrirModalEdicao(produtoStr) {
 
         
 
-        async function loadClients() {
-            const clients = await apiRequest('/clients');
-            const tbody = document.getElementById('tbody-clients');
-            tbody.innerHTML = '';
+     async function loadClients() {
+    const clients = await apiRequest('/clients');
+    const tbody = document.getElementById('tbody-clients');
+    tbody.innerHTML = '';
 
-            if (!clients || clients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
-                return;
-            }
+    if (!clients || clients.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
+        return;
+    }
 
-            clients.forEach(c => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${c.nome}</strong></td>
-                        <td>${c.telefone}</td>
-                        <td>${c.referencia || '-'}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button></td>
-                    </tr>
-                `;
-            });
-        }
+    clients.forEach(c => {
+        const clienteJson = encodeURIComponent(JSON.stringify(c));
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${c.nome}</strong></td>
+                <td>${c.telefone}</td>
+                <td>${c.referencia || '-'}</td>
+                <td style="text-align: right;">
+                    <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
+                    <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function abrirModalEdicaoCliente(clienteStr) {
+    const c = JSON.parse(decodeURIComponent(clienteStr));
+    document.getElementById('edit-cli-id').value = c.id;
+    document.getElementById('edit-cli-name').value = c.nome || '';
+    document.getElementById('edit-cli-phone').value = c.telefone || '';
+    document.getElementById('edit-cli-email').value = c.email || '';
+    document.getElementById('edit-cli-address').value = c.endereco || '';
+    document.getElementById('edit-cli-ref').value = c.referencia || '';
+
+    document.getElementById('modalEditarCliente').classList.add('active');
+}
+
+async function salvarEdicaoCliente() {
+    const id = document.getElementById('edit-cli-id').value;
+    const payload = {
+        nome: document.getElementById('edit-cli-name').value,
+        telefone: document.getElementById('edit-cli-phone').value,
+        email: document.getElementById('edit-cli-email').value,
+        endereco: document.getElementById('edit-cli-address').value,
+        referencia: document.getElementById('edit-cli-ref').value
+    };
+
+    const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
+    if (res) {
+        alert('Cliente atualizado com sucesso!');
+        closeModal('modalEditarCliente');
+        loadClients();
+    } else {
+        alert('Erro ao atualizar o cliente.');
+    }
+}
 
        async function loadColaboradores() {
     const colabs = await apiRequest('/colaboradores');
