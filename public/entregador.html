@@ -336,11 +336,7 @@
         </div>
     </div>
 
-    <!-- Leaflet JS (Biblioteca do Mapa Gratuito) -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
-   <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
+ <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
     <script>
         // CONFIGURAÇÕES GLOBAIS DA API
         const API_BASE_URL = '/api/entregador'; 
@@ -421,6 +417,7 @@
             document.getElementById('ent-nome-logado').textContent = nome;
             carregarIdentidadeVisualEmpresa();
             carregarRotasAtivas();
+            filtrarExtrato(); // Já carrega o extrato real no fundo
         }
 
         // CARREGA CORES E IDENTIDADE VISUAL DA EMPRESA VINCULADA
@@ -576,6 +573,7 @@
                 }
 
                 alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
+                filtrarExtrato(); // Atualiza o extrato em tempo real ao baixar o pedido
 
                 const card = document.getElementById('card-pedido-' + id);
                 if(card) {
@@ -589,6 +587,61 @@
                 }
             } catch (error) {
                 alert("Erro ao concluir entrega: " + error.message);
+            }
+        }
+
+        // CARREGAR EXTRATO DA API
+        async function filtrarExtrato() {
+            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+            const tbody = document.getElementById('tabela-extrato');
+            
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin"></i> Buscando histórico...</td></tr>';
+            
+            try {
+                const response = await fetch(`/api/entregador/extrato?empresa_id=${empresaId}`);
+                const extrato = await response.json();
+                
+                const dataFiltro = document.getElementById('filtro-data').value; 
+                const mesFiltro = document.getElementById('filtro-mes').value;   
+                const anoFiltro = document.getElementById('filtro-ano').value;   
+                
+                let qtdVisiveis = 0;
+                let valorTotal = 0;
+                tbody.innerHTML = '';
+                
+                extrato.forEach(item => {
+                    const [anoL, mesL, diaL] = (item.data_filtragem || '').split('-');
+                    
+                    let match = true;
+                    if (dataFiltro && item.data_filtragem !== dataFiltro) match = false;
+                    if (mesFiltro && mesL !== mesFiltro) match = false;
+                    if (anoFiltro && anoL !== anoFiltro) match = false;
+                    
+                    if (match) {
+                        qtdVisiveis++;
+                        valorTotal += parseFloat(item.taxa || 6.50);
+                        
+                        const dataFormatada = diaL ? `${diaL}/${mesL}/${anoL}` : item.data_filtragem;
+                        
+                        tbody.innerHTML += `
+                            <tr data-data="${item.data_filtragem}">
+                                <td><strong>#${item.id} - ${item.cliente}</strong><br><small style="color:var(--text-muted)">${item.endereco}</small></td>
+                                <td>${dataFormatada} ${item.hora}</td>
+                                <td><span class="badge badge-success">R$ ${(item.taxa || 6.50).toFixed(2).replace('.', ',')}</span></td>
+                            </tr>
+                        `;
+                    }
+                });
+                
+                if (qtdVisiveis === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
+                }
+                
+                document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
+                document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+                
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--danger); padding:20px;">Erro ao carregar extrato.</td></tr>';
             }
         }
 
