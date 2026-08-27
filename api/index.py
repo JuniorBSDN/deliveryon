@@ -420,7 +420,6 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 
 
 # ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
-
 @app.post("/api/colaboradores")
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -458,7 +457,50 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     finally:
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
-    
+
+
+@app.put("/api/colaboradores/{colab_id}")
+def update_colaborador(colab_id: int, colab: ColaboradorCreate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        try:
+            v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
+        except (ValueError, TypeError):
+            v_entrega = 0.00
+        
+        if colab.foto and colab.foto.strip() != "":
+            cursor.execute(
+                """UPDATE colaboradores SET 
+                   nome=%s, telefone=%s, email=%s, cpf=%s, data_nascimento=%s, endereco=%s, 
+                   funcao=%s, status=%s, observacoes=%s, tipo_veiculo=%s, veiculo_modelo=%s, 
+                   veiculo_cor=%s, veiculo_placa=%s, area_atuacao=%s, valor_entrega=%s, foto=%s
+                   WHERE id=%s AND empresa_id=%s""",
+                (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
+                 colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
+                 colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, v_entrega, colab.foto, colab_id, colab.empresa_id)
+            )
+        else:
+            cursor.execute(
+                """UPDATE colaboradores SET 
+                   nome=%s, telefone=%s, email=%s, cpf=%s, data_nascimento=%s, endereco=%s, 
+                   funcao=%s, status=%s, observacoes=%s, tipo_veiculo=%s, veiculo_modelo=%s, 
+                   veiculo_cor=%s, veiculo_placa=%s, area_atuacao=%s, valor_entrega=%s 
+                   WHERE id=%s AND empresa_id=%s""",
+                (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
+                 colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
+                 colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, v_entrega, colab_id, colab.empresa_id)
+            )
+            
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao atualizar: {str(e)}")
+    finally:
+        cursor.close()
+    return {"mensagem": "Colaborador atualizado com sucesso"}
+
+
+
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
