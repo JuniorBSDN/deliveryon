@@ -524,7 +524,7 @@
                             <thead>
                                 <tr>
                                     <th>ID / Data</th>
-                                    <th>Resumo</th>
+                                    <th>Resumo / Descrição</th>
                                     <th>Status</th>
                                     <th>Técnico Responsável</th>
                                 </tr>
@@ -1373,30 +1373,38 @@ async function salvarEdicaoCliente() {
         }
         
         async function loadHelpdeskGestor() {
-            const chamados = await apiRequest('/helpdesk');
-            const tbody = document.getElementById('tbody-gestor-helpdesk');
-            tbody.innerHTML = '';
+    const chamados = await apiRequest('/helpdesk');
+    const tbody = document.getElementById('tbody-gestor-helpdesk');
+    tbody.innerHTML = '';
 
-            if (!chamados || chamados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
-                return;
-            }
+    if (!chamados || chamados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+        return;
+    }
 
-            chamados.forEach(c => {
-                let badgeClass = 'badge-warning';
-                if(c.status === 'resolvido' || c.status === 'concluido') badgeClass = 'badge-success';
-                if(c.status === 'cancelado') badgeClass = 'badge-danger';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
-                        <td>${c.resumo_problema}</td>
-                        <td><span class="badge ${badgeClass}" style="text-transform: uppercase;">${c.status}</span></td>
-                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
-                    </tr>
-                `;
-            });
+    chamados.forEach(c => {
+        let badgeClass = 'badge-warning';
+        let statusTexto = c.status || 'aberto';
+        
+        if (statusTexto === 'resolvido' || statusTexto === 'concluido') {
+            badgeClass = 'badge-success';
+        } else if (statusTexto === 'cancelado') {
+            badgeClass = 'badge-danger';
+        } else if (statusTexto === 'em_andamento' || statusTexto === 'em_atendimento') {
+            badgeClass = 'badge-info';
+            statusTexto = 'Em Andamento';
         }
+
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
+                <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
+                <td><span class="badge ${badgeClass}" style="text-transform: uppercase;">${statusTexto}</span></td>
+                <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+            </tr>
+        `;
+    });
+}
 
         async function abrirChamadoHelpdesk() {
             const payload = {
