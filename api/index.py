@@ -146,8 +146,6 @@ class ChamadoCancelar(BaseModel):
 @app.get("/api/atualizar-banco")
 def atualizar_banco_de_dados(db=Depends(get_db)):
     cursor = db.cursor()
-    
-    # Comandos para criar as colunas novas caso elas ainda não existam no banco
     queries = [
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS empresa_id INTEGER DEFAULT 1;",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS cpf VARCHAR(50);",
@@ -160,6 +158,7 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS veiculo_placa VARCHAR(50);",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS area_atuacao VARCHAR(150);",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS valor_entrega NUMERIC(10,2) DEFAULT 0;",
+        "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS foto TEXT;",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS hora VARCHAR(20);",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
@@ -178,6 +177,8 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
             
     cursor.close()
     return {"status": "Banco atualizado!", "logs": resultados}
+
+
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
@@ -270,7 +271,7 @@ def get_empresa_historico(id: int, db=Depends(get_db)):
     return res
 
 
-# ================= ROTA AUXILIAR PARA O CARDÁPIO (INDEX.HTML) =================
+# ================= ROTA AUXILIAR PARA O CARDÁPIO =================
 @app.get("/api/empresas/por-nome")
 def get_empresa_por_nome(nome: str, db=Depends(get_db)):
     cursor = db.cursor()
@@ -420,87 +421,6 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 
 
 # ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
-@app.post("/api/colaboradores")
-def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        email = colab.email if colab.email and str(colab.email).strip() != "" else None
-        cpf = colab.cpf if colab.cpf and str(colab.cpf).strip() != "" else None
-        data_nasc = colab.data_nascimento if colab.data_nascimento and str(colab.data_nascimento).strip() != "" else None
-        endereco = colab.endereco if colab.endereco and str(colab.endereco).strip() != "" else None
-        obs = colab.observacoes if colab.observacoes and str(colab.observacoes).strip() != "" else None
-        t_veiculo = colab.tipo_veiculo if colab.tipo_veiculo and str(colab.tipo_veiculo).strip() != "" else None
-        v_modelo = colab.veiculo_modelo if colab.veiculo_modelo and str(colab.veiculo_modelo).strip() != "" else None
-        v_cor = colab.veiculo_cor if colab.veiculo_cor and str(colab.veiculo_cor).strip() != "" else None
-        v_placa = colab.veiculo_placa if colab.veiculo_placa and str(colab.veiculo_placa).strip() != "" else None
-        area = colab.area_atuacao if colab.area_atuacao and str(colab.area_atuacao).strip() != "" else None
-        foto_base64 = colab.foto if colab.foto and str(colab.foto).strip() != "" else None
-        
-        try:
-            v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
-        except (ValueError, TypeError):
-            v_entrega = 0.00
-
-        cursor.execute(
-            """INSERT INTO colaboradores 
-               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega, foto) 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
-            (colab.empresa_id, colab.nome, colab.telefone, email, cpf, data_nasc, endereco, 
-             colab.funcao, colab.status, obs, t_veiculo, v_modelo, 
-             v_cor, v_placa, area, v_entrega, foto_base64))
-        db.commit()
-        novo_id = cursor.fetchone()['id']
-    except Exception as e:
-        db.rollback()
-        print("ERRO EM /api/colaboradores:", str(e))
-        raise HTTPException(status_code=400, detail=f"Erro ao salvar colaborador: {str(e)}")
-    finally:
-        cursor.close()
-    return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
-
-
-@app.put("/api/colaboradores/{colab_id}")
-def update_colaborador(colab_id: int, colab: ColaboradorCreate, db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        try:
-            v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
-        except (ValueError, TypeError):
-            v_entrega = 0.00
-        
-        if colab.foto and colab.foto.strip() != "":
-            cursor.execute(
-                """UPDATE colaboradores SET 
-                   nome=%s, telefone=%s, email=%s, cpf=%s, data_nascimento=%s, endereco=%s, 
-                   funcao=%s, status=%s, observacoes=%s, tipo_veiculo=%s, veiculo_modelo=%s, 
-                   veiculo_cor=%s, veiculo_placa=%s, area_atuacao=%s, valor_entrega=%s, foto=%s
-                   WHERE id=%s AND empresa_id=%s""",
-                (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
-                 colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
-                 colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, v_entrega, colab.foto, colab_id, colab.empresa_id)
-            )
-        else:
-            cursor.execute(
-                """UPDATE colaboradores SET 
-                   nome=%s, telefone=%s, email=%s, cpf=%s, data_nascimento=%s, endereco=%s, 
-                   funcao=%s, status=%s, observacoes=%s, tipo_veiculo=%s, veiculo_modelo=%s, 
-                   veiculo_cor=%s, veiculo_placa=%s, area_atuacao=%s, valor_entrega=%s 
-                   WHERE id=%s AND empresa_id=%s""",
-                (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
-                 colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
-                 colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, v_entrega, colab_id, colab.empresa_id)
-            )
-            
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=f"Erro ao atualizar: {str(e)}")
-    finally:
-        cursor.close()
-    return {"mensagem": "Colaborador atualizado com sucesso"}
-
-
-
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
@@ -743,17 +663,42 @@ def delete_client(id: int, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
+@app.get("/api/colaboradores")
+def list_colaboradores(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT id, nome, telefone, email, cpf, funcao, status, foto FROM colaboradores WHERE empresa_id = %s ORDER BY id DESC", (empresa_id,))
+    res = cursor.fetchall()
+    cursor.close()
+    return res
+
 @app.post("/api/colaboradores")
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        email = colab.email if colab.email and str(colab.email).strip() != "" else None
+        cpf = colab.cpf if colab.cpf and str(colab.cpf).strip() != "" else None
+        data_nasc = colab.data_nascimento if colab.data_nascimento and str(colab.data_nascimento).strip() != "" else None
+        endereco = colab.endereco if colab.endereco and str(colab.endereco).strip() != "" else None
+        obs = colab.observacoes if colab.observacoes and str(colab.observacoes).strip() != "" else None
+        t_veiculo = colab.tipo_veiculo if colab.tipo_veiculo and str(colab.tipo_veiculo).strip() != "" else None
+        v_modelo = colab.veiculo_modelo if colab.veiculo_modelo and str(colab.veiculo_modelo).strip() != "" else None
+        v_cor = colab.veiculo_cor if colab.veiculo_cor and str(colab.veiculo_cor).strip() != "" else None
+        v_placa = colab.veiculo_placa if colab.veiculo_placa and str(colab.veiculo_placa).strip() != "" else None
+        area = colab.area_atuacao if colab.area_atuacao and str(colab.area_atuacao).strip() != "" else None
+        foto_base64 = colab.foto if colab.foto and str(colab.foto).strip() != "" else None
+        
+        try:
+            v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
+        except (ValueError, TypeError):
+            v_entrega = 0.00
+
         cursor.execute(
             """INSERT INTO colaboradores 
-               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega) 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
-            (colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco, 
-             colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo, 
-             colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, colab.valor_entrega))
+               (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega, foto) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
+            (colab.empresa_id, colab.nome, colab.telefone, email, cpf, data_nasc, endereco, 
+             colab.funcao, colab.status, obs, t_veiculo, v_modelo, 
+             v_cor, v_placa, area, v_entrega, foto_base64))
         db.commit()
         novo_id = cursor.fetchone()['id']
     except Exception as e:
@@ -763,6 +708,45 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
 
+@app.put("/api/colaboradores/{colab_id}")
+def update_colaborador(colab_id: int, colab: ColaboradorCreate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        try:
+            v_entrega = float(colab.valor_entrega) if colab.valor_entrega is not None else 0.00
+        except (ValueError, TypeError):
+            v_entrega = 0.00
+        
+        if colab.foto and colab.foto.strip() != "":
+            cursor.execute(
+                """UPDATE colaboradores SET 
+                   nome=%s, telefone=%s, email=%s, cpf=%s, data_nascimento=%s, endereco=%s, 
+                   funcao=%s, status=%s, observacoes=%s, tipo_veiculo=%s, veiculo_modelo=%s, 
+                   veiculo_cor=%s, veiculo_placa=%s, area_atuacao=%s, valor_entrega=%s, foto=%s
+                   WHERE id=%s AND empresa_id=%s""",
+                (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
+                 colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
+                 colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, v_entrega, colab.foto, colab_id, colab.empresa_id)
+            )
+        else:
+            cursor.execute(
+                """UPDATE colaboradores SET 
+                   nome=%s, telefone=%s, email=%s, cpf=%s, data_nascimento=%s, endereco=%s, 
+                   funcao=%s, status=%s, observacoes=%s, tipo_veiculo=%s, veiculo_modelo=%s, 
+                   veiculo_cor=%s, veiculo_placa=%s, area_atuacao=%s, valor_entrega=%s 
+                   WHERE id=%s AND empresa_id=%s""",
+                (colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
+                 colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
+                 colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, v_entrega, colab_id, colab.empresa_id)
+            )
+            
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao atualizar: {str(e)}")
+    finally:
+        cursor.close()
+    return {"mensagem": "Colaborador atualizado com sucesso"}
 
 @app.delete("/api/colaboradores/{id}")
 def delete_colaborador(id: int, db=Depends(get_db)):
