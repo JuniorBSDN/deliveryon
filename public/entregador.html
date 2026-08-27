@@ -421,6 +421,7 @@
         }
 
         // CARREGA CORES E IDENTIDADE VISUAL DA EMPRESA VINCULADA
+        
         async function carregarIdentidadeVisualEmpresa() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (!empresaId) return;
@@ -428,13 +429,21 @@
             try {
                 const response = await fetch(`/api/configuracoes?empresa_id=${empresaId}`);
                 const config = await response.json();
-
                 if (config.cor_primaria) {
                     document.documentElement.style.setProperty('--brand-primary', config.cor_primaria);
                 }
                 if (config.cor_secundaria) {
                     document.documentElement.style.setProperty('--brand-secondary', config.cor_secundaria);
                 }
+                if (config.logo_url && config.logo_url.trim() !== '') {
+                    const imgLogo = `<img src="${config.logo_url}" alt="Logo da Empresa" style="max-height: 60px; max-width: 100%; object-fit: contain; border-radius: 8px;">`;
+                    
+                    const sidebarLogo = document.querySelector('.sidebar .logo-wrapper');
+                    if (sidebarLogo) sidebarLogo.innerHTML = imgLogo;
+                    const topbarLogo = document.querySelector('.topbar .logo-wrapper');
+                    if (topbarLogo) topbarLogo.innerHTML = imgLogo;
+                }
+                
             } catch (error) {
                 console.error("Erro ao carregar identidade visual:", error);
             }
