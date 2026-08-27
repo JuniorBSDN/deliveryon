@@ -743,14 +743,6 @@ def delete_client(id: int, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
-@app.get("/api/colaboradores")
-def list_colaboradores(empresa_id: int, db=Depends(get_db)):
-    cursor = db.cursor()
-    cursor.execute("SELECT id, nome, telefone, email, cpf, funcao, status FROM colaboradores WHERE empresa_id = %s ORDER BY id DESC", (empresa_id,))
-    res = cursor.fetchall()
-    cursor.close()
-    return res
-
 @app.post("/api/colaboradores")
 def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -770,6 +762,7 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
     finally:
         cursor.close()
     return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
+
 
 @app.delete("/api/colaboradores/{id}")
 def delete_colaborador(id: int, db=Depends(get_db)):
