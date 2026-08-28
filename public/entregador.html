@@ -29,6 +29,8 @@
             --topbar-height: 60px;
         }
 
+        .badge-info { background-color: var(--info); color: white; }
+        
         /* ================= RESET E TIPOGRAFIA ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: font-size 0.2s ease; }
@@ -226,7 +228,12 @@
                             <h2 id="ent-nome-logado" style="font-size: 1.4rem; margin-top: 2px;">Carregando...</h2>
                         </div>
                         <div>
-                            <span class="badge badge-success" style="font-size: 0.9rem; padding: 6px 12px; cursor: pointer;" id="ent-status-badge" onclick="toggleStatusTrabalho()"><i class="ph ph-check-circle"></i> Disponível</span>
+                            <select id="ent-status-select" class="badge badge-success" style="font-size: 0.9rem; padding: 6px 12px; cursor: pointer; border: none; outline: none; -webkit-appearance: none; font-weight: bold; font-family: inherit; color: inherit;" onchange="alterarStatusEntregador(this.value)">
+                                <option value="Disponível" style="color: #333;">✅ Disponível</option>
+                                <option value="Em Entrega" style="color: #333;">🛵 Em Entrega</option>
+                                <option value="Pausado" style="color: #333;">⏸️ Pausado</option>
+                                <option value="Indisponível" style="color: #333;">❌ Indisponível</option>
+                            </select> 
                         </div>
                     </div>
                 </div>
@@ -337,7 +344,7 @@
     </div>
 
  <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
-    <script>
+   <script>
         // CONFIGURAÇÕES GLOBAIS DA API
         const API_BASE_URL = '/api/entregador'; 
         let mapaInstancias = {};
@@ -394,6 +401,7 @@
                 localStorage.setItem('deliveryon_entregador_nome', data.nome);
                 localStorage.setItem('deliveryon_entregador_id', data.id);
                 localStorage.setItem('deliveryon_empresa_id', data.empresa_id);
+                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível'); // <-- SALVA O STATUS AQUI
                 
                 verificarAcessoEntregador();
             } catch (error) {
@@ -409,19 +417,31 @@
             localStorage.removeItem('deliveryon_entregador_nome');
             localStorage.removeItem('deliveryon_entregador_id');
             localStorage.removeItem('deliveryon_empresa_id');
+            localStorage.removeItem('deliveryon_entregador_status');
             window.location.reload();
         }
 
         function inicializarPainelEntregador() {
             const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
+
+            // <-- APLICA O STATUS SALVO NA TELA -->
+            const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
+            const select = document.getElementById('ent-status-select');
+            if(select) {
+                select.value = statusSalvo;
+                if(statusSalvo === 'Disponível') select.className = 'badge badge-success';
+                else if(statusSalvo === 'Pausado') select.className = 'badge badge-warning';
+                else if(statusSalvo === 'Em Entrega') select.className = 'badge badge-info';
+                else select.className = 'badge badge-danger';
+            }
+
             carregarIdentidadeVisualEmpresa();
             carregarRotasAtivas();
-            filtrarExtrato(); // Já carrega o extrato real no fundo
+            filtrarExtrato(); 
         }
 
         // CARREGA CORES E IDENTIDADE VISUAL DA EMPRESA VINCULADA
-        
         async function carregarIdentidadeVisualEmpresa() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (!empresaId) return;
@@ -449,14 +469,32 @@
             }
         }
 
-        function toggleStatusTrabalho() {
-            const badge = document.getElementById('ent-status-badge');
-            if (badge.innerText.includes('Disponível')) {
-                badge.innerHTML = '<i class="ph ph-prohibit"></i> Pausado';
-                badge.className = 'badge badge-warning';
-            } else {
-                badge.innerHTML = '<i class="ph ph-check-circle"></i> Disponível';
-                badge.className = 'badge badge-success';
+        // NOVA FUNÇÃO: ALTERAR STATUS E ENVIAR PARA O BANCO (Substitui a antiga toggleStatusTrabalho)
+        async function alterarStatusEntregador(novoStatus) {
+            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+            const select = document.getElementById('ent-status-select');
+            
+            if(novoStatus === 'Disponível') select.className = 'badge badge-success';
+            else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
+            else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
+            else select.className = 'badge badge-danger';
+
+            try {
+                const response = await fetch('/api/entregador/status', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        entregador_id: parseInt(entregadorId), 
+                        status: novoStatus 
+                    })
+                });
+                
+                if(!response.ok) throw new Error("Falha de comunicação");
+                localStorage.setItem('deliveryon_entregador_status', novoStatus);
+                
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao sincronizar status. Verifique sua conexão.");
             }
         }
 
