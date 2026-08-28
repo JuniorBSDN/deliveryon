@@ -28,6 +28,7 @@ def get_db():
 
 # ================= MODELOS =================
 
+
 class ChamadoCreate(BaseModel):
     empresa_id: int
     resumo_problema: str
@@ -128,6 +129,7 @@ class EntregadorAuth(BaseModel):
     senha: str
 
 class EntregadorStatusUpdate(BaseModel):
+    entregador_id: int
     status: str
 
 class BaixaPedido(BaseModel):
@@ -811,6 +813,19 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 
 
 # ================= ROTAS DE ENTREGADOR (CORRIGIDAS) =================
+@app.put("/api/entregador/status")
+def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("UPDATE colaboradores SET status = %s WHERE id = %s AND funcao = 'Motoboy'", (data.status, data.entregador_id))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+    return {"mensagem": f"Status alterado para {data.status}"}
+
 @app.post("/api/auth/entregador")
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
@@ -830,7 +845,8 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
         "token": "token_motoboy_valido", 
         "nome": colab['nome'], 
         "id": colab['id'],
-        "empresa_id": colab['empresa_id']
+        "empresa_id": colab['empresa_id'],
+        "status": colab['status'] # Retornando o status atual
     }
 
 @app.get("/api/entregador/rotas")
@@ -849,9 +865,6 @@ def get_entregador_rotas(empresa_id: int, db=Depends(get_db)):
     cursor.close()
     return rotas
 
-@app.put("/api/entregador/status")
-def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
-    return {"mensagem": f"Status alterado para {data.status}"}
 
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: int, db=Depends(get_db)):
