@@ -1405,6 +1405,83 @@ async function salvarEdicaoCliente() {
         `;
     });
 }
+        function abrirModalEdicaoColaborador(colabStr) {
+            const c = JSON.parse(decodeURIComponent(colabStr));
+            document.getElementById('edit-colab-id').value = c.id;
+            document.getElementById('edit-colab-name').value = c.nome || '';
+            document.getElementById('edit-colab-phone').value = c.telefone || '';
+            document.getElementById('edit-colab-email').value = c.email || '';
+            document.getElementById('edit-colab-cpf').value = c.cpf || '';
+            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
+            document.getElementById('edit-colab-address').value = c.endereco || '';
+            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
+            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
+            document.getElementById('edit-colab-obs').value = c.observacoes || '';
+
+            // Resgata campos específicos de motoboy
+            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
+            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
+            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
+            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
+            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
+            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
+
+            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
+            document.getElementById('modalEditarColaborador').classList.add('active');
+        }
+
+        async function salvarEdicaoColaborador() {
+            const id = document.getElementById('edit-colab-id').value;
+            const funcao = document.getElementById('edit-colab-funcao').value;
+            const fileInput = document.getElementById('edit-colab-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); }
+                catch (err) { console.error("Erro ao converter foto:", err); }
+            }
+
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
+                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
+                veiculoCor = document.getElementById('edit-colab-v-cor').value;
+                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
+                areaAtuacao = document.getElementById('edit-colab-area').value;
+                const valEnt = document.getElementById('edit-colab-v-entrega').value;
+                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-colab-name').value,
+                telefone: document.getElementById('edit-colab-phone').value,
+                email: document.getElementById('edit-colab-email').value,
+                cpf: document.getElementById('edit-colab-cpf').value,
+                data_nascimento: document.getElementById('edit-colab-dob').value,
+                endereco: document.getElementById('edit-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('edit-colab-status').value,
+                observacoes: document.getElementById('edit-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Colaborador atualizado com sucesso!');
+                closeModal('modalEditarColaborador');
+                loadColaboradores();
+            } else {
+                alert('Erro ao atualizar o colaborador.');
+            }
+        }
 
         async function abrirChamadoHelpdesk() {
             const payload = {
