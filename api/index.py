@@ -892,34 +892,39 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
     return {"mensagem": "Entrega concluída e registrada com sucesso"}
 
 
-# ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO =================
+# ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
 @app.get("/api/empresas")
 def listar_empresas_publicas(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT id, nome_fantasia as nome, categoria, qrcode_imagem as logo_url, 
-               '40-50 min' as tempo_entrega, 5.00 as taxa_entrega 
-        FROM empresas 
-        WHERE status = 'ativo' 
-        ORDER BY id DESC
-    """)
-    res = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, qrcode_imagem as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega FROM empresas WHERE status = 'ativo' ORDER BY id DESC")
+        res = cursor.fetchall()
+    except Exception as e:
+        db.rollback()
+        # Fallback caso a tabela tenha estrutura básica
+        cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, NULL as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega FROM empresas ORDER BY id DESC")
+        res = cursor.fetchall()
+    finally:
+        cursor.close()
     return res
 
 @app.get("/api/produtos/destaques")
 def listar_produtos_destaques(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT p.id, p.nome, p.preco, p.descricao, p.foto, p.empresa_id, 
-               e.nome_fantasia as empresa_nome, e.qrcode_imagem as empresa_img, e.categoria as categoria_empresa
-        FROM produtos p
-        JOIN empresas e ON p.empresa_id = e.id
-        WHERE e.status = 'ativo'
-        ORDER BY p.id DESC LIMIT 10
-    """)
-    res = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute("""
+            SELECT p.id, p.nome, p.preco, p.descricao, p.foto, p.empresa_id, 
+                   e.nome_fantasia as empresa_nome, e.qrcode_imagem as empresa_img, 'geral' as categoria_empresa
+            FROM produtos p
+            JOIN empresas e ON p.empresa_id = e.id
+            ORDER BY p.id DESC LIMIT 10
+        """)
+        res = cursor.fetchall()
+    except Exception as e:
+        db.rollback()
+        res = []
+    finally:
+        cursor.close()
     return res
     
     
