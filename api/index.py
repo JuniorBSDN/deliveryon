@@ -173,6 +173,8 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_id INTEGER;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS data DATE;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);",
         "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
     ]
