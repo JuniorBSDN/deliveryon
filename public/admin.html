@@ -1501,6 +1501,44 @@ async function salvarEdicaoCliente() {
             }
         }
 
+        function inicializarPainel() {
+            loadDashboardData();
+            loadProducts();
+            loadClients();
+            loadColaboradores();
+            loadOuvidoria();
+            loadConfigurations();
+            loadHelpdeskGestor();
+            aplicarIdentidadeVisualDaEmpresa();
+
+            if(document.getElementById('chartFluxo')) {
+                new Chart(document.getElementById('chartFluxo').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+            if(document.getElementById('chartOuvidoria')) {
+                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+            // --- NOVO: AUTO ATUALIZAÇÃO EM TEMPO REAL ---
+            setInterval(() => {
+                // Atualiza a lista de colaboradores a cada 5 segundos SE a aba estiver aberta
+                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
+                    loadColaboradores();
+                }
+                // Atualiza o Dashboard a cada 5 segundos SE a aba estiver aberta
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
+                    loadDashboardData();
+                }
+            }, 5000); 
+        }
+
         window.onload = function() {
         const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
