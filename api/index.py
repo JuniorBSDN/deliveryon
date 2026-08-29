@@ -896,7 +896,13 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
 @app.get("/api/empresas")
 def listar_empresas_publicas(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id, nome_fantasia as nome, categoria, logo_url, tempo_entrega, taxa_entrega FROM empresas WHERE status = 'ativo' ORDER BY id DESC")
+    cursor.execute("""
+        SELECT id, nome_fantasia as nome, categoria, qrcode_imagem as logo_url, 
+               '40-50 min' as tempo_entrega, 5.00 as taxa_entrega 
+        FROM empresas 
+        WHERE status = 'ativo' 
+        ORDER BY id DESC
+    """)
     res = cursor.fetchall()
     cursor.close()
     return res
@@ -915,6 +921,7 @@ def listar_produtos_destaques(db=Depends(get_db)):
     res = cursor.fetchall()
     cursor.close()
     return res
+    
     
 @app.post("/api/backup")
 def backup():
