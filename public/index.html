@@ -94,13 +94,34 @@
         </div>
     </div>
 
-    <!-- SEÇÃO 1: HUB (Lista de Restaurantes) -->
+    <!-- SEÇÃO 1: HUB (Vitrine Global e Lista de Restaurantes) -->
     <section id="hub-section" class="py-8 bg-gray-50 flex-1">
         <div class="container mx-auto px-4">
-            <h2 class="text-2xl font-black text-gray-800 mb-6 border-l-4 pl-3" style="border-color: var(--brand-primary);">Restaurantes Abertos</h2>
+            
+            <!-- ABAS DE CATEGORIAS GLOBAIS (Filtro do Hub) -->
+            <div class="flex md:justify-center justify-start items-center mb-8 overflow-x-auto pb-3 scrollbar-hide relative">
+                <div class="flex space-x-2 bg-white p-1 rounded-full shadow-sm whitespace-nowrap border border-gray-200 items-center">
+                    <button class="hub-category-btn px-6 py-2 rounded-full text-white font-bold transition bg-brand" data-category="todos">Todos</button>
+                    <button class="hub-category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="lanches">Lanches</button>
+                    <button class="hub-category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="pizzas">Pizzas</button>
+                    <button class="hub-category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="doces">Açaí & Doces</button>
+                    <button class="hub-category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition" data-category="brasileira">Brasileira</button>
+                </div>
+            </div>
+
+            <!-- Carrossel de Produtos em Destaque -->
+            <div class="mb-10">
+                <h2 id="titulo-destaques" class="text-2xl font-black text-gray-800 mb-4 border-l-4 pl-3" style="border-color: var(--brand-primary);">Destaques de Hoje 🔥</h2>
+                
+                <div id="destaques-grid" class="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x" style="scroll-snap-type: x mandatory;">
+                    <div class="text-gray-500 font-bold py-4">Buscando os melhores pratos... <i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+
+            <!-- Lojas Cadastradas -->
+            <h2 id="titulo-lojas" class="text-2xl font-black text-gray-800 mb-6 border-l-4 pl-3" style="border-color: var(--brand-primary);">Lojas e Restaurantes</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="lojas-grid">
-                <!-- Lojas injetadas via JS -->
                 <div class="col-span-full text-center py-10">
                     <i class="fas fa-spinner fa-spin text-4xl mb-4" style="color: var(--brand-primary);"></i>
                     <p class="text-gray-500 font-bold">Buscando parceiros na sua região...</p>
@@ -194,6 +215,7 @@
     <script>new window.VLibras.Widget('https://vlibras.gov.br/app');</script>
 
     <script>
+        let destaquesGlobais = []; 
         const API_BASE_URL = "/api"; 
         
         let lojaAtualId = null; // Guarda a loja que o cliente está navegando
@@ -345,24 +367,33 @@
             document.querySelectorAll('.add-to-cart').forEach(b => b.addEventListener('click', addToCart));
         }
 
-        function setupEventListeners() {
-            document.getElementById('cart-btn').addEventListener('click', toggleCart);
-            document.getElementById('close-cart').addEventListener('click', toggleCart);
-            document.getElementById('backdrop').addEventListener('click', toggleCart);
-            
-            document.querySelectorAll('.category-btn').forEach(btn => {
+        // Filtros do HUB (As novas abas)
+            document.querySelectorAll('.hub-category-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('.category-btn').forEach(b => { b.className = "category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition"; });
-                    btn.className = "category-btn px-6 py-2 rounded-full font-bold text-white transition bg-brand";
-                    renderMenuItems(btn.dataset.category);
+                    // Pinta o botão clicado
+                    document.querySelectorAll('.hub-category-btn').forEach(b => { b.className = "hub-category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition"; });
+                    btn.className = "hub-category-btn px-6 py-2 rounded-full font-bold text-white transition bg-brand";
+                    
+                    const cat = btn.dataset.category;
+                    
+                    // 1. Atualiza os Destaques
+                    renderDestaques(cat);
+                    
+                    // 2. Atualiza as Lojas embaixo e os Títulos
+                    if (cat === 'todos') {
+                        renderLojas(lojasCadastradas);
+                        document.getElementById('titulo-destaques').innerHTML = 'Destaques de Hoje 🔥';
+                        document.getElementById('titulo-lojas').innerHTML = 'Lojas e Restaurantes';
+                    } else {
+                        // Se clicou em Pizzas, filtra as lojas que vendem Pizzas
+                        const lojasFiltradas = lojasCadastradas.filter(l => l.categoria.toLowerCase().includes(cat) || l.categoria.toLowerCase() === btn.textContent.toLowerCase());
+                        renderLojas(lojasFiltradas);
+                        
+                        document.getElementById('titulo-destaques').innerHTML = `Melhores pratos de ${btn.textContent} 🔥`;
+                        document.getElementById('titulo-lojas').innerHTML = `Lojas de ${btn.textContent}`;
+                    }
                 });
             });
-            document.getElementById('cli-pag').addEventListener('change', e => {
-                document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
-            });
-            // O finalizador de pedido precisará ser adaptado para pegar o telefone da loja selecionada.
-            document.getElementById('btn-enviar-whatsapp').addEventListener('click', () => { alert("Finalização do MarketPlace - Em breve conectado ao Backend!") });
-        }
 
         function addToCart(e) {
             // TRAVA DE MARKETPLACE: Só permite itens da mesma loja
@@ -437,6 +468,56 @@
         function toggleCart() {
             document.getElementById('cart-sidebar').classList.toggle('translate-x-full');
             document.getElementById('backdrop').classList.toggle('hidden');
+        }
+
+        async function carregarDestaquesAPI() {
+            const destaquesDB = await apiRequest('/produtos/destaques'); 
+
+            if (destaquesDB && destaquesDB.length > 0) {
+                destaquesGlobais = destaquesDB;
+            } else {
+                // MOCK reforçado com categorias para testarmos os filtros!
+                destaquesGlobais = [
+                    { id: '1', nome: 'X-Tudo Artesanal', preco: 35.90, foto: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd', empresa_id: '1', empresa_nome: 'Burger King', empresa_img: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add', categoria_hub: 'lanches' },
+                    { id: '2', nome: 'Pizza de Pepperoni G', preco: 55.00, foto: 'https://images.unsplash.com/photo-1513104890138-7c749659a591', empresa_id: '2', empresa_nome: 'Pizza Hut', empresa_img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591', categoria_hub: 'pizzas' },
+                    { id: '3', nome: 'Barca de Açaí', preco: 45.00, foto: 'https://images.unsplash.com/photo-1553177595-4de2bb0842b9', empresa_id: '3', empresa_nome: 'Açaí do Zé', empresa_img: 'https://images.unsplash.com/photo-1553177595-4de2bb0842b9', categoria_hub: 'doces' },
+                    { id: '4', nome: 'Marmita Feijoada', preco: 28.00, foto: 'https://images.unsplash.com/photo-1588675646184-6997d4b99ed8', empresa_id: '4', empresa_nome: 'Sabor Caseiro', empresa_img: 'https://images.unsplash.com/photo-1588675646184-6997d4b99ed8', categoria_hub: 'brasileira' }
+                ];
+            }
+            renderDestaques('todos');
+        }
+
+        // Função que desenha os produtos na tela baseada na aba selecionada
+        function renderDestaques(categoria) {
+            const container = document.getElementById('destaques-grid');
+            container.innerHTML = '';
+            
+            // Filtra os destaques
+            let filtrados = categoria === 'todos' 
+                ? destaquesGlobais 
+                : destaquesGlobais.filter(p => p.categoria_hub && p.categoria_hub.includes(categoria));
+
+            if(filtrados.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 font-medium py-4 px-2">Poxa, ainda não temos destaques para essa categoria hoje.</p>`;
+                return;
+            }
+
+            filtrados.forEach(prod => {
+                container.innerHTML += `
+                    <div class="snap-start shrink-0 w-64 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer transition hover:-translate-y-1 hover:shadow-md" 
+                         onclick="entrarNaLoja('${prod.empresa_id}', '${prod.empresa_nome}', '${prod.empresa_img}')">
+                        <div class="h-36 bg-gray-900 relative">
+                            <img src="${prod.foto}" class="w-full h-full object-cover">
+                            <div class="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                                <img src="${prod.empresa_img}" class="w-4 h-4 rounded-full object-cover"> ${prod.empresa_nome}
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-gray-800 text-sm mb-1 truncate">${prod.nome}</h3>
+                            <span class="font-black text-brand text-lg">R$ ${parseFloat(prod.preco).toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    </div>`;
+            });
         }
 
         function openImageModal(imgSrc) { document.getElementById('modal-image-src').src = imgSrc; document.getElementById('image-modal').classList.remove('hidden'); }
