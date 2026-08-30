@@ -568,7 +568,7 @@
     </div>
 </div>
 
-    <!-- ================= JAVASCRIPT MASTER COMPLETAMENTE INTEGRADO ================= -->
+   <!-- ================= JAVASCRIPT MASTER COMPLETAMENTE INTEGRADO ================= -->
     <script>
         let alertasGlobaisCache = [];
 
@@ -777,7 +777,15 @@
             };
             try {
                 const res = await fetch('/api/master/empresas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (res.ok) { alert("Cliente cadastrado!"); document.getElementById('form-cad-empresa').reset(); toggleCadastroForm(); carregarEmpresas(); carregarMetricas(); } else { alert("Erro ao cadastrar."); }
+                if (res.ok) { 
+                    alert("Cliente cadastrado com sucesso!"); 
+                    document.getElementById('form-cad-empresa').reset(); 
+                    toggleCadastroForm(); 
+                    carregarEmpresas(); 
+                    carregarMetricas(); 
+                } else { 
+                    alert("Erro ao cadastrar. Verifique os dados."); 
+                }
             } catch (err) { alert("Erro de API."); } finally { btn.disabled = false; }
         }
 
@@ -846,7 +854,16 @@
             if (sidebar.classList.contains('open')) { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
         }
 
-        function toggleCadastroForm() { const card = document.getElementById('card-novo-cliente'); card.classList.toggle('hidden'); if(!card.classList.contains('hidden')) card.scrollIntoView({ behavior: 'smooth' }); }
+        function toggleCadastroForm() { 
+            const card = document.getElementById('card-novo-cliente'); 
+            // PREVENÇÃO DE OVERWRITE: Reseta sempre que abrir o formulário
+            if(card.classList.contains('hidden')) {
+                document.getElementById('form-cad-empresa').reset();
+            }
+            card.classList.toggle('hidden'); 
+            if(!card.classList.contains('hidden')) card.scrollIntoView({ behavior: 'smooth' }); 
+        }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-overlay').classList.toggle('active'); }
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
@@ -944,49 +961,49 @@
         }
 
         // Abre o histórico buscando os dados reais do banco para aquela empresa específica
-async function abrirHistoricoEmpresa(id, nome) {
-    document.getElementById('historico-empresa-nome').innerText = nome;
-    const listaContainer = document.getElementById('lista-historico-modal');
-    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
-    
-    openModal('modalHistorico');
+        async function abrirHistoricoEmpresa(id, nome) {
+            document.getElementById('historico-empresa-nome').innerText = nome;
+            const listaContainer = document.getElementById('lista-historico-modal');
+            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
+            
+            openModal('modalHistorico');
 
-    try {
-        const res = await fetch(`/api/master/empresas/${id}/historico`);
-        if (res.ok) {
-            const historicos = await res.json();
-            if (historicos.length === 0) {
-                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico desta empresa.</li>';
-                return;
+            try {
+                const res = await fetch(`/api/master/empresas/${id}/historico`);
+                if (res.ok) {
+                    const historicos = await res.json();
+                    if (historicos.length === 0) {
+                        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico desta empresa.</li>';
+                        return;
+                    }
+                    listaContainer.innerHTML = '';
+                    historicos.forEach(h => {
+                        listaContainer.innerHTML += `
+                            <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
+                                <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data}</span>
+                                <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao}</span>
+                            </li>
+                        `;
+                    });
+                } else {
+                    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
+                }
+            } catch (e) {
+                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
             }
-            listaContainer.innerHTML = '';
-            historicos.forEach(h => {
-                listaContainer.innerHTML += `
-                    <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
-                        <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data}</span>
-                        <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao}</span>
-                    </li>
-                `;
-            });
-        } else {
-            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
         }
-    } catch (e) {
-        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
-    }
-}
 
         // Carrega indicadores e chamados ao abrir a aba
       async function carregarHelpdesk() {
             try {
-                // Indicadores (Ajustado para bater exatamente com as chaves do index.py)
+                // Indicadores
                 const resInd = await fetch('/api/master/helpdesk/indicadores');
                 if(resInd.ok) {
                     const ind = await resInd.json();
                     document.getElementById('ind-abertos').innerText = ind.abertos || 0;
-                    document.getElementById('ind-atendimento').innerText = ind.em_andamento || 0; // index.py envia 'em_andamento'
+                    document.getElementById('ind-atendimento').innerText = ind.em_andamento || 0; 
                     document.getElementById('ind-pendentes').innerText = ind.pendentes || 0;
-                    document.getElementById('ind-resolvidos').innerText = ind.concluidos || 0; // index.py envia 'concluidos'
+                    document.getElementById('ind-resolvidos').innerText = ind.concluidos || 0; 
                 }
 
                 // Lista de Chamados
@@ -1008,7 +1025,6 @@ async function abrirHistoricoEmpresa(id, nome) {
                         if(c.status === 'resolvido' || c.status === 'concluido') badgeCls = 'badge-success';
                         if(c.status === 'cancelado') badgeCls = 'badge-danger';
 
-                        // Mapeamento corrigido: c.empresa e c.data vêm direto da query do index.py
                         tbody.innerHTML += `
                             <tr>
                                 <td><strong>${c.empresa || 'Empresa Desconhecida'}</strong><br><small>${c.data || ''}</small></td>
