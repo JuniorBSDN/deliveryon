@@ -264,9 +264,10 @@
                     id: loja.id,
                     nome: loja.nome,
                     categoria: loja.categoria || 'Geral', 
-                    img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto', // Fallback de imagem
+                    img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto',
                     tempo: loja.tempo_entrega || '40-50 min',
-                    frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar'
+                    frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar',
+                    telefone: loja.telefone // <-- ADICIONE ESTA LINHA (Verifique se a coluna no banco se chama 'telefone' ou 'whatsapp')
                 }));
                 renderLojas(lojasCadastradas);
             } else {
@@ -310,6 +311,14 @@
         // ================= NAVEGAÇÃO ENTRE HUB E LOJA =================
         function entrarNaLoja(id, nome, img) {
             lojaAtualId = id;
+            
+            // Identifica a loja clicada e atualiza o número do WhatsApp dinamicamente
+            const lojaSelecionada = lojasCadastradas.find(l => String(l.id) === String(id));
+            if (lojaSelecionada && lojaSelecionada.telefone) {
+                // Remove tudo que não for número (ex: parênteses, traços, espaços)
+                telefoneWhatsapp = String(lojaSelecionada.telefone).replace(/\D/g, '');
+            }
+        
             document.getElementById('current-store-name').textContent = nome;
             document.getElementById('current-store-img').src = img;
             
