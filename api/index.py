@@ -170,11 +170,14 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS valor_entrega NUMERIC(10,2) DEFAULT 0;",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS foto TEXT;",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS hora VARCHAR(20);",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_id INTEGER;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS data DATE;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS total NUMERIC(10,2);",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento VARCHAR(50);",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS itens TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);",
-        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_id INTEGER;",
-        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS data DATE;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);",
         "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
     ]
@@ -191,7 +194,6 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
             
     cursor.close()
     return {"status": "Banco atualizado!", "logs": resultados}
-
 
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
