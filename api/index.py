@@ -629,7 +629,6 @@ def list_ouvidoria(empresa_id: int, db=Depends(get_db)):
     cursor.close()
     return res
 
-
 # ================= ROTAS DE PRODUTOS E COLABORADORES =================
 @app.put("/api/products/{id}")
 def update_product(id: int, prod: ProdutoUpdate, db=Depends(get_db)):
