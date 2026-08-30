@@ -400,7 +400,8 @@
 
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>                            <tbody id="tbody-colaboradores">
+                            <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <tbody id="tbody-colaboradores">
                                 <!-- Dados carregados dinamicamente via API Python -->
                             </tbody>
                         </table>
@@ -594,168 +595,182 @@
     </div>
 
     <!-- MODAL DE EDIÇÃO DE PRODUTO -->
-<div class="modal-overlay" id="modalEditarProduto">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="ph ph-pencil"></i> Editar Produto</h3>
-            <button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="form-editar-produto" onsubmit="event.preventDefault(); salvarEdicaoProduto();">
-                <input type="hidden" id="edit-prod-id">
-                <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-name" required></div>
-                <div class="form-group"><label>Categoria</label>
-                    <select class="form-control" id="edit-prod-cat" required>
-                        <option value="hamburgueres">Hambúrgueres</option>
-                        <option value="pizzas">Pizzas</option>
-                        <option value="salgados">Salgados</option>
-                        <option value="bebidas">Bebidas</option>
-                        <option value="sobremesas">Sobremesas</option>
-                        <option value="outra">Outra Categoria</option>
-                    </select>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="edit-prod-price" required></div>
-                    <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-stock" required></div>
-                </div>
-                <div class="form-group"><label>Nova Foto (Opcional)</label><input type="file" class="form-control" id="edit-prod-file"></div>
-                <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
-                <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                </div>
-            </form>
+    <div class="modal-overlay" id="modalEditarProduto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Produto</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-produto" onsubmit="event.preventDefault(); salvarEdicaoProduto();">
+                    <input type="hidden" id="edit-prod-id">
+                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-name" required></div>
+                    <div class="form-group"><label>Categoria</label>
+                        <select class="form-control" id="edit-prod-cat" required>
+                            <option value="hamburgueres">Hambúrgueres</option>
+                            <option value="pizzas">Pizzas</option>
+                            <option value="salgados">Salgados</option>
+                            <option value="bebidas">Bebidas</option>
+                            <option value="sobremesas">Sobremesas</option>
+                            <option value="outra">Outra Categoria</option>
+                        </select>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="edit-prod-price" required></div>
+                        <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-stock" required></div>
+                    </div>
+                    <div class="form-group"><label>Nova Foto (Opcional)</label><input type="file" class="form-control" id="edit-prod-file"></div>
+                    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- MODAL DE EDIÇÃO DE COLABORADOR -->
-<div class="modal-overlay" id="modalEditarColaborador">
-    <div class="modal-content" style="max-width: 700px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-identification-badge"></i> Editar Colaborador</h3>
-            <button class="close-modal" onclick="closeModal('modalEditarColaborador')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
-                <input type="hidden" id="edit-colab-id">
-                
-                <div class="form-group">
-                    <label>Nova Foto (Deixe em branco para manter a atual)</label>
-                    <input type="file" class="form-control" id="edit-colab-file">
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-colab-name" required></div>
-                    <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-colab-phone" required></div>
-                    <div class="form-group"><label>Email</label><input type="email" class="form-control" id="edit-colab-email" required></div>
-                    <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
-                    <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
-                    <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
+    <div class="modal-overlay" id="modalEditarColaborador">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-identification-badge"></i> Editar Colaborador</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarColaborador')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
+                    <input type="hidden" id="edit-colab-id">
                     
                     <div class="form-group">
-                        <label>Função</label>
-                        <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
-                            <option value="Administrador">Administrador</option>
-                            <option value="Gerente">Gerente</option>
-                            <option value="Caixa">Caixa</option>
-                            <option value="Motoboy">Entregador / Motoboy</option>
-                            <option value="Outro">Outro</option>
-                        </select>
+                        <label>Nova Foto (Deixe em branco para manter a atual)</label>
+                        <input type="file" class="form-control" id="edit-colab-file">
                     </div>
 
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select class="form-control" id="edit-colab-status">
-                            <option value="Disponível">Disponível</option>
-                            <option value="Pausado">Pausado</option>
-                            <option value="Indisponível">Indisponível</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="edit-campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
-                    <h4 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i> Dados do Veículo</h4>
                     <div class="form-grid">
-                        <div class="form-group"><label>Tipo</label><select class="form-control" id="edit-colab-t-veiculo"><option>Moto</option><option>Bicicleta</option></select></div>
-                        <div class="form-group"><label>Modelo</label><input type="text" class="form-control" id="edit-colab-v-modelo"></div>
-                        <div class="form-group"><label>Cor</label><input type="text" class="form-control" id="edit-colab-v-cor"></div>
-                        <div class="form-group"><label>Placa</label><input type="text" class="form-control" id="edit-colab-v-placa"></div>
-                        <div class="form-group"><label>Área</label><input type="text" class="form-control" id="edit-colab-area"></div>
-                        <div class="form-group"><label>Valor Entrega (R$)</label><input type="number" step="0.01" class="form-control" id="edit-colab-v-entrega"></div>
-                    </div>
-                </div>
+                        <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-colab-name" required></div>
+                        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-colab-phone" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" class="form-control" id="edit-colab-email" required></div>
+                        <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
+                        <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
+                        <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
+                        
+                        <div class="form-group">
+                            <label>Função</label>
+                            <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Gerente">Gerente</option>
+                                <option value="Caixa">Caixa</option>
+                                <option value="Motoboy">Entregador / Motoboy</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
 
-                <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
-                
-                <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                </div>
-            </form>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" id="edit-colab-status">
+                                <option value="Disponível">Disponível</option>
+                                <option value="Pausado">Pausado</option>
+                                <option value="Indisponível">Indisponível</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="edit-campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <h4 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i> Dados do Veículo</h4>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Tipo</label><select class="form-control" id="edit-colab-t-veiculo"><option>Moto</option><option>Bicicleta</option></select></div>
+                            <div class="form-group"><label>Modelo</label><input type="text" class="form-control" id="edit-colab-v-modelo"></div>
+                            <div class="form-group"><label>Cor</label><input type="text" class="form-control" id="edit-colab-v-cor"></div>
+                            <div class="form-group"><label>Placa</label><input type="text" class="form-control" id="edit-colab-v-placa"></div>
+                            <div class="form-group"><label>Área</label><input type="text" class="form-control" id="edit-colab-area"></div>
+                            <div class="form-group"><label>Valor Entrega (R$)</label><input type="number" step="0.01" class="form-control" id="edit-colab-v-entrega"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
+                    
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- MODAL DE EDIÇÃO DE CLIENTE -->
-<div class="modal-overlay" id="modalEditarCliente">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-pencil"></i> Editar Cliente</h3>
-            <button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
-                <input type="hidden" id="edit-cli-id">
-                
-                <div class="form-group">
-                    <label>Nome Completo</label>
-                    <input type="text" class="form-control" id="edit-cli-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Telefone / WhatsApp</label>
-                    <input type="text" class="form-control" id="edit-cli-phone" required>
-                </div>
-                <div class="form-group">
-                    <label>E-mail</label>
-                    <input type="email" class="form-control" id="edit-cli-email">
-                </div>
-                <div class="form-group">
-                    <label>Endereço</label>
-                    <input type="text" class="form-control" id="edit-cli-address" required>
-                </div>
-                <div class="form-group">
-                    <label>Referência Local</label>
-                    <input type="text" class="form-control" id="edit-cli-ref">
-                </div>
+    <div class="modal-overlay" id="modalEditarCliente">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Cliente</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
+                    <input type="hidden" id="edit-cli-id">
+                    
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" class="form-control" id="edit-cli-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="text" class="form-control" id="edit-cli-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" class="form-control" id="edit-cli-email">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" class="form-control" id="edit-cli-address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Referência Local</label>
+                        <input type="text" class="form-control" id="edit-cli-ref">
+                    </div>
 
-                <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                </div>
-            </form>
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
     <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
 
+        // =========================================================================
+        // 1. CORREÇÃO DA FUNÇÃO DE API (FIM DO VAZAMENTO DE DADOS)
+        // =========================================================================
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
-                const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+                const empresaId = localStorage.getItem('deliveryon_empresa_id');
+                
+                if (!empresaId) {
+                    console.error("Sessão inválida! ID da empresa não encontrado.");
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    return null;
+                }
+
                 let url = `${API_BASE_URL}${endpoint}`;
                 const options = {
                     method: method,
                     headers: { 'Content-Type': 'application/json' }
                 };
 
-                if (method === 'GET') {
+                // Garante o empresa_id na URL para buscas (GET) e exclusões (DELETE)
+                if (method === 'GET' || method === 'DELETE') {
                     const separator = url.includes('?') ? '&' : '?';
                     url += `${separator}empresa_id=${empresaId}`;
-                } else if (data) {
+                } 
+                // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
+                else if (method === 'POST' || method === 'PUT') {
+                    if (!data) data = {}; // Proteção contra payloads nulos
                     data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
@@ -769,7 +784,105 @@
             }
         }
 
-        // Função de Login Integrada por CNPJ
+        // =========================================================================
+        // 2. FUNÇÕES DE CLIENTE BLINDADAS
+        // =========================================================================
+        async function createClient() {
+            const form = document.getElementById('form-cliente');
+            const payload = {
+                nome: document.getElementById('input-cli-name').value,
+                telefone: document.getElementById('input-cli-phone').value,
+                email: document.getElementById('input-cli-email').value,
+                endereco: document.getElementById('input-cli-address').value,
+                referencia: document.getElementById('input-cli-ref').value,
+                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')) // Injeção extra direta de segurança
+            };
+            
+            const res = await apiRequest('/clients', 'POST', payload);
+            
+            if (res) {
+                alert('Cliente salvo com sucesso!');
+                form.reset();
+                loadClients();
+            } else {
+                alert('Falha ao cadastrar o cliente. Verifique sua conexão.');
+            }
+        }
+
+        async function loadClients() {
+            const clients = await apiRequest('/clients');
+            const tbody = document.getElementById('tbody-clients');
+            tbody.innerHTML = '';
+
+            if (!clients || clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
+                return;
+            }
+
+            clients.forEach(c => {
+                const clienteJson = encodeURIComponent(JSON.stringify(c));
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.nome}</strong></td>
+                        <td>${c.telefone}</td>
+                        <td>${c.referencia || '-'}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function abrirModalEdicaoCliente(clienteStr) {
+            const c = JSON.parse(decodeURIComponent(clienteStr));
+            document.getElementById('edit-cli-id').value = c.id;
+            document.getElementById('edit-cli-name').value = c.nome || '';
+            document.getElementById('edit-cli-phone').value = c.telefone || '';
+            document.getElementById('edit-cli-email').value = c.email || '';
+            document.getElementById('edit-cli-address').value = c.endereco || '';
+            document.getElementById('edit-cli-ref').value = c.referencia || '';
+
+            document.getElementById('modalEditarCliente').classList.add('active');
+        }
+
+        async function salvarEdicaoCliente() {
+            const id = document.getElementById('edit-cli-id').value;
+            const payload = {
+                nome: document.getElementById('edit-cli-name').value,
+                telefone: document.getElementById('edit-cli-phone').value,
+                email: document.getElementById('edit-cli-email').value,
+                endereco: document.getElementById('edit-cli-address').value,
+                referencia: document.getElementById('edit-cli-ref').value,
+                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')) // Trava extra
+            };
+
+            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Cliente atualizado com sucesso!');
+                closeModal('modalEditarCliente');
+                loadClients();
+            } else {
+                alert('Erro ao atualizar o cliente.');
+            }
+        }
+        
+        async function deleteClient(id) {
+            if(confirm("Deseja excluir este cliente?")) {
+                const res = await apiRequest(`/clients/${id}`, 'DELETE');
+                if(res) {
+                    loadClients();
+                } else {
+                    alert("Erro ao tentar excluir cliente. ID da empresa pode ser inválido.");
+                }
+            }
+        }
+
+        // =========================================================================
+        // OUTRAS FUNÇÕES E LÓGICAS DO PAINEL
+        // =========================================================================
+
         async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
@@ -891,7 +1004,7 @@
             });
         }
 
-function abrirModalEdicao(produtoStr) {
+        function abrirModalEdicao(produtoStr) {
             const p = JSON.parse(decodeURIComponent(produtoStr));
             document.getElementById('edit-prod-id').value = p.codigo;
             document.getElementById('edit-prod-name').value = p.nome;
@@ -951,130 +1064,6 @@ function abrirModalEdicao(produtoStr) {
             }
         }
 
-
-
-
-
-
-        
-
-     async function loadClients() {
-    const clients = await apiRequest('/clients');
-    const tbody = document.getElementById('tbody-clients');
-    tbody.innerHTML = '';
-
-    if (!clients || clients.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
-        return;
-    }
-
-    clients.forEach(c => {
-        const clienteJson = encodeURIComponent(JSON.stringify(c));
-        tbody.innerHTML += `
-            <tr>
-                <td><strong>${c.nome}</strong></td>
-                <td>${c.telefone}</td>
-                <td>${c.referencia || '-'}</td>
-                <td style="text-align: right;">
-                    <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
-                    <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-function abrirModalEdicaoCliente(clienteStr) {
-    const c = JSON.parse(decodeURIComponent(clienteStr));
-    document.getElementById('edit-cli-id').value = c.id;
-    document.getElementById('edit-cli-name').value = c.nome || '';
-    document.getElementById('edit-cli-phone').value = c.telefone || '';
-    document.getElementById('edit-cli-email').value = c.email || '';
-    document.getElementById('edit-cli-address').value = c.endereco || '';
-    document.getElementById('edit-cli-ref').value = c.referencia || '';
-
-    document.getElementById('modalEditarCliente').classList.add('active');
-}
-
-async function salvarEdicaoCliente() {
-    const id = document.getElementById('edit-cli-id').value;
-    const payload = {
-        nome: document.getElementById('edit-cli-name').value,
-        telefone: document.getElementById('edit-cli-phone').value,
-        email: document.getElementById('edit-cli-email').value,
-        endereco: document.getElementById('edit-cli-address').value,
-        referencia: document.getElementById('edit-cli-ref').value
-    };
-
-    const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
-    if (res) {
-        alert('Cliente atualizado com sucesso!');
-        closeModal('modalEditarCliente');
-        loadClients();
-    } else {
-        alert('Erro ao atualizar o cliente.');
-    }
-}
-
-       async function loadColaboradores() {
-    const colabs = await apiRequest('/colaboradores');
-    const tbody = document.getElementById('tbody-colaboradores');
-    tbody.innerHTML = '';
-
-    if (!colabs || colabs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
-        return;
-    }
-
-    colabs.forEach(cb => {
-        // Renderiza a foto ou um avatar padrão
-        let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
-        if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
-            fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
-        }
-
-        // Prepara os dados para o modal de edição
-        const colabJson = encodeURIComponent(JSON.stringify(cb));
-
-        tbody.innerHTML += `
-            <tr>
-                <td>${fotoHtml}</td>
-                <td><strong>${cb.nome}</strong></td>
-                <td>${cb.cpf || '-'}</td>
-                <td>${cb.funcao}</td>
-                <td>${cb.telefone}</td>
-                <td><span class="badge badge-success">${cb.status}</span></td>
-                <td style="text-align: right;">
-                    <button class="btn-action" title="Editar" onclick="abrirModalEdicaoColaborador('${colabJson}')"><i class="ph ph-pencil"></i></button>
-                    <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-        async function loadOuvidoria() {
-            const feeds = await apiRequest('/ouvidoria');
-            const tbody = document.getElementById('tbody-ouvidoria');
-            tbody.innerHTML = '';
-
-            if (!feeds || feeds.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback registrado.</td></tr>`;
-                return;
-            }
-
-            feeds.forEach(f => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
-                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
-                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Ver" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button></td>
-                    </tr>
-                `;
-            });
-        }
-
         async function createProduct() {
             const form = document.getElementById('form-produto');
             const precoInput = document.getElementById('input-new-prod-price').value;
@@ -1111,98 +1100,100 @@ async function salvarEdicaoCliente() {
             }
         }
 
-        async function createClient() {
-            const form = document.getElementById('form-cliente');
-            const payload = {
-                nome: document.getElementById('input-cli-name').value,
-                telefone: document.getElementById('input-cli-phone').value,
-                email: document.getElementById('input-cli-email').value,
-                endereco: document.getElementById('input-cli-address').value,
-                referencia: document.getElementById('input-cli-ref').value
-            };
-            
-            const res = await apiRequest('/clients', 'POST', payload);
-            
-            if (res) {
-                alert('Cliente salvo com sucesso!');
-                form.reset();
-                loadClients();
-            } else {
-                alert('Falha ao cadastrar o cliente. Ocorreu um erro no servidor.');
+        async function loadColaboradores() {
+            const colabs = await apiRequest('/colaboradores');
+            const tbody = document.getElementById('tbody-colaboradores');
+            tbody.innerHTML = '';
+
+            if (!colabs || colabs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
+                return;
             }
+
+            colabs.forEach(cb => {
+                // Renderiza a foto ou um avatar padrão
+                let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
+                if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
+                    fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
+                }
+
+                // Prepara os dados para o modal de edição
+                const colabJson = encodeURIComponent(JSON.stringify(cb));
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${fotoHtml}</td>
+                        <td><strong>${cb.nome}</strong></td>
+                        <td>${cb.cpf || '-'}</td>
+                        <td>${cb.funcao}</td>
+                        <td>${cb.telefone}</td>
+                        <td><span class="badge badge-success">${cb.status}</span></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoColaborador('${colabJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
         async function createColab() {
-    const form = document.getElementById('form-colaborador');
-    const funcao = document.getElementById('select-funcao').value;
-    
-    // Captura e converte a foto
-    const fileInput = document.getElementById('input-colab-file');
-    let fotoBase64 = '';
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        try {
-            fotoBase64 = await convertFileToBase64(fileInput.files[0]);
-        } catch (err) {
-            console.error("Erro ao converter foto:", err);
-        }
-    }
-    
-    let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
-    let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
-
-    if (funcao === 'Motoboy') {
-        const containerMotoboy = document.getElementById('campos-motoboy');
-        const inputsMoto = containerMotoboy.querySelectorAll('input, select');
-        tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
-        veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
-        veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
-        veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
-        areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
-        valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
-    }
-
-    const payload = {
-        nome: document.getElementById('input-colab-name').value,
-        telefone: document.getElementById('input-colab-phone').value,
-        email: document.getElementById('input-colab-email').value,
-        cpf: document.getElementById('input-colab-cpf').value,
-        data_nascimento: document.getElementById('input-colab-dob').value,
-        endereco: document.getElementById('input-colab-address').value,
-        funcao: funcao,
-        status: document.getElementById('select-colab-status').value,
-        observacoes: document.getElementById('textarea-colab-obs').value,
-        tipo_veiculo: tipoVeiculo,
-        veiculo_modelo: veiculoModelo,
-        veiculo_cor: veiculoCor,
-        veiculo_placa: veiculoPlaca,
-        area_atuacao: areaAtuacao,
-        valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
-        foto: fotoBase64 // <- Foto enviada aqui
-    };
-    
-    const res = await apiRequest('/colaboradores', 'POST', payload);
-    
-    if (res) {
-        alert('Colaborador cadastrado com sucesso!');
-        form.reset();
-        document.getElementById('campos-motoboy').classList.add('hidden');
-        loadColaboradores();
-    } else {
-        alert('Falha ao cadastrar o colaborador.');
-    }
-}
-
-        async function deleteProduct(code) {
-            if(confirm("Deseja excluir este produto?")) {
-                await apiRequest(`/products/${code}`, 'DELETE');
-                loadProducts();
+            const form = document.getElementById('form-colaborador');
+            const funcao = document.getElementById('select-funcao').value;
+            
+            // Captura e converte a foto
+            const fileInput = document.getElementById('input-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    fotoBase64 = await convertFileToBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Erro ao converter foto:", err);
+                }
             }
-        }
+            
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
 
-        async function deleteClient(id) {
-            if(confirm("Deseja excluir este cliente?")) {
-                await apiRequest(`/clients/${id}`, 'DELETE');
-                loadClients();
+            if (funcao === 'Motoboy') {
+                const containerMotoboy = document.getElementById('campos-motoboy');
+                const inputsMoto = containerMotoboy.querySelectorAll('input, select');
+                tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
+                veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
+                veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
+                veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
+                areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
+                valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('input-colab-name').value,
+                telefone: document.getElementById('input-colab-phone').value,
+                email: document.getElementById('input-colab-email').value,
+                cpf: document.getElementById('input-colab-cpf').value,
+                data_nascimento: document.getElementById('input-colab-dob').value,
+                endereco: document.getElementById('input-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('select-colab-status').value,
+                observacoes: document.getElementById('textarea-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64 // <- Foto enviada aqui
+            };
+            
+            const res = await apiRequest('/colaboradores', 'POST', payload);
+            
+            if (res) {
+                alert('Colaborador cadastrado com sucesso!');
+                form.reset();
+                document.getElementById('campos-motoboy').classList.add('hidden');
+                loadColaboradores();
+            } else {
+                alert('Falha ao cadastrar o colaborador.');
             }
         }
 
@@ -1211,6 +1202,158 @@ async function salvarEdicaoCliente() {
                 await apiRequest(`/colaboradores/${id}`, 'DELETE');
                 loadColaboradores();
             }
+        }
+
+        function abrirModalEdicaoColaborador(colabStr) {
+            const c = JSON.parse(decodeURIComponent(colabStr));
+            document.getElementById('edit-colab-id').value = c.id;
+            document.getElementById('edit-colab-name').value = c.nome || '';
+            document.getElementById('edit-colab-phone').value = c.telefone || '';
+            document.getElementById('edit-colab-email').value = c.email || '';
+            document.getElementById('edit-colab-cpf').value = c.cpf || '';
+            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
+            document.getElementById('edit-colab-address').value = c.endereco || '';
+            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
+            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
+            document.getElementById('edit-colab-obs').value = c.observacoes || '';
+
+            // Resgata campos específicos de motoboy
+            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
+            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
+            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
+            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
+            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
+            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
+
+            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
+            document.getElementById('modalEditarColaborador').classList.add('active');
+        }
+
+        async function salvarEdicaoColaborador() {
+            const id = document.getElementById('edit-colab-id').value;
+            const funcao = document.getElementById('edit-colab-funcao').value;
+            const fileInput = document.getElementById('edit-colab-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); }
+                catch (err) { console.error("Erro ao converter foto:", err); }
+            }
+
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
+                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
+                veiculoCor = document.getElementById('edit-colab-v-cor').value;
+                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
+                areaAtuacao = document.getElementById('edit-colab-area').value;
+                const valEnt = document.getElementById('edit-colab-v-entrega').value;
+                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-colab-name').value,
+                telefone: document.getElementById('edit-colab-phone').value,
+                email: document.getElementById('edit-colab-email').value,
+                cpf: document.getElementById('edit-colab-cpf').value,
+                data_nascimento: document.getElementById('edit-colab-dob').value,
+                endereco: document.getElementById('edit-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('edit-colab-status').value,
+                observacoes: document.getElementById('edit-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Colaborador atualizado com sucesso!');
+                closeModal('modalEditarColaborador');
+                loadColaboradores();
+            } else {
+                alert('Erro ao atualizar o colaborador.');
+            }
+        }
+
+        async function loadOuvidoria() {
+            const feeds = await apiRequest('/ouvidoria');
+            const tbody = document.getElementById('tbody-ouvidoria');
+            tbody.innerHTML = '';
+
+            if (!feeds || feeds.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback registrado.</td></tr>`;
+                return;
+            }
+
+            feeds.forEach(f => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
+                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
+                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function abrirChamadoHelpdesk() {
+            const payload = {
+                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')),
+                resumo_problema: document.getElementById('input-hd-resumo').value,
+                descricao: document.getElementById('textarea-hd-desc').value
+            };
+
+            const res = await apiRequest('/helpdesk', 'POST', payload);
+            if (res) {
+                alert('Chamado aberto com sucesso! Nossa equipe foi notificada.');
+                document.getElementById('input-hd-resumo').value = '';
+                document.getElementById('textarea-hd-desc').value = '';
+                loadHelpdeskGestor();
+            } else {
+                alert('Erro ao abrir o chamado.');
+            }
+        }
+
+        async function loadHelpdeskGestor() {
+            const chamados = await apiRequest('/helpdesk');
+            const tbody = document.getElementById('tbody-gestor-helpdesk');
+            tbody.innerHTML = '';
+
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+                return;
+            }
+
+            chamados.forEach(c => {
+                let badgeClass = 'badge-warning';
+                let statusTexto = c.status || 'aberto';
+                
+                if (statusTexto === 'resolvido' || statusTexto === 'concluido') {
+                    badgeClass = 'badge-success';
+                } else if (statusTexto === 'cancelado') {
+                    badgeClass = 'badge-danger';
+                } else if (statusTexto === 'em_andamento' || statusTexto === 'em_atendimento') {
+                    badgeClass = 'badge-info';
+                    statusTexto = 'Em Andamento';
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
+                        <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
+                        <td><span class="badge ${badgeClass}" style="text-transform: uppercase;">${statusTexto}</span></td>
+                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+                    </tr>
+                `;
+            });
         }
 
         async function triggerBackup() {
@@ -1370,161 +1513,6 @@ async function salvarEdicaoCliente() {
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
             }
-        }
-        
-        async function loadHelpdeskGestor() {
-    const chamados = await apiRequest('/helpdesk');
-    const tbody = document.getElementById('tbody-gestor-helpdesk');
-    tbody.innerHTML = '';
-
-    if (!chamados || chamados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
-        return;
-    }
-
-    chamados.forEach(c => {
-        let badgeClass = 'badge-warning';
-        let statusTexto = c.status || 'aberto';
-        
-        if (statusTexto === 'resolvido' || statusTexto === 'concluido') {
-            badgeClass = 'badge-success';
-        } else if (statusTexto === 'cancelado') {
-            badgeClass = 'badge-danger';
-        } else if (statusTexto === 'em_andamento' || statusTexto === 'em_atendimento') {
-            badgeClass = 'badge-info';
-            statusTexto = 'Em Andamento';
-        }
-
-        tbody.innerHTML += `
-            <tr>
-                <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
-                <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
-                <td><span class="badge ${badgeClass}" style="text-transform: uppercase;">${statusTexto}</span></td>
-                <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
-            </tr>
-        `;
-    });
-}
-        function abrirModalEdicaoColaborador(colabStr) {
-            const c = JSON.parse(decodeURIComponent(colabStr));
-            document.getElementById('edit-colab-id').value = c.id;
-            document.getElementById('edit-colab-name').value = c.nome || '';
-            document.getElementById('edit-colab-phone').value = c.telefone || '';
-            document.getElementById('edit-colab-email').value = c.email || '';
-            document.getElementById('edit-colab-cpf').value = c.cpf || '';
-            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
-            document.getElementById('edit-colab-address').value = c.endereco || '';
-            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
-            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
-            document.getElementById('edit-colab-obs').value = c.observacoes || '';
-
-            // Resgata campos específicos de motoboy
-            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
-            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
-            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
-            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
-            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
-            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
-
-            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
-            document.getElementById('modalEditarColaborador').classList.add('active');
-        }
-
-        async function salvarEdicaoColaborador() {
-            const id = document.getElementById('edit-colab-id').value;
-            const funcao = document.getElementById('edit-colab-funcao').value;
-            const fileInput = document.getElementById('edit-colab-file');
-            let fotoBase64 = '';
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); }
-                catch (err) { console.error("Erro ao converter foto:", err); }
-            }
-
-            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
-            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
-
-            if (funcao === 'Motoboy') {
-                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
-                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
-                veiculoCor = document.getElementById('edit-colab-v-cor').value;
-                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
-                areaAtuacao = document.getElementById('edit-colab-area').value;
-                const valEnt = document.getElementById('edit-colab-v-entrega').value;
-                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
-            }
-
-            const payload = {
-                nome: document.getElementById('edit-colab-name').value,
-                telefone: document.getElementById('edit-colab-phone').value,
-                email: document.getElementById('edit-colab-email').value,
-                cpf: document.getElementById('edit-colab-cpf').value,
-                data_nascimento: document.getElementById('edit-colab-dob').value,
-                endereco: document.getElementById('edit-colab-address').value,
-                funcao: funcao,
-                status: document.getElementById('edit-colab-status').value,
-                observacoes: document.getElementById('edit-colab-obs').value,
-                tipo_veiculo: tipoVeiculo,
-                veiculo_modelo: veiculoModelo,
-                veiculo_cor: veiculoCor,
-                veiculo_placa: veiculoPlaca,
-                area_atuacao: areaAtuacao,
-                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
-                foto: fotoBase64
-            };
-
-            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
-            if (res) {
-                alert('Colaborador atualizado com sucesso!');
-                closeModal('modalEditarColaborador');
-                loadColaboradores();
-            } else {
-                alert('Erro ao atualizar o colaborador.');
-            }
-        }
-
-        async function abrirChamadoHelpdesk() {
-            const payload = {
-                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')),
-                resumo_problema: document.getElementById('input-hd-resumo').value,
-                descricao: document.getElementById('textarea-hd-desc').value
-            };
-
-            const res = await apiRequest('/helpdesk', 'POST', payload);
-            if (res) {
-                alert('Chamado aberto com sucesso! Nossa equipe foi notificada.');
-                document.getElementById('input-hd-resumo').value = '';
-                document.getElementById('textarea-hd-desc').value = '';
-                loadHelpdeskGestor();
-            } else {
-                alert('Erro ao abrir o chamado.');
-            }
-        }
-
-        function inicializarPainel() {
-            loadDashboardData();
-            loadProducts();
-            loadClients();
-            loadColaboradores();
-            loadOuvidoria();
-            loadConfigurations();
-            loadHelpdeskGestor();
-            aplicarIdentidadeVisualDaEmpresa();
-
-            if(document.getElementById('chartFluxo')) {
-                new Chart(document.getElementById('chartFluxo').getContext('2d'), {
-                    type: 'line',
-                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-            }
-            if(document.getElementById('chartOuvidoria')) {
-                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-                });
-            }
 
             // --- NOVO: AUTO ATUALIZAÇÃO EM TEMPO REAL ---
             setInterval(() => {
@@ -1540,7 +1528,7 @@ async function salvarEdicaoCliente() {
         }
 
         window.onload = function() {
-        const empresaId = localStorage.getItem('deliveryon_empresa_id');
+            const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 inicializarPainel();
