@@ -468,6 +468,50 @@
             document.getElementById('cli-pag').addEventListener('change', e => {
                 document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
             });
+            document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
+    // 1. Coleta e valida os dados do formulário do Hub
+    const clienteNome = document.getElementById('cli-nome').value;
+    const clienteTel = document.getElementById('cli-tel').value;
+    const enderecoValue = document.getElementById('cli-end').value;
+    const pagamento = document.getElementById('cli-pag').value;
+    
+    // TRAVA DE SEGURANÇA: Exige o preenchimento antes de disparar para a API
+    if(!clienteNome || !clienteTel || !enderecoValue || !pagamento) {
+        alert("Por favor, preencha todos os dados de entrega e pagamento antes de enviar.");
+        return; 
+    }
+
+    const endereco = `${enderecoValue} (Ref: ${document.getElementById('cli-ref').value})`;
+    const totalPedido = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + TAXA_ENTREGA;
+    
+    const itensResumo = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+    const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    // 2. Dispara silenciosamente para a API (Alimentando o Dashboard do Gestor)
+    try {
+        await fetch(`${API_BASE_URL}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empresa_id: parseInt(carrinhoLojaId),
+                cliente: clienteNome,
+                telefone: clienteTel,
+                endereco: endereco,
+                pagamento: pagamento,
+                itens: itensResumo,
+                total: totalPedido,
+                status: 'Aguardando pagamento',
+                hora: horaAtual
+            })
+        });
+    } catch (e) {
+        console.error("Falha ao sincronizar pedido com o painel do Gestor", e);
+    }
+
+    // 3. Monta a mensagem e envia para o WhatsApp do restaurante
+    const msg = `*NOVO PEDIDO!*\n\n*Cliente:* ${clienteNome}\n*Endereço:* ${endereco}\n*Pagamento:* ${pagamento}\n\n*Itens:*\n${itensResumo}\n\n*Total (com taxa): R$ ${totalPedido.toFixed(2).replace('.', ',')}*`;
+    window.open(`https://wa.me/${telefoneWhatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+});
         }
 
         // ================= SISTEMA DE SACOLA =================
@@ -504,6 +548,7 @@
             } else {
                 document.getElementById('empty-cart-message').classList.add('hidden');
                 document.getElementById('checkout-form').classList.remove('hidden');
+                
                 document.getElementById('btn-enviar-whatsapp').disabled = false;
                 let sub = 0;
                 cart.forEach(i => {
