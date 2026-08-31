@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -7,7 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 
-app = FastAPI(title="DeliveryON API - Completa", description="API integrada (Cliente, Entregador, Gestor, Master)")
+app = FastAPI(title="DeliveryON API - Completa e Consolidada", description="API integrada (Cliente, Entregador, Gestor, Master)")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +18,7 @@ app.add_middleware(
 )
 
 DATABASE_URL = os.getenv("ON_DATA_URL")
+MASTER_SECRET = os.getenv("SENHA_MASTER", "master123")
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
@@ -27,7 +28,6 @@ def get_db():
         conn.close()
 
 # ================= MODELOS =================
-
 
 class ChamadoCreate(BaseModel):
     empresa_id: int
@@ -153,8 +153,11 @@ class ChamadoCancelar(BaseModel):
 
 
 # ================= ATUALIZAR BANCO =================
-@app.get("/api/atualizar-banco")
-def atualizar_banco_de_dados(db=Depends(get_db)):
+@app.post("/api/atualizar-banco")
+def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db)):
+    if x_master_key != MASTER_SECRET:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+
     cursor = db.cursor()
     queries = [
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS empresa_id INTEGER DEFAULT 1;",
@@ -175,6 +178,7 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS total NUMERIC(10,2);",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento VARCHAR(50);",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS itens TEXT;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS telefone VARCHAR(20);",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);",
@@ -195,10 +199,11 @@ def atualizar_banco_de_dados(db=Depends(get_db)):
     cursor.close()
     return {"status": "Banco atualizado!", "logs": resultados}
 
+
 # ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
-    if auth.senha == os.getenv("SENHA_MASTER", "master123"):
+    if auth.senha == MASTER_SECRET:
         return {"autorizado": True, "token": "token_master_valido"}
     raise HTTPException(status_code=401, detail="Senha Master incorreta")
 
@@ -549,7 +554,7 @@ def get_dashboard(empresa_id: int, db=Depends(get_db)):
     res_can = cur.fetchone()
     cancelados = res_can[list(res_can.keys())[0]] if isinstance(res_can, dict) and res_can else 0
 
-    cur.execute("SELECT SUM(total) FROM pedidos WHERE empresa_id = %s AND status = 'Entregue'", (empresa_id,))
+    cur.execute("SELECT SUM(valor_total) FROM pedidos WHERE empresa_id = %s AND status = 'Entregue'", (empresa_id,))
     row_receita = cur.fetchone()
     receita = row_receita[list(row_receita.keys())[0]] if isinstance(row_receita, dict) and row_receita else 0.00
     if not receita: receita = 0.00
@@ -562,15 +567,14 @@ def get_dashboard(empresa_id: int, db=Depends(get_db)):
         "receita": f"{receita:.2f}".replace('.', ',')
     }
 
-
 # ================= ROTAS DE CLIENTE E PEDIDOS =================
 @app.post("/api/orders")
 def create_order(order: OrderCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
-        INSERT INTO pedidos (empresa_id, cliente, telefone, endereco, pagamento, itens, total, status, hora) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
-    """, (order.empresa_id, order.cliente, order.telefone, order.endereco, order.pagamento, order.itens, order.total, order.status, order.hora))
+        INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, itens, valor_total, status, hora, data) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
+    """, (order.empresa_id, order.cliente, order.telefone, order.endereco, order.pagamento, order.itens, order.total, order.status, order.hora, order.data))
     db.commit()
     novo_id = cursor.fetchone()['id']
     cursor.close()
@@ -579,10 +583,18 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
 @app.get("/api/orders")
 def get_orders(empresa_id: int, db=Depends(get_db)):
     cur = db.cursor()
-    cur.execute(
-        "SELECT id, hora, cliente, endereco, total, status FROM pedidos WHERE empresa_id = %s ORDER BY id DESC LIMIT 50",
-        (empresa_id,)
-    )
+    cur.execute("""
+        SELECT 
+            id, 
+            hora, 
+            cliente_nome AS cliente, 
+            endereco_entrega AS endereco, 
+            valor_total AS total, 
+            status 
+        FROM pedidos 
+        WHERE empresa_id = %s 
+        ORDER BY id DESC LIMIT 50
+    """, (empresa_id,))
     rows = cur.fetchall()
     cur.close()
 
@@ -815,7 +827,7 @@ def delete_colaborador(id: int, db=Depends(get_db)):
     return {"mensagem": "Excluído com sucesso"}
 
 
-# ================= ROTAS DE ENTREGADOR (CORRIGIDAS) =================
+# ================= ROTAS DE ENTREGADOR =================
 @app.put("/api/entregador/status")
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -856,11 +868,11 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.cliente, p.endereco, p.total as valor, p.pagamento as status_pag, 
+        SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
                '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
                COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
         FROM pedidos p
-        LEFT JOIN clientes c ON p.cliente = c.nome AND p.empresa_id = c.empresa_id
+        LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
         WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto')
         ORDER BY p.id DESC
     """, (empresa_id,))
@@ -868,12 +880,11 @@ def get_entregador_rotas(empresa_id: int, db=Depends(get_db)):
     cursor.close()
     return rotas
 
-
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
-        SELECT id, cliente, endereco, total, 
+        SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
                TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
                COALESCE(hora, '--:--') as hora, '6,50' as taxa
         FROM pedidos 
@@ -898,12 +909,12 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
 def listar_empresas_publicas(db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, qrcode_imagem as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega FROM empresas WHERE status = 'ativo' ORDER BY id DESC")
+        cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, qrcode_imagem as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega, contato FROM empresas WHERE status = 'ativo' ORDER BY id DESC")
         res = cursor.fetchall()
     except Exception as e:
         db.rollback()
         # Fallback caso a tabela tenha estrutura básica
-        cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, NULL as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega FROM empresas ORDER BY id DESC")
+        cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, NULL as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega, contato FROM empresas ORDER BY id DESC")
         res = cursor.fetchall()
     finally:
         cursor.close()
