@@ -255,26 +255,46 @@
 
         // ================= CONEXÃO REAL COM EMPRESAS =================
         async function carregarLojasAPI() {
-            const lojasDB = await apiRequest('/empresas'); 
-            const container = document.getElementById('lojas-grid');
-            
-            if (lojasDB && lojasDB.length > 0) {
-                // Filtra apenas empresas ativas, se a API já não fizer isso
-                lojasCadastradas = lojasDB.map(loja => ({
-                    id: loja.id,
-                    nome: loja.nome,
-                    categoria: loja.categoria || 'Geral', 
-                    img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto',
-                    tempo: loja.tempo_entrega || '40-50 min',
-                    frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar',
-                    telefone: loja.telefone // <-- ADICIONE ESTA LINHA (Verifique se a coluna no banco se chama 'telefone' ou 'whatsapp')
-                }));
-                renderLojas(lojasCadastradas);
-            } else {
-                lojasCadastradas = [];
-                container.innerHTML = '<p class="col-span-full text-center text-gray-500 font-bold py-10">Nenhum restaurante aberto na sua região no momento.</p>';
-            }
-        }
+    const lojasDB = await apiRequest('/empresas'); 
+    const container = document.getElementById('lojas-grid');
+    
+    if (lojasDB && lojasDB.length > 0) {
+        lojasCadastradas = lojasDB.map(loja => ({
+            id: loja.id,
+            nome: loja.nome,
+            categoria: loja.categoria || 'Geral', 
+            img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto',
+            tempo: loja.tempo_entrega || '40-50 min',
+            frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar',
+            // Aqui fazemos a ligação com o seu banco Neon DB:
+            telefone: loja.contato 
+        }));
+        renderLojas(lojasCadastradas);
+    } else {
+        lojasCadastradas = [];
+        container.innerHTML = '<p class="col-span-full text-center text-gray-500 font-bold py-10">Nenhum restaurante aberto na sua região no momento.</p>';
+    }
+}
+
+async function entrarNaLoja(id, nome, img) {
+    lojaAtualId = id;
+    
+    // Busca a loja na lista local
+    let lojaSelecionada = lojasCadastradas.find(l => String(l.id) === String(id));
+    
+    // Atualiza a variável global do WhatsApp limpando a formatação do número
+    if (lojaSelecionada && lojaSelecionada.telefone) {
+        telefoneWhatsapp = String(lojaSelecionada.telefone).replace(/\D/g, '');
+    }
+
+    document.getElementById('current-store-name').textContent = nome;
+    document.getElementById('current-store-img').src = img;
+    
+    document.getElementById('hub-section').classList.add('hidden');
+    document.getElementById('store-section').classList.remove('hidden');
+    
+    carregarProdutosDaLoja(id);
+}
 
         function renderLojas(lojas) {
             const container = document.getElementById('lojas-grid');
@@ -309,25 +329,6 @@
         }
 
         // ================= NAVEGAÇÃO ENTRE HUB E LOJA =================
-        function entrarNaLoja(id, nome, img) {
-            lojaAtualId = id;
-            
-            // Identifica a loja clicada e atualiza o número do WhatsApp dinamicamente
-            const lojaSelecionada = lojasCadastradas.find(l => String(l.id) === String(id));
-            if (lojaSelecionada && lojaSelecionada.telefone) {
-                // Remove tudo que não for número (ex: parênteses, traços, espaços)
-                telefoneWhatsapp = String(lojaSelecionada.telefone).replace(/\D/g, '');
-            }
-        
-            document.getElementById('current-store-name').textContent = nome;
-            document.getElementById('current-store-img').src = img;
-            
-            document.getElementById('hub-section').classList.add('hidden');
-            document.getElementById('store-section').classList.remove('hidden');
-            
-            carregarProdutosDaLoja(id);
-        }
-
         function voltarParaHub() {
             document.getElementById('store-section').classList.add('hidden');
             document.getElementById('hub-section').classList.remove('hidden');
@@ -477,14 +478,14 @@
             document.getElementById('cli-pag').addEventListener('change', e => {
                 document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
             });
-            document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
+           document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
     // 1. Coleta e valida os dados do formulário do Hub
     const clienteNome = document.getElementById('cli-nome').value;
     const clienteTel = document.getElementById('cli-tel').value;
     const enderecoValue = document.getElementById('cli-end').value;
     const pagamento = document.getElementById('cli-pag').value;
     
-    // TRAVA DE SEGURANÇA: Exige o preenchimento antes de disparar para a API
+    // TRAVA DE SEGURANÇA: Exige o preenchimento antes de disparar
     if(!clienteNome || !clienteTel || !enderecoValue || !pagamento) {
         alert("Por favor, preencha todos os dados de entrega e pagamento antes de enviar.");
         return; 
@@ -495,26 +496,29 @@
     
     const itensResumo = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
     const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataAtual = new Date().toISOString().split('T')[0]; // Pega a data no formato YYYY-MM-DD para o banco
 
-    // 2. Dispara silenciosamente para a API (Alimentando o Dashboard do Gestor)
+    // 2. Dispara silenciosamente para a API (Alimentando o Dashboard)
     try {
-        await fetch(`${API_BASE_URL}/orders`, {
+        await fetch(`${API_BASE_URL}/orders`, { // Certifique-se de que sua API escuta essa rota e salva na tabela 'pedidos'
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 empresa_id: parseInt(carrinhoLojaId),
-                cliente: clienteNome,
-                telefone: clienteTel,
-                endereco: endereco,
+                cliente_nome: clienteNome,       // AJUSTADO CONFORME BANCO
+                telefone: clienteTel,            // Lembre-se de adicionar a coluna telefone na tabela pedidos!
+                endereco_entrega: endereco,      // AJUSTADO CONFORME BANCO
                 pagamento: pagamento,
                 itens: itensResumo,
-                total: totalPedido,
-                status: 'Aguardando pagamento',
+                valor_total: totalPedido,        // AJUSTADO (A coluna obrigatória do banco)
+                total: totalPedido,              // Preenchendo a outra coluna de total por segurança
+                status: 'pendente',              // AJUSTADO para o padrão do banco
+                data: dataAtual,                 // NOVO: Data do pedido
                 hora: horaAtual
             })
         });
     } catch (e) {
-        console.error("Falha ao sincronizar pedido com o painel do Gestor", e);
+        console.error("Falha ao sincronizar pedido com o painel", e);
     }
 
     // 3. Monta a mensagem e envia para o WhatsApp do restaurante
