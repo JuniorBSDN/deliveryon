@@ -14,7 +14,6 @@
         .bg-brand { background-color: var(--brand-primary); }
         .text-brand { color: var(--brand-primary); }
 
-        /* Estilo do Logo Padrão deliveryON */
         .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
         .logo-on { font-size: 2.2rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; animation: neon-pulse 1.5s infinite alternate ease-in-out; }
         .logo-delivery { font-size: 1rem; font-weight: 700; color: #333333; font-family: 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px; }
@@ -23,7 +22,6 @@
             100% { text-shadow: 0 0 8px rgba(255, 87, 34, 0.8), 0 0 15px rgba(255, 87, 34, 0.6), 0 0 25px rgba(255, 87, 34, 0.4); }
         }
 
-        /* Estilo do Painel de LED */
         .led-panel { background-color: #000000; border-top: 2px solid #333; border-bottom: 3px solid var(--brand-primary); overflow: hidden; white-space: nowrap; position: relative; box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.2); }
         .led-text { display: inline-block; font-family: 'Courier New', Courier, monospace; color: #ff3333; font-weight: 900; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px rgba(255, 0, 0, 0.8), 0 0 15px rgba(255, 0, 0, 0.5); animation: marquee 22s linear infinite; padding: 10px 0; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
@@ -34,7 +32,6 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Ajuste do VLibras */
         [vw] [vw-access-button] { left: 10px !important; right: auto !important; bottom: 10px !important; }
         [vw] .vw-plugin-wrapper { left: 10px !important; right: auto !important; }
 
@@ -43,13 +40,11 @@
 </head>
 <body class="bg-gray-50 font-sans pb-20 md:pb-0 min-h-screen flex flex-col" style="transition: font-size 0.2s ease;">
 
-    <!-- Ferramentas de Acessibilidade -->
     <div class="accessibility-tools no-print" style="position: fixed; top: 35%; left: 0; transform: translateY(-50%); z-index: 80; background: white; border: 1px solid #ccc; border-left: none; border-radius: 0 8px 8px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
         <button onclick="changeFontSize(1)" style="padding: 10px 15px; border: none; border-bottom: 1px solid #eee; background: transparent; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: #333;" title="Aumentar Fonte">A+</button>
         <button onclick="changeFontSize(-1)" style="padding: 10px 15px; border: none; background: transparent; cursor: pointer; font-weight: bold; font-size: 1rem; color: #333;" title="Diminuir Fonte">A-</button>
     </div>
 
-    <!-- Header -->
     <header id="app-header" class="bg-white text-gray-900 shadow-sm sticky top-0 z-40 border-b-4" style="border-color: var(--brand-primary);">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center overflow-x-auto scrollbar-hide">
             <div class="flex items-center space-x-4 shrink-0 pr-2 cursor-pointer" onclick="voltarParaHub()">
@@ -63,15 +58,6 @@
             </div>
 
             <div class="flex items-center space-x-2 md:space-x-3 shrink-0">
-                <button onclick="openTrackerModal()" id="tracker-nav-btn" class="hidden bg-amber-500 hover:bg-amber-600 text-black px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 transition shadow-sm animate-bounce whitespace-nowrap">
-                    <i class="fas fa-motorcycle"></i> <span>Meu Pedido</span>
-                </button>
-                <button onclick="openHistoricoModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200 whitespace-nowrap">
-                    <i class="fas fa-clock-rotate-left" style="color: var(--brand-primary);"></i> <span>Histórico</span>
-                </button>
-                <button onclick="openOuvidoriaModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition shadow-sm border border-gray-200 whitespace-nowrap">
-                    <i class="fas fa-megaphone" style="color: var(--brand-primary);"></i> <span>Ouvidoria</span>
-                </button>
                 <button id="cart-btn" class="relative p-2.5 rounded-full text-white transition shadow-md shrink-0" style="background-color: var(--brand-primary);">
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow">0</span>
@@ -86,7 +72,6 @@
         </div>
     </div>
 
-    <!-- Barra de Busca Global -->
     <div class="container mx-auto px-4 mt-6">
         <div class="relative max-w-3xl mx-auto">
             <input type="text" id="global-search" placeholder="Busque por restaurantes, lanches, pizzas..." class="w-full p-4 pl-14 rounded-2xl border-2 border-gray-200 shadow-sm focus:border-orange-500 outline-none transition text-lg font-medium" onkeyup="filtrarLojas()">
@@ -94,11 +79,9 @@
         </div>
     </div>
 
-    <!-- SEÇÃO 1: HUB (Vitrine Global e Lista de Restaurantes) -->
+    <!-- SEÇÃO 1: HUB -->
     <section id="hub-section" class="py-8 bg-gray-50 flex-1">
         <div class="container mx-auto px-4">
-            
-            <!-- ABAS DE CATEGORIAS GLOBAIS (Filtro do Hub) -->
             <div class="flex md:justify-center justify-start items-center mb-8 overflow-x-auto pb-3 scrollbar-hide relative">
                 <div class="flex space-x-2 bg-white p-1 rounded-full shadow-sm whitespace-nowrap border border-gray-200 items-center">
                     <button class="hub-category-btn px-6 py-2 rounded-full text-white font-bold transition bg-brand" data-category="todos">Todos</button>
@@ -109,18 +92,14 @@
                 </div>
             </div>
 
-            <!-- Carrossel de Produtos em Destaque -->
             <div class="mb-10">
                 <h2 id="titulo-destaques" class="text-2xl font-black text-gray-800 mb-4 border-l-4 pl-3" style="border-color: var(--brand-primary);">Destaques de Hoje 🔥</h2>
-                
                 <div id="destaques-grid" class="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x" style="scroll-snap-type: x mandatory;">
                     <div class="text-gray-500 font-bold py-4">Buscando os melhores pratos... <i class="fas fa-spinner fa-spin"></i></div>
                 </div>
             </div>
 
-            <!-- Lojas Cadastradas -->
             <h2 id="titulo-lojas" class="text-2xl font-black text-gray-800 mb-6 border-l-4 pl-3" style="border-color: var(--brand-primary);">Lojas e Restaurantes</h2>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="lojas-grid">
                 <div class="col-span-full text-center py-10">
                     <i class="fas fa-spinner fa-spin text-4xl mb-4" style="color: var(--brand-primary);"></i>
@@ -130,11 +109,9 @@
         </div>
     </section>
 
-    <!-- SEÇÃO 2: CATÁLOGO DA LOJA (Produtos) -->
+    <!-- SEÇÃO 2: CATÁLOGO DA LOJA -->
     <section id="store-section" class="py-6 bg-gray-50 flex-1 hidden">
         <div class="container mx-auto px-4 relative">
-            
-            <!-- Header da Loja Específica -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex items-center gap-4">
                 <button onclick="voltarParaHub()" class="bg-gray-100 p-3 rounded-full hover:bg-gray-200 transition">
                     <i class="fas fa-arrow-left text-gray-700"></i>
@@ -155,24 +132,21 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="menu-items">
-                <!-- Produtos entram aqui -->
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="menu-items"></div>
         </div>
     </section>
 
-    <!-- RODAPÉ -->
     <footer class="app-footer no-print">
         <div>&copy; 2026 <strong>ON delivery</strong>. Marketplace Oficial.</div>
     </footer>
 
-    <!-- (Modais de Ouvidoria, Histórico e Tracker continuam os mesmos) -->
+    <!-- MODAL IMAGEM -->
     <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-90 z-[70] hidden flex justify-center items-center backdrop-blur-sm p-4">
         <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white text-4xl transition z-10 hover:opacity-75"><i class="fas fa-times"></i></button>
         <img id="modal-image-src" src="" alt="Ampliada" class="max-w-[95%] max-h-[90vh] object-contain rounded-xl shadow-2xl">
     </div>
 
-    <!-- Sacola Modal (Simplificada na visualização para poupar espaço de código, mantém a mesma estrutura do seu original) -->
+    <!-- SACOLA SIDEBAR -->
     <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
         <div class="p-5 bg-gray-900 text-white flex justify-between items-center shadow-md">
             <h3 class="text-xl font-bold flex items-center"><i class="fas fa-shopping-bag mr-2 text-brand"></i> Sacola</h3>
@@ -184,7 +158,7 @@
                 <p class="text-lg font-medium">Sua sacola está vazia</p>
             </div>
             <div id="cart-items" class="space-y-4 mb-6"></div>
-            <!-- Checkout Form (Mantido o mesmo) -->
+            
             <div id="checkout-form" class="hidden bg-white p-5 rounded-xl shadow-sm border space-y-3">
                 <input type="text" id="cli-nome" placeholder="Nome completo" class="w-full p-3 border rounded-lg text-sm" required>
                 <input type="tel" id="cli-tel" placeholder="WhatsApp" class="w-full p-3 border rounded-lg text-sm" required>
@@ -220,13 +194,11 @@
         
         let lojaAtualId = null; 
         let carrinhoLojaId = null; 
-        
         let telefoneWhatsapp = ""; 
         const TAXA_ENTREGA = 5.00;
         let lojasCadastradas = [];
         let menuItems = [];
         let cart = [];
-        let pedidoAtual = null;
         let currentFontSize = 100;
 
         async function apiRequest(endpoint, method = 'GET', data = null) {
@@ -253,48 +225,43 @@
             setupEventListeners();
         }
 
-        // ================= CONEXÃO REAL COM EMPRESAS =================
         async function carregarLojasAPI() {
-    const lojasDB = await apiRequest('/empresas'); 
-    const container = document.getElementById('lojas-grid');
-    
-    if (lojasDB && lojasDB.length > 0) {
-        lojasCadastradas = lojasDB.map(loja => ({
-            id: loja.id,
-            nome: loja.nome,
-            categoria: loja.categoria || 'Geral', 
-            img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto',
-            tempo: loja.tempo_entrega || '40-50 min',
-            frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar',
-            // Aqui fazemos a ligação com o seu banco Neon DB:
-            telefone: loja.contato 
-        }));
-        renderLojas(lojasCadastradas);
-    } else {
-        lojasCadastradas = [];
-        container.innerHTML = '<p class="col-span-full text-center text-gray-500 font-bold py-10">Nenhum restaurante aberto na sua região no momento.</p>';
-    }
-}
+            const lojasDB = await apiRequest('/empresas'); 
+            const container = document.getElementById('lojas-grid');
+            
+            if (lojasDB && lojasDB.length > 0) {
+                lojasCadastradas = lojasDB.map(loja => ({
+                    id: loja.id,
+                    nome: loja.nome,
+                    categoria: loja.categoria || 'Geral', 
+                    img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto',
+                    tempo: loja.tempo_entrega || '40-50 min',
+                    frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar',
+                    telefone: loja.contato 
+                }));
+                renderLojas(lojasCadastradas);
+            } else {
+                lojasCadastradas = [];
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 font-bold py-10">Nenhum restaurante cadastrado ou ativo no momento.</p>';
+            }
+        }
 
-async function entrarNaLoja(id, nome, img) {
-    lojaAtualId = id;
-    
-    // Busca a loja na lista local
-    let lojaSelecionada = lojasCadastradas.find(l => String(l.id) === String(id));
-    
-    // Atualiza a variável global do WhatsApp limpando a formatação do número
-    if (lojaSelecionada && lojaSelecionada.telefone) {
-        telefoneWhatsapp = String(lojaSelecionada.telefone).replace(/\D/g, '');
-    }
+        async function entrarNaLoja(id, nome, img) {
+            lojaAtualId = id;
+            let lojaSelecionada = lojasCadastradas.find(l => String(l.id) === String(id));
+            
+            if (lojaSelecionada && lojaSelecionada.telefone) {
+                telefoneWhatsapp = String(lojaSelecionada.telefone).replace(/\D/g, '');
+            }
 
-    document.getElementById('current-store-name').textContent = nome;
-    document.getElementById('current-store-img').src = img;
-    
-    document.getElementById('hub-section').classList.add('hidden');
-    document.getElementById('store-section').classList.remove('hidden');
-    
-    carregarProdutosDaLoja(id);
-}
+            document.getElementById('current-store-name').textContent = nome;
+            document.getElementById('current-store-img').src = img;
+            
+            document.getElementById('hub-section').classList.add('hidden');
+            document.getElementById('store-section').classList.remove('hidden');
+            
+            carregarProdutosDaLoja(id);
+        }
 
         function renderLojas(lojas) {
             const container = document.getElementById('lojas-grid');
@@ -328,7 +295,6 @@ async function entrarNaLoja(id, nome, img) {
             renderLojas(filtradas);
         }
 
-        // ================= NAVEGAÇÃO ENTRE HUB E LOJA =================
         function voltarParaHub() {
             document.getElementById('store-section').classList.add('hidden');
             document.getElementById('hub-section').classList.remove('hidden');
@@ -336,7 +302,6 @@ async function entrarNaLoja(id, nome, img) {
             renderLojas(lojasCadastradas);
         }
 
-        // ================= CONEXÃO REAL COM PRODUTOS DA LOJA =================
         async function carregarProdutosDaLoja(idEmpresa) {
             const container = document.getElementById('menu-items');
             container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl" style="color: var(--brand-primary);"></i><p class="mt-2 text-gray-500">Carregando cardápio...</p></div>';
@@ -389,12 +354,10 @@ async function entrarNaLoja(id, nome, img) {
             document.querySelectorAll('.add-to-cart').forEach(b => b.addEventListener('click', addToCart));
         }
 
-        // ================= CONEXÃO REAL COM DESTAQUES DO HUB =================
         async function carregarDestaquesAPI() {
             const destaquesDB = await apiRequest('/produtos/destaques'); 
 
             if (destaquesDB && destaquesDB.length > 0) {
-                // Formata os dados do banco garantindo fallback para nulos
                 destaquesGlobais = destaquesDB.map(d => ({
                     ...d,
                     empresa_nome: d.empresa_nome || 'Loja Desconhecida',
@@ -440,7 +403,6 @@ async function entrarNaLoja(id, nome, img) {
             });
         }
 
-        // ================= EVENTOS GERAIS =================
         function setupEventListeners() {
             document.querySelectorAll('.hub-category-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -463,7 +425,6 @@ async function entrarNaLoja(id, nome, img) {
                 });
             });
 
-            // Categorias internas da Loja
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.category-btn').forEach(b => { b.className = "category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition"; });
@@ -478,12 +439,8 @@ async function entrarNaLoja(id, nome, img) {
             document.getElementById('cli-pag').addEventListener('change', e => {
                 document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
             });
-         
 
-            
-            
             document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
-                // 1. Coleta e valida os dados do formulário
                 const clienteNome = document.getElementById('cli-nome').value.trim();
                 const clienteTel = document.getElementById('cli-tel').value.trim();
                 const enderecoValue = document.getElementById('cli-end').value.trim();
@@ -491,16 +448,13 @@ async function entrarNaLoja(id, nome, img) {
                 const pagamento = document.getElementById('cli-pag').value;
                 const troco = document.getElementById('cli-troco') ? document.getElementById('cli-troco').value : '';
                 
-                // Trava de segurança: impede o envio se faltar dado obrigatório
                 if(!clienteNome || !clienteTel || !enderecoValue || !pagamento) {
                     alert("Por favor, preencha todos os dados de entrega e pagamento antes de enviar.");
                     return; 
                 }
             
-                // 2. Define o ID correto da empresa atual (garantindo que não vá nulo)
                 const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
             
-                // 3. Define o número do WhatsApp de destino da loja
                 let numeroDestino = telefoneWhatsapp;
                 if (!numeroDestino && typeof lojaAtualId !== 'undefined') {
                     const lojaAtual = lojasCadastradas.find(l => String(l.id) === String(lojaAtualId));
@@ -509,7 +463,7 @@ async function entrarNaLoja(id, nome, img) {
                     }
                 }
                 if (!numeroDestino) {
-                    numeroDestino = "5591983252639"; // Fallback padrão
+                    numeroDestino = "5591983252639"; 
                 } else if (!numeroDestino.startsWith('55')) {
                     numeroDestino = '55' + numeroDestino;
                 }
@@ -522,15 +476,14 @@ async function entrarNaLoja(id, nome, img) {
                 const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 const dataAtual = new Date().toISOString().split('T')[0];
             
-                // 4. Dispara para a API do Backend (para alimentar o Dashboard do admin.html)
                 try {
-                    const respostaApi = await fetch(`${API_BASE_URL}/orders`, {
+                    await fetch(`${API_BASE_URL}/orders`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             empresa_id: empresaIdFinal,
                             cliente: clienteNome,
-                            cliente_nome: clienteNome, // Compatibilidade com diferentes versões do backend
+                            cliente_nome: clienteNome,
                             telefone: clienteTel,
                             endereco: enderecoCompleto,
                             pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
@@ -542,15 +495,10 @@ async function entrarNaLoja(id, nome, img) {
                             hora: horaAtual
                         })
                     });
-            
-                    if (!respostaApi.ok) {
-                        console.warn("Aviso: O pedido foi gerado, mas o painel admin pode não ter sincronizado perfeitamente.");
-                    }
                 } catch (e) {
                     console.error("Erro de conexão ao enviar pedido para o painel:", e);
                 }
             
-                // 5. Monta a mensagem do WhatsApp e abre a conversa
                 let msg = `*NOVO PEDIDO!* 🛒\n\n*Cliente:* ${clienteNome}\n*Telefone:* ${clienteTel}\n*Endereço:* ${enderecoCompleto}\n*Pagamento:* ${pagamento}`;
                 if(pagamento === 'Dinheiro' && troco) {
                     msg += ` (Troco para: R$ ${troco})`;
@@ -560,7 +508,6 @@ async function entrarNaLoja(id, nome, img) {
                 const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
                 window.open(urlWhatsApp, '_blank');
             
-                // 6. LIMPEZA COMPLETA: Esvazia o carrinho, limpa os inputs e fecha a sacola
                 cart = [];
                 document.getElementById('cli-nome').value = '';
                 document.getElementById('cli-tel').value = '';
@@ -571,16 +518,10 @@ async function entrarNaLoja(id, nome, img) {
                 if(document.getElementById('div-troco')) document.getElementById('div-troco').classList.add('hidden');
                 
                 updateCartUI();
-                toggleCart(); // Fecha a lateral da sacola
+                toggleCart();
             });
-            
-            // URL direta que força o número correto sem tela de seleção
-            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
-            window.open(urlWhatsApp, '_blank');
-        });
         }
 
-        // ================= SISTEMA DE SACOLA =================
         function addToCart(e) {
             if(cart.length > 0 && carrinhoLojaId !== lojaAtualId) {
                 if(confirm("Você já tem itens de outro restaurante na sacola. Deseja limpar a sacola e começar um novo pedido neste restaurante?")) {
@@ -614,7 +555,6 @@ async function entrarNaLoja(id, nome, img) {
             } else {
                 document.getElementById('empty-cart-message').classList.add('hidden');
                 document.getElementById('checkout-form').classList.remove('hidden');
-                
                 document.getElementById('btn-enviar-whatsapp').disabled = false;
                 let sub = 0;
                 cart.forEach(i => {
