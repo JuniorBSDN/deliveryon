@@ -478,7 +478,7 @@ async function entrarNaLoja(id, nome, img) {
             document.getElementById('cli-pag').addEventListener('change', e => {
                 document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
             });
-           document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
+         document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
     // 1. Coleta e valida os dados do formulário do Hub
     const clienteNome = document.getElementById('cli-nome').value;
     const clienteTel = document.getElementById('cli-tel').value;
@@ -491,29 +491,45 @@ async function entrarNaLoja(id, nome, img) {
         return; 
     }
 
+    // GARANTIA DE TELEFONE: Se por acaso a variável global estiver vazia, tenta pegar da loja ativa
+    let numeroDestino = telefoneWhatsapp;
+    if (!numeroDestino && typeof lojaAtualId !== 'undefined') {
+        const lojaAtual = lojasCadastradas.find(l => String(l.id) === String(lojaAtualId));
+        if (lojaAtual && lojaAtual.telefone) {
+            numeroDestino = String(lojaAtual.telefone).replace(/\D/g, '');
+        }
+    }
+
+    // Se ainda assim estiver vazio, usa o padrão do Brasil com o DDD da sua região (ex: Pará/Vigia = 91)
+    if (!numeroDestino) {
+        numeroDestino = "5591983252639"; // Número de emergência caso a loja não tenha salvo
+    } else if (!numeroDestino.startsWith('55')) {
+        numeroDestino = '55' + numeroDestino;
+    }
+
     const endereco = `${enderecoValue} (Ref: ${document.getElementById('cli-ref').value})`;
     const totalPedido = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + TAXA_ENTREGA;
     
     const itensResumo = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
     const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const dataAtual = new Date().toISOString().split('T')[0]; // Pega a data no formato YYYY-MM-DD para o banco
+    const dataAtual = new Date().toISOString().split('T')[0];
 
     // 2. Dispara silenciosamente para a API (Alimentando o Dashboard)
     try {
-        await fetch(`${API_BASE_URL}/orders`, { // Certifique-se de que sua API escuta essa rota e salva na tabela 'pedidos'
+        await fetch(`${API_BASE_URL}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 empresa_id: parseInt(carrinhoLojaId),
-                cliente_nome: clienteNome,       // AJUSTADO CONFORME BANCO
-                telefone: clienteTel,            // Lembre-se de adicionar a coluna telefone na tabela pedidos!
-                endereco_entrega: endereco,      // AJUSTADO CONFORME BANCO
+                cliente_nome: clienteNome,
+                telefone: clienteTel,
+                endereco_entrega: endereco,
                 pagamento: pagamento,
                 itens: itensResumo,
-                valor_total: totalPedido,        // AJUSTADO (A coluna obrigatória do banco)
-                total: totalPedido,              // Preenchendo a outra coluna de total por segurança
-                status: 'pendente',              // AJUSTADO para o padrão do banco
-                data: dataAtual,                 // NOVO: Data do pedido
+                valor_total: totalPedido,
+                total: totalPedido,
+                status: 'pendente',
+                data: dataAtual,
                 hora: horaAtual
             })
         });
@@ -521,9 +537,12 @@ async function entrarNaLoja(id, nome, img) {
         console.error("Falha ao sincronizar pedido com o painel", e);
     }
 
-    // 3. Monta a mensagem e envia para o WhatsApp do restaurante
+    // 3. Monta a mensagem e abre o chat diretamente com o número da empresa
     const msg = `*NOVO PEDIDO!*\n\n*Cliente:* ${clienteNome}\n*Endereço:* ${endereco}\n*Pagamento:* ${pagamento}\n\n*Itens:*\n${itensResumo}\n\n*Total (com taxa): R$ ${totalPedido.toFixed(2).replace('.', ',')}*`;
-    window.open(`https://wa.me/${telefoneWhatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    // URL direta que força o número correto sem tela de seleção
+    const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
+    window.open(urlWhatsApp, '_blank');
 });
         }
 
