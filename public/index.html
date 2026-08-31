@@ -478,72 +478,106 @@ async function entrarNaLoja(id, nome, img) {
             document.getElementById('cli-pag').addEventListener('change', e => {
                 document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
             });
-         document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
-    // 1. Coleta e valida os dados do formulário do Hub
-    const clienteNome = document.getElementById('cli-nome').value;
-    const clienteTel = document.getElementById('cli-tel').value;
-    const enderecoValue = document.getElementById('cli-end').value;
-    const pagamento = document.getElementById('cli-pag').value;
-    
-    // TRAVA DE SEGURANÇA: Exige o preenchimento antes de disparar
-    if(!clienteNome || !clienteTel || !enderecoValue || !pagamento) {
-        alert("Por favor, preencha todos os dados de entrega e pagamento antes de enviar.");
-        return; 
-    }
+         
 
-    // GARANTIA DE TELEFONE: Se por acaso a variável global estiver vazia, tenta pegar da loja ativa
-    let numeroDestino = telefoneWhatsapp;
-    if (!numeroDestino && typeof lojaAtualId !== 'undefined') {
-        const lojaAtual = lojasCadastradas.find(l => String(l.id) === String(lojaAtualId));
-        if (lojaAtual && lojaAtual.telefone) {
-            numeroDestino = String(lojaAtual.telefone).replace(/\D/g, '');
-        }
-    }
-
-    // Se ainda assim estiver vazio, usa o padrão do Brasil com o DDD da sua região (ex: Pará/Vigia = 91)
-    if (!numeroDestino) {
-        numeroDestino = "5591983252639"; // Número de emergência caso a loja não tenha salvo
-    } else if (!numeroDestino.startsWith('55')) {
-        numeroDestino = '55' + numeroDestino;
-    }
-
-    const endereco = `${enderecoValue} (Ref: ${document.getElementById('cli-ref').value})`;
-    const totalPedido = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + TAXA_ENTREGA;
-    
-    const itensResumo = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
-    const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const dataAtual = new Date().toISOString().split('T')[0];
-
-    // 2. Dispara silenciosamente para a API (Alimentando o Dashboard)
-    try {
-        await fetch(`${API_BASE_URL}/orders`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                empresa_id: parseInt(lojaAtualId || 1), // Assegura que nunca vai null ou undefined
-                cliente_nome: clienteNome,
-                telefone: clienteTel,
-                endereco_entrega: endereco,
-                pagamento: pagamento,
-                itens: itensResumo,
-                valor_total: totalPedido,
-                total: totalPedido,
-                status: 'Aguardando pagamento',
-                data: dataAtual,
-                hora: horaAtual
-            })
+            
+            
+            document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
+                // 1. Coleta e valida os dados do formulário
+                const clienteNome = document.getElementById('cli-nome').value.trim();
+                const clienteTel = document.getElementById('cli-tel').value.trim();
+                const enderecoValue = document.getElementById('cli-end').value.trim();
+                const referenciaValue = document.getElementById('cli-ref').value.trim();
+                const pagamento = document.getElementById('cli-pag').value;
+                const troco = document.getElementById('cli-troco') ? document.getElementById('cli-troco').value : '';
+                
+                // Trava de segurança: impede o envio se faltar dado obrigatório
+                if(!clienteNome || !clienteTel || !enderecoValue || !pagamento) {
+                    alert("Por favor, preencha todos os dados de entrega e pagamento antes de enviar.");
+                    return; 
+                }
+            
+                // 2. Define o ID correto da empresa atual (garantindo que não vá nulo)
+                const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
+            
+                // 3. Define o número do WhatsApp de destino da loja
+                let numeroDestino = telefoneWhatsapp;
+                if (!numeroDestino && typeof lojaAtualId !== 'undefined') {
+                    const lojaAtual = lojasCadastradas.find(l => String(l.id) === String(lojaAtualId));
+                    if (lojaAtual && lojaAtual.telefone) {
+                        numeroDestino = String(lojaAtual.telefone).replace(/\D/g, '');
+                    }
+                }
+                if (!numeroDestino) {
+                    numeroDestino = "5591983252639"; // Fallback padrão
+                } else if (!numeroDestino.startsWith('55')) {
+                    numeroDestino = '55' + numeroDestino;
+                }
+            
+                const enderecoCompleto = `${enderecoValue} (Ref: ${referenciaValue})`;
+                const valorProdutos = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const totalPedido = valorProdutos + TAXA_ENTREGA;
+                
+                const itensResumo = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+                const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const dataAtual = new Date().toISOString().split('T')[0];
+            
+                // 4. Dispara para a API do Backend (para alimentar o Dashboard do admin.html)
+                try {
+                    const respostaApi = await fetch(`${API_BASE_URL}/orders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            empresa_id: empresaIdFinal,
+                            cliente: clienteNome,
+                            cliente_nome: clienteNome, // Compatibilidade com diferentes versões do backend
+                            telefone: clienteTel,
+                            endereco: enderecoCompleto,
+                            pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
+                            itens: itensResumo,
+                            total: totalPedido.toFixed(2),
+                            valor_total: totalPedido.toFixed(2),
+                            status: 'Aguardando pagamento',
+                            data: dataAtual,
+                            hora: horaAtual
+                        })
+                    });
+            
+                    if (!respostaApi.ok) {
+                        console.warn("Aviso: O pedido foi gerado, mas o painel admin pode não ter sincronizado perfeitamente.");
+                    }
+                } catch (e) {
+                    console.error("Erro de conexão ao enviar pedido para o painel:", e);
+                }
+            
+                // 5. Monta a mensagem do WhatsApp e abre a conversa
+                let msg = `*NOVO PEDIDO!* 🛒\n\n*Cliente:* ${clienteNome}\n*Telefone:* ${clienteTel}\n*Endereço:* ${enderecoCompleto}\n*Pagamento:* ${pagamento}`;
+                if(pagamento === 'Dinheiro' && troco) {
+                    msg += ` (Troco para: R$ ${troco})`;
+                }
+                msg += `\n\n*Itens:*\n${itensResumo}\n\n*Taxa de Entrega:* R$ ${TAXA_ENTREGA.toFixed(2).replace('.', ',')}\n*Total do Pedido: R$ ${totalPedido.toFixed(2).replace('.', ',')}*`;
+                
+                const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
+                window.open(urlWhatsApp, '_blank');
+            
+                // 6. LIMPEZA COMPLETA: Esvazia o carrinho, limpa os inputs e fecha a sacola
+                cart = [];
+                document.getElementById('cli-nome').value = '';
+                document.getElementById('cli-tel').value = '';
+                document.getElementById('cli-end').value = '';
+                document.getElementById('cli-ref').value = '';
+                document.getElementById('cli-pag').value = '';
+                if(document.getElementById('cli-troco')) document.getElementById('cli-troco').value = '';
+                if(document.getElementById('div-troco')) document.getElementById('div-troco').classList.add('hidden');
+                
+                updateCartUI();
+                toggleCart(); // Fecha a lateral da sacola
+            });
+            
+            // URL direta que força o número correto sem tela de seleção
+            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
+            window.open(urlWhatsApp, '_blank');
         });
-    } catch (e) {
-        console.error("Falha ao sincronizar pedido com o painel", e);
-    }
-
-    // 3. Monta a mensagem e abre o chat diretamente com o número da empresa
-    const msg = `*NOVO PEDIDO!*\n\n*Cliente:* ${clienteNome}\n*Endereço:* ${endereco}\n*Pagamento:* ${pagamento}\n\n*Itens:*\n${itensResumo}\n\n*Total (com taxa): R$ ${totalPedido.toFixed(2).replace('.', ',')}*`;
-    
-    // URL direta que força o número correto sem tela de seleção
-    const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
-    window.open(urlWhatsApp, '_blank');
-});
         }
 
         // ================= SISTEMA DE SACOLA =================
