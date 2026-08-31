@@ -520,7 +520,7 @@ async function entrarNaLoja(id, nome, img) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                empresa_id: parseInt(carrinhoLojaId),
+                empresa_id: parseInt(lojaAtualId || 1), // Assegura que nunca vai null ou undefined
                 cliente_nome: clienteNome,
                 telefone: clienteTel,
                 endereco_entrega: endereco,
@@ -528,7 +528,7 @@ async function entrarNaLoja(id, nome, img) {
                 itens: itensResumo,
                 valor_total: totalPedido,
                 total: totalPedido,
-                status: 'pendente',
+                status: 'Aguardando pagamento',
                 data: dataAtual,
                 hora: horaAtual
             })
