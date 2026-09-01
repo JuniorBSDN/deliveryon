@@ -938,7 +938,36 @@ def listar_produtos_destaques(db=Depends(get_db)):
     finally:
         cursor.close()
     return res
+
+@app.get("/api/dashboard/fluxo")
+def get_dashboard_fluxo(empresa_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    # Retorna a contagem de pedidos agrupados por hora para o gráfico
+    cursor.execute("""
+        SELECT 
+            SUBSTRING(hora FROM 1 for 2) as horario, 
+            COUNT(*) as total 
+        FROM pedidos 
+        WHERE empresa_id = %s AND hora IS NOT NULL AND hora != ''
+        GROUP BY horario 
+        ORDER BY horario ASC
+    """, (empresa_id,))
+    rows = cursor.fetchall()
+    cursor.close()
     
+    # Formata para o padrão que o Chart.js/JavaScript do admin costuma ler
+    horarios = [f"{i:02d}h" for i in range(17, 22)] # Ex: 17h, 18h, 19h, 20h, 21h
+    totais = {row['horario']: row['total'] for row in rows}
+    
+    dados_grafico = []
+    for h in range(17, 22):
+        h_str = f"{h:02d}"
+        dados_grafico.append({
+            "hora": f"{h_str}h",
+            "total": totais.get(h_str, 0)
+        })
+        
+    return dados_grafico
     
 @app.post("/api/backup")
 def backup():
