@@ -743,7 +743,42 @@
         const API_BASE_URL = "/api";
         let currentActiveId = null;
         let chartFluxoInstance = null;
-
+        let chartOuvidoriaInstance = null;
+        
+        // Substitua a criação antiga do gráfico de ouvidoria dentro de inicializarPainel() por esta chamada:
+        async function configurarGraficoOuvidoria() {
+            const ctxOuvidoria = document.getElementById('chartOuvidoria');
+            if (!ctxOuvidoria) return;
+        
+            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        
+            atualizarDadosOuvidoriaGrafico();
+        }
+        
+        async function atualizarDadosOuvidoriaGrafico() {
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas'); // Rota que retorna contagem por categoria (ex: {otimo: 5, bom: 2, ...})
+            
+            if (estatisticas && chartOuvidoriaInstance) {
+                chartOuvidoriaInstance.data.datasets[0].data = [
+                    estatisticas.otimo || 0,
+                    estatisticas.bom || 0,
+                    estatisticas.regular || 0,
+                    estatisticas.ruim || 0,
+                    estatisticas.pessimo || 0
+                ];
+                chartOuvidoriaInstance.update();
+            }
+        }
         // =========================================================================
         // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
         // =========================================================================
