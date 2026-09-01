@@ -41,6 +41,7 @@
         .badge-success { background-color: var(--success); }
         .badge-danger { background-color: var(--danger); }
         .badge-warning { background-color: var(--warning); color: #333; }
+        .badge-info { background-color: var(--info); }
 
         /* LOGOTIPO DO PROTÓTIPO */
         .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
@@ -146,8 +147,8 @@
         
         @media print {
             body * { visibility: hidden; }
-            #area-impressao-notificacoes, #area-impressao-notificacoes *, #area-impressao-helpdesk, #area-impressao-helpdesk * { visibility: visible; }
-            #area-impressao-notificacoes, #area-impressao-helpdesk { position: absolute; left: 0; top: 0; width: 100%; }
+            #area-impressao-notificacoes, #area-impressao-notificacoes *, #area-impressao-helpdesk, #area-impressao-helpdesk *, #area-impressao-entregadores, #area-impressao-entregadores * { visibility: visible; }
+            #area-impressao-notificacoes, #area-impressao-helpdesk, #area-impressao-entregadores { position: absolute; left: 0; top: 0; width: 100%; }
             .btn, .item-actions, .filter-tabs { display: none !important; }
         }
     </style>
@@ -167,6 +168,7 @@
         <ul class="nav-menu">
             <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> Dashboard</a></li>
             <li><a class="nav-link" onclick="navigate('empresas', this)"><span class="nav-icon"><i class="ph ph-buildings"></i></span> Empresas / Tenants</a></li>
+            <li><a class="nav-link" onclick="navigate('entregadores', this)"><span class="nav-icon"><i class="ph ph-motorcycle"></i></span> Entregadores</a></li>
             <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk</a></li>
         </ul>
         <div class="nav-footer">
@@ -291,6 +293,56 @@
                             </thead>
                             <tbody id="tabela-empresas">
                                 <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando dados...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= ENTREGADORES GLOBAIS ================= -->
+            <section id="sec-entregadores" class="page-section hidden">
+                <div class="page-header flex justify-between align-center action-bar-mobile">
+                    <h1 class="page-title"><i class="ph-duotone ph-motorcycle"></i> Rede Global de Entregadores</h1>
+                </div>
+
+                <!-- Indicadores de Entregadores -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="card" style="border-top: 4px solid var(--brand-primary); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Total Cadastrados</span>
+                        <h2 id="ind-ent-total" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--success); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Online / Disponível</span>
+                        <h2 id="ind-ent-online" style="font-size: 1.5rem; color: var(--success); margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--info); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Em Entrega</span>
+                        <h2 id="ind-ent-rota" style="font-size: 1.5rem; color: var(--info); margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--danger); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Bloqueados</span>
+                        <h2 id="ind-ent-bloqueados" style="font-size: 1.5rem; color: var(--danger); margin-top: 5px;">0</h2>
+                    </div>
+                </div>
+
+                <div class="card" id="area-impressao-entregadores" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0; flex-wrap: wrap; gap: 15px;">
+                        <input type="text" id="filtro-busca-entregador" class="form-control" placeholder="Buscar por nome ou telefone..." style="width: 100%; max-width: 400px; margin-bottom: 0;">
+                        <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Rede</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Entregador</th>
+                                    <th>Telefone / Contato</th>
+                                    <th>Status Rede</th>
+                                    <th>Entregas Feitas</th>
+                                    <th style="text-align: right;">Ações de Controle</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-entregadores">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando entregadores...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -438,7 +490,7 @@
     <div class="modal-overlay" id="modalContrato">
         <div class="modal-content" style="max-width: 750px;">
             <div class="modal-header">
-                <h3><i class="ph ph-scroll text-brand-primary"></i> Contrato de Licenciamento de Software - deliveryON</h3>
+                <h3><i class="ph ph-scroll text-brand-primary"></i> Contrato de Licenciamento - deliveryON</h3>
                 <button class="close-modal" onclick="closeModal('modalContrato')">&times;</button>
             </div>
             <div class="modal-body">
@@ -470,7 +522,7 @@
     <div class="modal-overlay" id="modalHistorico">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações - <span id="historico-empresa-nome">Empresa</span></h3>
+                <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações - <span id="historico-empresa-nome">Empresa/Entregador</span></h3>
                 <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
             </div>
             <div class="modal-body">
@@ -592,6 +644,7 @@
             carregarMetricas();
             carregarNotificacoesReais();
             carregarEmpresas();
+            carregarEntregadores();
             carregarHelpdesk();
         }
 
@@ -701,9 +754,9 @@
                 const res = await fetch('/api/master/metrics');
                 if (res.ok) {
                     const data = await res.json();
-                    document.getElementById('metric-disk').textContent = data.db_disk_usage;
-                    document.getElementById('metric-clientes').textContent = data.total_clientes;
-                    document.getElementById('metric-mrr').textContent = data.mrr;
+                    document.getElementById('metric-disk').textContent = data.db_disk_usage || '--';
+                    document.getElementById('metric-clientes').textContent = data.total_clientes || '--';
+                    document.getElementById('metric-mrr').textContent = data.mrr || '--';
                 }
             } catch (err) { console.error("Erro ao carregar métricas"); }
         }
@@ -735,7 +788,7 @@
                                     <button class="btn-action" title="Ativar/Desativar" onclick="toggleStatus(${emp.id})"><i class="ph ph-arrows-clockwise"></i></button>
                                     <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
                                     <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
-                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoEmpresa(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-clock-counter-clockwise"></i></button>                            
+                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${emp.id}, '${emp.nome_fantasia}', 'empresa')"><i class="ph ph-clock-counter-clockwise"></i></button>                            
                                     <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
                                 </td>
                             </tr>
@@ -744,6 +797,64 @@
                 }
             } catch (err) { 
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB.</td></tr>'; 
+            }
+        }
+
+        async function carregarEntregadores() {
+            const tbody = document.getElementById('tabela-entregadores');
+            try {
+                const res = await fetch('/api/master/entregadores');
+                if (res.ok) {
+                    const entregadores = await res.json();
+                    
+                    let online = 0, emRota = 0, bloqueados = 0;
+
+                    if (entregadores.length === 0) { 
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum entregador cadastrado na plataforma.</td></tr>'; 
+                        return; 
+                    }
+                    
+                    tbody.innerHTML = '';
+                    entregadores.forEach(ent => {
+                        let badgeClass = 'badge-danger';
+                        if (ent.status === 'Disponível') { badgeClass = 'badge-success'; online++; }
+                        else if (ent.status === 'Em Entrega') { badgeClass = 'badge-info'; emRota++; }
+                        else if (ent.status === 'Pausado') { badgeClass = 'badge-warning'; }
+                        else if (ent.status === 'Bloqueado') { badgeClass = 'badge-danger'; bloqueados++; }
+                        
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo || 'Moto'}</small></td>
+                                <td>${ent.telefone}</td>
+                                <td><span class="badge ${badgeClass}">${ent.status}</span></td>
+                                <td>${ent.total_entregas || 0}</td>
+                                <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                                    <button class="btn-action" title="Bloquear/Desbloquear Conta" onclick="bloquearEntregadorAdmin(${ent.id}, '${ent.nome}')"><i class="ph ph-lock-key"></i></button>
+                                    <button class="btn-action" title="Ver Histórico de Corridas" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>                            
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    document.getElementById('ind-ent-total').innerText = entregadores.length;
+                    document.getElementById('ind-ent-online').innerText = online;
+                    document.getElementById('ind-ent-rota').innerText = emRota;
+                    document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
+
+                }
+            } catch (err) { 
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB ao carregar entregadores.</td></tr>'; 
+            }
+        }
+
+        async function bloquearEntregadorAdmin(id, nome) {
+            if(confirm(`Deseja alterar o status de bloqueio do entregador ${nome}?`)) {
+                try {
+                    await fetch(`/api/master/entregadores/${id}/bloqueio`, { method: 'PUT' });
+                    carregarEntregadores();
+                } catch(e) {
+                    alert("Erro ao alterar bloqueio.");
+                }
             }
         }
 
@@ -926,27 +1037,31 @@
             }
         }
 
-        async function abrirHistoricoEmpresa(id, nome) {
+        async function abrirHistoricoGlobal(id, nome, tipo) {
             document.getElementById('historico-empresa-nome').innerText = nome;
             const listaContainer = document.getElementById('lista-historico-modal');
             listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
             
             openModal('modalHistorico');
 
+            const url = tipo === 'empresa' 
+                ? `/api/master/empresas/${id}/historico` 
+                : `/api/master/entregadores/${id}/historico`;
+
             try {
-                const res = await fetch(`/api/master/empresas/${id}/historico`);
+                const res = await fetch(url);
                 if (res.ok) {
                     const historicos = await res.json();
                     if (historicos.length === 0) {
-                        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico desta empresa.</li>';
+                        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro encontrado.</li>';
                         return;
                     }
                     listaContainer.innerHTML = '';
                     historicos.forEach(h => {
                         listaContainer.innerHTML += `
                             <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
-                                <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data}</span>
-                                <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao}</span>
+                                <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data || h.data_hora}</span>
+                                <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao || h.detalhe}</span>
                             </li>
                         `;
                     });
