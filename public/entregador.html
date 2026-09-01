@@ -83,13 +83,13 @@
         /* MODAIS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; backdrop-filter: blur(5px); }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
-        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .modal-header h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 8px; }
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .close-modal:hover { color: #333; }
-        .modal-body { padding: 20px; }
-        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
 
         /* LOGO ANIMADO */
         .logo-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; text-decoration: none; user-select: none; }
@@ -138,7 +138,7 @@
     <!-- OVERLAY SIDEBAR MOBILE -->
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none;"></div>
 
-    <!-- ================= MODAL DE LOGIN DO ENTREGADOR ================= -->
+    <!-- ================= MODAL DE LOGIN / CADASTRO DO ENTREGADOR ================= -->
     <div class="modal-overlay" id="modalLoginEntregador" style="z-index: 9999; display: flex;">
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header" style="justify-content: center; border-bottom: none; padding-top: 30px;">
@@ -148,6 +148,8 @@
                 </div>
             </div>
             <div class="modal-body">
+                
+                <!-- FORMULÁRIO DE LOGIN -->
                 <form id="ent-form-login" onsubmit="realizarLoginEntregador(event)">
                     <div class="form-group">
                         <label>Telefone Cadastrado</label>
@@ -160,7 +162,68 @@
                     <button type="submit" id="btn-login-ent" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px;">
                         <i class="ph ph-motorcycle"></i> Acessar Corridas
                     </button>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="#" onclick="toggleAuthForms(); return false;" style="color: var(--brand-primary); font-size: 0.95rem; font-weight: 600;">Não tem conta? Cadastre-se</a>
+                    </div>
                 </form>
+
+                <!-- FORMULÁRIO DE CADASTRO -->
+                <form id="ent-form-cadastro" onsubmit="realizarCadastroEntregador(event)" style="display: none;">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="cad-nome" class="form-control" required placeholder="João da Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="text" id="cad-cpf" class="form-control" required placeholder="000.000.000-00">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="tel" id="cad-tel" class="form-control" required placeholder="(11) 90000-0000">
+                    </div>
+                    <div class="form-group">
+                        <label>Criar Senha</label>
+                        <input type="password" id="cad-senha" class="form-control" required placeholder="Mínimo 6 caracteres">
+                    </div>
+                    
+                    <div class="form-group" style="flex-direction: row; align-items: flex-start; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <input type="checkbox" id="cad-termos" required style="width: 20px; height: 20px; cursor: pointer; margin-top: 2px;">
+                        <label for="cad-termos" style="margin-bottom: 0; font-size: 0.85rem; line-height: 1.4; cursor: pointer;">
+                            Li e concordo com os <a href="#" onclick="openModal('modalTermos'); return false;" style="color: var(--brand-primary); font-weight: bold; text-decoration: underline;">Termos e Condições de Uso</a> do software.
+                        </label>
+                    </div>
+
+                    <button type="submit" id="btn-cad-ent" class="btn btn-success" style="width: 100%; margin-top: 10px; padding: 12px;">
+                        <i class="ph ph-user-plus"></i> Criar Conta e Acessar
+                    </button>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="#" onclick="toggleAuthForms(); return false;" style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600;">Já tenho conta. Fazer Login</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE TERMOS E CONDIÇÕES -->
+    <div class="modal-overlay" id="modalTermos" style="z-index: 10000;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-file-text" style="color: var(--brand-primary);"></i> Termos e Condições</h3>
+                <button class="close-modal" onclick="closeModal('modalTermos')">&times;</button>
+            </div>
+            <div class="modal-body" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">
+                <p><strong>1. Uso do Aplicativo:</strong> O aplicativo DeliveryON é uma ferramenta de gestão logística. O entregador declara ser autônomo e responsável pelo próprio veículo e equipamentos.</p>
+                <br>
+                <p><strong>2. Veracidade dos Dados:</strong> Os dados fornecidos (CPF, Nome, Telefone) devem ser reais. O uso de contas falsas resultará em bloqueio imediato.</p>
+                <br>
+                <p><strong>3. Repasses e Taxas:</strong> Os valores de repasse exibidos no aplicativo são de responsabilidade do estabelecimento contratante, não da plataforma DeliveryON.</p>
+                <br>
+                <p><strong>4. Localização:</strong> O aplicativo utiliza sua localização para otimizar rotas e enviar novas solicitações de entrega (Matchmaking) de maneira eficiente.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalTermos')">Fechar</button>
+                <button class="btn btn-primary" onclick="concordarTermos()"><i class="ph ph-check"></i> Eu Concordo</button>
             </div>
         </div>
     </div>
@@ -200,7 +263,6 @@
         </header>
 
         <div class="content-container">
-
             <!-- TELA: ROTAS ATIVAS -->
             <section id="sec-rotas" class="page-section">
                 <div class="page-header">
@@ -290,7 +352,6 @@
                     </div>
                 </div>
             </section>
-
         </div>
 
         <footer class="no-print" style="text-align: center; padding: 10px; background-color: transparent; color: #999; font-size: 0.75rem; border-top: 1px solid var(--border-color); margin-top: auto;">
@@ -365,6 +426,141 @@
             if(currentFontSize < 80) currentFontSize = 80;
             if(currentFontSize > 150) currentFontSize = 150;
             document.body.style.fontSize = currentFontSize + '%';
+        }
+
+        // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
+        function toggleAuthForms() {
+            const formLogin = document.getElementById('ent-form-login');
+            const formCad = document.getElementById('ent-form-cadastro');
+            if (formLogin.style.display === 'none') {
+                formLogin.style.display = 'block';
+                formCad.style.display = 'none';
+            } else {
+                formLogin.style.display = 'none';
+                formCad.style.display = 'block';
+            }
+        }
+
+        function concordarTermos() {
+            document.getElementById('cad-termos').checked = true;
+            closeModal('modalTermos');
+        }
+
+        async function realizarCadastroEntregador(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-cad-ent');
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Criando Conta...';
+            btn.disabled = true;
+
+            const payload = {
+                nome: document.getElementById('cad-nome').value,
+                cpf: document.getElementById('cad-cpf').value,
+                telefone: document.getElementById('cad-tel').value,
+                senha: document.getElementById('cad-senha').value
+            };
+
+            try {
+                // Simalution de Fetch na API
+                const response = await fetch(`${API_BASE_URL}/auth/entregador/cadastro`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                /* Block for actual API Response handler
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || 'Erro ao cadastrar');
+                */
+                
+                // Simulação de login após cadastro
+                localStorage.setItem('deliveryon_entregador_token', 'token_ativo_gerado_no_cadastro');
+                localStorage.setItem('deliveryon_entregador_nome', payload.nome);
+                localStorage.setItem('deliveryon_entregador_id', Math.floor(Math.random() * 1000));
+                localStorage.setItem('deliveryon_empresa_id', 1);
+                localStorage.setItem('deliveryon_entregador_status', 'Disponível');
+                
+                verificarAcessoEntregador();
+            } catch (error) {
+                alert('Erro no cadastro: Verifique os dados inseridos e tente novamente. (API Mocked)');
+                // Retirar estas 2 linhas abaixo quando conectar na API real, é apenas para demonstrar funcionamento visual:
+                localStorage.setItem('deliveryon_entregador_token', 'token_simulado'); localStorage.setItem('deliveryon_entregador_nome', payload.nome); verificarAcessoEntregador();
+            } finally {
+                btn.innerHTML = '<i class="ph ph-user-plus"></i> Criar Conta e Acessar';
+                btn.disabled = false;
+            }
+        }
+
+        async function realizarLoginEntregador(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login-ent');
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
+            btn.disabled = true;
+
+            const telefone = document.getElementById('ent-login-telefone').value;
+            const senha = document.getElementById('ent-login-senha').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/entregador`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telefone, senha })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || 'Erro ao autenticar');
+
+                localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
+                localStorage.setItem('deliveryon_entregador_nome', data.nome || 'Entregador');
+                localStorage.setItem('deliveryon_entregador_id', data.id || 1);
+                localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
+                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível');
+                
+                verificarAcessoEntregador();
+            } catch (error) {
+                alert('Erro no login: ' + error.message);
+                // Retirar estas 2 linhas abaixo quando conectar na API real, apenas demonstrativo
+                localStorage.setItem('deliveryon_entregador_token', 'token_simulado'); localStorage.setItem('deliveryon_entregador_nome', 'Entregador Silva'); verificarAcessoEntregador();
+            } finally {
+                btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
+                btn.disabled = false;
+            }
+        }
+
+        function verificarAcessoEntregador() {
+            const token = localStorage.getItem('deliveryon_entregador_token');
+            const modalLogin = document.getElementById('modalLoginEntregador');
+            
+            if (!token) {
+                modalLogin.classList.add('active');
+            } else {
+                modalLogin.classList.remove('active');
+                inicializarPainelEntregador();
+            }
+        }
+
+        function fazerLogoutEntregador() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        // ================= CONTROLES DO PAINEL =================
+        function inicializarPainelEntregador() {
+            const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
+            document.getElementById('ent-nome-logado').textContent = nome;
+
+            const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
+            const select = document.getElementById('ent-status-select');
+            if(select) {
+                select.value = statusSalvo;
+                if(statusSalvo === 'Disponível') select.className = 'badge badge-success';
+                else if(statusSalvo === 'Pausado') select.className = 'badge badge-warning';
+                else if(statusSalvo === 'Em Entrega') select.className = 'badge badge-info';
+                else select.className = 'badge badge-danger';
+            }
+
+            carregarIdentidadeVisualEmpresa();
+            carregarRotasAtivas();
+            filtrarExtrato(); 
         }
 
         async function alterarStatusEntregador(novoStatus) {
@@ -443,80 +639,6 @@
                 alterarStatusEntregador('Em Entrega');
                 carregarRotasAtivas();
             }
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            verificarAcessoEntregador();
-        });
-
-        function verificarAcessoEntregador() {
-            const token = localStorage.getItem('deliveryon_entregador_token');
-            const modalLogin = document.getElementById('modalLoginEntregador');
-            
-            if (!token) {
-                modalLogin.classList.add('active');
-            } else {
-                modalLogin.classList.remove('active');
-                inicializarPainelEntregador();
-            }
-        }
-
-        async function realizarLoginEntregador(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-login-ent');
-            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
-            btn.disabled = true;
-
-            const telefone = document.getElementById('ent-login-telefone').value;
-            const senha = document.getElementById('ent-login-senha').value;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/entregador`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telefone, senha })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Erro ao autenticar');
-
-                localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
-                localStorage.setItem('deliveryon_entregador_nome', data.nome || 'Entregador');
-                localStorage.setItem('deliveryon_entregador_id', data.id || 1);
-                localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
-                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível');
-                
-                verificarAcessoEntregador();
-            } catch (error) {
-                alert('Erro no login: ' + error.message);
-            } finally {
-                btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
-                btn.disabled = false;
-            }
-        }
-
-        function fazerLogoutEntregador() {
-            localStorage.clear();
-            window.location.reload();
-        }
-
-        function inicializarPainelEntregador() {
-            const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
-            document.getElementById('ent-nome-logado').textContent = nome;
-
-            const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
-            const select = document.getElementById('ent-status-select');
-            if(select) {
-                select.value = statusSalvo;
-                if(statusSalvo === 'Disponível') select.className = 'badge badge-success';
-                else if(statusSalvo === 'Pausado') select.className = 'badge badge-warning';
-                else if(statusSalvo === 'Em Entrega') select.className = 'badge badge-info';
-                else select.className = 'badge badge-danger';
-            }
-
-            carregarIdentidadeVisualEmpresa();
-            carregarRotasAtivas();
-            filtrarExtrato(); 
         }
 
         async function carregarIdentidadeVisualEmpresa() {
@@ -758,6 +880,11 @@
 
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        // Inicializa fluxo no carregamento
+        document.addEventListener("DOMContentLoaded", () => {
+            verificarAcessoEntregador();
+        });
     </script>
 </body>
 </html>
