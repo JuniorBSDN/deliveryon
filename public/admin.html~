@@ -167,6 +167,7 @@
             <li><a class="nav-link" onclick="navigate('colaboradores', this)"><span class="nav-icon"><i class="ph ph-identification-badge"></i></span> Colaboradores</a></li>
             <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
             <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
+            <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk</a></li>
             <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
@@ -228,7 +229,7 @@
 
                 <div class="card">
                     <h3 class="mb-20">Adicionar Novo Produto</h3>
-                    <form onsubmit="event.preventDefault(); createProduct();">
+                    <form id="form-produto" onsubmit="event.preventDefault(); createProduct();">
                         <div class="form-grid">
                             <div class="form-group"><label>Código</label><input type="text" class="form-control" value="PRD-AUTO" readonly style="background:#f0f0f0;"></div>
                             <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control" id="input-new-prod-file"></div>
@@ -259,7 +260,7 @@
                                     <option value="outra">➕ Outra Categoria</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" class="form-control" id="input-new-prod-price" required></div>
+                            <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="input-new-prod-price" placeholder="Ex: 25,90" required></div>
                             <div class="form-group"><label>Estoque Atual</label><input type="number" class="form-control" id="input-new-prod-stock" value="100"></div>
                         </div>
                         <div class="form-group"><label>Descrição</label><textarea class="form-control" id="textarea-new-prod-desc" rows="2"></textarea></div>
@@ -289,7 +290,7 @@
 
                 <div class="card">
                     <h3 class="mb-20">Cadastrar Cliente Manual</h3>
-                    <form onsubmit="event.preventDefault(); createClient();">
+                    <form id="form-cliente" onsubmit="event.preventDefault(); createClient();">
                         <div class="form-grid">
                             <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" id="input-cli-name" required></div>
                             <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" id="input-cli-phone" required></div>
@@ -324,7 +325,7 @@
 
                 <div class="card">
                     <h3 class="mb-20">Cadastrar Novo Colaborador</h3>
-                    <form onsubmit="event.preventDefault(); createColab();">
+                    <form id="form-colaborador" onsubmit="event.preventDefault(); createColab();">
                         <div class="form-grid">
                             <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control" id="input-colab-file"></div>
                             <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" id="input-colab-name" required></div>
@@ -399,7 +400,7 @@
 
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+                            <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-colaboradores">
                                 <!-- Dados carregados dinamicamente via API Python -->
                             </tbody>
@@ -492,6 +493,51 @@
                 </div>
             </section>
 
+            <!-- HELPDESK DO GESTOR -->
+            <section id="sec-helpdesk" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk e Suporte</h1></div>
+
+                <div class="card">
+                    <h3 class="mb-20">Abrir Novo Chamado</h3>
+                    <form onsubmit="event.preventDefault(); abrirChamadoHelpdesk();">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Resumo do Problema</label>
+                                <input type="text" class="form-control" id="input-hd-resumo" placeholder="Ex: Erro ao imprimir pedido" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição Detalhada</label>
+                            <textarea class="form-control" id="textarea-hd-desc" rows="3" placeholder="Explique o que está acontecendo..." required></textarea>
+                        </div>
+                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
+                            <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar Chamado ao Master</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                        <h3>Meus Chamados</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID / Data</th>
+                                    <th>Resumo / Descrição</th>
+                                    <th>Status</th>
+                                    <th>Técnico Responsável</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-gestor-helpdesk">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
            <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
@@ -548,24 +594,218 @@
         </div>
     </div>
 
-    <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
-    <script>
+    <!-- MODAL DE EDIÇÃO DE PRODUTO -->
+    <div class="modal-overlay" id="modalEditarProduto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Produto</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-produto" onsubmit="event.preventDefault(); salvarEdicaoProduto();">
+                    <input type="hidden" id="edit-prod-id">
+                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-name" required></div>
+                    <div class="form-group"><label>Categoria</label>
+                        <select class="form-control" id="edit-prod-cat" required>
+                            <option value="hamburgueres">Hambúrgueres</option>
+                            <option value="pizzas">Pizzas</option>
+                            <option value="salgados">Salgados</option>
+                            <option value="bebidas">Bebidas</option>
+                            <option value="sobremesas">Sobremesas</option>
+                            <option value="outra">Outra Categoria</option>
+                        </select>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="edit-prod-price" required></div>
+                        <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-stock" required></div>
+                    </div>
+                    <div class="form-group"><label>Nova Foto (Opcional)</label><input type="file" class="form-control" id="edit-prod-file"></div>
+                    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE COLABORADOR -->
+    <div class="modal-overlay" id="modalEditarColaborador">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-identification-badge"></i> Editar Colaborador</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarColaborador')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
+                    <input type="hidden" id="edit-colab-id">
+                    
+                    <div class="form-group">
+                        <label>Nova Foto (Deixe em branco para manter a atual)</label>
+                        <input type="file" class="form-control" id="edit-colab-file">
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-colab-name" required></div>
+                        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-colab-phone" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" class="form-control" id="edit-colab-email" required></div>
+                        <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
+                        <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
+                        <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
+                        
+                        <div class="form-group">
+                            <label>Função</label>
+                            <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Gerente">Gerente</option>
+                                <option value="Caixa">Caixa</option>
+                                <option value="Motoboy">Entregador / Motoboy</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" id="edit-colab-status">
+                                <option value="Disponível">Disponível</option>
+                                <option value="Pausado">Pausado</option>
+                                <option value="Indisponível">Indisponível</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="edit-campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <h4 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i> Dados do Veículo</h4>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Tipo</label><select class="form-control" id="edit-colab-t-veiculo"><option>Moto</option><option>Bicicleta</option></select></div>
+                            <div class="form-group"><label>Modelo</label><input type="text" class="form-control" id="edit-colab-v-modelo"></div>
+                            <div class="form-group"><label>Cor</label><input type="text" class="form-control" id="edit-colab-v-cor"></div>
+                            <div class="form-group"><label>Placa</label><input type="text" class="form-control" id="edit-colab-v-placa"></div>
+                            <div class="form-group"><label>Área</label><input type="text" class="form-control" id="edit-colab-area"></div>
+                            <div class="form-group"><label>Valor Entrega (R$)</label><input type="number" step="0.01" class="form-control" id="edit-colab-v-entrega"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
+                    
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE CLIENTE -->
+    <div class="modal-overlay" id="modalEditarCliente">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Cliente</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
+                    <input type="hidden" id="edit-cli-id">
+                    
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" class="form-control" id="edit-cli-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="text" class="form-control" id="edit-cli-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" class="form-control" id="edit-cli-email">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" class="form-control" id="edit-cli-address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Referência Local</label>
+                        <input type="text" class="form-control" id="edit-cli-ref">
+                    </div>
+
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+  <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
-
+        let chartFluxoInstance = null;
+        let chartOuvidoriaInstance = null;
+        
+        // Substitua a criação antiga do gráfico de ouvidoria dentro de inicializarPainel() por esta chamada:
+        async function configurarGraficoOuvidoria() {
+            const ctxOuvidoria = document.getElementById('chartOuvidoria');
+            if (!ctxOuvidoria) return;
+        
+            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        
+            atualizarDadosOuvidoriaGrafico();
+        }
+        
+        async function atualizarDadosOuvidoriaGrafico() {
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas'); // Rota que retorna contagem por categoria (ex: {otimo: 5, bom: 2, ...})
+            
+            if (estatisticas && chartOuvidoriaInstance) {
+                chartOuvidoriaInstance.data.datasets[0].data = [
+                    estatisticas.otimo || 0,
+                    estatisticas.bom || 0,
+                    estatisticas.regular || 0,
+                    estatisticas.ruim || 0,
+                    estatisticas.pessimo || 0
+                ];
+                chartOuvidoriaInstance.update();
+            }
+        }
+        // =========================================================================
+        // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
+        // =========================================================================
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
-                const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+                const empresaId = localStorage.getItem('deliveryon_empresa_id');
+                
+                if (!empresaId) {
+                    console.error("Sessão inválida! ID da empresa não encontrado.");
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    return null;
+                }
+
                 let url = `${API_BASE_URL}${endpoint}`;
                 const options = {
                     method: method,
                     headers: { 'Content-Type': 'application/json' }
                 };
 
-                if (method === 'GET') {
+                // Garante o empresa_id na URL para buscas (GET) e exclusões (DELETE)
+                if (method === 'GET' || method === 'DELETE') {
                     const separator = url.includes('?') ? '&' : '?';
                     url += `${separator}empresa_id=${empresaId}`;
-                } else if (data) {
+                } 
+                // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
+                else if (method === 'POST' || method === 'PUT') {
+                    if (!data) data = {}; 
                     data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
@@ -579,7 +819,9 @@
             }
         }
 
-        // Função de Login Integrada por CNPJ
+        // =========================================================================
+        // 2. AUTENTICAÇÃO E SESSÃO
+        // =========================================================================
         async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
@@ -594,7 +836,6 @@
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
                     localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
 
-                    // Esconde a tela de login e inicializa o painel
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
@@ -611,35 +852,45 @@
             location.reload();
         }
 
-        async function updateOrderStatus(orderId, selectElement) {
-            const novoStatus = selectElement.value;
-            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
-
-            if (response) {
-                loadDashboardData();
-            } else {
-                alert("Erro ao atualizar o status do pedido.");
-            }
-        }
-
+        // =========================================================================
+        // 3. DASHBOARD E GRÁFICOS DINÂMICOS
+        // =========================================================================
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
-                document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
-                document.getElementById('val-delivered-count').innerText = data.entregues || 0;
-                document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
-                document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
+                const waitingEl = document.getElementById('val-waiting-count');
+                const deliveredEl = document.getElementById('val-delivered-count');
+                const canceledEl = document.getElementById('val-canceled-count');
+                const revenueEl = document.getElementById('val-revenue-total');
+
+                if (waitingEl) waitingEl.innerText = data.aguardando || 0;
+                if (deliveredEl) deliveredEl.innerText = data.entregues || 0;
+                if (canceledEl) canceledEl.innerText = data.cancelados || 0;
+                if (revenueEl) revenueEl.innerText = `R$ ${data.receita || '0,00'}`;
             }
             loadOrders();
+        }
+
+        async function atualizarGraficoFluxo() {
+            const dadosFluxo = await apiRequest('/dashboard/fluxo');
+            if (dadosFluxo && chartFluxoInstance) {
+                const labels = dadosFluxo.map(item => item.hora);
+                const totais = dadosFluxo.map(item => item.total);
+
+                chartFluxoInstance.data.labels = labels;
+                chartFluxoInstance.data.datasets[0].data = totais;
+                chartFluxoInstance.update();
+            }
         }
 
         async function loadOrders() {
             const orders = await apiRequest('/orders');
             const tbody = document.getElementById('tbody-recent-orders');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
-
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
                 return;
             }
 
@@ -666,9 +917,23 @@
             });
         }
 
+        async function updateOrderStatus(orderId, selectElement) {
+            const novoStatus = selectElement.value;
+            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+            if (response) {
+                loadDashboardData();
+            } else {
+                alert("Erro ao atualizar o status do pedido.");
+            }
+        }
+
+        // =========================================================================
+        // 4. GESTÃO DE PRODUTOS
+        // =========================================================================
         async function loadProducts() {
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
             if (!products || products.length === 0) {
@@ -677,13 +942,20 @@
             }
 
             products.forEach(p => {
+                let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
+                if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
+                    imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
+                }
+
+                const produtoJson = encodeURIComponent(JSON.stringify(p));
                 tbody.innerHTML += `
                     <tr data-id="${p.codigo}">
-                        <td><div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div></td>
+                        <td>${imagemHtml}</td>
                         <td>${p.codigo}</td>
-                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao}</span></td>
-                        <td>R$ ${p.preco}</td>
+                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
+                        <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
                         <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicao('${produtoJson}')"><i class="ph ph-pencil"></i></button>
                             <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
@@ -691,9 +963,85 @@
             });
         }
 
+        async function createProduct() {
+            const form = document.getElementById('form-produto');
+            const precoInput = document.getElementById('input-new-prod-price').value;
+            const fileInput = document.getElementById('input-new-prod-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                nome: document.getElementById('input-new-prod-name').value,
+                categoria: document.getElementById('categoria').value,
+                preco: parseFloat(precoInput.replace(',', '.')),
+                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
+                descricao: document.getElementById('textarea-new-prod-desc').value,
+                foto: fotoBase64
+            };
+            
+            const res = await apiRequest('/products', 'POST', payload);
+            if (res) {
+                alert('Produto cadastrado com sucesso!');
+                form.reset();
+                loadProducts();
+            } else {
+                alert('Falha ao cadastrar o produto.');
+            }
+        }
+
+        async function deleteProduct(code) {
+            if(confirm("Deseja realmente excluir este produto?")) {
+                const res = await apiRequest(`/products/${code}`, 'DELETE');
+                if (res) loadProducts();
+            }
+        }
+
+        function abrirModalEdicao(produtoStr) {
+            const p = JSON.parse(decodeURIComponent(produtoStr));
+            document.getElementById('edit-prod-id').value = p.codigo;
+            document.getElementById('edit-prod-name').value = p.nome;
+            document.getElementById('edit-prod-cat').value = p.categoria || 'outra';
+            document.getElementById('edit-prod-price').value = p.preco;
+            document.getElementById('edit-prod-stock').value = p.estoque || 100;
+            document.getElementById('edit-prod-desc').value = p.descricao || '';
+            document.getElementById('modalEditarProduto').classList.add('active');
+        }
+
+        async function salvarEdicaoProduto() {
+            const id = document.getElementById('edit-prod-id').value;
+            const fileInput = document.getElementById('edit-prod-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-prod-name').value,
+                categoria: document.getElementById('edit-prod-cat').value,
+                preco: parseFloat(document.getElementById('edit-prod-price').value.replace(',', '.')),
+                estoque: parseInt(document.getElementById('edit-prod-stock').value) || 0,
+                descricao: document.getElementById('edit-prod-desc').value,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/products/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Produto atualizado!');
+                closeModal('modalEditarProduto');
+                loadProducts();
+            }
+        }
+
+        // =========================================================================
+        // 5. GESTÃO DE CLIENTES
+        // =========================================================================
         async function loadClients() {
             const clients = await apiRequest('/clients');
             const tbody = document.getElementById('tbody-clients');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
             if (!clients || clients.length === 0) {
@@ -702,77 +1050,23 @@
             }
 
             clients.forEach(c => {
+                const clienteJson = encodeURIComponent(JSON.stringify(c));
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${c.nome}</strong></td>
                         <td>${c.telefone}</td>
                         <td>${c.referencia || '-'}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
                     </tr>
                 `;
             });
-        }
-
-        async function loadColaboradores() {
-            const colabs = await apiRequest('/colaboradores');
-            const tbody = document.getElementById('tbody-colaboradores');
-            tbody.innerHTML = '';
-
-            if (!colabs || colabs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
-                return;
-            }
-
-            colabs.forEach(cb => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${cb.nome}</strong></td>
-                        <td>${cb.cpf}</td>
-                        <td>${cb.funcao}</td>
-                        <td>${cb.telefone}</td>
-                        <td><span class="badge badge-success">${cb.status}</span></td>
-                        <td style="text-align: right;"><button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button></td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function loadOuvidoria() {
-            const feeds = await apiRequest('/ouvidoria');
-            const tbody = document.getElementById('tbody-ouvidoria');
-            tbody.innerHTML = '';
-
-            if (!feeds || feeds.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback registrado.</td></tr>`;
-                return;
-            }
-
-            feeds.forEach(f => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
-                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
-                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Ver" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button></td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function createProduct() {
-            const payload = {
-                nome: document.getElementById('input-new-prod-name').value,
-                categoria: document.getElementById('categoria').value,
-                preco: document.getElementById('input-new-prod-price').value,
-                estoque: document.getElementById('input-new-prod-stock').value,
-                descricao: document.getElementById('textarea-new-prod-desc').value
-            };
-            await apiRequest('/products', 'POST', payload);
-            alert('Produto cadastrado com sucesso!');
-            loadProducts();
         }
 
         async function createClient() {
+            const form = document.getElementById('form-cliente');
             const payload = {
                 nome: document.getElementById('input-cli-name').value,
                 telefone: document.getElementById('input-cli-phone').value,
@@ -780,32 +1074,11 @@
                 endereco: document.getElementById('input-cli-address').value,
                 referencia: document.getElementById('input-cli-ref').value
             };
-            await apiRequest('/clients', 'POST', payload);
-            alert('Cliente salvo com sucesso!');
-            loadClients();
-        }
-
-        async function createColab() {
-            const payload = {
-                nome: document.getElementById('input-colab-name').value,
-                telefone: document.getElementById('input-colab-phone').value,
-                email: document.getElementById('input-colab-email').value,
-                cpf: document.getElementById('input-colab-cpf').value,
-                data_nascimento: document.getElementById('input-colab-dob').value,
-                endereco: document.getElementById('input-colab-address').value,
-                funcao: document.getElementById('select-funcao').value,
-                status: document.getElementById('select-colab-status').value,
-                observacoes: document.getElementById('textarea-colab-obs').value
-            };
-            await apiRequest('/colaboradores', 'POST', payload);
-            alert('Colaborador cadastrado com sucesso!');
-            loadColaboradores();
-        }
-
-        async function deleteProduct(code) {
-            if(confirm("Deseja excluir este produto?")) {
-                await apiRequest(`/products/${code}`, 'DELETE');
-                loadProducts();
+            const res = await apiRequest('/clients', 'POST', payload);
+            if (res) {
+                alert('Cliente salvo!');
+                form.reset();
+                loadClients();
             }
         }
 
@@ -816,6 +1089,122 @@
             }
         }
 
+        function abrirModalEdicaoCliente(clienteStr) {
+            const c = JSON.parse(decodeURIComponent(clienteStr));
+            document.getElementById('edit-cli-id').value = c.id;
+            document.getElementById('edit-cli-name').value = c.nome || '';
+            document.getElementById('edit-cli-phone').value = c.telefone || '';
+            document.getElementById('edit-cli-email').value = c.email || '';
+            document.getElementById('edit-cli-address').value = c.endereco || '';
+            document.getElementById('edit-cli-ref').value = c.referencia || '';
+            document.getElementById('modalEditarCliente').classList.add('active');
+        }
+
+        async function salvarEdicaoCliente() {
+            const id = document.getElementById('edit-cli-id').value;
+            const payload = {
+                nome: document.getElementById('edit-cli-name').value,
+                telefone: document.getElementById('edit-cli-phone').value,
+                email: document.getElementById('edit-cli-email').value,
+                endereco: document.getElementById('edit-cli-address').value,
+                referencia: document.getElementById('edit-cli-ref').value
+            };
+            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Cliente atualizado!');
+                closeModal('modalEditarCliente');
+                loadClients();
+            }
+        }
+
+        // =========================================================================
+        // 6. GESTÃO DE COLABORADORES
+        // =========================================================================
+        async function loadColaboradores() {
+            const colabs = await apiRequest('/colaboradores');
+            const tbody = document.getElementById('tbody-colaboradores');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!colabs || colabs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
+                return;
+            }
+
+            colabs.forEach(cb => {
+                let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
+                if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
+                    fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
+                }
+                const colabJson = encodeURIComponent(JSON.stringify(cb));
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${fotoHtml}</td>
+                        <td><strong>${cb.nome}</strong></td>
+                        <td>${cb.cpf || '-'}</td>
+                        <td>${cb.funcao}</td>
+                        <td>${cb.telefone}</td>
+                        <td><span class="badge badge-success">${cb.status}</span></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoColaborador('${colabJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function createColab() {
+            const form = document.getElementById('form-colaborador');
+            const funcao = document.getElementById('select-funcao').value;
+            const fileInput = document.getElementById('input-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+            
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                const containerMotoboy = document.getElementById('campos-motoboy');
+                const inputsMoto = containerMotoboy.querySelectorAll('input, select');
+                tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
+                veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
+                veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
+                veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
+                areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
+                valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('input-colab-name').value,
+                telefone: document.getElementById('input-colab-phone').value,
+                email: document.getElementById('input-colab-email').value,
+                cpf: document.getElementById('input-colab-cpf').value,
+                data_nascimento: document.getElementById('input-colab-dob').value,
+                endereco: document.getElementById('input-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('select-colab-status').value,
+                observacoes: document.getElementById('textarea-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64
+            };
+            
+            const res = await apiRequest('/colaboradores', 'POST', payload);
+            if (res) {
+                alert('Colaborador cadastrado!');
+                form.reset();
+                document.getElementById('campos-motoboy').classList.add('hidden');
+                loadColaboradores();
+            }
+        }
+
         async function deleteColab(id) {
             if(confirm("Deseja excluir este colaborador?")) {
                 await apiRequest(`/colaboradores/${id}`, 'DELETE');
@@ -823,13 +1212,136 @@
             }
         }
 
-        async function triggerBackup() {
-            await apiRequest('/backup', 'POST');
-            alert('Backup executado com sucesso.');
+        function abrirModalEdicaoColaborador(colabStr) {
+            const c = JSON.parse(decodeURIComponent(colabStr));
+            document.getElementById('edit-colab-id').value = c.id;
+            document.getElementById('edit-colab-name').value = c.nome || '';
+            document.getElementById('edit-colab-phone').value = c.telefone || '';
+            document.getElementById('edit-colab-email').value = c.email || '';
+            document.getElementById('edit-colab-cpf').value = c.cpf || '';
+            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
+            document.getElementById('edit-colab-address').value = c.endereco || '';
+            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
+            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
+            document.getElementById('edit-colab-obs').value = c.observacoes || '';
+
+            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
+            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
+            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
+            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
+            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
+            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
+
+            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
+            document.getElementById('modalEditarColaborador').classList.add('active');
         }
 
-        async function fetchReport(tipo) {
-            alert(`Gerando relatório de [${tipo}]...`);
+        async function salvarEdicaoColaborador() {
+            const id = document.getElementById('edit-colab-id').value;
+            const funcao = document.getElementById('edit-colab-funcao').value;
+            const fileInput = document.getElementById('edit-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
+                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
+                veiculoCor = document.getElementById('edit-colab-v-cor').value;
+                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
+                areaAtuacao = document.getElementById('edit-colab-area').value;
+                const valEnt = document.getElementById('edit-colab-v-entrega').value;
+                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-colab-name').value,
+                telefone: document.getElementById('edit-colab-phone').value,
+                email: document.getElementById('edit-colab-email').value,
+                cpf: document.getElementById('edit-colab-cpf').value,
+                data_nascimento: document.getElementById('edit-colab-dob').value,
+                endereco: document.getElementById('edit-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('edit-colab-status').value,
+                observacoes: document.getElementById('edit-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Colaborador atualizado!');
+                closeModal('modalEditarColaborador');
+                loadColaboradores();
+            }
+        }
+
+        // =========================================================================
+        // 7. OUVIDORIA, HELPDESK E CONFIGURAÇÕES
+        // =========================================================================
+        async function loadOuvidoria() {
+            const feeds = await apiRequest('/ouvidoria');
+            const tbody = document.getElementById('tbody-ouvidoria');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (!feeds || feeds.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback.</td></tr>`;
+                return;
+            }
+            feeds.forEach(f => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
+                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
+                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function abrirChamadoHelpdesk() {
+            const payload = {
+                resumo_problema: document.getElementById('input-hd-resumo').value,
+                descricao: document.getElementById('textarea-hd-desc').value
+            };
+            const res = await apiRequest('/helpdesk', 'POST', payload);
+            if (res) {
+                alert('Chamado aberto com sucesso!');
+                document.getElementById('input-hd-resumo').value = '';
+                document.getElementById('textarea-hd-desc').value = '';
+                loadHelpdeskGestor();
+            }
+        }
+
+        async function loadHelpdeskGestor() {
+            const chamados = await apiRequest('/helpdesk');
+            const tbody = document.getElementById('tbody-gestor-helpdesk');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+                return;
+            }
+            chamados.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
+                        <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
+                        <td><span class="badge badge-warning" style="text-transform: uppercase;">${c.status || 'aberto'}</span></td>
+                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+                    </tr>
+                `;
+            });
         }
 
         async function loadConfigurations() {
@@ -842,24 +1354,67 @@
                 document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
                 if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
                 if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
-
                 window.currentLogoBase64 = config.logo_url || '';
-
-                // Atualiza a logo visualmente na interface se existir salva
                 atualizarExibicaoLogotipo(window.currentLogoBase64);
             }
         }
 
+        async function saveConfigurations() {
+            const configAtual = await apiRequest('/configuracoes') || {};
+            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { logoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                titulo: document.getElementById('input-config-title').value,
+                slogan: document.getElementById('input-config-slogan').value,
+                endereco: document.getElementById('input-config-address').value,
+                telefone: document.getElementById('input-config-phone').value,
+                horario_funcionamento: document.getElementById('textarea-config-hours').value,
+                cor_primaria: document.getElementById('input-config-cor1').value,
+                cor_secundaria: document.getElementById('input-config-cor2').value,
+                logo_url: logoBase64
+            };
+
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações salvas!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            }
+        }
+
+        async function aplicarIdentidadeVisualDaEmpresa() {
+            try {
+                const config = await apiRequest('/configuracoes');
+                if (!config) return;
+                const root = document.documentElement;
+                if (config.cor_primaria) root.style.setProperty('--brand-primary', config.cor_primaria);
+                if (config.cor_secundaria) root.style.setProperty('--brand-secondary', config.cor_secundaria);
+            } catch (e) {}
+        }
+
+        async function triggerBackup() {
+            await apiRequest('/backup', 'POST');
+            alert('Backup executado com sucesso.');
+        }
+
+        async function fetchReport(tipo) {
+            alert(`Gerando relatório de [${tipo}]...`);
+        }
+
+        // =========================================================================
+        // 8. UTILITÁRIOS E INICIALIZAÇÃO DO PAINEL
+        // =========================================================================
         function atualizarExibicaoLogotipo(logoBase64) {
             const containers = document.querySelectorAll('.logo-preview-box');
             containers.forEach(container => {
                 if (logoBase64 && logoBase64.trim() !== '') {
                     container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
                 } else {
-                    container.innerHTML = `
-                        <span class="on-logo-top">ON</span>
-                        <span class="on-logo-bottom">delivery</span>
-                    `;
+                    container.innerHTML = `<span class="on-logo-top">ON</span><span class="on-logo-bottom">delivery</span>`;
                 }
             });
         }
@@ -871,60 +1426,6 @@
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = error => reject(error);
             });
-        }
-
-        async function saveConfigurations() {
-            // 1. Busca primeiro os dados atuais salvos no banco para garantir que nada seja perdido
-            const configAtual = await apiRequest('/configuracoes') || {};
-
-            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
-            const fileInput = document.getElementById('input-config-logo-file');
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try {
-                    logoBase64 = await convertFileToBase64(fileInput.files[0]);
-                } catch (err) {
-                    console.error("Erro ao converter imagem:", err);
-                }
-            }
-
-            // 2. Pega os valores da tela, mas se estiverem vazios, mantém o que já estava no banco
-            const payload = {
-                titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
-                slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
-                endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
-                telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
-                horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
-                cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
-                cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
-                logo_url: logoBase64
-            };
-
-            const res = await apiRequest('/configuracoes', 'PUT', payload);
-            if (res) {
-                alert('Configurações, cores e logotipo salvos com sucesso!');
-                loadConfigurations();
-                aplicarIdentidadeVisualDaEmpresa();
-            } else {
-                alert('Erro ao salvar as configurações.');
-            }
-        }
-
-        async function aplicarIdentidadeVisualDaEmpresa() {
-            try {
-                const config = await apiRequest('/configuracoes');
-                if (!config) return;
-
-                const root = document.documentElement;
-                if (config.cor_primaria) {
-                    root.style.setProperty('--brand-primary', config.cor_primaria);
-                }
-                if (config.cor_secundaria) {
-                    root.style.setProperty('--brand-secondary', config.cor_secundaria);
-                }
-            } catch (e) {
-                console.error("Erro ao aplicar identidade visual:", e);
-            }
         }
 
         function toggleMotoboyFields(funcao, idContainer) {
@@ -961,6 +1462,11 @@
             document.getElementById(targetId).classList.remove('hidden');
         }
 
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Função de Inicialização Única e Consolidada
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
@@ -968,15 +1474,30 @@
             loadColaboradores();
             loadOuvidoria();
             loadConfigurations();
+            loadHelpdeskGestor();
             aplicarIdentidadeVisualDaEmpresa();
 
+            // Configuração do Gráfico de Fluxo Dinâmico
             if(document.getElementById('chartFluxo')) {
-                new Chart(document.getElementById('chartFluxo').getContext('2d'), {
+                const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
+                chartFluxoInstance = new Chart(ctxFluxo, {
                     type: 'line',
-                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
+                    data: { 
+                        labels: ['17h', '18h', '19h', '20h', '21h'], 
+                        datasets: [{ 
+                            data: [0, 0, 0, 0, 0], 
+                            borderColor: '#ff5722', 
+                            backgroundColor: 'rgba(255,87,34,0.1)', 
+                            fill: true, 
+                            tension: 0.4 
+                        }]
+                    },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
+                atualizarGraficoFluxo();
             }
+
+            // Gráfico de Ouvidoria
             if(document.getElementById('chartOuvidoria')) {
                 new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
                     type: 'doughnut',
@@ -984,6 +1505,17 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
             }
+
+            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
+            setInterval(() => {
+                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
+                    loadColaboradores();
+                }
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
+                    loadDashboardData();
+                    atualizarGraficoFluxo();
+                }
+            }, 5000); 
         }
 
         window.onload = function() {
