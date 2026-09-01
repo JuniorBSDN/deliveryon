@@ -739,14 +739,13 @@
         </div>
     </div>
 
-    <!-- ================= SCRIPTS DE INTEGRAÇÃO COM API PYTHON ================= -->
-    <script>
+  <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
         let chartFluxoInstance = null;
 
         // =========================================================================
-        // 1. CORREÇÃO DA FUNÇÃO DE API (FIM DO VAZAMENTO DE DADOS)
+        // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
         // =========================================================================
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
@@ -771,7 +770,7 @@
                 } 
                 // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
                 else if (method === 'POST' || method === 'PUT') {
-                    if (!data) data = {}; // Proteção contra payloads nulos
+                    if (!data) data = {}; 
                     data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
@@ -786,104 +785,8 @@
         }
 
         // =========================================================================
-        // 2. FUNÇÕES DE CLIENTE BLINDADAS
+        // 2. AUTENTICAÇÃO E SESSÃO
         // =========================================================================
-        async function createClient() {
-            const form = document.getElementById('form-cliente');
-            const payload = {
-                nome: document.getElementById('input-cli-name').value,
-                telefone: document.getElementById('input-cli-phone').value,
-                email: document.getElementById('input-cli-email').value,
-                endereco: document.getElementById('input-cli-address').value,
-                referencia: document.getElementById('input-cli-ref').value,
-                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')) // Injeção extra direta de segurança
-            };
-            
-            const res = await apiRequest('/clients', 'POST', payload);
-            
-            if (res) {
-                alert('Cliente salvo com sucesso!');
-                form.reset();
-                loadClients();
-            } else {
-                alert('Falha ao cadastrar o cliente. Verifique sua conexão.');
-            }
-        }
-
-        async function loadClients() {
-            const clients = await apiRequest('/clients');
-            const tbody = document.getElementById('tbody-clients');
-            tbody.innerHTML = '';
-
-            if (!clients || clients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
-                return;
-            }
-
-            clients.forEach(c => {
-                const clienteJson = encodeURIComponent(JSON.stringify(c));
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${c.nome}</strong></td>
-                        <td>${c.telefone}</td>
-                        <td>${c.referencia || '-'}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function abrirModalEdicaoCliente(clienteStr) {
-            const c = JSON.parse(decodeURIComponent(clienteStr));
-            document.getElementById('edit-cli-id').value = c.id;
-            document.getElementById('edit-cli-name').value = c.nome || '';
-            document.getElementById('edit-cli-phone').value = c.telefone || '';
-            document.getElementById('edit-cli-email').value = c.email || '';
-            document.getElementById('edit-cli-address').value = c.endereco || '';
-            document.getElementById('edit-cli-ref').value = c.referencia || '';
-
-            document.getElementById('modalEditarCliente').classList.add('active');
-        }
-
-        async function salvarEdicaoCliente() {
-            const id = document.getElementById('edit-cli-id').value;
-            const payload = {
-                nome: document.getElementById('edit-cli-name').value,
-                telefone: document.getElementById('edit-cli-phone').value,
-                email: document.getElementById('edit-cli-email').value,
-                endereco: document.getElementById('edit-cli-address').value,
-                referencia: document.getElementById('edit-cli-ref').value,
-                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')) // Trava extra
-            };
-
-            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
-            if (res) {
-                alert('Cliente atualizado com sucesso!');
-                closeModal('modalEditarCliente');
-                loadClients();
-            } else {
-                alert('Erro ao atualizar o cliente.');
-            }
-        }
-        
-        async function deleteClient(id) {
-            if(confirm("Deseja excluir este cliente?")) {
-                const res = await apiRequest(`/clients/${id}`, 'DELETE');
-                if(res) {
-                    loadClients();
-                } else {
-                    alert("Erro ao tentar excluir cliente. ID da empresa pode ser inválido.");
-                }
-            }
-        }
-
-        // =========================================================================
-        // OUTRAS FUNÇÕES E LÓGICAS DO PAINEL
-        // =========================================================================
-
         async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
@@ -898,7 +801,6 @@
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
                     localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
 
-                    // Esconde a tela de login e inicializa o painel
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
@@ -915,21 +817,12 @@
             location.reload();
         }
 
-        async function updateOrderStatus(orderId, selectElement) {
-            const novoStatus = selectElement.value;
-            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
-
-            if (response) {
-                loadDashboardData();
-            } else {
-                alert("Erro ao atualizar o status do pedido.");
-            }
-        }
-
-       async function loadDashboardData() {
+        // =========================================================================
+        // 3. DASHBOARD E GRÁFICOS DINÂMICOS
+        // =========================================================================
+        async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
-                // Ajustado para preencher os IDs corretos dos cards do seu HTML
                 const waitingEl = document.getElementById('val-waiting-count');
                 const deliveredEl = document.getElementById('val-delivered-count');
                 const canceledEl = document.getElementById('val-canceled-count');
@@ -943,15 +836,26 @@
             loadOrders();
         }
 
-       async function loadOrders() {
+        async function atualizarGraficoFluxo() {
+            const dadosFluxo = await apiRequest('/dashboard/fluxo');
+            if (dadosFluxo && chartFluxoInstance) {
+                const labels = dadosFluxo.map(item => item.hora);
+                const totais = dadosFluxo.map(item => item.total);
+
+                chartFluxoInstance.data.labels = labels;
+                chartFluxoInstance.data.datasets[0].data = totais;
+                chartFluxoInstance.update();
+            }
+        }
+
+        async function loadOrders() {
             const orders = await apiRequest('/orders');
             const tbody = document.getElementById('tbody-recent-orders');
             if (!tbody) return;
             
             tbody.innerHTML = '';
-
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado no banco de dados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
                 return;
             }
 
@@ -978,9 +882,23 @@
             });
         }
 
+        async function updateOrderStatus(orderId, selectElement) {
+            const novoStatus = selectElement.value;
+            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+            if (response) {
+                loadDashboardData();
+            } else {
+                alert("Erro ao atualizar o status do pedido.");
+            }
+        }
+
+        // =========================================================================
+        // 4. GESTÃO DE PRODUTOS
+        // =========================================================================
         async function loadProducts() {
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
             if (!products || products.length === 0) {
@@ -990,14 +908,11 @@
 
             products.forEach(p => {
                 let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
-                
                 if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
                     imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
                 }
 
-                // Empacota o objeto do produto de forma segura para abrir no modal
                 const produtoJson = encodeURIComponent(JSON.stringify(p));
-
                 tbody.innerHTML += `
                     <tr data-id="${p.codigo}">
                         <td>${imagemHtml}</td>
@@ -1013,6 +928,42 @@
             });
         }
 
+        async function createProduct() {
+            const form = document.getElementById('form-produto');
+            const precoInput = document.getElementById('input-new-prod-price').value;
+            const fileInput = document.getElementById('input-new-prod-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                nome: document.getElementById('input-new-prod-name').value,
+                categoria: document.getElementById('categoria').value,
+                preco: parseFloat(precoInput.replace(',', '.')),
+                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
+                descricao: document.getElementById('textarea-new-prod-desc').value,
+                foto: fotoBase64
+            };
+            
+            const res = await apiRequest('/products', 'POST', payload);
+            if (res) {
+                alert('Produto cadastrado com sucesso!');
+                form.reset();
+                loadProducts();
+            } else {
+                alert('Falha ao cadastrar o produto.');
+            }
+        }
+
+        async function deleteProduct(code) {
+            if(confirm("Deseja realmente excluir este produto?")) {
+                const res = await apiRequest(`/products/${code}`, 'DELETE');
+                if (res) loadProducts();
+            }
+        }
+
         function abrirModalEdicao(produtoStr) {
             const p = JSON.parse(decodeURIComponent(produtoStr));
             document.getElementById('edit-prod-id').value = p.codigo;
@@ -1021,25 +972,15 @@
             document.getElementById('edit-prod-price').value = p.preco;
             document.getElementById('edit-prod-stock').value = p.estoque || 100;
             document.getElementById('edit-prod-desc').value = p.descricao || '';
-            
             document.getElementById('modalEditarProduto').classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
         }
 
         async function salvarEdicaoProduto() {
             const id = document.getElementById('edit-prod-id').value;
             const fileInput = document.getElementById('edit-prod-file');
             let fotoBase64 = '';
-
             if (fileInput && fileInput.files && fileInput.files[0]) {
-                try {
-                    fotoBase64 = await convertFileToBase64(fileInput.files[0]);
-                } catch (err) {
-                    console.error("Erro ao converter nova foto:", err);
-                }
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
 
             const payload = {
@@ -1053,65 +994,101 @@
 
             const res = await apiRequest(`/products/${id}`, 'PUT', payload);
             if (res) {
-                alert('Produto atualizado com sucesso!');
+                alert('Produto atualizado!');
                 closeModal('modalEditarProduto');
                 loadProducts();
-            } else {
-                alert('Erro ao atualizar o produto.');
             }
         }
 
-        async function deleteProduct(code) {
-            if(confirm("Deseja realmente excluir este produto?")) {
-                const res = await apiRequest(`/products/${code}`, 'DELETE');
-                if (res) {
-                    alert('Produto excluído com sucesso!');
-                    loadProducts();
-                } else {
-                    alert('Erro ao excluir o produto.');
-                }
+        // =========================================================================
+        // 5. GESTÃO DE CLIENTES
+        // =========================================================================
+        async function loadClients() {
+            const clients = await apiRequest('/clients');
+            const tbody = document.getElementById('tbody-clients');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!clients || clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
+                return;
             }
+
+            clients.forEach(c => {
+                const clienteJson = encodeURIComponent(JSON.stringify(c));
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.nome}</strong></td>
+                        <td>${c.telefone}</td>
+                        <td>${c.referencia || '-'}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
-        async function createProduct() {
-            const form = document.getElementById('form-produto');
-            const precoInput = document.getElementById('input-new-prod-price').value;
-            const precoFormatado = parseFloat(precoInput.replace(',', '.'));
-            
-            const fileInput = document.getElementById('input-new-prod-file');
-            let fotoBase64 = '';
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try {
-                    fotoBase64 = await convertFileToBase64(fileInput.files[0]);
-                } catch (err) {
-                    console.error("Erro ao converter imagem do produto:", err);
-                }
-            }
-
+        async function createClient() {
+            const form = document.getElementById('form-cliente');
             const payload = {
-                nome: document.getElementById('input-new-prod-name').value,
-                categoria: document.getElementById('categoria').value,
-                preco: precoFormatado,
-                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
-                descricao: document.getElementById('textarea-new-prod-desc').value,
-                foto: fotoBase64
+                nome: document.getElementById('input-cli-name').value,
+                telefone: document.getElementById('input-cli-phone').value,
+                email: document.getElementById('input-cli-email').value,
+                endereco: document.getElementById('input-cli-address').value,
+                referencia: document.getElementById('input-cli-ref').value
             };
-            
-            const res = await apiRequest('/products', 'POST', payload);
-            
+            const res = await apiRequest('/clients', 'POST', payload);
             if (res) {
-                alert('Produto cadastrado com sucesso!');
+                alert('Cliente salvo!');
                 form.reset();
-                loadProducts();
-            } else {
-                alert('Falha ao cadastrar o produto. Ocorreu um erro no servidor.');
+                loadClients();
             }
         }
 
+        async function deleteClient(id) {
+            if(confirm("Deseja excluir este cliente?")) {
+                await apiRequest(`/clients/${id}`, 'DELETE');
+                loadClients();
+            }
+        }
+
+        function abrirModalEdicaoCliente(clienteStr) {
+            const c = JSON.parse(decodeURIComponent(clienteStr));
+            document.getElementById('edit-cli-id').value = c.id;
+            document.getElementById('edit-cli-name').value = c.nome || '';
+            document.getElementById('edit-cli-phone').value = c.telefone || '';
+            document.getElementById('edit-cli-email').value = c.email || '';
+            document.getElementById('edit-cli-address').value = c.endereco || '';
+            document.getElementById('edit-cli-ref').value = c.referencia || '';
+            document.getElementById('modalEditarCliente').classList.add('active');
+        }
+
+        async function salvarEdicaoCliente() {
+            const id = document.getElementById('edit-cli-id').value;
+            const payload = {
+                nome: document.getElementById('edit-cli-name').value,
+                telefone: document.getElementById('edit-cli-phone').value,
+                email: document.getElementById('edit-cli-email').value,
+                endereco: document.getElementById('edit-cli-address').value,
+                referencia: document.getElementById('edit-cli-ref').value
+            };
+            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Cliente atualizado!');
+                closeModal('modalEditarCliente');
+                loadClients();
+            }
+        }
+
+        // =========================================================================
+        // 6. GESTÃO DE COLABORADORES
+        // =========================================================================
         async function loadColaboradores() {
             const colabs = await apiRequest('/colaboradores');
             const tbody = document.getElementById('tbody-colaboradores');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
             if (!colabs || colabs.length === 0) {
@@ -1120,15 +1097,11 @@
             }
 
             colabs.forEach(cb => {
-                // Renderiza a foto ou um avatar padrão
                 let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
                 if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
                     fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
                 }
-
-                // Prepara os dados para o modal de edição
                 const colabJson = encodeURIComponent(JSON.stringify(cb));
-
                 tbody.innerHTML += `
                     <tr>
                         <td>${fotoHtml}</td>
@@ -1149,16 +1122,10 @@
         async function createColab() {
             const form = document.getElementById('form-colaborador');
             const funcao = document.getElementById('select-funcao').value;
-            
-            // Captura e converte a foto
             const fileInput = document.getElementById('input-colab-file');
             let fotoBase64 = '';
             if (fileInput && fileInput.files && fileInput.files[0]) {
-                try {
-                    fotoBase64 = await convertFileToBase64(fileInput.files[0]);
-                } catch (err) {
-                    console.error("Erro ao converter foto:", err);
-                }
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
             
             let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
@@ -1191,18 +1158,15 @@
                 veiculo_placa: veiculoPlaca,
                 area_atuacao: areaAtuacao,
                 valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
-                foto: fotoBase64 // <- Foto enviada aqui
+                foto: fotoBase64
             };
             
             const res = await apiRequest('/colaboradores', 'POST', payload);
-            
             if (res) {
-                alert('Colaborador cadastrado com sucesso!');
+                alert('Colaborador cadastrado!');
                 form.reset();
                 document.getElementById('campos-motoboy').classList.add('hidden');
                 loadColaboradores();
-            } else {
-                alert('Falha ao cadastrar o colaborador.');
             }
         }
 
@@ -1226,7 +1190,6 @@
             document.getElementById('edit-colab-status').value = c.status || 'Disponível';
             document.getElementById('edit-colab-obs').value = c.observacoes || '';
 
-            // Resgata campos específicos de motoboy
             document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
             document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
             document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
@@ -1243,10 +1206,8 @@
             const funcao = document.getElementById('edit-colab-funcao').value;
             const fileInput = document.getElementById('edit-colab-file');
             let fotoBase64 = '';
-
             if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); }
-                catch (err) { console.error("Erro ao converter foto:", err); }
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
 
             let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
@@ -1283,31 +1244,31 @@
 
             const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
             if (res) {
-                alert('Colaborador atualizado com sucesso!');
+                alert('Colaborador atualizado!');
                 closeModal('modalEditarColaborador');
                 loadColaboradores();
-            } else {
-                alert('Erro ao atualizar o colaborador.');
             }
         }
 
+        // =========================================================================
+        // 7. OUVIDORIA, HELPDESK E CONFIGURAÇÕES
+        // =========================================================================
         async function loadOuvidoria() {
             const feeds = await apiRequest('/ouvidoria');
             const tbody = document.getElementById('tbody-ouvidoria');
+            if(!tbody) return;
             tbody.innerHTML = '';
-
             if (!feeds || feeds.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback registrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback.</td></tr>`;
                 return;
             }
-
             feeds.forEach(f => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${f.data}<br><strong>${f.cliente}</strong></td>
                         <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
                         <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Ver" onclick="viewFeed('${f.id}')"><i class="ph ph-eye"></i></button></td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
                     </tr>
                 `;
             });
@@ -1315,63 +1276,37 @@
 
         async function abrirChamadoHelpdesk() {
             const payload = {
-                empresa_id: parseInt(localStorage.getItem('deliveryon_empresa_id')),
                 resumo_problema: document.getElementById('input-hd-resumo').value,
                 descricao: document.getElementById('textarea-hd-desc').value
             };
-
             const res = await apiRequest('/helpdesk', 'POST', payload);
             if (res) {
-                alert('Chamado aberto com sucesso! Nossa equipe foi notificada.');
+                alert('Chamado aberto com sucesso!');
                 document.getElementById('input-hd-resumo').value = '';
                 document.getElementById('textarea-hd-desc').value = '';
                 loadHelpdeskGestor();
-            } else {
-                alert('Erro ao abrir o chamado.');
             }
         }
 
         async function loadHelpdeskGestor() {
             const chamados = await apiRequest('/helpdesk');
             const tbody = document.getElementById('tbody-gestor-helpdesk');
+            if(!tbody) return;
             tbody.innerHTML = '';
-
             if (!chamados || chamados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
                 return;
             }
-
             chamados.forEach(c => {
-                let badgeClass = 'badge-warning';
-                let statusTexto = c.status || 'aberto';
-                
-                if (statusTexto === 'resolvido' || statusTexto === 'concluido') {
-                    badgeClass = 'badge-success';
-                } else if (statusTexto === 'cancelado') {
-                    badgeClass = 'badge-danger';
-                } else if (statusTexto === 'em_andamento' || statusTexto === 'em_atendimento') {
-                    badgeClass = 'badge-info';
-                    statusTexto = 'Em Andamento';
-                }
-
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
                         <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
-                        <td><span class="badge ${badgeClass}" style="text-transform: uppercase;">${statusTexto}</span></td>
+                        <td><span class="badge badge-warning" style="text-transform: uppercase;">${c.status || 'aberto'}</span></td>
                         <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
                     </tr>
                 `;
             });
-        }
-
-        async function triggerBackup() {
-            await apiRequest('/backup', 'POST');
-            alert('Backup executado com sucesso.');
-        }
-
-        async function fetchReport(tipo) {
-            alert(`Gerando relatório de [${tipo}]...`);
         }
 
         async function loadConfigurations() {
@@ -1384,22 +1319,67 @@
                 document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
                 if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
                 if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
-
                 window.currentLogoBase64 = config.logo_url || '';
                 atualizarExibicaoLogotipo(window.currentLogoBase64);
             }
         }
 
+        async function saveConfigurations() {
+            const configAtual = await apiRequest('/configuracoes') || {};
+            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { logoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                titulo: document.getElementById('input-config-title').value,
+                slogan: document.getElementById('input-config-slogan').value,
+                endereco: document.getElementById('input-config-address').value,
+                telefone: document.getElementById('input-config-phone').value,
+                horario_funcionamento: document.getElementById('textarea-config-hours').value,
+                cor_primaria: document.getElementById('input-config-cor1').value,
+                cor_secundaria: document.getElementById('input-config-cor2').value,
+                logo_url: logoBase64
+            };
+
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações salvas!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            }
+        }
+
+        async function aplicarIdentidadeVisualDaEmpresa() {
+            try {
+                const config = await apiRequest('/configuracoes');
+                if (!config) return;
+                const root = document.documentElement;
+                if (config.cor_primaria) root.style.setProperty('--brand-primary', config.cor_primaria);
+                if (config.cor_secundaria) root.style.setProperty('--brand-secondary', config.cor_secundaria);
+            } catch (e) {}
+        }
+
+        async function triggerBackup() {
+            await apiRequest('/backup', 'POST');
+            alert('Backup executado com sucesso.');
+        }
+
+        async function fetchReport(tipo) {
+            alert(`Gerando relatório de [${tipo}]...`);
+        }
+
+        // =========================================================================
+        // 8. UTILITÁRIOS E INICIALIZAÇÃO DO PAINEL
+        // =========================================================================
         function atualizarExibicaoLogotipo(logoBase64) {
             const containers = document.querySelectorAll('.logo-preview-box');
             containers.forEach(container => {
                 if (logoBase64 && logoBase64.trim() !== '') {
                     container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
                 } else {
-                    container.innerHTML = `
-                        <span class="on-logo-top">ON</span>
-                        <span class="on-logo-bottom">delivery</span>
-                    `;
+                    container.innerHTML = `<span class="on-logo-top">ON</span><span class="on-logo-bottom">delivery</span>`;
                 }
             });
         }
@@ -1411,57 +1391,6 @@
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = error => reject(error);
             });
-        }
-
-        async function saveConfigurations() {
-            const configAtual = await apiRequest('/configuracoes') || {};
-            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
-            const fileInput = document.getElementById('input-config-logo-file');
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try {
-                    logoBase64 = await convertFileToBase64(fileInput.files[0]);
-                } catch (err) {
-                    console.error("Erro ao converter imagem:", err);
-                }
-            }
-
-            const payload = {
-                titulo: document.getElementById('input-config-title').value || configAtual.titulo || '',
-                slogan: document.getElementById('input-config-slogan').value || configAtual.slogan || '',
-                endereco: document.getElementById('input-config-address').value || configAtual.endereco || '',
-                telefone: document.getElementById('input-config-phone').value || configAtual.telefone || '',
-                horario_funcionamento: document.getElementById('textarea-config-hours').value || configAtual.horario_funcionamento || '',
-                cor_primaria: document.getElementById('input-config-cor1').value || configAtual.cor_primaria || '#ff5722',
-                cor_secundaria: document.getElementById('input-config-cor2').value || configAtual.cor_secundaria || '#e64a19',
-                logo_url: logoBase64
-            };
-
-            const res = await apiRequest('/configuracoes', 'PUT', payload);
-            if (res) {
-                alert('Configurações, cores e logotipo salvos com sucesso!');
-                loadConfigurations();
-                aplicarIdentidadeVisualDaEmpresa();
-            } else {
-                alert('Erro ao salvar as configurações.');
-            }
-        }
-
-        async function aplicarIdentidadeVisualDaEmpresa() {
-            try {
-                const config = await apiRequest('/configuracoes');
-                if (!config) return;
-
-                const root = document.documentElement;
-                if (config.cor_primaria) {
-                    root.style.setProperty('--brand-primary', config.cor_primaria);
-                }
-                if (config.cor_secundaria) {
-                    root.style.setProperty('--brand-secondary', config.cor_secundaria);
-                }
-            } catch (e) {
-                console.error("Erro ao aplicar identidade visual:", e);
-            }
         }
 
         function toggleMotoboyFields(funcao, idContainer) {
@@ -1498,6 +1427,11 @@
             document.getElementById(targetId).classList.remove('hidden');
         }
 
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Função de Inicialização Única e Consolidada
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
@@ -1508,33 +1442,7 @@
             loadHelpdeskGestor();
             aplicarIdentidadeVisualDaEmpresa();
 
-            if(document.getElementById('chartFluxo')) {
-                new Chart(document.getElementById('chartFluxo').getContext('2d'), {
-                    type: 'line',
-                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]},
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-            }
-            if(document.getElementById('chartOuvidoria')) {
-                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-                });
-            }
-
-            
-            async function inicializarPainel() {
-            loadDashboardData();
-            loadProducts();
-            loadClients();
-            loadColaboradores();
-            loadOuvidoria();
-            loadConfigurations();
-            loadHelpdeskGestor();
-            aplicarIdentidadeVisualDaEmpresa();
-
-            // Configuração e carga dinâmica do Gráfico de Fluxo
+            // Configuração do Gráfico de Fluxo Dinâmico
             if(document.getElementById('chartFluxo')) {
                 const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
                 chartFluxoInstance = new Chart(ctxFluxo, {
@@ -1554,6 +1462,7 @@
                 atualizarGraficoFluxo();
             }
 
+            // Gráfico de Ouvidoria
             if(document.getElementById('chartOuvidoria')) {
                 new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
                     type: 'doughnut',
@@ -1562,7 +1471,7 @@
                 });
             }
 
-            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL ---
+            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
             setInterval(() => {
                 if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
                     loadColaboradores();
@@ -1570,32 +1479,6 @@
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
                     loadDashboardData();
                     atualizarGraficoFluxo();
-                }
-            }, 5000); 
-        }
-
-        async function atualizarGraficoFluxo() {
-            const dadosFluxo = await apiRequest('/dashboard/fluxo');
-            if (dadosFluxo && chartFluxoInstance) {
-                // Mapeia os dados recebidos da API para os horários do gráfico
-                const labels = dadosFluxo.map(item => item.hora);
-                const totais = dadosFluxo.map(item => item.total);
-
-                chartFluxoInstance.data.labels = labels;
-                chartFluxoInstance.data.datasets[0].data = totais;
-                chartFluxoInstance.update();
-            }
-        }
-            
-            // --- NOVO: AUTO ATUALIZAÇÃO EM TEMPO REAL ---
-            setInterval(() => {
-                // Atualiza a lista de colaboradores a cada 5 segundos SE a aba estiver aberta
-                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
-                    loadColaboradores();
-                }
-                // Atualiza o Dashboard a cada 5 segundos SE a aba estiver aberta
-                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
-                    loadDashboardData();
                 }
             }, 5000); 
         }
