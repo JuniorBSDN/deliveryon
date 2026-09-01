@@ -743,6 +743,7 @@
     <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
+        let chartFluxoInstance = null;
 
         // =========================================================================
         // 1. CORREÇÃO DA FUNÇÃO DE API (FIM DO VAZAMENTO DE DADOS)
@@ -1522,6 +1523,70 @@
                 });
             }
 
+            
+            async function inicializarPainel() {
+            loadDashboardData();
+            loadProducts();
+            loadClients();
+            loadColaboradores();
+            loadOuvidoria();
+            loadConfigurations();
+            loadHelpdeskGestor();
+            aplicarIdentidadeVisualDaEmpresa();
+
+            // Configuração e carga dinâmica do Gráfico de Fluxo
+            if(document.getElementById('chartFluxo')) {
+                const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
+                chartFluxoInstance = new Chart(ctxFluxo, {
+                    type: 'line',
+                    data: { 
+                        labels: ['17h', '18h', '19h', '20h', '21h'], 
+                        datasets: [{ 
+                            data: [0, 0, 0, 0, 0], 
+                            borderColor: '#ff5722', 
+                            backgroundColor: 'rgba(255,87,34,0.1)', 
+                            fill: true, 
+                            tension: 0.4 
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+                atualizarGraficoFluxo();
+            }
+
+            if(document.getElementById('chartOuvidoria')) {
+                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL ---
+            setInterval(() => {
+                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
+                    loadColaboradores();
+                }
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
+                    loadDashboardData();
+                    atualizarGraficoFluxo();
+                }
+            }, 5000); 
+        }
+
+        async function atualizarGraficoFluxo() {
+            const dadosFluxo = await apiRequest('/dashboard/fluxo');
+            if (dadosFluxo && chartFluxoInstance) {
+                // Mapeia os dados recebidos da API para os horários do gráfico
+                const labels = dadosFluxo.map(item => item.hora);
+                const totais = dadosFluxo.map(item => item.total);
+
+                chartFluxoInstance.data.labels = labels;
+                chartFluxoInstance.data.datasets[0].data = totais;
+                chartFluxoInstance.update();
+            }
+        }
+            
             // --- NOVO: AUTO ATUALIZAÇÃO EM TEMPO REAL ---
             setInterval(() => {
                 // Atualiza a lista de colaboradores a cada 5 segundos SE a aba estiver aberta
