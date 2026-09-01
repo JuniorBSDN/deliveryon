@@ -343,11 +343,41 @@
         </div>
     </div>
 
- <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
-   <script>
+    <!-- MODAL NOVA CORRIDA (UBER STYLE) -->
+    <div class="modal-overlay" id="modalNovaCorrida" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 350px; text-align: center; border-radius: 12px; border-top: 5px solid var(--brand-primary);">
+            <div class="modal-body" style="padding: 30px 20px;">
+                <div class="pulse-ring" style="width: 80px; height: 80px; background: #ffebee; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 15px; animation: pulse 1.5s infinite;">
+                    <i class="ph-fill ph-bell-ringing"></i>
+                </div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 5px;">Nova Entrega!</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Restaurante próximo</p>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Ganhos Estimados</span>
+                    <h3 style="font-size: 2rem; color: var(--success); margin-top: 5px;" id="dispatch-valor">R$ 6,50</h3>
+                </div>
+
+                <div style="font-size: 3rem; font-weight: 900; color: var(--text-main); margin-bottom: 20px;" id="dispatch-timer">15</div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline" style="flex: 1; border-color: var(--danger); color: var(--danger);" onclick="responderDespacho(false)">Recusar</button>
+                    <button class="btn btn-success" style="flex: 2; font-size: 1.1rem;" onclick="responderDespacho(true)">ACEITAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }</style>
+
+    <!-- ================= SCRIPTS DE INTEGRAÇÃO ================= -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
         // CONFIGURAÇÕES GLOBAIS DA API
         const API_BASE_URL = '/api/entregador'; 
         let mapaInstancias = {};
+        let wsDespacho = null;
+        let timerDespacho = null;
+        let corridaAtualId = null;
 
         // Acessibilidade - Tamanho da Fonte
         let currentFontSize = 100;
@@ -356,6 +386,101 @@
             if(currentFontSize < 80) currentFontSize = 80;
             if(currentFontSize > 150) currentFontSize = 150;
             document.body.style.fontSize = currentFontSize + '%';
+        }
+
+        // ALTERAR STATUS E SINCRONIZAR COM BANCO + WEBSOCKET
+        async function alterarStatusEntregador(novoStatus) {
+            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+            const select = document.getElementById('ent-status-select');
+
+            if(novoStatus === 'Disponível') select.className = 'badge badge-success';
+            else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
+            else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
+            else select.className = 'badge badge-danger';
+
+            localStorage.setItem('deliveryon_entregador_status', novoStatus);
+
+            // Gerencia WebSocket baseado no status
+            if (novoStatus === 'Disponível') {
+                conectarWebSocket(entregadorId);
+            } else {
+                if (wsDespacho) wsDespacho.close();
+            }
+
+            // Envia para o banco de dados
+            try {
+                const response = await fetch('/api/entregador/status', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        entregador_id: parseInt(entregadorId), 
+                        status: novoStatus 
+                    })
+                });
+                
+                if(!response.ok) throw new Error("Falha de comunicação");
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function conectarWebSocket(id) {
+            if (wsDespacho) wsDespacho.close();
+
+            wsDespacho = new WebSocket(`wss://sua-api.com/ws/dispatch/${id}`);
+
+            wsDespacho.onmessage = function(event) {
+                const dados = JSON.parse(event.data);
+                if (dados.tipo === 'NOVA_CORRIDA') {
+                    tocarAlertaSonoro();
+                    exibirAlertaNovaCorrida(dados.corrida_id, dados.taxa);
+                }
+            };
+
+            wsDespacho.onclose = function() {
+                if (localStorage.getItem('deliveryon_entregador_status') === 'Disponível') {
+                    setTimeout(() => conectarWebSocket(id), 5000);
+                }
+            };
+        }
+
+        function exibirAlertaNovaCorrida(id, taxa) {
+            corridaAtualId = id;
+            document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
+            document.getElementById('modalNovaCorrida').classList.add('active');
+
+            let tempo = 15;
+            document.getElementById('dispatch-timer').innerText = tempo;
+
+            timerDespacho = setInterval(() => {
+                tempo--;
+                document.getElementById('dispatch-timer').innerText = tempo;
+                if (tempo <= 0) {
+                    responderDespacho(false);
+                }
+            }, 1000);
+        }
+
+        function responderDespacho(aceitou) {
+            clearInterval(timerDespacho);
+            document.getElementById('modalNovaCorrida').classList.remove('active');
+
+            if (wsDespacho && wsDespacho.readyState === WebSocket.OPEN) {
+                wsDespacho.send(JSON.stringify({
+                    tipo: aceitou ? 'ACEITAR' : 'RECUSAR',
+                    corrida_id: corridaAtualId
+                }));
+            }
+
+            if (aceitou) {
+                alterarStatusEntregador('Em Entrega');
+                carregarRotasAtivas();
+            }
+        }
+
+        function tocarAlertaSonoro() {
+            const audio = new Audio('alerta-corrida.mp3');
+            audio.play().catch(e => console.log("Bloqueio de autoplay do navegador"));
         }
 
         // LÓGICA DE AUTENTICAÇÃO
@@ -401,7 +526,7 @@
                 localStorage.setItem('deliveryon_entregador_nome', data.nome);
                 localStorage.setItem('deliveryon_entregador_id', data.id);
                 localStorage.setItem('deliveryon_empresa_id', data.empresa_id);
-                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível'); // <-- SALVA O STATUS AQUI
+                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível');
                 
                 verificarAcessoEntregador();
             } catch (error) {
@@ -413,11 +538,7 @@
         }
 
         function fazerLogoutEntregador() {
-            localStorage.removeItem('deliveryon_entregador_token');
-            localStorage.removeItem('deliveryon_entregador_nome');
-            localStorage.removeItem('deliveryon_entregador_id');
-            localStorage.removeItem('deliveryon_empresa_id');
-            localStorage.removeItem('deliveryon_entregador_status');
+            localStorage.clear();
             window.location.reload();
         }
 
@@ -425,7 +546,6 @@
             const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
 
-            // <-- APLICA O STATUS SALVO NA TELA -->
             const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
             const select = document.getElementById('ent-status-select');
             if(select) {
@@ -441,7 +561,6 @@
             filtrarExtrato(); 
         }
 
-        // CARREGA CORES E IDENTIDADE VISUAL DA EMPRESA VINCULADA
         async function carregarIdentidadeVisualEmpresa() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (!empresaId) return;
@@ -463,42 +582,11 @@
                     const topbarLogo = document.querySelector('.topbar .logo-wrapper');
                     if (topbarLogo) topbarLogo.innerHTML = imgLogo;
                 }
-                
             } catch (error) {
                 console.error("Erro ao carregar identidade visual:", error);
             }
         }
 
-        // NOVA FUNÇÃO: ALTERAR STATUS E ENVIAR PARA O BANCO (Substitui a antiga toggleStatusTrabalho)
-        async function alterarStatusEntregador(novoStatus) {
-            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
-            const select = document.getElementById('ent-status-select');
-            
-            if(novoStatus === 'Disponível') select.className = 'badge badge-success';
-            else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
-            else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
-            else select.className = 'badge badge-danger';
-
-            try {
-                const response = await fetch('/api/entregador/status', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        entregador_id: parseInt(entregadorId), 
-                        status: novoStatus 
-                    })
-                });
-                
-                if(!response.ok) throw new Error("Falha de comunicação");
-                localStorage.setItem('deliveryon_entregador_status', novoStatus);
-                
-            } catch (error) {
-                console.error(error);
-                alert("Erro ao sincronizar status. Verifique sua conexão.");
-            }
-        }
-
-        // CARREGAR ROTAS DA API FILTRADAS POR EMPRESA
         async function carregarRotasAtivas() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
             const container = document.getElementById('ent-lista-rotas');
@@ -560,7 +648,6 @@
             }
         }
 
-        // INTEGRAÇÃO LEAFLET (Mapa por ID dinâmico)
         function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
             const latLoja = -0.9234; 
             const lngLoja = -48.1321;
@@ -584,7 +671,6 @@
                 .bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
         }
 
-        // FLUXO DE CONCLUSÃO DE ENTREGA (POST PARA API)
         function abrirModalConclusao(id, cliente, valor) {
             document.getElementById('modal-pedido-id').value = id;
             document.getElementById('modal-cliente-nome').value = cliente;
@@ -620,7 +706,7 @@
                 }
 
                 alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
-                filtrarExtrato(); // Atualiza o extrato em tempo real ao baixar o pedido
+                filtrarExtrato();
 
                 const card = document.getElementById('card-pedido-' + id);
                 if(card) {
@@ -637,7 +723,6 @@
             }
         }
 
-        // CARREGAR EXTRATO DA API
         async function filtrarExtrato() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
             const tbody = document.getElementById('tabela-extrato');
@@ -649,8 +734,8 @@
                 const extrato = await response.json();
                 
                 const dataFiltro = document.getElementById('filtro-data').value; 
-                const mesFiltro = document.getElementById('filtro-mes').value;   
-                const anoFiltro = document.getElementById('filtro-ano').value;   
+                const mesFiltro = document.getElementById('filtro-mes').value;    
+                const anoFiltro = document.getElementById('filtro-ano').value;    
                 
                 let qtdVisiveis = 0;
                 let valorTotal = 0;
@@ -692,7 +777,6 @@
             }
         }
 
-        // NAVEGAÇÃO SPA E MODAIS
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
