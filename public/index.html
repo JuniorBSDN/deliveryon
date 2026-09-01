@@ -27,28 +27,39 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 90px; }
         
-        .header-loja { background: white; padding: 20px; border-bottom: 1px solid var(--border-color); text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header-loja { background: white; padding: 25px 20px; border-bottom: 1px solid var(--border-color); text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
 
         /* BANNER / TOAST DE ACOMPANHAMENTO ATIVO */
         .order-tracking-banner { background: linear-gradient(135deg, #1a1a1a, #333); color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .order-tracking-banner:hover { opacity: 0.95; }
+        .hidden { display: none !important; }
 
-        .categories-nav { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; white-space: nowrap; }
-        .cat-chip { padding: 8px 16px; background: white; border: 1px solid var(--border-color); border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: all 0.2s; }
+        /* CATEGORIAS */
+        .categories-nav { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 25px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .cat-chip { padding: 8px 18px; background: white; border: 1px solid var(--border-color); border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: all 0.2s; }
+        .cat-chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
         .cat-chip.active { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
 
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
-        .product-card { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
-        .product-card h4 { font-size: 1.1rem; margin-bottom: 5px; }
-        .product-card p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
-        .product-price { font-weight: 700; color: var(--success); font-size: 1.1rem; }
+        /* PRODUTOS */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-card { background: white; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; }
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+        .product-img-box { width: 100%; height: 160px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .product-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .product-img-box i { font-size: 3rem; color: #ccc; }
+        .product-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-info h4 { font-size: 1.1rem; margin-bottom: 6px; }
+        .product-info p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .product-price { font-weight: 700; color: var(--success); font-size: 1.15rem; }
 
-        .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
         .btn-primary { background: var(--brand-primary); color: white; width: 100%; }
 
         /* BARRA INFERIOR DO CARRINHO */
-        .cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid var(--border-color); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 1000; }
+        .cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid var(--border-color); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1000; }
         
         /* TIMELINE DE ACOMPANHAMENTO DO PEDIDO (MODAL) */
         .timeline { position: relative; padding-left: 30px; margin: 20px 0; }
@@ -62,16 +73,17 @@
         /* MODAIS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 10px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 10px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; float: right; }
         .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; width: 100%; margin-bottom: 15px; outline: none; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); display: block; }
     </style>
 </head>
 <body>
 
     <header class="header-loja">
-        <h1 id="loja-nome" style="font-size: 1.5rem;">Carregando Loja...</h1>
-        <p id="loja-slogan" style="font-size: 0.9rem; color: var(--text-muted);">Aguarde...</p>
+        <h1 id="loja-nome" style="font-size: 1.6rem; font-weight: 800;">Carregando Loja...</h1>
+        <p id="loja-slogan" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">Aguarde...</p>
     </header>
 
     <div class="container">
@@ -86,12 +98,16 @@
 
         <!-- CATEGORIAS -->
         <div class="categories-nav" id="categorias-container">
-            <div class="cat-chip active">Todos</div>
+            <div class="cat-chip active" onclick="filtrarCategoria('Todos', this)">Todos</div>
+            <div class="cat-chip" onclick="filtrarCategoria('hamburgueres', this)">🍔 Hambúrgueres</div>
+            <div class="cat-chip" onclick="filtrarCategoria('pizzas', this)">🍕 Pizzas</div>
+            <div class="cat-chip" onclick="filtrarCategoria('bebidas', this)">🥤 Bebidas</div>
+            <div class="cat-chip" onclick="filtrarCategoria('sobremesas', this)">🍰 Sobremesas</div>
         </div>
 
         <!-- LISTA DE PRODUTOS -->
         <div class="products-grid" id="cardapio-produtos">
-            <!-- Injetado via JS -->
+            <!-- Injetado dinamicamente via JS -->
         </div>
     </div>
 
@@ -99,9 +115,9 @@
     <div class="cart-bar" id="cart-bar" style="display: none;">
         <div>
             <span style="font-size: 0.85rem; color: var(--text-muted);" id="cart-qtd-itens">0 itens</span>
-            <h3 id="cart-total-valor" style="font-size: 1.2rem; color: var(--success);">R$ 0,00</h3>
+            <h3 id="cart-total-valor" style="font-size: 1.3rem; color: var(--success);">R$ 0,00</h3>
         </div>
-        <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="abrirCheckout()">Ver Carrinho / Finalizar</button>
+        <button class="btn btn-primary" style="width: auto; padding: 12px 24px; font-size: 1rem;" onclick="abrirCheckout()"><i class="ph ph-shopping-cart"></i> Ver Carrinho / Finalizar</button>
     </div>
 
     <!-- MODAL DE CHECKOUT / FINALIZAR PEDIDO -->
@@ -125,7 +141,7 @@
                         <option>Dinheiro</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary" style="padding: 12px;"><i class="ph ph-paper-plane-tilt"></i> Enviar Pedido para a Loja</button>
+                <button type="submit" class="btn btn-primary" style="padding: 12px; margin-top: 10px;"><i class="ph ph-paper-plane-tilt"></i> Enviar Pedido para a Loja</button>
             </form>
         </div>
     </div>
@@ -169,6 +185,7 @@
     <script>
         const API_BASE_URL = "/api";
         let carrinho = [];
+        let produtosGlobais = [];
         let empresaIdAtiva = 1;
         let pedidoAtivoId = null;
         let mapaClienteInstancia = null;
@@ -194,32 +211,59 @@
                 }
 
                 const resProd = await fetch(`${API_BASE_URL}/products?empresa_id=${empresaIdAtiva}`);
-                const produtos = await resProd.json();
+                produtosGlobais = await resProd.json();
                 
-                const container = document.getElementById('cardapio-produtos');
-                container.innerHTML = '';
-
-                if (!produtos || produtos.length === 0) {
-                    container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted);">Nenhum produto disponível no momento.</p>';
-                    return;
-                }
-
-                produtos.forEach(p => {
-                    container.innerHTML += `
-                        <div class="product-card">
-                            <div>
-                                <h4>${p.nome}</h4>
-                                <p>${p.descricao || 'Sem descrição'}</p>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                                <span class="product-price">R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</span>
-                                <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick='adicionarAoCarrinho(${JSON.stringify(p)})'><i class="ph ph-plus"></i> Adicionar</button>
-                            </div>
-                        </div>
-                    `;
-                });
+                renderizarProdutos(produtosGlobais);
             } catch (e) {
                 console.error("Erro ao carregar cardápio:", e);
+                document.getElementById('cardapio-produtos').innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: var(--danger);">Erro ao carregar produtos da vitrine.</p>';
+            }
+        }
+
+        function renderizarProdutos(lista) {
+            const container = document.getElementById('cardapio-produtos');
+            container.innerHTML = '';
+
+            if (!lista || lista.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted); padding: 30px;">Nenhum produto disponível no momento.</p>';
+                return;
+            }
+
+            lista.forEach(p => {
+                let imagemHtml = `<div class="product-img-box"><i class="ph ph-fork-knife"></i></div>`;
+                if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
+                    imagemHtml = `<div class="product-img-box"><img src="${p.foto}" alt="${p.nome}"></div>`;
+                }
+
+                const precoFormatado = typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco;
+
+                container.innerHTML += `
+                    <div class="product-card">
+                        ${imagemHtml}
+                        <div class="product-info">
+                            <div>
+                                <h4>${p.nome}</h4>
+                                <p>${p.descricao || 'Sem descrição informada.'}</p>
+                            </div>
+                            <div class="product-footer">
+                                <span class="product-price">R$ ${precoFormatado}</span>
+                                <button class="btn btn-primary" style="width: auto; padding: 7px 14px;" onclick='adicionarAoCarrinho(${JSON.stringify(p)})'><i class="ph ph-plus"></i> Adicionar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filtrarCategoria(categoria, elementoChip) {
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            elementoChip.classList.add('active');
+
+            if (categoria === 'Todos') {
+                renderizarProdutos(produtosGlobais);
+            } else {
+                const filtrados = produtosGlobais.filter(p => (p.categoria || '').toLowerCase() === categoria.toLowerCase());
+                renderizarProdutos(filtrados);
             }
         }
 
@@ -256,9 +300,9 @@
 
             carrinho.forEach(item => {
                 listaDiv.innerHTML += `
-                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 8px;">
                         <span>${item.quantidade}x ${item.nome}</span>
-                        <span>R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                        <span style="font-weight: 600;">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
                     </div>
                 `;
             });
