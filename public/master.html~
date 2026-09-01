@@ -29,7 +29,6 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         
-        /* Oculta o painel até que a senha Master seja validada */
         body { background-color: var(--bg-color); color: var(--text-main); display: none; height: 100vh; overflow: hidden; transition: font-size 0.2s ease; }
         
         .hidden { display: none !important; }
@@ -95,7 +94,7 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
         th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
-        /* ================= ESTILOS DA CENTRAL DE ALERTAS (AVANÇADA) ================= */
+        /* CENTRAL DE ALERTAS */
         .adv-list-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
         .adv-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         
@@ -145,11 +144,10 @@
             .item-actions { width: 100%; justify-content: flex-end; margin-top: 10px; }
         }
         
-        /* Estilo para impressão (Apenas Notificações) */
         @media print {
             body * { visibility: hidden; }
-            #area-impressao-notificacoes, #area-impressao-notificacoes * { visibility: visible; }
-            #area-impressao-notificacoes { position: absolute; left: 0; top: 0; width: 100%; }
+            #area-impressao-notificacoes, #area-impressao-notificacoes *, #area-impressao-helpdesk, #area-impressao-helpdesk * { visibility: visible; }
+            #area-impressao-notificacoes, #area-impressao-helpdesk { position: absolute; left: 0; top: 0; width: 100%; }
             .btn, .item-actions, .filter-tabs { display: none !important; }
         }
     </style>
@@ -301,12 +299,60 @@
 
             <!-- ================= HELPDESK MASTER ================= -->
             <section id="sec-helpdesk" class="page-section hidden">
-                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> HD e Suporte</h1></div>
-                <div class="card">
-                    <p style="color: var(--text-muted); text-align: center; padding: 40px;">
-                        <i class="ph ph-wrench" style="font-size: 3rem; margin-bottom: 10px; display: block;"></i>
-                        Nenhum chamado pendente no momento.
-                    </p>
+                <div class="page-header flex justify-between align-center action-bar-mobile">
+                    <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk & Suporte Master</h1>
+                </div>
+
+                <!-- Indicadores de SLA e Chamados -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="card" style="border-top: 4px solid var(--info); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Abertos</span>
+                        <h2 id="ind-abertos" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--warning); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Em Atendimento</span>
+                        <h2 id="ind-atendimento" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid #6c757d; text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Pendentes</span>
+                        <h2 id="ind-pendentes" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--success); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Resolvidos</span>
+                        <h2 id="ind-resolvidos" style="font-size: 1.5rem; color: var(--success); margin-top: 5px;">0</h2>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--brand-primary); text-align: center; padding: 15px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Tempo Médio (SLA)</span>
+                        <h2 style="font-size: 1.4rem; color: var(--brand-primary); margin-top: 5px;">42 min</h2>
+                    </div>
+                </div>
+
+                <!-- Lista de Chamados com Filtros e Impressão -->
+                <div class="card" id="area-impressao-helpdesk" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0; flex-wrap: wrap; gap: 15px;">
+                        <div class="flex gap-10 align-center" style="width: 100%; max-width: 500px;">
+                            <input type="text" id="filtro-busca-hd" class="form-control" placeholder="Buscar por empresa ou assunto..." style="margin-bottom: 0;">
+                            <input type="date" id="filtro-data-hd" class="form-control" style="width: auto; margin-bottom: 0;" onchange="carregarHelpdesk()">
+                        </div>
+                        <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Resultado</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente / Empresa</th>
+                                    <th>Resumo do Problema</th>
+                                    <th>Status</th>
+                                    <th>Técnico</th>
+                                    <th style="text-align: right;">Ações e Modificações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-chamados">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </div>
@@ -349,9 +395,7 @@
         </div>
     </div>
     
-   
-    
-<!-- ================= MODAL DE CONFIGURAÇÃO DE PIX NO MASTER ================= -->
+    <!-- MODAL DE CONFIGURAÇÃO DE PIX NO MASTER -->
     <div class="modal-overlay" id="modalPixMaster">
         <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header">
@@ -361,19 +405,16 @@
             <div class="modal-body">
                 <input type="hidden" id="pix-empresa-id">
                 
-                <!-- Especificação Clara do Mês Referente -->
                 <div class="form-group" style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
                     <label style="color: var(--brand-primary); margin-bottom: 0;">Mês de Referência da Cobrança:</label>
                     <span id="pix-mes-referencia-texto" style="font-size: 1.1rem; font-weight: bold; color: var(--text-main);">--</span>
                 </div>
 
-                <!-- Botão para Buscar Imagem do Código QR no Dispositivo -->
                 <div class="form-group">
                     <label>Selecionar Imagem do QR Code (Arquivo do Dispositivo)</label>
                     <input type="file" id="input-arquivo-qrcode" class="form-control" accept="image/*" onchange="converterImagemParaBase64(event)" style="padding: 6px;">
                     <small style="color: var(--text-muted); margin-top: 4px;">A imagem selecionada será enviada e exibida no painel do Gestor.</small>
                     
-                    <!-- Pré-visualização da Imagem -->
                     <div id="preview-qrcode-container" style="margin-top: 10px; display: none; text-align: center;">
                         <img id="preview-qrcode-img" src="" alt="Pré-visualização QR Code" style="max-width: 140px; max-height: 140px; border: 1px solid #ccc; border-radius: 6px; padding: 4px;">
                     </div>
@@ -393,7 +434,7 @@
         </div>
     </div>
     
-    <!-- ================= MODAL CONTRATO REFORMULADO E PROFISSIONAL ================= -->
+    <!-- MODAL CONTRATO REFORMULADO -->
     <div class="modal-overlay" id="modalContrato">
         <div class="modal-content" style="max-width: 750px;">
             <div class="modal-header">
@@ -426,150 +467,87 @@
     </div>
 
     <!-- MODAL HISTÓRICO -->
-<div class="modal-overlay" id="modalHistorico">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações - <span id="historico-empresa-nome">Empresa</span></h3>
-            <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <ul id="lista-historico-modal" style="list-style: none; padding: 0;">
-                <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
-            </ul>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
-        </div>
-    </div>
-</div>
-
-    <!-- ================= HELPDESK MASTER COMPLETO ================= -->
-<section id="sec-helpdesk" class="page-section hidden">
-    <div class="page-header flex justify-between align-center action-bar-mobile">
-        <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk & Suporte Master</h1>
-    </div>
-
-    <!-- Indicadores de SLA e Chamados -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
-        <div class="card" style="border-top: 4px solid var(--info); text-align: center; padding: 15px;">
-            <span style="color: var(--text-muted); font-size: 0.8rem;">Abertos</span>
-            <h2 id="ind-abertos" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
-        </div>
-        <div class="card" style="border-top: 4px solid var(--warning); text-align: center; padding: 15px;">
-            <span style="color: var(--text-muted); font-size: 0.8rem;">Em Atendimento</span>
-            <h2 id="ind-atendimento" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
-        </div>
-        <div class="card" style="border-top: 4px solid #6c757d; text-align: center; padding: 15px;">
-            <span style="color: var(--text-muted); font-size: 0.8rem;">Pendentes</span>
-            <h2 id="ind-pendentes" style="font-size: 1.5rem; margin-top: 5px;">0</h2>
-        </div>
-        <div class="card" style="border-top: 4px solid var(--success); text-align: center; padding: 15px;">
-            <span style="color: var(--text-muted); font-size: 0.8rem;">Resolvidos</span>
-            <h2 id="ind-resolvidos" style="font-size: 1.5rem; color: var(--success); margin-top: 5px;">0</h2>
-        </div>
-        <div class="card" style="border-top: 4px solid var(--brand-primary); text-align: center; padding: 15px;">
-            <span style="color: var(--text-muted); font-size: 0.8rem;">Tempo Médio (SLA)</span>
-            <h2 style="font-size: 1.4rem; color: var(--brand-primary); margin-top: 5px;">42 min</h2>
-        </div>
-    </div>
-
-    <!-- Lista de Chamados com Filtros e Impressão -->
-    <div class="card" id="area-impressao-helpdesk" style="padding: 0;">
-        <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0; flex-wrap: wrap; gap: 15px;">
-            <div class="flex gap-10 align-center" style="width: 100%; max-width: 500px;">
-                <input type="text" id="filtro-busca-hd" class="form-control" placeholder="Buscar por empresa ou assunto..." style="margin-bottom: 0;">
-                <input type="date" id="filtro-data-hd" class="form-control" style="width: auto; margin-bottom: 0;" onchange="carregarHelpdesk()">
+    <div class="modal-overlay" id="modalHistorico">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico de Interações - <span id="historico-empresa-nome">Empresa</span></h3>
+                <button class="close-modal" onclick="closeModal('modalHistorico')">&times;</button>
             </div>
-            <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Resultado</button>
-        </div>
-
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Cliente / Empresa</th>
-                        <th>Resumo do Problema</th>
-                        <th>Status</th>
-                        <th>Técnico</th>
-                        <th style="text-align: right;">Ações e Modificações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-chamados">
-                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
-<!-- ================= MODAIS DE AÇÃO DO HELPDESK ================= -->
-
-<!-- Modal Concluir Chamado -->
-<div class="modal-overlay" id="modalConcluirChamado">
-    <div class="modal-content" style="max-width: 450px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-check-circle" style="color: var(--success);"></i> Concluir Atendimento</h3>
-            <button class="close-modal" onclick="closeModal('modalConcluirChamado')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="concluir-chamado-id">
-            <div class="form-group">
-                <label>Informar Técnico Responsável</label>
-                <input type="text" id="input-tecnico-nome" class="form-control" placeholder="Ex: Suporte Nível 2 - Carlos" required>
+            <div class="modal-body">
+                <ul id="lista-historico-modal" style="list-style: none; padding: 0;">
+                    <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
+                </ul>
             </div>
-            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 15px;">
-                <input type="checkbox" id="check-envia-comprovante" checked style="width: 18px; height: 18px;">
-                <label style="margin-bottom: 0; cursor: pointer;" for="check-envia-comprovante">Enviar comprovante de atendimento automático ao cliente</label>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalHistorico')">Fechar</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('modalConcluirChamado')">Cancelar</button>
-            <button class="btn btn-success" onclick="salvarConclusaoChamado()"><i class="ph ph-paper-plane-tilt"></i> Enviar e Concluir</button>
-        </div>
     </div>
-</div>
 
-<!-- Modal Cancelar Chamado -->
-<div class="modal-overlay" id="modalCancelarChamado">
-    <div class="modal-content" style="max-width: 450px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-x-circle" style="color: var(--danger);"></i> Cancelar Chamado</h3>
-            <button class="close-modal" onclick="closeModal('modalCancelarChamado')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="cancelar-chamado-id">
-            <div class="form-group">
-                <label>Motivo do Cancelamento</label>
-                <textarea id="textarea-motivo-cancelamento" class="form-control" rows="3" placeholder="Informe o motivo detalhado..." required></textarea>
+    <!-- Modais do Helpdesk -->
+    <div class="modal-overlay" id="modalConcluirChamado">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-check-circle" style="color: var(--success);"></i> Concluir Atendimento</h3>
+                <button class="close-modal" onclick="closeModal('modalConcluirChamado')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="concluir-chamado-id">
+                <div class="form-group">
+                    <label>Informar Técnico Responsável</label>
+                    <input type="text" id="input-tecnico-nome" class="form-control" placeholder="Ex: Suporte Nível 2 - Carlos" required>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 15px;">
+                    <input type="checkbox" id="check-envia-comprovante" checked style="width: 18px; height: 18px;">
+                    <label style="margin-bottom: 0; cursor: pointer;" for="check-envia-comprovante">Enviar comprovante de atendimento automático ao cliente</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalConcluirChamado')">Cancelar</button>
+                <button class="btn btn-success" onclick="salvarConclusaoChamado()"><i class="ph ph-paper-plane-tilt"></i> Enviar e Concluir</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('modalCancelarChamado')">Voltar</button>
-            <button class="btn btn-danger" onclick="salvarCancelamentoChamado()"><i class="ph ph-trash"></i> Confirmar Cancelamento</button>
+    </div>
+
+    <div class="modal-overlay" id="modalCancelarChamado">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-x-circle" style="color: var(--danger);"></i> Cancelar Chamado</h3>
+                <button class="close-modal" onclick="closeModal('modalCancelarChamado')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelar-chamado-id">
+                <div class="form-group">
+                    <label>Motivo do Cancelamento</label>
+                    <textarea id="textarea-motivo-cancelamento" class="form-control" rows="3" placeholder="Informe o motivo detalhado..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalCancelarChamado')">Voltar</button>
+                <button class="btn btn-danger" onclick="salvarCancelamentoChamado()"><i class="ph ph-trash"></i> Confirmar Cancelamento</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Histórico do Chamado -->
-<div class="modal-overlay" id="modalHistoricoChamado">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico do Chamado #<span id="hist-chamado-id"></span></h3>
-            <button class="close-modal" onclick="closeModal('modalHistoricoChamado')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <ul id="lista-historico-chamado" style="list-style: none; padding: 0;">
-                <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
-            </ul>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Histórico</button>
-            <button class="btn btn-outline" onclick="closeModal('modalHistoricoChamado')">Fechar</button>
+    <div class="modal-overlay" id="modalHistoricoChamado">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico do Chamado #<span id="hist-chamado-id"></span></h3>
+                <button class="close-modal" onclick="closeModal('modalHistoricoChamado')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul id="lista-historico-chamado" style="list-style: none; padding: 0;">
+                    <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Histórico</button>
+                <button class="btn btn-outline" onclick="closeModal('modalHistoricoChamado')">Fechar</button>
+            </div>
         </div>
     </div>
-</div>
 
-    <!-- ================= JAVASCRIPT MASTER COMPLETAMENTE INTEGRADO ================= -->
+    <!-- JAVASCRIPT MASTER INTEGRADO -->
     <script>
         let alertasGlobaisCache = [];
 
@@ -614,6 +592,7 @@
             carregarMetricas();
             carregarNotificacoesReais();
             carregarEmpresas();
+            carregarHelpdesk();
         }
 
         function fazerLogout() {
@@ -621,7 +600,6 @@
             window.location.reload();
         }
 
-        // ================= NOTIFICAÇÕES (DASHBOARD) =================
         async function carregarNotificacoesReais() {
             const container = document.getElementById('advancedAlertsList');
             const dataFiltro = document.getElementById('filtro-data-notificacoes').value;
@@ -689,7 +667,9 @@
         function gerarBotoesAcao(alerta) {
             if (alerta.tipo === 'infra') return `<button class="btn btn-danger" style="font-size: 0.8rem;" onclick="alert('Verificando...')"><i class="ph ph-magnifying-glass"></i> Verificar Infra</button>`;
             if (alerta.tipo === 'fin') return `<button class="btn btn-outline" style="font-size: 0.8rem;" onclick="openModal('modalPixMaster')"><i class="ph ph-qr-code"></i> Gerar Pix</button>`;
-            if (alerta.tipo === 'sup') return `<button class="btn btn-primary" style="font-size: 0.8rem;" onclick="navigate('helpdesk', document.querySelectorAll('.nav-link')[2])"><i class="ph ph-wrench"></i> Gerar O.S.</button>`;
+            if (alerta.tipo === 'sup') {
+                return `<button class="btn btn-primary" style="font-size: 0.8rem;" onclick="const linkHd = Array.from(document.querySelectorAll('.nav-link')).find(el => el.textContent.includes('Helpdesk')); navigate('helpdesk', linkHd); carregarHelpdesk();"><i class="ph ph-wrench"></i> Gerar O.S.</button>`;
+            }
             return '';
         }
 
@@ -716,7 +696,6 @@
             } catch (e) { alert('Erro de rede.'); }
         }
 
-        // ================= MÉTRICAS E EMPRESAS =================
         async function carregarMetricas() {
             try {
                 const res = await fetch('/api/master/metrics');
@@ -751,12 +730,13 @@
                                 <td style="text-transform: uppercase;">${emp.plano}</td>
                                 <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
                                 <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                                    <button class="btn-action" title="Carimbar e Autenticar Pagamento" onclick="carimbarPagamentoMaster(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>                                    
+                                    <button class="btn-action" title="Carimbar e Autenticar Pagamento" onclick="carimbarPagamentoMaster(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>                            
                                     <button class="btn-action" title="Configurar e Enviar Pix" onclick="abrirModalConfigurarPix(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-qr-code"></i></button>
                                     <button class="btn-action" title="Ativar/Desativar" onclick="toggleStatus(${emp.id})"><i class="ph ph-arrows-clockwise"></i></button>
                                     <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
                                     <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
-                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoEmpresa(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-clock-counter-clockwise"></i></button>                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoEmpresa(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-clock-counter-clockwise"></i></button>                            
+                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
                                 </td>
                             </tr>
                         `;
@@ -775,7 +755,15 @@
             };
             try {
                 const res = await fetch('/api/master/empresas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (res.ok) { alert("Cliente cadastrado!"); document.getElementById('form-cad-empresa').reset(); toggleCadastroForm(); carregarEmpresas(); carregarMetricas(); } else { alert("Erro ao cadastrar."); }
+                if (res.ok) { 
+                    alert("Cliente cadastrado com sucesso!"); 
+                    document.getElementById('form-cad-empresa').reset(); 
+                    toggleCadastroForm(); 
+                    carregarEmpresas(); 
+                    carregarMetricas(); 
+                } else { 
+                    alert("Erro ao cadastrar. Verifique os dados."); 
+                }
             } catch (err) { alert("Erro de API."); } finally { btn.disabled = false; }
         }
 
@@ -844,13 +832,19 @@
             if (sidebar.classList.contains('open')) { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
         }
 
-        function toggleCadastroForm() { const card = document.getElementById('card-novo-cliente'); card.classList.toggle('hidden'); if(!card.classList.contains('hidden')) card.scrollIntoView({ behavior: 'smooth' }); }
+        function toggleCadastroForm() { 
+            const card = document.getElementById('card-novo-cliente'); 
+            if(card.classList.contains('hidden')) {
+                document.getElementById('form-cad-empresa').reset();
+            }
+            card.classList.toggle('hidden'); 
+            if(!card.classList.contains('hidden')) card.scrollIntoView({ behavior: 'smooth' }); 
+        }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-overlay').classList.toggle('active'); }
         function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-        // Define automaticamente o mês atual no título do modal PIX ao abrir
-       // Converte a imagem do QR Code selecionada no dispositivo para Base64
         function converterImagemParaBase64(event) {
             const arquivo = event.target.files[0];
             if (arquivo) {
@@ -858,8 +852,6 @@
                 leitor.onload = function(e) {
                     const base64String = e.target.result;
                     document.getElementById('input-url-qrcode-base64').value = base64String;
-                    
-                    // Exibe a pré-visualização para o Master conferir
                     const previewImg = document.getElementById('preview-qrcode-img');
                     previewImg.src = base64String;
                     document.getElementById('preview-qrcode-container').style.display = 'block';
@@ -868,18 +860,13 @@
             }
         }
 
-        // Abre o modal de configuração de Pix já formatando o mês atual de referência
         function abrirModalConfigurarPix(id, nome) {
             document.getElementById('pix-empresa-id').value = id;
-            
-            // Define o mês e ano atual por extenso (ex: "Agosto de 2026")
             const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             const d = new Date();
             const mesAnoAtual = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
-            
             document.getElementById('pix-mes-referencia-texto').innerText = mesAnoAtual;
             
-            // Limpa campos anteriores
             document.getElementById('input-arquivo-qrcode').value = '';
             document.getElementById('input-url-qrcode-base64').value = '';
             document.getElementById('preview-qrcode-container').style.display = 'none';
@@ -888,7 +875,6 @@
             openModal('modalPixMaster');
         }
 
-        // Salva a configuração de Pix com a imagem em Base64 e o mês de referência
         async function salvarConfiguracaoPix() {
             const id = document.getElementById('pix-empresa-id').value;
             const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
@@ -922,7 +908,6 @@
             }
         }
 
-        // Função executada ao clicar no carimbo de pagamento na tabela de empresas
         async function carimbarPagamentoMaster(id, nome) {
             if(confirm(`Deseja autenticar e carimbar o pagamento da empresa "${nome}"?\n\nIsso mudará o status para ATIVO e enviará o comprovante ao Gestor.`)) {
                 try {
@@ -941,53 +926,49 @@
             }
         }
 
-        // Abre o histórico buscando os dados reais do banco para aquela empresa específica
-async function abrirHistoricoEmpresa(id, nome) {
-    document.getElementById('historico-empresa-nome').innerText = nome;
-    const listaContainer = document.getElementById('lista-historico-modal');
-    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
-    
-    openModal('modalHistorico');
+        async function abrirHistoricoEmpresa(id, nome) {
+            document.getElementById('historico-empresa-nome').innerText = nome;
+            const listaContainer = document.getElementById('lista-historico-modal');
+            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
+            
+            openModal('modalHistorico');
 
-    try {
-        const res = await fetch(`/api/master/empresas/${id}/historico`);
-        if (res.ok) {
-            const historicos = await res.json();
-            if (historicos.length === 0) {
-                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico desta empresa.</li>';
-                return;
+            try {
+                const res = await fetch(`/api/master/empresas/${id}/historico`);
+                if (res.ok) {
+                    const historicos = await res.json();
+                    if (historicos.length === 0) {
+                        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico desta empresa.</li>';
+                        return;
+                    }
+                    listaContainer.innerHTML = '';
+                    historicos.forEach(h => {
+                        listaContainer.innerHTML += `
+                            <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
+                                <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data}</span>
+                                <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao}</span>
+                            </li>
+                        `;
+                    });
+                } else {
+                    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
+                }
+            } catch (e) {
+                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
             }
-            listaContainer.innerHTML = '';
-            historicos.forEach(h => {
-                listaContainer.innerHTML += `
-                    <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
-                        <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data}</span>
-                        <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao}</span>
-                    </li>
-                `;
-            });
-        } else {
-            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
         }
-    } catch (e) {
-        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
-    }
-}
 
-        // Carrega indicadores e chamados ao abrir a aba
         async function carregarHelpdesk() {
             try {
-                // Indicadores
                 const resInd = await fetch('/api/master/helpdesk/indicadores');
                 if(resInd.ok) {
                     const ind = await resInd.json();
                     document.getElementById('ind-abertos').innerText = ind.abertos || 0;
-                    document.getElementById('ind-atendimento').innerText = ind.em_atendimento || 0;
+                    document.getElementById('ind-atendimento').innerText = ind.em_andamento || 0; 
                     document.getElementById('ind-pendentes').innerText = ind.pendentes || 0;
-                    document.getElementById('ind-resolvidos').innerText = ind.resolvidos || 0;
+                    document.getElementById('ind-resolvidos').innerText = ind.concluidos || 0; 
                 }
 
-                // Lista de Chamados
                 const dataFiltro = document.getElementById('filtro-data-hd').value;
                 const url = dataFiltro ? `/api/master/helpdesk/chamados?data=${dataFiltro}` : '/api/master/helpdesk/chamados';
                 
@@ -1002,21 +983,16 @@ async function abrirHistoricoEmpresa(id, nome) {
                     }
                     tbody.innerHTML = '';
                     chamados.forEach(c => {
-                        let badgeCls = 'badge-warning';
-                        if(c.status === 'resolvido') badgeCls = 'badge-success';
-                        if(c.status === 'cancelado') badgeCls = 'badge-danger';
-
                         tbody.innerHTML += `
                             <tr>
-                                <td><strong>${c.empresa_nome}</strong><br><small>${c.data_criacao}</small></td>
+                                <td><strong>${c.empresa || 'Empresa Desconhecida'}</strong><br><small>${c.data || ''}</small></td>
                                 <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${c.resumo_problema}</td>
                                 <td>
                                     <select class="form-control" style="padding: 4px; font-size: 0.8rem; width: auto;" onchange="alterarStatusChamado(${c.id}, this.value)">
                                         <option value="aberto" ${c.status === 'aberto' ? 'selected' : ''}>Aberto</option>
-                                        <option value="em_atendimento" ${c.status === 'em_atendimento' ? 'selected' : ''}>Análise / Em Atendimento</option>
-                                        <option value="em_producao" ${c.status === 'em_producao' ? 'selected' : ''}>Em Produção</option>
+                                        <option value="em_atendimento" ${c.status === 'em_atendimento' || c.status === 'em_andamento' ? 'selected' : ''}>Análise / Em Atendimento</option>
                                         <option value="pendente" ${c.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-                                        <option value="resolvido" ${c.status === 'resolvido' ? 'selected' : ''}>Resolvido</option>
+                                        <option value="concluido" ${c.status === 'concluido' || c.status === 'resolvido' ? 'selected' : ''}>Concluído</option>
                                     </select>
                                 </td>
                                 <td>${c.tecnico_responsavel || 'Não atribuído'}</td>
@@ -1030,7 +1006,7 @@ async function abrirHistoricoEmpresa(id, nome) {
                     });
                 }
             } catch(e) {
-                console.error("Erro ao carregar Helpdesk");
+                console.error("Erro ao carregar Helpdesk", e);
             }
         }
 
