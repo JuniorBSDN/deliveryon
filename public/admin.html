@@ -111,7 +111,6 @@
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
-        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
 
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
@@ -594,6 +593,40 @@
         </div>
     </div>
 
+    <!-- MODAL DE DESPACHO / ESCOLHA DE MOTOBOY -->
+    <div class="modal-overlay" id="modalDespachoPedido">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-motorcycle" style="color: var(--brand-primary);"></i> Despachar Pedido #<span id="despacho-pedido-id"></span></h3>
+                <button class="close-modal" onclick="closeModal('modalDespachoPedido')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Escolha como deseja realizar esta entrega:</p>
+                
+                <div class="form-group">
+                    <label><strong>Opção 1: Motoboy Próprio da Casa</strong></label>
+                    <select class="form-control" id="select-motoboy-interno">
+                        <option value="">Carregando motoboys disponíveis...</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="confirmarDespachoInterno()"><i class="ph ph-check"></i> Atribuir Motoboy Próprio</button>
+
+                <div style="margin: 25px 0 15px 0; border-top: 1px dashed var(--border-color); text-align: center; position: relative;">
+                    <span style="background: white; padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; position: relative; top: -10px;">OU</span>
+                </div>
+
+                <div class="form-group">
+                    <label><strong>Opção 2: Frota Próxima / Terceirizada</strong></label>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Envia um alerta com cronômetro para o entregador livre mais próximo na região.</p>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; background: #6c5ce7;" onclick="confirmarDespachoExterno()"><i class="ph ph-radar"></i> Disparar para Motoboys Próximos</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalDespachoPedido')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE EDIÇÃO DE PRODUTO -->
     <div class="modal-overlay" id="modalEditarProduto">
         <div class="modal-content">
@@ -640,7 +673,7 @@
             <div class="modal-body">
                 <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
                     <input type="hidden" id="edit-colab-id">
-                    
+
                     <div class="form-group">
                         <label>Nova Foto (Deixe em branco para manter a atual)</label>
                         <input type="file" class="form-control" id="edit-colab-file">
@@ -653,7 +686,7 @@
                         <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
                         <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
                         <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
-                        
+
                         <div class="form-group">
                             <label>Função</label>
                             <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
@@ -688,7 +721,7 @@
                     </div>
 
                     <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
-                    
+
                     <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
                         <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
                         <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
@@ -708,7 +741,7 @@
             <div class="modal-body">
                 <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
                     <input type="hidden" id="edit-cli-id">
-                    
+
                     <div class="form-group">
                         <label>Nome Completo</label>
                         <input type="text" class="form-control" id="edit-cli-name" required>
@@ -744,12 +777,12 @@
         let currentActiveId = null;
         let chartFluxoInstance = null;
         let chartOuvidoriaInstance = null;
-        
-        // Substitua a criação antiga do gráfico de ouvidoria dentro de inicializarPainel() por esta chamada:
+        let pedidoParaDespacharId = null;
+
         async function configurarGraficoOuvidoria() {
             const ctxOuvidoria = document.getElementById('chartOuvidoria');
             if (!ctxOuvidoria) return;
-        
+
             chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
                 type: 'doughnut',
                 data: {
@@ -761,13 +794,13 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             });
-        
+
             atualizarDadosOuvidoriaGrafico();
         }
-        
+
         async function atualizarDadosOuvidoriaGrafico() {
-            const estatisticas = await apiRequest('/ouvidoria/estatisticas'); // Rota que retorna contagem por categoria (ex: {otimo: 5, bom: 2, ...})
-            
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas');
+
             if (estatisticas && chartOuvidoriaInstance) {
                 chartOuvidoriaInstance.data.datasets[0].data = [
                     estatisticas.otimo || 0,
@@ -779,13 +812,11 @@
                 chartOuvidoriaInstance.update();
             }
         }
-        // =========================================================================
-        // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
-        // =========================================================================
+
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id');
-                
+
                 if (!empresaId) {
                     console.error("Sessão inválida! ID da empresa não encontrado.");
                     document.getElementById('auth-overlay').style.display = 'flex';
@@ -798,14 +829,12 @@
                     headers: { 'Content-Type': 'application/json' }
                 };
 
-                // Garante o empresa_id na URL para buscas (GET) e exclusões (DELETE)
                 if (method === 'GET' || method === 'DELETE') {
                     const separator = url.includes('?') ? '&' : '?';
                     url += `${separator}empresa_id=${empresaId}`;
-                } 
-                // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
+                }
                 else if (method === 'POST' || method === 'PUT') {
-                    if (!data) data = {}; 
+                    if (!data) data = {};
                     data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
@@ -819,9 +848,6 @@
             }
         }
 
-        // =========================================================================
-        // 2. AUTENTICAÇÃO E SESSÃO
-        // =========================================================================
         async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
@@ -852,9 +878,6 @@
             location.reload();
         }
 
-        // =========================================================================
-        // 3. DASHBOARD E GRÁFICOS DINÂMICOS
-        // =========================================================================
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
@@ -887,7 +910,7 @@
             const orders = await apiRequest('/orders');
             const tbody = document.getElementById('tbody-recent-orders');
             if (!tbody) return;
-            
+
             tbody.innerHTML = '';
             if (!orders || orders.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
@@ -901,7 +924,7 @@
                         <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
                         <td>R$ ${order.total || '0,00'}</td>
                         <td>
-                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
+                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="tratarMudancaStatusPedido('${order.id}', this)">
                                 <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
                                 <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
                                 <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
@@ -917,9 +940,61 @@
             });
         }
 
-        async function updateOrderStatus(orderId, selectElement) {
+        async function tratarMudancaStatusPedido(orderId, selectElement) {
             const novoStatus = selectElement.value;
-            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+
+            if (novoStatus === 'Saiu para entrega') {
+                pedidoParaDespacharId = orderId;
+                await carregarMotoboysDisponiveisNoModal();
+                document.getElementById('despacho-pedido-id').innerText = orderId;
+                document.getElementById('modalDespachoPedido').classList.add('active');
+                return;
+            }
+
+            await atualizarStatusBackend(orderId, novoStatus);
+        }
+
+        async function carregarMotoboysDisponiveisNoModal() {
+            const selectMotoboy = document.getElementById('select-motoboy-interno');
+            selectMotoboy.innerHTML = '<option value="">Buscando motoboys disponíveis...</option>';
+
+            const colabs = await apiRequest('/colaboradores');
+            selectMotoboy.innerHTML = '';
+
+            const motoboysDisponiveis = colabs.filter(c => c.funcao === 'Motoboy' && c.status === 'Disponível');
+
+            if (motoboysDisponiveis.length === 0) {
+                selectMotoboy.innerHTML = '<option value="">Nenhum motoboy próprio disponível no momento</option>';
+                return;
+            }
+
+            selectMotoboy.innerHTML = '<option value="">Selecione um motoboy da casa...</option>';
+            motoboysDisponiveis.forEach(m => {
+                selectMotoboy.innerHTML += `<option value="${m.id}">${m.nome} (${m.veiculo_modelo || 'Moto'})</option>`;
+            });
+        }
+
+        async function confirmarDespachoInterno() {
+            const motoboyId = document.getElementById('select-motoboy-interno').value;
+            if (!motoboyId) {
+                alert("Por favor, selecione um motoboy da equipe própria.");
+                return;
+            }
+
+            await apiRequest(`/orders/${pedidoParaDespacharId}/atribuir-motoboy`, 'POST', { motoboy_id: parseInt(motoboyId) });
+            await atualizarStatusBackend(pedidoParaDespacharId, 'Saiu para entrega');
+            closeModal('modalDespachoPedido');
+        }
+
+        async function confirmarDespachoExterno() {
+            await apiRequest(`/orders/${pedidoParaDespacharId}/desparchar-proximos`, 'POST');
+            await atualizarStatusBackend(pedidoParaDespacharId, 'Saiu para entrega');
+            alert("Alerta enviado para os motoboys próximos na região via sistema!");
+            closeModal('modalDespachoPedido');
+        }
+
+        async function atualizarStatusBackend(orderId, status) {
+            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: status });
             if (response) {
                 loadDashboardData();
             } else {
@@ -927,9 +1002,6 @@
             }
         }
 
-        // =========================================================================
-        // 4. GESTÃO DE PRODUTOS
-        // =========================================================================
         async function loadProducts() {
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
@@ -981,7 +1053,7 @@
                 descricao: document.getElementById('textarea-new-prod-desc').value,
                 foto: fotoBase64
             };
-            
+
             const res = await apiRequest('/products', 'POST', payload);
             if (res) {
                 alert('Produto cadastrado com sucesso!');
@@ -1035,9 +1107,6 @@
             }
         }
 
-        // =========================================================================
-        // 5. GESTÃO DE CLIENTES
-        // =========================================================================
         async function loadClients() {
             const clients = await apiRequest('/clients');
             const tbody = document.getElementById('tbody-clients');
@@ -1117,9 +1186,6 @@
             }
         }
 
-        // =========================================================================
-        // 6. GESTÃO DE COLABORADORES
-        // =========================================================================
         async function loadColaboradores() {
             const colabs = await apiRequest('/colaboradores');
             const tbody = document.getElementById('tbody-colaboradores');
@@ -1162,7 +1228,7 @@
             if (fileInput && fileInput.files && fileInput.files[0]) {
                 try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
-            
+
             let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
             let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
 
@@ -1195,7 +1261,7 @@
                 valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
                 foto: fotoBase64
             };
-            
+
             const res = await apiRequest('/colaboradores', 'POST', payload);
             if (res) {
                 alert('Colaborador cadastrado!');
@@ -1285,9 +1351,6 @@
             }
         }
 
-        // =========================================================================
-        // 7. OUVIDORIA, HELPDESK E CONFIGURAÇÕES
-        // =========================================================================
         async function loadOuvidoria() {
             const feeds = await apiRequest('/ouvidoria');
             const tbody = document.getElementById('tbody-ouvidoria');
@@ -1405,9 +1468,6 @@
             alert(`Gerando relatório de [${tipo}]...`);
         }
 
-        // =========================================================================
-        // 8. UTILITÁRIOS E INICIALIZAÇÃO DO PAINEL
-        // =========================================================================
         function atualizarExibicaoLogotipo(logoBase64) {
             const containers = document.querySelectorAll('.logo-preview-box');
             containers.forEach(container => {
@@ -1466,7 +1526,6 @@
             document.getElementById(modalId).classList.remove('active');
         }
 
-        // Função de Inicialização Única e Consolidada
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
@@ -1477,19 +1536,18 @@
             loadHelpdeskGestor();
             aplicarIdentidadeVisualDaEmpresa();
 
-            // Configuração do Gráfico de Fluxo Dinâmico
             if(document.getElementById('chartFluxo')) {
                 const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
                 chartFluxoInstance = new Chart(ctxFluxo, {
                     type: 'line',
-                    data: { 
-                        labels: ['17h', '18h', '19h', '20h', '21h'], 
-                        datasets: [{ 
-                            data: [0, 0, 0, 0, 0], 
-                            borderColor: '#ff5722', 
-                            backgroundColor: 'rgba(255,87,34,0.1)', 
-                            fill: true, 
-                            tension: 0.4 
+                    data: {
+                        labels: ['17h', '18h', '19h', '20h', '21h'],
+                        datasets: [{
+                            data: [0, 0, 0, 0, 0],
+                            borderColor: '#ff5722',
+                            backgroundColor: 'rgba(255,87,34,0.1)',
+                            fill: true,
+                            tension: 0.4
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
@@ -1497,7 +1555,6 @@
                 atualizarGraficoFluxo();
             }
 
-            // Gráfico de Ouvidoria
             if(document.getElementById('chartOuvidoria')) {
                 new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
                     type: 'doughnut',
@@ -1506,7 +1563,6 @@
                 });
             }
 
-            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
             setInterval(() => {
                 if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
                     loadColaboradores();
@@ -1515,7 +1571,7 @@
                     loadDashboardData();
                     atualizarGraficoFluxo();
                 }
-            }, 5000); 
+            }, 5000);
         }
 
         window.onload = function() {
