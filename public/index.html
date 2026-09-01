@@ -30,7 +30,7 @@
         .header-loja { background: white; padding: 20px; border-bottom: 1px solid var(--border-color); text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .container { max-width: 900px; margin: 0 auto; padding: 20px; }
 
-        /* BANNER / TOAST DE ACOMPANHAMENTO ATIVO (NOVO) */
+        /* BANNER / TOAST DE ACOMPANHAMENTO ATIVO */
         .order-tracking-banner { background: linear-gradient(135deg, #1a1a1a, #333); color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .order-tracking-banner:hover { opacity: 0.95; }
 
@@ -75,7 +75,7 @@
     </header>
 
     <div class="container">
-        <!-- BANNER DE ACOMPANHAMENTO DE PEDIDO ATIVO (APARECE QUANDO HÁ PEDIDO EM ANDAMENTO) -->
+        <!-- BANNER DE ACOMPANHAMENTO DE PEDIDO ATIVO -->
         <div id="banner-acompanhamento" class="order-tracking-banner hidden" onclick="abrirModalAcompanhamento()">
             <div>
                 <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--warning); font-weight: bold;"><i class="ph ph-clock"></i> Pedido em Andamento</span>
@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE TIMELINE / ACOMPANHAMENTO DO PEDIDO (PADRÃO IFOOD/RAPPI) -->
+    <!-- MODAL DE TIMELINE / ACOMPANHAMENTO DO PEDIDO -->
     <div class="modal-overlay" id="modalAcompanhamento">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal('modalAcompanhamento')">&times;</button>
@@ -169,14 +169,13 @@
     <script>
         const API_BASE_URL = "/api";
         let carrinho = [];
-        let empresaIdAtiva = 1; // ID padrão ou capturado via URL/Parâmetro
+        let empresaIdAtiva = 1;
         let pedidoAtivoId = null;
         let mapaClienteInstancia = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             carregarVitrineLoja();
             
-            // Verifica se já existe um pedido ativo salvo no navegador para este cliente
             const pedidoSalvo = localStorage.getItem('deliveryon_pedido_ativo_id');
             if (pedidoSalvo) {
                 pedidoAtivoId = pedidoSalvo;
@@ -187,7 +186,6 @@
 
         async function carregarVitrineLoja() {
             try {
-                // Busca dados da empresa e produtos
                 const resConfig = await fetch(`${API_BASE_URL}/configuracoes?empresa_id=${empresaIdAtiva}`);
                 const config = await resConfig.json();
                 if (config) {
@@ -352,7 +350,6 @@
             const infoMotoboy = document.getElementById('info-motoboy-cliente');
             const containerMapa = document.getElementById('container-mapa-cliente');
 
-            // Reseta classes
             stepAguardando.className = 'timeline-step';
             stepPreparando.className = 'timeline-step';
             stepEntrega.className = 'timeline-step';
@@ -393,7 +390,6 @@
                 mapaClienteInstancia.remove();
             }
 
-            // Coordenadas simuladas de rota entre loja e cliente
             const latLoja = -0.9234; 
             const lngLoja = -48.1321;
             const latCliente = -0.9270;
@@ -417,4 +413,3 @@
     </script>
 </body>
 </html>
-```[cite: 1, 2, 3]
