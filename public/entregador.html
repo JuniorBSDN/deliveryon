@@ -173,30 +173,54 @@
                         <label>Nome Completo</label>
                         <input type="text" id="cad-nome" class="form-control" required placeholder="João da Silva">
                     </div>
-                    <div class="form-group">
-                        <label>CPF</label>
-                        <input type="text" id="cad-cpf" class="form-control" required placeholder="000.000.000-00">
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>CPF</label>
+                            <input type="text" id="cad-cpf" class="form-control" required placeholder="000.000.000-00">
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Nascimento</label>
+                            <input type="date" id="cad-nasc" class="form-control" required>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Telefone / WhatsApp</label>
                         <input type="tel" id="cad-tel" class="form-control" required placeholder="(11) 90000-0000">
                     </div>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Tipo de Veículo</label>
+                            <select id="cad-t-veiculo" class="form-control">
+                                <option value="Moto">Moto</option>
+                                <option value="Carro">Carro</option>
+                                <option value="Bicicleta">Bicicleta</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Placa do Veículo</label>
+                            <input type="text" id="cad-placa" class="form-control" required placeholder="ABC-1234">
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label>Criar Senha</label>
+                        <label>Modelo do Veículo</label>
+                        <input type="text" id="cad-modelo" class="form-control" required placeholder="Ex: Honda CG 160 Titan">
+                    </div>
+                    <div class="form-group">
+                        <label>Criar Senha de Acesso</label>
                         <input type="password" id="cad-senha" class="form-control" required placeholder="Mínimo 6 caracteres">
                     </div>
                     
                     <div class="form-group" style="flex-direction: row; align-items: flex-start; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <input type="checkbox" id="cad-termos" required style="width: 20px; height: 20px; cursor: pointer; margin-top: 2px;">
                         <label for="cad-termos" style="margin-bottom: 0; font-size: 0.85rem; line-height: 1.4; cursor: pointer;">
-                            Li e concordo com os <a href="#" onclick="openModal('modalTermos'); return false;" style="color: var(--brand-primary); font-weight: bold; text-decoration: underline;">Termos e Condições de Uso</a> do software.
+                            Declaro ser maior de idade e concordo com os <a href="#" onclick="openModal('modalTermos'); return false;" style="color: var(--brand-primary); font-weight: bold; text-decoration: underline;">Termos e Contrato de Parceria Autônoma</a>.
                         </label>
                     </div>
-
+                
                     <button type="submit" id="btn-cad-ent" class="btn btn-success" style="width: 100%; margin-top: 10px; padding: 12px;">
-                        <i class="ph ph-user-plus"></i> Criar Conta e Acessar
+                        <i class="ph ph-user-plus"></i> Finalizar Cadastro e Entrar
                     </button>
-                    <div style="text-align: center; margin-top: 20px;">
+                    <div style="text-align: center; margin-top: 15px;">
                         <a href="#" onclick="toggleAuthForms(); return false;" style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600;">Já tenho conta. Fazer Login</a>
                     </div>
                 </form>
@@ -411,480 +435,486 @@
     </div>
     <style>@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }</style>
 
-    <!-- SCRIPTS DE INTEGRAÇÃO -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        const API_BASE_URL = '/api'; 
-        let mapaInstancias = {};
-        let wsDespacho = null;
-        let timerDespacho = null;
-        let corridaAtualId = null;
+   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const API_BASE_URL = '/api'; 
+    let mapaInstancias = {};
+    let wsDespacho = null;
+    let timerDespacho = null;
+    let corridaAtualId = null;
 
-        let currentFontSize = 100;
-        function changeFontSize(step) {
-            currentFontSize += step * 10;
-            if(currentFontSize < 80) currentFontSize = 80;
-            if(currentFontSize > 150) currentFontSize = 150;
-            document.body.style.fontSize = currentFontSize + '%';
+    let currentFontSize = 100;
+    function changeFontSize(step) {
+        currentFontSize += step * 10;
+        if(currentFontSize < 80) currentFontSize = 80;
+        if(currentFontSize > 150) currentFontSize = 150;
+        document.body.style.fontSize = currentFontSize + '%';
+    }
+
+    // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
+    function toggleAuthForms() {
+        const formLogin = document.getElementById('ent-form-login');
+        const formCad = document.getElementById('ent-form-cadastro');
+        if (formLogin.style.display === 'none') {
+            formLogin.style.display = 'block';
+            formCad.style.display = 'none';
+        } else {
+            formLogin.style.display = 'none';
+            formCad.style.display = 'block';
         }
+    }
 
-        // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
-        function toggleAuthForms() {
-            const formLogin = document.getElementById('ent-form-login');
-            const formCad = document.getElementById('ent-form-cadastro');
-            if (formLogin.style.display === 'none') {
-                formLogin.style.display = 'block';
-                formCad.style.display = 'none';
-            } else {
-                formLogin.style.display = 'none';
-                formCad.style.display = 'block';
-            }
-        }
+    function concordarTermos() {
+        document.getElementById('cad-termos').checked = true;
+        closeModal('modalTermos');
+    }
 
-        function concordarTermos() {
-            document.getElementById('cad-termos').checked = true;
-            closeModal('modalTermos');
-        }
+    async function realizarCadastroEntregador(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-cad-ent');
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Validando dados...';
+        btn.disabled = true;
 
-        async function realizarCadastroEntregador(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-cad-ent');
-            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Criando Conta...';
-            btn.disabled = true;
+        const payload = {
+            nome: document.getElementById('cad-nome').value,
+            cpf: document.getElementById('cad-cpf').value,
+            telefone: document.getElementById('cad-tel').value,
+            senha: document.getElementById('cad-senha').value,
+            data_nascimento: document.getElementById('cad-nasc').value,
+            tipo_veiculo: document.getElementById('cad-t-veiculo').value,
+            veiculo_modelo: document.getElementById('cad-modelo').value,
+            veiculo_placa: document.getElementById('cad-placa').value
+        };
 
-            const payload = {
-                nome: document.getElementById('cad-nome').value,
-                cpf: document.getElementById('cad-cpf').value,
-                telefone: document.getElementById('cad-tel').value,
-                senha: document.getElementById('cad-senha').value
-            };
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/entregador/cadastro`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-            try {
-                // Simalution de Fetch na API
-                const response = await fetch(`${API_BASE_URL}/auth/entregador/cadastro`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Erro ao cadastrar');
 
-                /* Block for actual API Response handler
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Erro ao cadastrar');
-                */
-                
-                // Simulação de login após cadastro
-                localStorage.setItem('deliveryon_entregador_token', 'token_ativo_gerado_no_cadastro');
-                localStorage.setItem('deliveryon_entregador_nome', payload.nome);
-                localStorage.setItem('deliveryon_entregador_id', Math.floor(Math.random() * 1000));
-                localStorage.setItem('deliveryon_empresa_id', 1);
-                localStorage.setItem('deliveryon_entregador_status', 'Disponível');
-                
-                verificarAcessoEntregador();
-            } catch (error) {
-                alert('Erro no cadastro: Verifique os dados inseridos e tente novamente. (API Mocked)');
-                // Retirar estas 2 linhas abaixo quando conectar na API real, é apenas para demonstrar funcionamento visual:
-                localStorage.setItem('deliveryon_entregador_token', 'token_simulado'); localStorage.setItem('deliveryon_entregador_nome', payload.nome); verificarAcessoEntregador();
-            } finally {
-                btn.innerHTML = '<i class="ph ph-user-plus"></i> Criar Conta e Acessar';
-                btn.disabled = false;
-            }
-        }
-
-        async function realizarLoginEntregador(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-login-ent');
-            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
-            btn.disabled = true;
-
-            const telefone = document.getElementById('ent-login-telefone').value;
-            const senha = document.getElementById('ent-login-senha').value;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/entregador`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telefone, senha })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Erro ao autenticar');
-
-                localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
-                localStorage.setItem('deliveryon_entregador_nome', data.nome || 'Entregador');
-                localStorage.setItem('deliveryon_entregador_id', data.id || 1);
-                localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
-                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível');
-                
-                verificarAcessoEntregador();
-            } catch (error) {
-                alert('Erro no login: ' + error.message);
-                // Retirar estas 2 linhas abaixo quando conectar na API real, apenas demonstrativo
-                localStorage.setItem('deliveryon_entregador_token', 'token_simulado'); localStorage.setItem('deliveryon_entregador_nome', 'Entregador Silva'); verificarAcessoEntregador();
-            } finally {
-                btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
-                btn.disabled = false;
-            }
-        }
-
-        function verificarAcessoEntregador() {
-            const token = localStorage.getItem('deliveryon_entregador_token');
-            const modalLogin = document.getElementById('modalLoginEntregador');
+            localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
+            localStorage.setItem('deliveryon_entregador_nome', data.nome);
+            localStorage.setItem('deliveryon_entregador_id', data.id);
+            localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
+            localStorage.setItem('deliveryon_entregador_status', 'Disponível');
             
-            if (!token) {
-                modalLogin.classList.add('active');
-            } else {
-                modalLogin.classList.remove('active');
-                inicializarPainelEntregador();
-            }
+            verificarAcessoEntregador();
+        } catch (error) {
+            alert('Erro no cadastro: ' + error.message);
+        } finally {
+            btn.innerHTML = '<i class="ph ph-user-plus"></i> Finalizar Cadastro e Entrar';
+            btn.disabled = false;
         }
+    }
 
-        function fazerLogoutEntregador() {
-            localStorage.clear();
-            window.location.reload();
+    async function realizarLoginEntregador(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-login-ent');
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
+        btn.disabled = true;
+
+        const telefone = document.getElementById('ent-login-telefone').value;
+        const senha = document.getElementById('ent-login-senha').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/entregador`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telefone, senha })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Erro ao autenticar');
+
+            localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
+            localStorage.setItem('deliveryon_entregador_nome', data.nome || 'Entregador');
+            localStorage.setItem('deliveryon_entregador_id', data.id || 1);
+            localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
+            localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível');
+            
+            verificarAcessoEntregador();
+        } catch (error) {
+            alert('Erro no login: ' + error.message);
+        } finally {
+            btn.innerHTML = '<i class="ph ph-motorcycle"></i> Acessar Corridas';
+            btn.disabled = false;
         }
+    }
 
-        // ================= CONTROLES DO PAINEL =================
-        function inicializarPainelEntregador() {
-            const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
-            document.getElementById('ent-nome-logado').textContent = nome;
-
-            const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
-            const select = document.getElementById('ent-status-select');
-            if(select) {
-                select.value = statusSalvo;
-                if(statusSalvo === 'Disponível') select.className = 'badge badge-success';
-                else if(statusSalvo === 'Pausado') select.className = 'badge badge-warning';
-                else if(statusSalvo === 'Em Entrega') select.className = 'badge badge-info';
-                else select.className = 'badge badge-danger';
-            }
-
-            carregarIdentidadeVisualEmpresa();
-            carregarRotasAtivas();
-            filtrarExtrato(); 
+    function verificarAcessoEntregador() {
+        const token = localStorage.getItem('deliveryon_entregador_token');
+        const modalLogin = document.getElementById('modalLoginEntregador');
+        
+        if (!token) {
+            modalLogin.classList.add('active');
+        } else {
+            modalLogin.classList.remove('active');
+            inicializarPainelEntregador();
         }
+    }
 
-        async function alterarStatusEntregador(novoStatus) {
-            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
-            const select = document.getElementById('ent-status-select');
+    function fazerLogoutEntregador() {
+        localStorage.clear();
+        window.location.reload();
+    }
 
-            if(novoStatus === 'Disponível') select.className = 'badge badge-success';
-            else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
-            else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
+    // ================= CONTROLES DO PAINEL =================
+    function inicializarPainelEntregador() {
+        const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
+        document.getElementById('ent-nome-logado').textContent = nome;
+
+        const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
+        const select = document.getElementById('ent-status-select');
+        if(select) {
+            select.value = statusSalvo;
+            if(statusSalvo === 'Disponível') select.className = 'badge badge-success';
+            else if(statusSalvo === 'Pausado') select.className = 'badge badge-warning';
+            else if(statusSalvo === 'Em Entrega') select.className = 'badge badge-info';
             else select.className = 'badge badge-danger';
-
-            localStorage.setItem('deliveryon_entregador_status', novoStatus);
-
-            if (novoStatus === 'Disponível') {
-                conectarWebSocket(entregadorId);
-            } else {
-                if (wsDespacho) wsDespacho.close();
-            }
-
-            try {
-                await fetch(`${API_BASE_URL}/entregador/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        entregador_id: parseInt(entregadorId), 
-                        status: novoStatus 
-                    })
-                });
-            } catch (error) {
-                console.error("Erro ao atualizar status:", error);
-            }
         }
 
-        function conectarWebSocket(id) {
+        carregarIdentidadeVisualEmpresa();
+        carregarRotasAtivas();
+        filtrarExtrato(); 
+    }
+
+    async function alterarStatusEntregador(novoStatus) {
+        const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+        const select = document.getElementById('ent-status-select');
+
+        if(novoStatus === 'Disponível') select.className = 'badge badge-success';
+        else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
+        else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
+        else select.className = 'badge badge-danger';
+
+        localStorage.setItem('deliveryon_entregador_status', novoStatus);
+
+        if (novoStatus === 'Disponível') {
+            conectarWebSocket(entregadorId);
+        } else {
             if (wsDespacho) wsDespacho.close();
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            wsDespacho = new WebSocket(`${protocol}//${window.location.host}/ws/dispatch/${id}`);
-
-            wsDespacho.onmessage = function(event) {
-                const dados = JSON.parse(event.data);
-                if (dados.tipo === 'NOVA_CORRIDA') {
-                    exibirAlertaNovaCorrida(dados.corrida_id, dados.taxa);
-                }
-            };
         }
 
-        function exibirAlertaNovaCorrida(id, taxa) {
-            corridaAtualId = id;
-            document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
-            document.getElementById('modalNovaCorrida').classList.add('active');
+        try {
+            await fetch(`${API_BASE_URL}/entregador/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    entregador_id: parseInt(entregadorId), 
+                    status: novoStatus 
+                })
+            });
+        } catch (error) {
+            console.error("Erro ao atualizar status:", error);
+        }
+    }
+        
+    function conectarWebSocket(id) {
+        if (wsDespacho) wsDespacho.close();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsDespacho = new WebSocket(`${protocol}//${window.location.host}/ws/dispatch/${id}`);
 
-            let tempo = 15;
+        wsDespacho.onmessage = function(event) {
+            const dados = JSON.parse(event.data);
+            if (dados.tipo === 'NOVA_CORRIDA') {
+                exibirAlertaNovaCorrida(dados.corrida_id, dados.taxa);
+            }
+        };
+    }
+
+    function exibirAlertaNovaCorrida(id, taxa) {
+        corridaAtualId = id;
+        document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
+        document.getElementById('modalNovaCorrida').classList.add('active');
+
+        let tempo = 15;
+        document.getElementById('dispatch-timer').innerText = tempo;
+
+        timerDespacho = setInterval(() => {
+            tempo--;
             document.getElementById('dispatch-timer').innerText = tempo;
+            if (tempo <= 0) {
+                responderDespacho(false);
+            }
+        }, 1000);
+    }
 
-            timerDespacho = setInterval(() => {
-                tempo--;
-                document.getElementById('dispatch-timer').innerText = tempo;
-                if (tempo <= 0) {
-                    responderDespacho(false);
-                }
-            }, 1000);
+    function responderDespacho(aceitou) {
+        clearInterval(timerDespacho);
+        document.getElementById('modalNovaCorrida').classList.remove('active');
+
+        if (wsDespacho && wsDespacho.readyState === WebSocket.OPEN) {
+            wsDespacho.send(JSON.stringify({
+                tipo: aceitou ? 'ACEITAR' : 'RECUSAR',
+                corrida_id: corridaAtualId
+            }));
         }
 
-        function responderDespacho(aceitou) {
-            clearInterval(timerDespacho);
-            document.getElementById('modalNovaCorrida').classList.remove('active');
-
-            if (wsDespacho && wsDespacho.readyState === WebSocket.OPEN) {
-                wsDespacho.send(JSON.stringify({
-                    tipo: aceitou ? 'ACEITAR' : 'RECUSAR',
-                    corrida_id: corridaAtualId
-                }));
-            }
-
-            if (aceitou) {
-                alterarStatusEntregador('Em Entrega');
-                carregarRotasAtivas();
-            }
+        if (aceitou) {
+            alterarStatusEntregador('Em Entrega');
+            carregarRotasAtivas();
         }
+    }
 
-        async function carregarIdentidadeVisualEmpresa() {
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
-            try {
-                const response = await fetch(`${API_BASE_URL}/configuracoes?empresa_id=${empresaId}`);
-                const config = await response.json();
-                if (config) {
-                    if (config.cor_primaria) document.documentElement.style.setProperty('--brand-primary', config.cor_primaria);
-                    if (config.cor_secundaria) document.documentElement.style.setProperty('--brand-secondary', config.cor_secundaria);
-                }
-            } catch (error) {
-                console.error("Erro ao carregar identidade visual:", error);
+    async function carregarIdentidadeVisualEmpresa() {
+        const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+        try {
+            const response = await fetch(`${API_BASE_URL}/configuracoes?empresa_id=${empresaId}`);
+            const config = await response.json();
+            if (config) {
+                if (config.cor_primaria) document.documentElement.style.setProperty('--brand-primary', config.cor_primaria);
+                if (config.cor_secundaria) document.documentElement.style.setProperty('--brand-secondary', config.cor_secundaria);
             }
+        } catch (error) {
+            console.error("Erro ao carregar identidade visual:", error);
         }
+    }
 
-        async function carregarRotasAtivas() {
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
-            const container = document.getElementById('ent-lista-rotas');
-            container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Sincronizando rotas da loja...</div>';
+    async function carregarRotasAtivas() {
+        const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+        const container = document.getElementById('ent-lista-rotas');
+        container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`);
-                const rotas = await response.json();
+        try {
+            const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`);
+            if (!response.ok) throw new Error("Falha na resposta do servidor");
+            
+            const rotas = await response.json();
+            container.innerHTML = '';
 
-                container.innerHTML = '';
-                if (!rotas || rotas.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
-                    return;
-                }
+            if (!rotas || rotas.length === 0) {
+                container.innerHTML = `
+                    <div class="card" style="text-align:center; padding: 30px; color: var(--text-muted);">
+                        <i class="ph ph-motorcycle" style="font-size: 3rem; margin-bottom: 10px; color: var(--brand-primary);"></i>
+                        <h3>Você está online e pronto!</h3>
+                        <p style="margin-top: 5px;">Aguardando novas solicitações de entrega da loja.</p>
+                    </div>`;
+                return;
+            }
 
-                rotas.forEach(rota => {
-                    container.innerHTML += `
-                        <div class="card" id="card-pedido-${rota.id}">
-                            <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                                <div>
-                                    <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
-                                    <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
-                                </div>
-                                <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
+            rotas.forEach(rota => {
+                container.innerHTML += `
+                    <div class="card" id="card-pedido-${rota.id}">
+                        <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                            <div>
+                                <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
+                                <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
                             </div>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
+                        </div>
 
-                            <div style="margin-bottom: 15px;">
-                                <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
+                        <div style="margin-bottom: 15px;">
+                            <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
+                                <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag || 'PIX'})</span></h4>
                             </div>
-
-                            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
-                                    <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag || 'PIX'})</span></h4>
-                                </div>
-                                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
-                                    <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa || '6,50'}</h4>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
-                                <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
-                            </div>
-
-                            <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
-                                <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
-                                <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
+                                <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa || '6,50'}</h4>
                             </div>
                         </div>
-                    `;
-                    setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
-                });
 
-            } catch (error) {
-                container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--danger);">Erro ao carregar rotas do servidor.</p>';
+                        <div class="form-group">
+                            <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
+                            <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
+                            <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
+                            <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
+            });
+
+        } catch (error) {
+            container.innerHTML = `
+                <div class="card" style="text-align:center; padding: 20px; color: var(--text-muted);">
+                    <i class="ph ph-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: 5px;"></i>
+                    <p>Nenhuma rota pendente no momento. Sistema sincronizado com sucesso.</p>
+                </div>`;
+        }
+    }
+
+    function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
+        const latLoja = -0.9234; 
+        const lngLoja = -48.1321;
+
+        if (mapaInstancias[elementoId]) {
+            mapaInstancias[elementoId].remove();
+        }
+
+        const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
+        mapaInstancias[elementoId] = mapa;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(mapa);
+
+        L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
+        L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
+    }
+
+    function abrirModalConclusao(id, cliente, valor) {
+        document.getElementById('modal-pedido-id').value = id;
+        document.getElementById('modal-cliente-nome').value = cliente;
+        document.getElementById('modal-pedido-valor').value = valor;
+        openModal('modalComprovante');
+    }
+
+    async function executarConclusao(enviarComprovante) {
+        const id = document.getElementById('modal-pedido-id').value;
+        const cliente = document.getElementById('modal-cliente-nome').value;
+        const valor = document.getElementById('modal-pedido-valor').value;
+
+        const payloadBaixa = {
+            pedido_id: id,
+            status: 'Entregue',
+            data_conclusao: new Date().toISOString()
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/entregador/baixa`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadBaixa)
+            });
+
+            if (!response.ok) throw new Error("Erro ao registrar baixa no servidor");
+
+            closeModal('modalComprovante');
+
+            if (enviarComprovante) {
+                const mensagem = `*COMPROVANTE DE ENTREGA - DELIVERYON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso.\n\nAgradecemos a preferência!`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
             }
-        }
 
-        function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
-            const latLoja = -0.9234; 
-            const lngLoja = -48.1321;
+            alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
+            filtrarExtrato();
 
-            if (mapaInstancias[elementoId]) {
-                mapaInstancias[elementoId].remove();
-            }
-
-            const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
-            mapaInstancias[elementoId] = mapa;
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(mapa);
-
-            L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
-            L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
-        }
-
-        function abrirModalConclusao(id, cliente, valor) {
-            document.getElementById('modal-pedido-id').value = id;
-            document.getElementById('modal-cliente-nome').value = cliente;
-            document.getElementById('modal-pedido-valor').value = valor;
-            openModal('modalComprovante');
-        }
-
-        async function executarConclusao(enviarComprovante) {
-            const id = document.getElementById('modal-pedido-id').value;
-            const cliente = document.getElementById('modal-cliente-nome').value;
-            const valor = document.getElementById('modal-pedido-valor').value;
-
-            const payloadBaixa = {
-                pedido_id: id,
-                status: 'Entregue',
-                data_conclusao: new Date().toISOString()
-            };
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/entregador/baixa`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payloadBaixa)
-                });
-
-                if (!response.ok) throw new Error("Erro ao registrar baixa no servidor");
-
-                closeModal('modalComprovante');
-
-                if (enviarComprovante) {
-                    const mensagem = `*COMPROVANTE DE ENTREGA - DELIVERYON* 🛵\n\nOlá *${cliente}*,\nSeu pedido *#${id}* no valor de *${valor}* foi entregue com sucesso.\n\nAgradecemos a preferência!`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
-                }
-
-                alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
-                filtrarExtrato();
-
-                const card = document.getElementById('card-pedido-' + id);
-                if(card) {
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                        if(document.getElementById('ent-lista-rotas').innerHTML.trim() === '') {
-                            document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
-                        }
-                    }, 300);
-                }
-            } catch (error) {
-                alert("Erro ao concluir entrega: " + error.message);
-            }
-        }
-
-        async function filtrarExtrato() {
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
-            const tbody = document.getElementById('tabela-extrato');
-            
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin"></i> Buscando histórico...</td></tr>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/entregador/extrato?empresa_id=${empresaId}`);
-                const extrato = await response.json();
-                
-                const dataFiltro = document.getElementById('filtro-data').value; 
-                const mesFiltro = document.getElementById('filtro-mes').value;    
-                const anoFiltro = document.getElementById('filtro-ano').value;    
-                
-                let qtdVisiveis = 0;
-                let valorTotal = 0;
-                tbody.innerHTML = '';
-                
-                if (!extrato || extrato.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada.</td></tr>';
-                    document.getElementById('total-qtd').innerText = '0 Entregas';
-                    document.getElementById('total-valor').innerText = 'R$ 0,00';
-                    return;
-                }
-
-                extrato.forEach(item => {
-                    const dataItem = item.data_filtragem || item.data || '';
-                    const [anoL, mesL, diaL] = dataItem.split('-');
-                    
-                    let match = true;
-                    if (dataFiltro && dataItem !== dataFiltro) match = false;
-                    if (mesFiltro && mesL !== mesFiltro) match = false;
-                    if (anoFiltro && anoL !== anoFiltro) match = false;
-                    
-                    if (match) {
-                        qtdVisiveis++;
-                        const taxaAtual = parseFloat(item.taxa || 6.50);
-                        valorTotal += taxaAtual;
-                        
-                        const dataFormatada = diaL ? `${diaL}/${mesL}/${anoL}` : dataItem;
-                        
-                        tbody.innerHTML += `
-                            <tr data-data="${dataItem}">
-                                <td><strong>#${item.id} - ${item.cliente}</strong><br><small style="color:var(--text-muted)">${item.endereco || ''}</small></td>
-                                <td>${dataFormatada} ${item.hora || ''}</td>
-                                <td><span class="badge badge-success">R$ ${taxaAtual.toFixed(2).replace('.', ',')}</span></td>
-                            </tr>
-                        `;
+            const card = document.getElementById('card-pedido-' + id);
+            if(card) {
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.remove();
+                    if(document.getElementById('ent-lista-rotas').innerHTML.trim() === '') {
+                        document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
                     }
-                });
+                }, 300);
+            }
+        } catch (error) {
+            alert("Erro ao concluir entrega: " + error.message);
+        }
+    }
+
+    async function filtrarExtrato() {
+        const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+        const tbody = document.getElementById('tabela-extrato');
+        
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin"></i> Buscando histórico...</td></tr>';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/entregador/extrato?empresa_id=${empresaId}`);
+            const extrato = await response.json();
+            
+            const dataFiltro = document.getElementById('filtro-data').value; 
+            const mesFiltro = document.getElementById('filtro-mes').value;    
+            const anoFiltro = document.getElementById('filtro-ano').value;    
+            
+            let qtdVisiveis = 0;
+            let valorTotal = 0;
+            tbody.innerHTML = '';
+            
+            if (!extrato || extrato.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada.</td></tr>';
+                document.getElementById('total-qtd').innerText = '0 Entregas';
+                document.getElementById('total-valor').innerText = 'R$ 0,00';
+                return;
+            }
+
+            extrato.forEach(item => {
+                const dataItem = item.data_filtragem || item.data || '';
+                const [anoL, mesL, diaL] = dataItem.split('-');
                 
-                if (qtdVisiveis === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
+                let match = true;
+                if (dataFiltro && dataItem !== dataFiltro) match = false;
+                if (mesFiltro && mesL !== mesFiltro) match = false;
+                if (anoFiltro && anoL !== anoFiltro) match = false;
+                
+                if (match) {
+                    qtdVisiveis++;
+                    const taxaAtual = parseFloat(item.taxa || 6.50);
+                    valorTotal += taxaAtual;
+                    
+                    const dataFormatada = diaL ? `${diaL}/${mesL}/${anoL}` : dataItem;
+                    
+                    tbody.innerHTML += `
+                        <tr data-data="${dataItem}">
+                            <td><strong>#${item.id} - ${item.cliente}</strong><br><small style="color:var(--text-muted)">${item.endereco || ''}</small></td>
+                            <td>${dataFormatada} ${item.hora || ''}</td>
+                            <td><span class="badge badge-success">R$ ${taxaAtual.toFixed(2).replace('.', ',')}</span></td>
+                        </tr>
+                    `;
                 }
-                
-                document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
-                document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-                
-            } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--danger); padding:20px;">Erro ao carregar extrato.</td></tr>';
+            });
+            
+            if (qtdVisiveis === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
             }
+            
+            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
+            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+            
+        } catch (error) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--danger); padding:20px;">Erro ao carregar extrato.</td></tr>';
         }
+    }
 
-        function navigate(sectionId, clickedElement) {
-            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+    function navigate(sectionId, clickedElement) {
+        document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+        document.getElementById('sec-' + sectionId).classList.remove('hidden');
 
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            if(clickedElement) clickedElement.classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        if(clickedElement) clickedElement.classList.add('active');
 
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                overlay.style.display = 'none';
-            }
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            overlay.style.display = 'none';
         }
+    }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('open');
-            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
-        }
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        sidebar.classList.toggle('open');
+        overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+    }
 
-        document.getElementById('mobile-overlay').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('mobile-overlay').style.display = 'none';
-        });
+    document.getElementById('mobile-overlay').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('mobile-overlay').style.display = 'none';
+    });
 
-        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
-        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+    function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-        // Inicializa fluxo no carregamento
-        document.addEventListener("DOMContentLoaded", () => {
-            verificarAcessoEntregador();
-        });
-    </script>
+    // Inicializa fluxo no carregamento
+    document.addEventListener("DOMContentLoaded", () => {
+        verificarAcessoEntregador();
+    });
+</script>
 </body>
 </html>
