@@ -942,7 +942,7 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     try:
         email_valido = ent.email if ent.email and ent.email.strip() != "" else f"motoboy_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
         
-        # Salvando com empresa_id NULL para indicar que é autônomo da plataforma
+        # FORÇANDO empresa_id como NULL, não importa o que o app mande
         cursor.execute("""
             INSERT INTO colaboradores 
             (empresa_id, nome, telefone, email, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
