@@ -978,6 +978,31 @@ def master_listar_entregadores(db=Depends(get_db)):
         return cursor.fetchall()
     finally:
         cursor.close()
+
+@app.get("/api/master/entregadores")
+def listar_entregadores_globais(db = Depends(get_db)):
+    # Certifique-se de que a consulta busca apenas os autônomos globais (sem empresa vinculada)
+    # ou os cadastrados na rede geral da plataforma:
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, nome, telefone, funcao, status, 
+               (SELECT COUNT(*) FROM pedidos p WHERE p.motoboy_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
+        FROM colaboradores 
+        WHERE funcao = 'Motoboy' AND empresa_id IS NULL
+    """)
+    resultados = cursor.fetchall()
+    
+    entregadores = []
+    for row in resultados:
+        entregadores.append({
+            "id": row[0],
+            "nome": row[1],
+            "telefone": row[2],
+            "veiculo": row[3] or "Moto",
+            "status": row[4] or "Disponível",
+            "total_entregas": row[5] or 0
+        })
+    return entregadores
         
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
 @app.get("/api/empresas")
