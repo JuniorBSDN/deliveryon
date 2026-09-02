@@ -631,6 +631,78 @@
         };
     }
 
+   
+  let intervaloPolling = null;
+    let ultimaCorridaNotificadaId = null;
+
+    async function alterarStatusEntregador(novoStatus) {
+        const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+        const select = document.getElementById('ent-status-select');
+
+        if(novoStatus === 'Disponível') select.className = 'badge badge-success';
+        else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
+        else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
+        else select.className = 'badge badge-danger';
+
+        localStorage.setItem('deliveryon_entregador_status', novoStatus);
+
+        // Gerencia o polling de novas entregas baseado no status
+        if (novoStatus === 'Disponível') {
+            iniciarPollingDespacho();
+        } else {
+            pararPollingDespacho();
+        }
+
+        try {
+            await fetch(`${API_BASE_URL}/entregador/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    entregador_id: parseInt(entregadorId), 
+                    status: novoStatus 
+                })
+            });
+        } catch (error) {
+            console.error("Erro ao atualizar status:", error);
+        }
+    }
+      
+    function iniciarPollingDespacho() {
+        pararPollingDespacho();
+        // Consulta o servidor a cada 5 segundos buscando novas entregas na praça
+        intervaloPolling = setInterval(async () => {
+            const statusAtual = localStorage.getItem('deliveryon_entregador_status');
+            if (statusAtual !== 'Disponível') {
+                pararPollingDespacho();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/entregador/rotas`);
+                if (response.ok) {
+                    const rotas = await response.json();
+                    if (rotas && rotas.length > 0) {
+                        const maisRecente = rotas[0]; // Pega o pedido mais recente
+                        // Se for um pedido novo que ainda não foi notificado na tela
+                        if (maisRecente.id !== ultimaCorridaNotificadaId) {
+                            ultimaCorridaNotificadaId = maisRecente.id;
+                            exibirAlertaNovaCorrida(maisRecente.id, maisRecente.taxa || '6,50');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Erro no polling de despacho:", err);
+            }
+        }, 5000);
+    }
+
+    function pararPollingDespacho() {
+        if (intervaloPolling) {
+            clearInterval(intervaloPolling);
+            intervaloPolling = null;
+        }
+    }
+
     function exibirAlertaNovaCorrida(id, taxa) {
         corridaAtualId = id;
         document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
@@ -651,13 +723,6 @@
     function responderDespacho(aceitou) {
         clearInterval(timerDespacho);
         document.getElementById('modalNovaCorrida').classList.remove('active');
-
-        if (wsDespacho && wsDespacho.readyState === WebSocket.OPEN) {
-            wsDespacho.send(JSON.stringify({
-                tipo: aceitou ? 'ACEITAR' : 'RECUSAR',
-                corrida_id: corridaAtualId
-            }));
-        }
 
         if (aceitou) {
             alterarStatusEntregador('Em Entrega');
@@ -684,7 +749,6 @@
     container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
     try {
-        // Chamada limpa focada na rede global de entregas
         const response = await fetch(`${API_BASE_URL}/entregador/rotas`);
         if (!response.ok) throw new Error("Falha na resposta do servidor");
 
@@ -916,9 +980,13 @@
     function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
     function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-    // Inicializa fluxo no carregamento
+    // Inicializa fluxo no carregamento e ativa o polling se estiver disponível
     document.addEventListener("DOMContentLoaded", () => {
         verificarAcessoEntregador();
+        const statusSalvo = localStorage.getItem('deliveryon_entregador_status');
+        if (statusSalvo === 'Disponível') {
+            iniciarPollingDespacho();
+        }
     });
 </script>
 </body>
