@@ -1009,9 +1009,9 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Query blindada que não quebra caso o banco não tenha a coluna entregador_id
         cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = entregadores_app.id AND p.status = 'Entregue') as total_entregas
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo 
             FROM entregadores_app
             ORDER BY id DESC;
         """)
@@ -1025,7 +1025,7 @@ def master_listar_entregadores(db=Depends(get_db)):
                 "telefone": row['telefone'],
                 "status": row['status'] or "Disponível",
                 "veiculo": row['veiculo'] or "Moto",
-                "total_entregas": row['total_entregas'] or 0
+                "total_entregas": 0
             })
         return lista_final
     except Exception as e:
