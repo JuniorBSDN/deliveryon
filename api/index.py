@@ -968,18 +968,21 @@ def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
         cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
-            FROM colaboradores
-            WHERE funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL
-            ORDER BY id DESC;
+            SELECT c.id, c.nome, c.telefone, c.status, c.tipo_veiculo as veiculo, 
+                   c.empresa_id, COALESCE(e.nome_fantasia, 'DeliveryON') as loja_vinculada,
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = c.id AND p.status = 'Entregue') as total_entregas
+            FROM colaboradores c
+            LEFT JOIN empresas e ON c.empresa_id = e.id
+            WHERE c.funcao ILIKE '%motoboy%' OR c.funcao ILIKE '%entregador%' OR c.tipo_veiculo IS NOT NULL
+            ORDER BY c.id DESC;
         """)
         return cursor.fetchall()
     except Exception as e:
         print(f"Erro na query avançada, fazendo fallback: {e}")
-        db.rollback() # Limpa a transação que falhou
+        db.rollback() 
         cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 0 as total_entregas
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
+                   1 as empresa_id, 'DeliveryON' as loja_vinculada, 0 as total_entregas
             FROM colaboradores
             WHERE funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL
             ORDER BY id DESC;
