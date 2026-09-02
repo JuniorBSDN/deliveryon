@@ -815,26 +815,31 @@
                     }
                     
                     tbody.innerHTML = '';
-                    entregadores.forEach(ent => {
-                        let badgeClass = 'badge-danger';
-                        if (ent.status === 'Disponível') { badgeClass = 'badge-success'; online++; }
-                        else if (ent.status === 'Em Entrega') { badgeClass = 'badge-info'; emRota++; }
-                        else if (ent.status === 'Pausado') { badgeClass = 'badge-warning'; }
-                        else if (ent.status === 'Bloqueado') { badgeClass = 'badge-danger'; bloqueados++; }
-                        
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo || 'Moto'}</small></td>
-                                <td>${ent.telefone}</td>
-                                <td><span class="badge ${badgeClass}">${ent.status}</span></td>
-                                <td>${ent.total_entregas || 0}</td>
-                                <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                                    <button class="btn-action" title="Bloquear/Desbloquear Conta" onclick="bloquearEntregadorAdmin(${ent.id}, '${ent.nome}')"><i class="ph ph-lock-key"></i></button>
-                                    <button class="btn-action" title="Ver Histórico de Corridas" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>                            
-                                </td>
-                            </tr>
-                        `;
-                    });
+                        entregadores.forEach(ent => {
+                            let badgeClass = 'badge-danger';
+                            if (ent.status === 'Disponível') { badgeClass = 'badge-success'; online++; }
+                            else if (ent.status === 'Em Entrega') { badgeClass = 'badge-info'; emRota++; }
+                            else if (ent.status === 'Pausado') { badgeClass = 'badge-warning'; }
+                            else if (ent.status === 'Bloqueado') { badgeClass = 'badge-danger'; bloqueados++; }
+                            
+                            // NOVA LÓGICA DE DISTINÇÃO DE VÍNCULO
+                            let vinculoBadge = ent.empresa_id == 1 
+                                ? `<span class="badge" style="background: var(--brand-primary);"><i class="ph ph-globe"></i> Global App</span>`
+                                : `<span class="badge" style="background: #6c757d;"><i class="ph ph-storefront"></i> Fixo: ${ent.loja_vinculada}</span>`;
+                            
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo || 'Moto'}</small></td>
+                                    <td>${ent.telefone}<br>${vinculoBadge}</td>
+                                    <td><span class="badge ${badgeClass}">${ent.status}</span></td>
+                                    <td>${ent.total_entregas || 0}</td>
+                                    <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                                        <button class="btn-action" title="Bloquear/Desbloquear Conta" onclick="bloquearEntregadorAdmin(${ent.id}, '${ent.nome}')"><i class="ph ph-lock-key"></i></button>
+                                        <button class="btn-action" title="Ver Histórico de Corridas" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>                            
+                                    </td>
+                                </tr>
+                            `;
+                        });
 
                     document.getElementById('ind-ent-total').innerText = entregadores.length;
                     document.getElementById('ind-ent-online').innerText = online;
