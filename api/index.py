@@ -930,15 +930,15 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Se empresa_id não vier ou for 'null'/'undefined', busca todas as rotas ativas da rede global
-        if not empresa_id or empresa_id == "null" or empresa_id == "undefined":
+        # Se a empresa_id não for informada ou for inválida, busca todas as rotas ativas (Rede Global)
+        if not empresa_id or empresa_id == "null" or empresa_id == "undefined" or empresa_id == "1":
             cursor.execute("""
                 SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
                        '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
                        COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
                 FROM pedidos p
-                LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
-                WHERE p.status IN ('Saiu para entrega', 'Pronto')
+                LEFT JOIN clientes c ON p.cliente_nome = c.nome
+                WHERE p.status IN ('Saiu para entrega', 'Pronto', 'Pendente')
                 ORDER BY p.id DESC
             """)
         else:
@@ -948,12 +948,14 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
                        COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
                 FROM pedidos p
                 LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
-                WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto')
+                WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto', 'Pendente')
                 ORDER BY p.id DESC
             """, (int(empresa_id),))
         
         rotas = cursor.fetchall()
         return rotas
+    except Exception as e:
+        return []
     finally:
         cursor.close()
 
