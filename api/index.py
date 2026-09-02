@@ -967,23 +967,12 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Busca apenas os motoboys autônomos da plataforma (sem vínculo com empresa específica)
         cursor.execute("""
             SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
                    (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
             FROM colaboradores
             WHERE (funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL)
-              AND (empresa_id IS NULL OR empresa_id = 1)
-            ORDER BY id DESC;
-        """)
-        return cursor.fetchall()
-    except Exception as e:
-        db.rollback()
-        cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 0 as total_entregas
-            FROM colaboradores
-            WHERE funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%'
-              AND (empresa_id IS NULL OR empresa_id = 1)
+              AND empresa_id IS NULL
             ORDER BY id DESC;
         """)
         return cursor.fetchall()
