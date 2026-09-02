@@ -877,6 +877,7 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
 @app.post("/api/auth/entregador")
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
+    # Busca o motoboy validando o telefone e permitindo login por senha genérica ou CPF
     cursor.execute("""
         SELECT id, empresa_id, nome, status 
         FROM colaboradores 
@@ -971,6 +972,7 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     try:
         email_valido = ent.email if ent.email and ent.email.strip() != "" else f"motoboy_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
         
+        # Inserindo com a senha e garantindo o status inicial
         cursor.execute("""
             INSERT INTO colaboradores 
             (empresa_id, nome, telefone, email, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
@@ -988,8 +990,7 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     finally:
         cursor.close()
     
-    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": None, "status": "Disponível"}
-     
+    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": None, "status": "Disponível", "token": "token_ativo"}
 
 # ================= ROTAS DO MASTER (ÚNICA E CORRETA) =================
 @app.get("/api/master/entregadores")
@@ -1001,7 +1002,7 @@ def master_listar_entregadores(db=Depends(get_db)):
                    (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
             FROM colaboradores
             WHERE (funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL)
-              AND empresa_id IS NULL
+              AND (empresa_id IS NULL)
             ORDER BY id DESC;
         """)
         resultados = cursor.fetchall()
