@@ -940,17 +940,16 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
 def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        empresa_id = 1 
-        # Se o e-mail não vier do front, geramos um temporário baseado no CPF para não violar a restrição do banco
+        # Entregador autônomo do App NÃO possui empresa fixa (empresa_id = NULL)
         email_valido = ent.email if ent.email and ent.email.strip() != "" else f"motoboy_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
         
         cursor.execute("""
             INSERT INTO colaboradores 
             (empresa_id, nome, telefone, email, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Motoboy', 'Disponível')
+            VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s, 'Entregador App', 'Disponível')
             RETURNING id;
         """, (
-            empresa_id, ent.nome, ent.telefone, email_valido, ent.cpf, 
+            ent.nome, ent.telefone, email_valido, ent.cpf, 
             ent.data_nascimento, ent.tipo_veiculo, ent.veiculo_modelo, ent.veiculo_placa
         ))
         db.commit()
@@ -961,27 +960,30 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     finally:
         cursor.close()
     
-    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": empresa_id, "status": "Disponível"}
+    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": None, "status": "Disponível"}
+
 
 @app.get("/api/master/entregadores")
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Tenta buscar focando estritamente em quem se cadastrou como Motoboy independente/App
         cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
-            FROM colaboradores
-            WHERE funcao = 'Motoboy' AND (empresa_id IS NULL OR empresa_id = 1)
-            ORDER BY id DESC;
+            SELECT c.id, c.nome, c.telefone, c.status, c.tipo_veiculo as veiculo, 
+                   c.empresa_id, COALESCE(e.nome_fantasia, 'Rede Global (App)') as loja_vinculada,
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = c.id AND p.status = 'Entregue') as total_entregas
+            FROM colaboradores c
+            LEFT JOIN empresas e ON c.empresa_id = e.id
+            WHERE c.empresa_id IS NULL OR c.funcao ILIKE '%Entregador App%'
+            ORDER BY c.id DESC;
         """)
         return cursor.fetchall()
     except Exception as e:
         db.rollback()
         cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 0 as total_entregas
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
+                   NULL as empresa_id, 'Rede Global (App)' as loja_vinculada, 0 as total_entregas
             FROM colaboradores
-            WHERE funcao = 'Motoboy'
+            WHERE empresa_id IS NULL OR funcao ILIKE '%Entregador App%'
             ORDER BY id DESC;
         """)
         return cursor.fetchall()
