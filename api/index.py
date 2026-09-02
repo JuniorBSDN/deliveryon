@@ -879,7 +879,6 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Ajustado de 'colaboradores' para 'entregadores_app'
         cursor.execute("UPDATE entregadores_app SET status = %s WHERE id = %s", (data.status, data.entregador_id))
         db.commit()
     except Exception as e:
@@ -893,8 +892,6 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Buscando diretamente na tabela onde o cadastro realmente acontece (entregadores_app)
-        # Permite senha exata ou a senha genérica '123456'
         cursor.execute("""
             SELECT id, 1 as empresa_id, nome, status, senha, cpf 
             FROM entregadores_app 
@@ -906,7 +903,6 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
         if not colab:
             raise HTTPException(status_code=401, detail="Telefone não cadastrado.")
             
-        # Validação da senha (compara com a senha cadastrada ou a genérica '123456')
         if auth.senha != colab['senha'] and auth.senha != '123456' and auth.senha != colab['cpf']:
             raise HTTPException(status_code=401, detail="Senha ou CPF incorretos.")
 
@@ -930,7 +926,6 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # O entregador autônomo da rede global deve enxergar todas as corridas ativas na praça
         cursor.execute("""
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
                    '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
@@ -1011,27 +1006,6 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": 1, "status": "Disponível", "token": "token_ativo"}
 
 @app.get("/api/master/entregadores")
-def get_master_entregadores(db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        cursor.execute("""
-            SELECT id, nome, telefone, COALESCE(veiculo, 'Moto') as veiculo, 
-                   COALESCE(status, 'Disponível') as status, 
-                   COALESCE(total_entregas, 0) as total_entregas 
-            FROM entregadores
-            ORDER BY id DESC
-        """)
-        colunas = [col[0] for col in cursor.description]
-        entregadores = [dict(zip(colunas, row)) for row in cursor.fetchall()]
-        return entregadores
-    except Exception as e:
-        print(f"Erro ao buscar entregadores: {e}")
-        return []
-    finally:
-        cursor.close()
-    
-# ================= ROTAS DO MASTER (ÚNICA E CORRETA) =================
-@app.get("/api/master/entregadores")
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
@@ -1070,7 +1044,6 @@ def listar_empresas_publicas(db=Depends(get_db)):
         res = cursor.fetchall()
     except Exception as e:
         db.rollback()
-        # Fallback caso a tabela tenha estrutura básica
         cursor.execute("SELECT id, nome_fantasia as nome, 'Geral' as categoria, NULL as logo_url, '40-50 min' as tempo_entrega, 5.00 as taxa_entrega, contato FROM empresas ORDER BY id DESC")
         res = cursor.fetchall()
     finally:
@@ -1099,7 +1072,6 @@ def listar_produtos_destaques(db=Depends(get_db)):
 @app.get("/api/dashboard/fluxo")
 def get_dashboard_fluxo(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
-    # Retorna a contagem de pedidos agrupados por hora para o gráfico
     cursor.execute("""
         SELECT 
             SUBSTRING(hora FROM 1 for 2) as horario, 
@@ -1112,8 +1084,6 @@ def get_dashboard_fluxo(empresa_id: int, db=Depends(get_db)):
     rows = cursor.fetchall()
     cursor.close()
     
-    # Formata para o padrão que o Chart.js/JavaScript do admin costuma ler
-    horarios = [f"{i:02d}h" for i in range(17, 22)] # Ex: 17h, 18h, 19h, 20h, 21h
     totais = {row['horario']: row['total'] for row in rows}
     
     dados_grafico = []
