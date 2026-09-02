@@ -193,6 +193,7 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS entregador_id INTEGER;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);",
         "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
     ]
@@ -940,6 +941,31 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
         cursor.close()
     
     return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": empresa_id, "status": "Disponível"}
+
+@app.get("/api/master/entregadores")
+def master_listar_entregadores(db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
+            FROM colaboradores
+            WHERE funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL
+            ORDER BY id DESC;
+        """)
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"Erro na query avançada, fazendo fallback: {e}")
+        db.rollback() # Limpa a transação que falhou
+        cursor.execute("""
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 0 as total_entregas
+            FROM colaboradores
+            WHERE funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL
+            ORDER BY id DESC;
+        """)
+        return cursor.fetchall()
+    finally:
+        cursor.close()
 
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
 @app.get("/api/empresas")
