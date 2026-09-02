@@ -926,14 +926,14 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Captura todas as variações possíveis de status de pedidos que precisam ser entregues
+        # Traz qualquer pedido que esteja em andamento na praça (exclui apenas os finalizados)
         cursor.execute("""
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
                    '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
                    COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(p.status) IN ('saiu para entrega', 'pronto', 'pendente', 'aguardando entrega', 'em andamento', 'aprovado / preparando')
+            WHERE LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
             ORDER BY p.id DESC
         """)
         
