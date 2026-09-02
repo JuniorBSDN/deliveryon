@@ -967,30 +967,27 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Tenta buscar focando estritamente em quem se cadastrou como Motoboy independente/App
         cursor.execute("""
-            SELECT c.id, c.nome, c.telefone, c.status, c.tipo_veiculo as veiculo, 
-                   c.empresa_id, COALESCE(e.nome_fantasia, 'DeliveryON') as loja_vinculada,
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = c.id AND p.status = 'Entregue') as total_entregas
-            FROM colaboradores c
-            LEFT JOIN empresas e ON c.empresa_id = e.id
-            WHERE c.funcao ILIKE '%motoboy%' OR c.funcao ILIKE '%entregador%' OR c.tipo_veiculo IS NOT NULL
-            ORDER BY c.id DESC;
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
+            FROM colaboradores
+            WHERE funcao = 'Motoboy' AND (empresa_id IS NULL OR empresa_id = 1)
+            ORDER BY id DESC;
         """)
         return cursor.fetchall()
     except Exception as e:
-        print(f"Erro na query avançada, fazendo fallback: {e}")
-        db.rollback() 
+        db.rollback()
         cursor.execute("""
-            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
-                   1 as empresa_id, 'DeliveryON' as loja_vinculada, 0 as total_entregas
+            SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 0 as total_entregas
             FROM colaboradores
-            WHERE funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL
+            WHERE funcao = 'Motoboy'
             ORDER BY id DESC;
         """)
         return cursor.fetchall()
     finally:
         cursor.close()
-
+        
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
 @app.get("/api/empresas")
 def listar_empresas_publicas(db=Depends(get_db)):
