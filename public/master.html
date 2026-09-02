@@ -800,56 +800,46 @@
             }
         }
 
-       async function carregarEntregadores() {
-    const tbody = document.getElementById('tabela-entregadores');
-    try {
-        const res = await fetch('/api/master/entregadores');
-        if (res.ok) {
-            const entregadores = await res.json();
-            let online = 0, emRota = 0, bloqueados = 0;
+        async function carregarEntregadores() {
+            const tbody = document.getElementById('tabela-entregadores');
+            try {
+                const res = await fetch('/api/master/entregadores');
+                if (res.ok) {
+                    const entregadores = await res.json();
+                    let online = 0, emRota = 0, bloqueados = 0;
 
-            if (entregadores.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum entregador cadastrado.</td></tr>';
-                return;
-            }
+                    if (entregadores.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum entregador cadastrado.</td></tr>';
+                        return;
+                    }
 
-            tbody.innerHTML = '';
-            entregadores.forEach(ent => {
-                if (ent.status === 'Disponível') online++;
-                if (ent.status === 'Em Entrega') emRota++;
-                if (ent.status === 'Bloqueado') bloqueados++;
+                    tbody.innerHTML = '';
+                    entregadores.forEach(ent => {
+                        if (ent.status === 'Disponível') online++;
+                        if (ent.status === 'Em Entrega') emRota++;
+                        if (ent.status === 'Bloqueado') bloqueados++;
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo}</small></td>
-                        <td>${ent.telefone}</td>
-                        <td><span class="badge ${ent.status === 'Disponível' ? 'badge-success' : 'badge-info'}">${ent.status}</span></td>
-                        <td>${ent.total_entregas}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('ind-ent-total').innerText = entregadores.length;
-            document.getElementById('ind-ent-online').innerText = online;
-            document.getElementById('ind-ent-rota').innerText = emRota;
-            document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
-        }
-    } catch (err) {
-        console.error("Erro ao carregar entregadores no master", err);
-    }
-}
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo}</small></td>
+                                <td>${ent.telefone}</td>
+                                <td><span class="badge ${ent.status === 'Disponível' ? 'badge-success' : 'badge-info'}">${ent.status}</span></td>
+                                <td>${ent.total_entregas}</td>
+                                <td style="text-align: right;">
+                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
 
                     document.getElementById('ind-ent-total').innerText = entregadores.length;
                     document.getElementById('ind-ent-online').innerText = online;
                     document.getElementById('ind-ent-rota').innerText = emRota;
                     document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
-
                 }
-            } catch (err) { 
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB ao carregar entregadores.</td></tr>'; 
+            } catch (err) {
+                console.error("Erro ao carregar entregadores no master", err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB ao carregar entregadores.</td></tr>';
             }
         }
 
