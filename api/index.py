@@ -132,6 +132,16 @@ class EntregadorStatusUpdate(BaseModel):
     entregador_id: int
     status: str
 
+class EntregadorCadastro(BaseModel):
+    nome: str
+    cpf: str
+    telefone: str
+    senha: str
+    data_nascimento: Optional[str] = None
+    tipo_veiculo: Optional[str] = "Moto"
+    veiculo_modelo: Optional[str] = None
+    veiculo_placa: Optional[str] = None
+
 class BaixaPedido(BaseModel):
     pedido_id: str
     status: str
@@ -902,6 +912,31 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
     db.commit()
     cursor.close()
     return {"mensagem": "Entrega concluída e registrada com sucesso"}
+
+@app.post("/api/auth/entregador/cadastro")
+def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Por padrão, vinculamos à empresa_id 1 ou ajustamos conforme o fluxo
+        empresa_id = 1 
+        cursor.execute("""
+            INSERT INTO colaboradores 
+            (empresa_id, nome, telefone, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Motoboy', 'Disponível')
+            RETURNING id;
+        """, (
+            empresa_id, ent.nome, ent.telefone, ent.cpf, 
+            ent.data_nascimento, ent.tipo_veiculo, ent.veiculo_modelo, ent.veiculo_placa
+        ))
+        db.commit()
+        novo_id = cursor.fetchone()['id']
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao cadastrar entregador: {str(e)}")
+    finally:
+        cursor.close()
+    
+    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": empresa_id, "status": "Disponível"}
 
 
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
