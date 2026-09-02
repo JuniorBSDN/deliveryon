@@ -187,6 +187,10 @@
                         <label>Telefone / WhatsApp</label>
                         <input type="tel" id="cad-tel" class="form-control" required placeholder="(11) 90000-0000">
                     </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="cad-email" class="form-control" required placeholder="joao@email.com">
+                    </div>
                     <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="form-group">
                             <label>Tipo de Veículo</label>
@@ -477,6 +481,7 @@
 
         const payload = {
             nome: document.getElementById('cad-nome').value,
+            email: document.getElementById('cad-email').value, // Capturando o e-mail
             cpf: document.getElementById('cad-cpf').value,
             telefone: document.getElementById('cad-tel').value,
             senha: document.getElementById('cad-senha').value,
