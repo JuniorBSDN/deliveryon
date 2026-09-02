@@ -1017,7 +1017,7 @@ def master_listar_entregadores(db=Depends(get_db)):
             ORDER BY id DESC;
         """)
         resultados = cursor.fetchall()
-        
+
         lista_final = []
         for row in resultados:
             lista_final.append({
@@ -1029,6 +1029,10 @@ def master_listar_entregadores(db=Depends(get_db)):
                 "total_entregas": row['total_entregas'] or 0
             })
         return lista_final
+    except Exception as e:
+        db.rollback()
+        print(f"Erro em /api/master/entregadores: {str(e)}")
+        return [] # Retorna vazio para não estourar erro 500 na interface
     finally:
         cursor.close()
         
