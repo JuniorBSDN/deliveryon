@@ -879,7 +879,8 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        cursor.execute("UPDATE colaboradores SET status = %s WHERE id = %s", (data.status, data.entregador_id))
+        # Ajustado de 'colaboradores' para 'entregadores_app'
+        cursor.execute("UPDATE entregadores_app SET status = %s WHERE id = %s", (data.status, data.entregador_id))
         db.commit()
     except Exception as e:
         db.rollback()
@@ -891,26 +892,39 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
 @app.post("/api/auth/entregador")
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
-    # Busca o motoboy validando o telefone e permitindo login por senha genérica ou CPF
-    cursor.execute("""
-        SELECT id, empresa_id, nome, status 
-        FROM colaboradores 
-        WHERE telefone = %s AND (cpf = %s OR %s = '123456') AND (funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%')
-    """, (auth.telefone, auth.senha, auth.senha))
-    colab = cursor.fetchone()
-    cursor.close()
-    
-    if not colab:
-        raise HTTPException(status_code=401, detail="Credenciais inválidas ou acesso negado.")
+    try:
+        # Buscando diretamente na tabela onde o cadastro realmente acontece (entregadores_app)
+        # Permite senha exata ou a senha genérica '123456'
+        cursor.execute("""
+            SELECT id, 1 as empresa_id, nome, status, senha, cpf 
+            FROM entregadores_app 
+            WHERE telefone = %s
+        """, (auth.telefone,))
         
-    return {
-        "autorizado": True, 
-        "token": "token_motoboy_valido", 
-        "nome": colab['nome'], 
-        "id": colab['id'],
-        "empresa_id": colab['empresa_id'],
-        "status": colab['status']
-    }
+        colab = cursor.fetchone()
+        
+        if not colab:
+            raise HTTPException(status_code=401, detail="Telefone não cadastrado.")
+            
+        # Validação da senha (compara com a senha cadastrada ou a genérica '123456')
+        if auth.senha != colab['senha'] and auth.senha != '123456' and auth.senha != colab['cpf']:
+            raise HTTPException(status_code=401, detail="Senha ou CPF incorretos.")
+
+        return {
+            "autorizado": True, 
+            "token": "token_motoboy_valido", 
+            "nome": colab['nome'], 
+            "id": colab['id'],
+            "empresa_id": colab['empresa_id'],
+            "status": colab['status']
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+
 
 @app.get("/api/entregador/rotas")
 def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
