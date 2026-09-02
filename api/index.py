@@ -634,6 +634,27 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     cur.close()
     return {"success": True, "message": "Status atualizado com sucesso!"}
 
+@app.get("/api/orders/{order_id}")
+def get_order_by_id(order_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, status, valor_total as total, endereco_entrega as endereco 
+        FROM pedidos 
+        WHERE id = %s
+    """, (order_id,))
+    order = cursor.fetchone()
+    cursor.close()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+        
+    return {
+        "id": order['id'],
+        "status": order['status'],
+        "total": f"{order['total']:.2f}".replace('.', ',') if order['total'] else "0,00",
+        "endereco": order['endereco']
+    }
+
 @app.post("/api/ouvidoria")
 def create_ouvidoria(ouv: OuvidoriaCreate, db=Depends(get_db)):
     cursor = db.cursor()
