@@ -970,31 +970,27 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
 def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        email_valido = ent.email if ent.email and ent.email.strip() != "" else f"colab_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
-        
-        # Se houver um empresa_id salvo no navegador ou passado, vincula a ele. Caso contrário, deixa NULL (global).
-        # Como é um colaborador/funcionário, ele deve pertencer à empresa da sessão atual.
-        emp_id = getattr(ent, 'empresa_id', None) or 1 # Ajuste conforme o contexto da requisição da loja
+        email_valido = ent.email if ent.email and ent.email.strip() != "" else f"motoboy_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
         
         cursor.execute("""
-            INSERT INTO colaboradores 
-            (empresa_id, nome, telefone, email, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Colaborador', 'Disponível')
+            INSERT INTO entregadores_app 
+            (nome, cpf, telefone, senha, email, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Disponível')
             RETURNING id;
         """, (
-            emp_id, ent.nome, ent.telefone, email_valido, ent.cpf, 
+            ent.nome, ent.cpf, ent.telefone, ent.senha, email_valido, 
             ent.data_nascimento, ent.tipo_veiculo, ent.veiculo_modelo, ent.veiculo_placa
         ))
         db.commit()
         novo_id = cursor.fetchone()['id']
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Erro ao cadastrar colaborador: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erro ao cadastrar entregador: {str(e)}")
     finally:
         cursor.close()
     
-    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": emp_id, "status": "Disponível", "token": "token_ativo"}
-
+    return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": 1, "status": "Disponível", "token": "token_ativo"}
+    
 # ================= ROTAS DO MASTER (ÚNICA E CORRETA) =================
 @app.get("/api/master/entregadores")
 def master_listar_entregadores(db=Depends(get_db)):
@@ -1002,15 +998,12 @@ def master_listar_entregadores(db=Depends(get_db)):
     try:
         cursor.execute("""
             SELECT id, nome, telefone, status, tipo_veiculo as veiculo, 
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
-            FROM colaboradores
-            WHERE (funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%' OR tipo_veiculo IS NOT NULL)
-              AND (empresa_id IS NULL)
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.entregador_id = entregadores_app.id AND p.status = 'Entregue') as total_entregas
+            FROM entregadores_app
             ORDER BY id DESC;
         """)
         resultados = cursor.fetchall()
         
-        # Converte explicitamente para dicionário limpo para o front-end ler sem travar
         lista_final = []
         for row in resultados:
             lista_final.append({
