@@ -171,6 +171,20 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
 
     cursor = db.cursor()
     queries = [
+        """CREATE TABLE IF NOT EXISTS entregadores_app (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            cpf VARCHAR(14) UNIQUE NOT NULL,
+            email VARCHAR(255),
+            telefone VARCHAR(20),
+            data_nascimento VARCHAR(50),
+            tipo_veiculo VARCHAR(50),
+            veiculo_modelo VARCHAR(100),
+            veiculo_placa VARCHAR(50),
+            senha VARCHAR(255) NOT NULL,
+            status VARCHAR(20) DEFAULT 'Disponível',
+            empresa_id INTEGER DEFAULT 1
+        );""",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS empresa_id INTEGER DEFAULT 1;",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS cpf VARCHAR(50);",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS data_nascimento VARCHAR(50);",
