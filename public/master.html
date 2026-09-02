@@ -801,47 +801,60 @@
         }
 
         async function carregarEntregadores() {
-            const tbody = document.getElementById('tabela-entregadores');
-            try {
-                const res = await fetch('/api/master/entregadores');
-                if (res.ok) {
-                    const entregadores = await res.json();
-                    let online = 0, emRota = 0, bloqueados = 0;
+    const tbody = document.getElementById('tabela-entregadores');
+    if (!tbody) return;
 
-                    if (entregadores.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum entregador cadastrado.</td></tr>';
-                        return;
-                    }
+    try {
+        const res = await fetch('/api/master/entregadores');
+        if (!res.ok) throw new Error("Erro na API do servidor");
 
-                    tbody.innerHTML = '';
-                    entregadores.forEach(ent => {
-                        if (ent.status === 'Disponível') online++;
-                        if (ent.status === 'Em Entrega') emRota++;
-                        if (ent.status === 'Bloqueado') bloqueados++;
+        const data = await res.json();
+        // Garante que é um array, mesmo se o backend retornar outro formato
+        const entregadores = Array.isArray(data) ? data : (data.entregadores || []);
 
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo}</small></td>
-                                <td>${ent.telefone}</td>
-                                <td><span class="badge ${ent.status === 'Disponível' ? 'badge-success' : 'badge-info'}">${ent.status}</span></td>
-                                <td>${ent.total_entregas}</td>
-                                <td style="text-align: right;">
-                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+        let online = 0, emRota = 0, bloqueados = 0;
 
-                    document.getElementById('ind-ent-total').innerText = entregadores.length;
-                    document.getElementById('ind-ent-online').innerText = online;
-                    document.getElementById('ind-ent-rota').innerText = emRota;
-                    document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
-                }
-            } catch (err) {
-                console.error("Erro ao carregar entregadores no master", err);
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB ao carregar entregadores.</td></tr>';
-            }
+        if (entregadores.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum entregador cadastrado na rede global.</td></tr>';
+            document.getElementById('ind-ent-total').innerText = 0;
+            document.getElementById('ind-ent-online').innerText = 0;
+            document.getElementById('ind-ent-rota').innerText = 0;
+            document.getElementById('ind-ent-bloqueados').innerText = 0;
+            return;
         }
+
+        tbody.innerHTML = '';
+        entregadores.forEach(ent => {
+            const status = ent.status || 'Disponível';
+            if (status === 'Disponível' || status === 'Online') online++;
+            if (status === 'Em Entrega' || status === 'Em Rota') emRota++;
+            if (status === 'Bloqueado') bloqueados++;
+
+            const badgeClass = status === 'Disponível' || status === 'Online' ? 'badge-success' : (status === 'Bloqueado' ? 'badge-danger' : 'badge-info');
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${ent.nome || 'Entregador sem nome'}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo || 'Moto'}</small></td>
+                    <td>${ent.telefone || '--'}</td>
+                    <td><span class="badge ${badgeClass}">${status}</span></td>
+                    <td>${ent.total_entregas || 0}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome || 'Entregador'}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('ind-ent-total').innerText = entregadores.length;
+        document.getElementById('ind-ent-online').innerText = online;
+        document.getElementById('ind-ent-rota').innerText = emRota;
+        document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
+
+    } catch (err) {
+        console.error("Erro ao carregar entregadores no master:", err);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger); padding: 20px;">Erro ao sincronizar com o banco de dados. Verifique a rota do backend.</td></tr>';
+    }
+}
 
         async function bloquearEntregadorAdmin(id, nome) {
             if(confirm(`Deseja alterar o status de bloqueio do entregador ${nome}?`)) {
