@@ -851,6 +851,41 @@
         function closeImageModal() { document.getElementById('image-modal').classList.add('hidden'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
+async function recuperarPedidoAtivo(pedidoId) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/orders/${pedidoId}`);
+        if (!res.ok) return;
+
+        const pedido = await res.json();
+
+        // Se o pedido já foi finalizado, limpamos a memória do celular
+        if (pedido.status === 'Entregue' || pedido.status === 'Cancelado') {
+            localStorage.removeItem('deliveryon_pedido_ativo');
+            return;
+        }
+
+        // Caso contrário, ele ainda está ativo!
+        // AQUI VOCÊ CHAMA A SUA FUNÇÃO QUE ABRE O MODAL DO CLIENTE
+        // Exemplo: 
+        // document.getElementById('status-texto').innerText = pedido.status;
+        // openModal('modalAcompanhamento');
+        
+    } catch (error) {
+        console.error("Erro ao buscar pedido ativo:", error);
+    }
+}
+        
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Verifica se o cliente tem um pedido em andamento salvo no navegador
+    const pedidoAtivo = localStorage.getItem('deliveryon_pedido_ativo');
+    
+    if (pedidoAtivo) {
+        recuperarPedidoAtivo(pedidoAtivo);
+    }
+});
+        
+        
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
