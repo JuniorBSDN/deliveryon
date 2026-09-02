@@ -1009,6 +1009,26 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
         cursor.close()
     
     return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": 1, "status": "Disponível", "token": "token_ativo"}
+
+@app.get("/api/master/entregadores")
+def get_master_entregadores(db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT id, nome, telefone, COALESCE(veiculo, 'Moto') as veiculo, 
+                   COALESCE(status, 'Disponível') as status, 
+                   COALESCE(total_entregas, 0) as total_entregas 
+            FROM entregadores
+            ORDER BY id DESC
+        """)
+        colunas = [col[0] for col in cursor.description]
+        entregadores = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+        return entregadores
+    except Exception as e:
+        print(f"Erro ao buscar entregadores: {e}")
+        return []
+    finally:
+        cursor.close()
     
 # ================= ROTAS DO MASTER (ÚNICA E CORRETA) =================
 @app.get("/api/master/entregadores")
