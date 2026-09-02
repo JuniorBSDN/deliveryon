@@ -679,77 +679,77 @@
         }
     }
 
-    async function carregarRotasAtivas() {
-        const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
-        const container = document.getElementById('ent-lista-rotas');
-        container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
+   async function carregarRotasAtivas() {
+    const container = document.getElementById('ent-lista-rotas');
+    container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`);
-            if (!response.ok) throw new Error("Falha na resposta do servidor");
-            
-            const rotas = await response.json();
-            container.innerHTML = '';
+    try {
+        // Chamada limpa focada na rede global de entregas
+        const response = await fetch(`${API_BASE_URL}/entregador/rotas`);
+        if (!response.ok) throw new Error("Falha na resposta do servidor");
 
-            if (!rotas || rotas.length === 0) {
-                container.innerHTML = `
-                    <div class="card" style="text-align:center; padding: 30px; color: var(--text-muted);">
-                        <i class="ph ph-motorcycle" style="font-size: 3rem; margin-bottom: 10px; color: var(--brand-primary);"></i>
-                        <h3>Você está online e pronto!</h3>
-                        <p style="margin-top: 5px;">Aguardando novas solicitações de entrega da loja.</p>
-                    </div>`;
-                return;
-            }
+        const rotas = await response.json();
+        container.innerHTML = '';
 
-            rotas.forEach(rota => {
-                container.innerHTML += `
-                    <div class="card" id="card-pedido-${rota.id}">
-                        <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                            <div>
-                                <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
-                                <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
-                            </div>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
+        if (!rotas || rotas.length === 0) {
+            container.innerHTML = `
+                <div class="card" style="text-align:center; padding: 30px; color: var(--text-muted);">
+                    <i class="ph ph-motorcycle" style="font-size: 3rem; margin-bottom: 10px; color: var(--brand-primary);"></i>
+                    <h3>Você está online e pronto!</h3>
+                    <p style="margin-top: 5px;">Aguardando novas solicitações de entrega na praça.</p>
+                </div>`;
+            return;
+        }
+
+        rotas.forEach(rota => {
+            container.innerHTML += `
+                <div class="card" id="card-pedido-${rota.id}">
+                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                        <div>
+                            <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
+                            <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
                         </div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
+                    </div>
 
-                        <div style="margin-bottom: 15px;">
-                            <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
-                            <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
+                    <div style="margin-bottom: 15px;">
+                        <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
+                            <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag || 'PIX'})</span></h4>
                         </div>
-
-                        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
-                                <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag || 'PIX'})</span></h4>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
-                                <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa || '6,50'}</h4>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
-                            <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
-                        </div>
-
-                        <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
-                            <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
-                            <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                        <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
+                            <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa || '6,50'}</h4>
                         </div>
                     </div>
-                `;
-                setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
-            });
 
-        } catch (error) {
-            container.innerHTML = `
-                <div class="card" style="text-align:center; padding: 20px; color: var(--text-muted);">
-                    <i class="ph ph-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: 5px;"></i>
-                    <p>Nenhuma rota pendente no momento. Sistema sincronizado com sucesso.</p>
-                </div>`;
-        }
+                    <div class="form-group">
+                        <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
+                        <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
+                    </div>
+
+                    <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
+                        <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
+                        <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
+        });
+
+    } catch (error) {
+        container.innerHTML = `
+            <div class="card" style="text-align:center; padding: 20px; color: var(--text-muted);">
+                <i class="ph ph-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: 5px;"></i>
+                <p>Nenhuma rota pendente no momento. Sistema sincronizado com sucesso.</p>
+            </div>`;
     }
+}
 
     function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
         const latLoja = -0.9234; 
