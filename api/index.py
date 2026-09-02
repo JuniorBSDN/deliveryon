@@ -137,6 +137,7 @@ class EntregadorCadastro(BaseModel):
     cpf: str
     telefone: str
     senha: str
+    email: Optional[str] = None  
     data_nascimento: Optional[str] = None
     tipo_veiculo: Optional[str] = "Moto"
     veiculo_modelo: Optional[str] = None
@@ -917,15 +918,17 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
 def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Por padrão, vinculamos à empresa_id 1 ou ajustamos conforme o fluxo
         empresa_id = 1 
+        # Se o e-mail não vier do front, geramos um temporário baseado no CPF para não violar a restrição do banco
+        email_valido = ent.email if ent.email and ent.email.strip() != "" else f"motoboy_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
+        
         cursor.execute("""
             INSERT INTO colaboradores 
-            (empresa_id, nome, telefone, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Motoboy', 'Disponível')
+            (empresa_id, nome, telefone, email, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Motoboy', 'Disponível')
             RETURNING id;
         """, (
-            empresa_id, ent.nome, ent.telefone, ent.cpf, 
+            empresa_id, ent.nome, ent.telefone, email_valido, ent.cpf, 
             ent.data_nascimento, ent.tipo_veiculo, ent.veiculo_modelo, ent.veiculo_placa
         ))
         db.commit()
@@ -937,7 +940,6 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
         cursor.close()
     
     return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": empresa_id, "status": "Disponível"}
-
 
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
 @app.get("/api/empresas")
