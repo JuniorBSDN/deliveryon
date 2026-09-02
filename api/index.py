@@ -963,7 +963,7 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": None, "status": "Disponível"}
     
 
-@@app.get("/api/master/entregadores")
+@app.get("/api/master/entregadores")
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
     try:
