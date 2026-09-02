@@ -898,57 +898,64 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     }
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: Optional[int] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
+def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
-    # Se o entregador for global (empresa_id IS NULL), ele busca pedidos prontos ou atribuídos a ele
-    if empresa_id:
-        cursor.execute("""
-            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
-                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
-            WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto')
-            ORDER BY p.id DESC
-        """, (empresa_id,))
-    else:
-        cursor.execute("""
-            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
-                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE p.status IN ('Saiu para entrega', 'Pronto')
-            ORDER BY p.id DESC
-        """)
-    rotas = cursor.fetchall()
-    cursor.close()
-    return rotas
+    try:
+        # Se empresa_id não vier ou for 'null'/'undefined', busca todas as rotas ativas da rede global
+        if not empresa_id or empresa_id == "null" or empresa_id == "undefined":
+            cursor.execute("""
+                SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
+                       '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                       COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
+                FROM pedidos p
+                LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
+                WHERE p.status IN ('Saiu para entrega', 'Pronto')
+                ORDER BY p.id DESC
+            """)
+        else:
+            cursor.execute("""
+                SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
+                       '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                       COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
+                FROM pedidos p
+                LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
+                WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto')
+                ORDER BY p.id DESC
+            """, (int(empresa_id),))
+        
+        rotas = cursor.fetchall()
+        return rotas
+    finally:
+        cursor.close()
 
 @app.get("/api/entregador/extrato")
-def get_entregador_extrato(empresa_id: Optional[int] = None, db=Depends(get_db)):
+def get_entregador_extrato(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
-    if empresa_id:
-        cursor.execute("""
-            SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
-                   TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
-                   COALESCE(hora, '--:--') as hora, '6,50' as taxa
-            FROM pedidos 
-            WHERE empresa_id = %s AND status = 'Entregue'
-            ORDER BY id DESC
-        """, (empresa_id,))
-    else:
-        cursor.execute("""
-            SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
-                   TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
-                   COALESCE(hora, '--:--') as hora, '6,50' as taxa
-            FROM pedidos 
-            WHERE status = 'Entregue'
-            ORDER BY id DESC
-        """)
-    extrato = cursor.fetchall()
-    cursor.close()
-    return extrato
+    try:
+        if not empresa_id or empresa_id == "null" or empresa_id == "undefined":
+            cursor.execute("""
+                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
+                       TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+                       COALESCE(hora, '--:--') as hora, '6,50' as taxa
+                FROM pedidos 
+                WHERE status = 'Entregue'
+                ORDER BY id DESC
+            """)
+        else:
+            cursor.execute("""
+                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
+                       TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+                       COALESCE(hora, '--:--') as hora, '6,50' as taxa
+                FROM pedidos 
+                WHERE empresa_id = %s AND status = 'Entregue'
+                ORDER BY id DESC
+            """, (int(empresa_id),))
+            
+        extrato = cursor.fetchall()
+        return extrato
+    finally:
+        cursor.close()
+
 
 @app.post("/api/entregador/baixa")
 def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
