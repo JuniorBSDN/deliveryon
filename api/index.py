@@ -926,19 +926,21 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Captura todas as variações possíveis de status de pedidos que precisam ser entregues
         cursor.execute("""
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
                    '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
                    COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE p.status IN ('Saiu para entrega', 'Pronto', 'Pendente')
+            WHERE LOWER(p.status) IN ('saiu para entrega', 'pronto', 'pendente', 'aguardando entrega', 'em andamento', 'aprovado / preparando')
             ORDER BY p.id DESC
         """)
         
         rotas = cursor.fetchall()
         return rotas
     except Exception as e:
+        print(f"Erro ao buscar rotas do entregador: {str(e)}")
         return []
     finally:
         cursor.close()
