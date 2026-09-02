@@ -865,7 +865,7 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        cursor.execute("UPDATE colaboradores SET status = %s WHERE id = %s AND funcao = 'Motoboy'", (data.status, data.entregador_id))
+        cursor.execute("UPDATE colaboradores SET status = %s WHERE id = %s", (data.status, data.entregador_id))
         db.commit()
     except Exception as e:
         db.rollback()
@@ -880,7 +880,7 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor.execute("""
         SELECT id, empresa_id, nome, status 
         FROM colaboradores 
-        WHERE telefone = %s AND (cpf = %s OR %s = '123456') AND funcao = 'Motoboy'
+        WHERE telefone = %s AND (cpf = %s OR %s = '123456') AND (funcao ILIKE '%motoboy%' OR funcao ILIKE '%entregador%')
     """, (auth.telefone, auth.senha, auth.senha))
     colab = cursor.fetchone()
     cursor.close()
@@ -894,36 +894,58 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
         "nome": colab['nome'], 
         "id": colab['id'],
         "empresa_id": colab['empresa_id'],
-        "status": colab['status'] # Retornando o status atual
+        "status": colab['status']
     }
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: int, db=Depends(get_db)):
+def get_entregador_rotas(empresa_id: Optional[int] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
-               '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-               COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
-        FROM pedidos p
-        LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
-        WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto')
-        ORDER BY p.id DESC
-    """, (empresa_id,))
+    # Se o entregador for global (empresa_id IS NULL), ele busca pedidos prontos ou atribuídos a ele
+    if empresa_id:
+        cursor.execute("""
+            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
+                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
+            FROM pedidos p
+            LEFT JOIN clientes c ON p.cliente_nome = c.nome AND p.empresa_id = c.empresa_id
+            WHERE p.empresa_id = %s AND p.status IN ('Saiu para entrega', 'Pronto')
+            ORDER BY p.id DESC
+        """, (empresa_id,))
+    else:
+        cursor.execute("""
+            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
+                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
+            FROM pedidos p
+            LEFT JOIN clientes c ON p.cliente_nome = c.nome
+            WHERE p.status IN ('Saiu para entrega', 'Pronto')
+            ORDER BY p.id DESC
+        """)
     rotas = cursor.fetchall()
     cursor.close()
     return rotas
 
 @app.get("/api/entregador/extrato")
-def get_entregador_extrato(empresa_id: int, db=Depends(get_db)):
+def get_entregador_extrato(empresa_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
-               TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
-               COALESCE(hora, '--:--') as hora, '6,50' as taxa
-        FROM pedidos 
-        WHERE empresa_id = %s AND status = 'Entregue'
-        ORDER BY id DESC
-    """, (empresa_id,))
+    if empresa_id:
+        cursor.execute("""
+            SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
+                   TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+                   COALESCE(hora, '--:--') as hora, '6,50' as taxa
+            FROM pedidos 
+            WHERE empresa_id = %s AND status = 'Entregue'
+            ORDER BY id DESC
+        """, (empresa_id,))
+    else:
+        cursor.execute("""
+            SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
+                   TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+                   COALESCE(hora, '--:--') as hora, '6,50' as taxa
+            FROM pedidos 
+            WHERE status = 'Entregue'
+            ORDER BY id DESC
+        """)
     extrato = cursor.fetchall()
     cursor.close()
     return extrato
@@ -942,7 +964,6 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
     try:
         email_valido = ent.email if ent.email and ent.email.strip() != "" else f"motoboy_{ent.cpf.replace('.', '').replace('-', '')}@deliveryon.com"
         
-        # FORÇANDO empresa_id como NULL, não importa o que o app mande
         cursor.execute("""
             INSERT INTO colaboradores 
             (empresa_id, nome, telefone, email, cpf, data_nascimento, tipo_veiculo, veiculo_modelo, veiculo_placa, funcao, status)
@@ -961,8 +982,9 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
         cursor.close()
     
     return {"autorizado": True, "id": novo_id, "nome": ent.nome, "empresa_id": None, "status": "Disponível"}
-    
+     
 
+# ================= ROTAS DO MASTER (ÚNICA E CORRETA) =================
 @app.get("/api/master/entregadores")
 def master_listar_entregadores(db=Depends(get_db)):
     cursor = db.cursor()
@@ -975,34 +997,21 @@ def master_listar_entregadores(db=Depends(get_db)):
               AND empresa_id IS NULL
             ORDER BY id DESC;
         """)
-        return cursor.fetchall()
+        resultados = cursor.fetchall()
+        
+        entregadores = []
+        for row in resultados:
+            entregadores.append({
+                "id": row['id'],
+                "nome": row['nome'],
+                "telefone": row['telefone'],
+                "veiculo": row['veiculo'] or "Moto",
+                "status": row['status'] or "Disponível",
+                "total_entregas": row['total_entregas'] or 0
+            })
+        return entregadores
     finally:
         cursor.close()
-
-@app.get("/api/master/entregadores")
-def listar_entregadores_globais(db = Depends(get_db)):
-    # Certifique-se de que a consulta busca apenas os autônomos globais (sem empresa vinculada)
-    # ou os cadastrados na rede geral da plataforma:
-    cursor = db.cursor()
-    cursor.execute("""
-        SELECT id, nome, telefone, funcao, status, 
-               (SELECT COUNT(*) FROM pedidos p WHERE p.motoboy_id = colaboradores.id AND p.status = 'Entregue') as total_entregas
-        FROM colaboradores 
-        WHERE funcao = 'Motoboy' AND empresa_id IS NULL
-    """)
-    resultados = cursor.fetchall()
-    
-    entregadores = []
-    for row in resultados:
-        entregadores.append({
-            "id": row[0],
-            "nome": row[1],
-            "telefone": row[2],
-            "veiculo": row[3] or "Moto",
-            "status": row[4] or "Disponível",
-            "total_entregas": row[5] or 0
-        })
-    return entregadores
         
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO (SEGURAS) =================
 @app.get("/api/empresas")
