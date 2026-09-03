@@ -987,7 +987,7 @@
         }
 
         async function confirmarDespachoExterno() {
-            await apiRequest(`/orders/${pedidoParaDespacharId}/desparchar-proximos`, 'POST');
+            await apiRequest(`/orders/${pedidoParaDespacharId}/despachar-proximos`, 'POST');
             await atualizarStatusBackend(pedidoParaDespacharId, 'Saiu para entrega');
             alert("Alerta enviado para os motoboys próximos na região via sistema!");
             closeModal('modalDespachoPedido');
