@@ -987,6 +987,7 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Filtro corrigido para retornar apenas pedidos com status real de despacho
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -995,7 +996,7 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
                    p.status, p.entregador_id
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
+            WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado')
         """
         params = []
         
@@ -1004,7 +1005,7 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
             params.append(int(empresa_id))
             
         if entregador_id:
-            # Exibe rotas atribuídas ao entregador ou não atribuídas a ninguém (praça)
+            # Exibe rotas atribuídas ao entregador específico ou abertas na praça
             query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
             params.append(entregador_id)
 
