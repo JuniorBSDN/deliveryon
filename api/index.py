@@ -891,31 +891,33 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 
 # ================= ROTAS DE ENTREGADOR =================
 @app.get("/api/entregador/notificacoes")
-def verificar_notificacoes_entregador(empresa_id: Optional[str] = None, db=Depends(get_db)):
+def verificar_notificacoes_entregador(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Busca pedidos recentes que estão com status indicando despacho ou prontos para entrega
-        if empresa_id and empresa_id != "null":
-            cursor.execute("""
-                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, 
-                       valor_total as valor, pagamento as status_pag, hora 
-                FROM pedidos 
-                WHERE empresa_id = %s 
-                  AND LOWER(status) IN ('saiu para entrega', 'pronto', 'despachado', 'pendente')
-                ORDER BY id DESC LIMIT 5
-            """, (int(empresa_id),))
-        else:
-            cursor.execute("""
-                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, 
-                       valor_total as valor, pagamento as status_pag, hora 
-                FROM pedidos 
-                WHERE LOWER(status) IN ('saiu para entrega', 'pronto', 'despachado', 'pendente')
-                ORDER BY id DESC LIMIT 5
-            """)
+        query = """
+            SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, 
+                   valor_total as valor, pagamento as status_pag, hora,
+                   status, entregador_id
+            FROM pedidos 
+            WHERE LOWER(status) IN ('saiu para entrega', 'pronto', 'despachado', 'pendente')
+        """
+        params = []
+
+        if empresa_id and empresa_id not in ("null", "undefined"):
+            query += " AND empresa_id = %s"
+            params.append(int(empresa_id))
+            
+        if entregador_id:
+            # Garante que ele veja os pedidos dele OU os que estão na praça (NULL)
+            query += " AND (entregador_id = %s OR entregador_id IS NULL)"
+            params.append(entregador_id)
+
+        query += " ORDER BY id DESC LIMIT 5"
         
-        notificacoes = cursor.fetchall()
-        return {"novas_corridas": notificacoes}
+        cursor.execute(query, tuple(params))
+        return {"novas_corridas": cursor.fetchall()}
     except Exception as e:
+        print(f"Erro em notificacoes: {str(e)}")
         return {"novas_corridas": []}
     finally:
         cursor.close()
@@ -982,37 +984,41 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
+def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        if empresa_id and empresa_id != "null" and empresa_id != "undefined":
-            cursor.execute("""
-                SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
-                       '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                       COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
-                FROM pedidos p
-                LEFT JOIN clientes c ON p.cliente_nome = c.nome
-                WHERE p.empresa_id = %s AND LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
-                ORDER BY p.id DESC
-            """, (int(empresa_id),))
-        else:
-            cursor.execute("""
-                SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
-                       '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                       COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
-                FROM pedidos p
-                LEFT JOIN clientes c ON p.cliente_nome = c.nome
-                WHERE LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
-                ORDER BY p.id DESC
-            """)
+        query = """
+            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
+                   p.valor_total as valor, p.pagamento as status_pag, 
+                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng,
+                   p.status, p.entregador_id
+            FROM pedidos p
+            LEFT JOIN clientes c ON p.cliente_nome = c.nome
+            WHERE LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
+        """
+        params = []
+        
+        if empresa_id and empresa_id not in ("null", "undefined"):
+            query += " AND p.empresa_id = %s"
+            params.append(int(empresa_id))
+            
+        if entregador_id:
+            # Exibe rotas atribuídas ao entregador ou não atribuídas a ninguém (praça)
+            query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
+            params.append(entregador_id)
 
-        rotas = cursor.fetchall()
-        return rotas
+        query += " ORDER BY p.id DESC"
+        
+        cursor.execute(query, tuple(params))
+        return cursor.fetchall()
     except Exception as e:
         print(f"Erro ao buscar rotas do entregador: {str(e)}")
         return []
     finally:
         cursor.close()
+
+
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
