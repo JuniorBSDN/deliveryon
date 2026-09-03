@@ -565,9 +565,15 @@
     }
 
     function fazerLogoutEntregador() {
-        localStorage.clear();
-        window.location.reload();
-    }
+    // Apaga APENAS as chaves do entregador, protegendo a sessão do Admin
+    localStorage.removeItem('deliveryon_entregador_token');
+    localStorage.removeItem('deliveryon_entregador_nome');
+    localStorage.removeItem('deliveryon_entregador_id');
+    localStorage.removeItem('deliveryon_entregador_status');
+    localStorage.removeItem('ultimo_pedido_notificado');
+    
+    window.location.reload();
+}
 
     // ================= CONTROLES DO PAINEL =================
     function inicializarPainelEntregador() {
