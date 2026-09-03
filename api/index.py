@@ -892,27 +892,41 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # 1. Tenta buscar na tabela de entregadores autônomos (entregadores_app)
         cursor.execute("""
             SELECT id, 1 as empresa_id, nome, status, senha, cpf 
             FROM entregadores_app 
             WHERE telefone = %s
         """, (auth.telefone,))
-        
         colab = cursor.fetchone()
-        
+
+        # 2. Se não achar, busca na tabela de colaboradores internos (fixos da loja)
         if not colab:
-            raise HTTPException(status_code=401, detail="Telefone não cadastrado.")
-            
-        if auth.senha != colab['senha'] and auth.senha != '123456' and auth.senha != colab['cpf']:
+            cursor.execute("""
+                SELECT id, empresa_id, nome, status, 
+                       COALESCE(cpf, '123456') as senha, cpf 
+                FROM colaboradores 
+                WHERE telefone = %s AND LOWER(funcao) LIKE '%%motoboy%%'
+            """, (auth.telefone,))
+            colab = cursor.fetchone()
+
+        if not colab:
+            raise HTTPException(status_code=401, detail="Telefone não cadastrado como entregador.")
+
+        # Validação de senha / CPF
+        senha_cadastrada = str(colab['senha']) if colab['senha'] else '123456'
+        cpf_cadastrado = str(colab['cpf']) if colab['cpf'] else ''
+        
+        if auth.senha != senha_cadastrada and auth.senha != '123456' and auth.senha != cpf_cadastrado:
             raise HTTPException(status_code=401, detail="Senha ou CPF incorretos.")
 
         return {
-            "autorizado": True, 
-            "token": "token_motoboy_valido", 
-            "nome": colab['nome'], 
+            "autorizado": True,
+            "token": "token_motoboy_valido",
+            "nome": colab['nome'],
             "id": colab['id'],
             "empresa_id": colab['empresa_id'],
-            "status": colab['status']
+            "status": colab['status'] or "Disponível"
         }
     except HTTPException as he:
         raise he
@@ -926,17 +940,27 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Traz qualquer pedido que esteja em andamento na praça (exclui apenas os finalizados)
-        cursor.execute("""
-            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
-                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
-            ORDER BY p.id DESC
-        """)
-        
+        if empresa_id and empresa_id != "null" and empresa_id != "undefined":
+            cursor.execute("""
+                SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
+                       '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                       COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
+                FROM pedidos p
+                LEFT JOIN clientes c ON p.cliente_nome = c.nome
+                WHERE p.empresa_id = %s AND LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
+                ORDER BY p.id DESC
+            """, (int(empresa_id),))
+        else:
+            cursor.execute("""
+                SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, p.valor_total as valor, p.pagamento as status_pag, 
+                       '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
+                       COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng 
+                FROM pedidos p
+                LEFT JOIN clientes c ON p.cliente_nome = c.nome
+                WHERE LOWER(COALESCE(p.status, '')) NOT IN ('entregue', 'cancelado', 'concluido')
+                ORDER BY p.id DESC
+            """)
+
         rotas = cursor.fetchall()
         return rotas
     except Exception as e:
@@ -944,7 +968,6 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, db=Depends(get_db)):
         return []
     finally:
         cursor.close()
-
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
