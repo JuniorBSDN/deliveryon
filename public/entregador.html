@@ -441,6 +441,7 @@
 
    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    let ultimoPedidoNotificadoId = localStorage.getItem('ultimo_pedido_notificado') || 0;
     const API_BASE_URL = '/api'; 
     let mapaInstancias = {};
     let timerDespacho = null;
@@ -456,6 +457,55 @@
         document.body.style.fontSize = currentFontSize + '%';
     }
 
+
+    async function verificarNotificacoesApp() {
+    const empresaId = localStorage.getItem('empresa_id') || '';
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/entregador/notificacoes?empresa_id=${empresaId}`);
+        const data = await response.json();
+        
+        if (data.novas_corridas && data.novas_corridas.length > 0) {
+            const pedidoRecente = data.novas_corridas[0]; // Pega o mais recente
+            
+            if (pedidoRecente.id > ultimoPedidoNotificadoId) {
+                ultimoPedidoNotificadoId = pedidoRecente.id;
+                localStorage.setItem('ultimo_pedido_notificado', ultimoPedidoNotificadoId);
+                
+                // Toca um bipe sonoro de alerta (opcional)
+                tocarAlertaSonoro();
+                
+                // Exibe o Modal/Alerta chamando para a corrida na tela do entregador
+                mostrarModalNovaCorrida(pedidoRecente);
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao buscar notificações do entregador:", error);
+    }
+}
+
+function mostrarModalNovaCorrida(pedido) {
+    // Se você já tiver um elemento de modal no HTML do entregador, atualize os textos dele:
+    const modal = document.getElementById('modalNovaCorrida');
+    if (modal) {
+        document.getElementById('detalheCliente').innerText = pedido.cliente;
+        document.getElementById('detalheEndereco').innerText = pedido.endereco;
+        document.getElementById('detalheValor').innerText = `R$ ${pedido.valor}`;
+        modal.style.display = 'flex';
+    } else {
+        // Fallback caso não tenha o modal estruturado ainda: usa um alerta interativo
+        if (confirm(`🚨 NOVA CORRIDA DISPONÍVEL!\nCliente: ${pedido.cliente}\nEndereço: ${pedido.endereco}\nValor: R$ ${pedido.valor}\n\nDeseja aceitar esta entrega?`)) {
+            aceitarCorrida(pedido.id);
+        }
+    }
+}
+
+function tocarAlertaSonoro() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
+}
+
+// Inicia a verificação automática a cada 5 segundos assim que o entregador logar
+setInterval(verificarNotificacoesApp, 5000);
     // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
     function toggleAuthForms() {
         const formLogin = document.getElementById('ent-form-login');
