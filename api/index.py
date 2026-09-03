@@ -875,6 +875,36 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 
 
 # ================= ROTAS DE ENTREGADOR =================
+@app.get("/api/entregador/notificacoes")
+def verificar_notificacoes_entregador(empresa_id: Optional[str] = None, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Busca pedidos recentes que estão com status indicando despacho ou prontos para entrega
+        if empresa_id and empresa_id != "null":
+            cursor.execute("""
+                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, 
+                       valor_total as valor, pagamento as status_pag, hora 
+                FROM pedidos 
+                WHERE empresa_id = %s 
+                  AND LOWER(status) IN ('saiu para entrega', 'pronto', 'despachado', 'pendente')
+                ORDER BY id DESC LIMIT 5
+            """, (int(empresa_id),))
+        else:
+            cursor.execute("""
+                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, 
+                       valor_total as valor, pagamento as status_pag, hora 
+                FROM pedidos 
+                WHERE LOWER(status) IN ('saiu para entrega', 'pronto', 'despachado', 'pendente')
+                ORDER BY id DESC LIMIT 5
+            """)
+        
+        notificacoes = cursor.fetchall()
+        return {"novas_corridas": notificacoes}
+    except Exception as e:
+        return {"novas_corridas": []}
+    finally:
+        cursor.close()
+        
 @app.put("/api/entregador/status")
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
