@@ -457,55 +457,6 @@
         document.body.style.fontSize = currentFontSize + '%';
     }
 
-
-    async function verificarNotificacoesApp() {
-    const empresaId = localStorage.getItem('empresa_id') || '';
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/entregador/notificacoes?empresa_id=${empresaId}`);
-        const data = await response.json();
-        
-        if (data.novas_corridas && data.novas_corridas.length > 0) {
-            const pedidoRecente = data.novas_corridas[0]; // Pega o mais recente
-            
-            if (pedidoRecente.id > ultimoPedidoNotificadoId) {
-                ultimoPedidoNotificadoId = pedidoRecente.id;
-                localStorage.setItem('ultimo_pedido_notificado', ultimoPedidoNotificadoId);
-                
-                // Toca um bipe sonoro de alerta (opcional)
-                tocarAlertaSonoro();
-                
-                // Exibe o Modal/Alerta chamando para a corrida na tela do entregador
-                mostrarModalNovaCorrida(pedidoRecente);
-            }
-        }
-    } catch (error) {
-        console.error("Erro ao buscar notificações do entregador:", error);
-    }
-}
-
-function mostrarModalNovaCorrida(pedido) {
-    // Se você já tiver um elemento de modal no HTML do entregador, atualize os textos dele:
-    const modal = document.getElementById('modalNovaCorrida');
-    if (modal) {
-        document.getElementById('detalheCliente').innerText = pedido.cliente;
-        document.getElementById('detalheEndereco').innerText = pedido.endereco;
-        document.getElementById('detalheValor').innerText = `R$ ${pedido.valor}`;
-        modal.style.display = 'flex';
-    } else {
-        // Fallback caso não tenha o modal estruturado ainda: usa um alerta interativo
-        if (confirm(`🚨 NOVA CORRIDA DISPONÍVEL!\nCliente: ${pedido.cliente}\nEndereço: ${pedido.endereco}\nValor: R$ ${pedido.valor}\n\nDeseja aceitar esta entrega?`)) {
-            aceitarCorrida(pedido.id);
-        }
-    }
-}
-
-function tocarAlertaSonoro() {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
-}
-
-// Inicia a verificação automática a cada 5 segundos assim que o entregador logar
-setInterval(verificarNotificacoesApp, 5000);
     // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
     function toggleAuthForms() {
         const formLogin = document.getElementById('ent-form-login');
@@ -636,6 +587,7 @@ setInterval(verificarNotificacoesApp, 5000);
         carregarIdentidadeVisualEmpresa();
         carregarRotasAtivas();
         filtrarExtrato(); 
+        iniciarPollingDespacho();
     }
 
     async function alterarStatusEntregador(novoStatus) {
@@ -668,24 +620,23 @@ setInterval(verificarNotificacoesApp, 5000);
             console.error("Erro ao atualizar status:", error);
         }
     }
-      
+    
     function iniciarPollingDespacho() {
         pararPollingDespacho();
         intervaloPolling = setInterval(async () => {
             const statusAtual = localStorage.getItem('deliveryon_entregador_status');
-            if (statusAtual !== 'Disponível') {
-                pararPollingDespacho();
-                return;
-            }
+            const empresaId = localStorage.getItem('deliveryon_empresa_id') || '';
+            if (statusAtual !== 'Disponível') return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/entregador/rotas`);
+                const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`);
                 if (response.ok) {
                     const rotas = await response.json();
                     if (rotas && rotas.length > 0) {
                         const maisRecente = rotas[0];
                         if (maisRecente.id !== ultimaCorridaNotificadaId) {
                             ultimaCorridaNotificadaId = maisRecente.id;
+                            tocarAlertaSonoro();
                             exibirAlertaNovaCorrida(maisRecente.id, maisRecente.taxa || '6,50');
                         }
                     }
@@ -701,6 +652,11 @@ setInterval(verificarNotificacoesApp, 5000);
             clearInterval(intervaloPolling);
             intervaloPolling = null;
         }
+    }
+
+    function tocarAlertaSonoro() {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
     }
 
     function exibirAlertaNovaCorrida(id, taxa) {
@@ -746,10 +702,11 @@ setInterval(verificarNotificacoesApp, 5000);
 
     async function carregarRotasAtivas() {
         const container = document.getElementById('ent-lista-rotas');
+        const empresaId = localStorage.getItem('deliveryon_empresa_id') || '';
         container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
         try {
-            const response = await fetch(`${API_BASE_URL}/entregador/rotas`);
+            const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`);
             if (!response.ok) throw new Error("Falha na resposta do servidor");
 
             const rotas = await response.json();
@@ -980,13 +937,8 @@ setInterval(verificarNotificacoesApp, 5000);
     function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
     function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-    // Inicializa fluxo no carregamento e ativa o polling se estiver disponível
     document.addEventListener("DOMContentLoaded", () => {
         verificarAcessoEntregador();
-        const statusSalvo = localStorage.getItem('deliveryon_entregador_status');
-        if (statusSalvo === 'Disponível') {
-            iniciarPollingDespacho();
-        }
     });
 </script>
 </body>
