@@ -1097,7 +1097,42 @@ def get_dashboard_fluxo(empresa_id: int, db=Depends(get_db)):
         })
         
     return dados_grafico
-    
+
+@app.post("/api/orders/{order_id}/despachar-proximos")
+def despachar_proximos(order_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Atualiza o status do pedido para 'Saiu para entrega' sinalizando a praça
+        cursor.execute(
+            "UPDATE pedidos SET status = 'Saiu para entrega' WHERE id = %s",
+            (order_id,)
+        )
+        db.commit()
+        return {"success": True, "message": "Pedido despachado para a frota próxima!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
+@app.post("/api/orders/{order_id}/atribuir-motoboy")
+def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
+    motoboy_id = data.get("motoboy_id")
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "UPDATE pedidos SET status = 'Saiu para entrega', entregador_id = %s WHERE id = %s",
+            (motoboy_id, order_id)
+        )
+        db.commit()
+        return {"success": True, "message": "Motoboy atribuído com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
+
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
