@@ -6,6 +6,8 @@ from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from psycopg2 import pool
+from psycopg2.extras import RealDictConnection
 
 app = FastAPI(title="DeliveryON API - Completa e Consolidada", description="API integrada (Cliente, Entregador, Gestor, Master)")
 
@@ -20,12 +22,19 @@ app.add_middleware(
 DATABASE_URL = os.getenv("ON_DATA_URL")
 MASTER_SECRET = os.getenv("SENHA_MASTER", "master123")
 
+db_pool = pool.ThreadedConnectionPool(
+    minconn=2,
+    maxconn=20,
+    dsn=DATABASE_URL,
+    connection_factory=RealDictConnection
+)
+
 def get_db():
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    conn = db_pool.getconn()
     try:
         yield conn
     finally:
-        conn.close()
+        db_pool.putconn(conn)
 
 # ================= MODELOS =================
 
@@ -711,7 +720,13 @@ def update_product(id: int, prod: ProdutoUpdate, db=Depends(get_db)):
 @app.get("/api/products")
 def list_products(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT id as codigo, nome, categoria, preco, estoque, descricao, foto FROM produtos WHERE empresa_id = %s ORDER BY id DESC", (empresa_id,))
+    cursor.execute("""
+        SELECT id as codigo, nome, categoria, preco, estoque, descricao, foto 
+        FROM produtos 
+        WHERE empresa_id = %s 
+        ORDER BY id DESC 
+        LIMIT 50;
+    """, (empresa_id,))
     res = cursor.fetchall()
     cursor.close()
     return res
