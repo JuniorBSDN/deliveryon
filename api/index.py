@@ -987,6 +987,7 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Remoção do filtro estrito de empresa_id: permite que a frota veja a 'praça' global
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -999,10 +1000,6 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
         """
         params = []
 
-        if empresa_id and empresa_id not in ("null", "undefined", ""):
-            query += " AND p.empresa_id = %s"
-            params.append(int(empresa_id))
-
         if entregador_id and entregador_id.isdigit():
             query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
             params.append(int(entregador_id))
@@ -1012,40 +1009,39 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
         cursor.execute(query, tuple(params))
         return cursor.fetchall()
     except Exception as e:
-        print(f"Erro ao buscar rotas: {str(e)}")
+        print(f"Erro Crítico em get_entregador_rotas: {str(e)}")
         return []
     finally:
         cursor.close()
 
 
 @app.get("/api/entregador/extrato")
-def get_entregador_extrato(empresa_id: Optional[str] = None, db=Depends(get_db)):
+def get_entregador_extrato(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        if not empresa_id or empresa_id == "null" or empresa_id == "undefined":
-            cursor.execute("""
-                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
-                       TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
-                       COALESCE(hora, '--:--') as hora, '6,50' as taxa
-                FROM pedidos 
-                WHERE status = 'Entregue'
-                ORDER BY id DESC
-            """)
-        else:
-            cursor.execute("""
-                SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
-                       TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
-                       COALESCE(hora, '--:--') as hora, '6,50' as taxa
-                FROM pedidos 
-                WHERE empresa_id = %s AND status = 'Entregue'
-                ORDER BY id DESC
-            """, (int(empresa_id),))
-            
-        extrato = cursor.fetchall()
-        return extrato
+        query = """
+            SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
+                   TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+                   COALESCE(hora, '--:--') as hora, '6,50' as taxa
+            FROM pedidos 
+            WHERE status = 'Entregue'
+        """
+        params = []
+        
+        # Filtra o extrato pelas entregas feitas pelo motoboy, sem prender ao ID da loja
+        if entregador_id and entregador_id.isdigit():
+            query += " AND entregador_id = %s"
+            params.append(int(entregador_id))
+        elif empresa_id and empresa_id not in ("null", "undefined", ""):
+            query += " AND empresa_id = %s"
+            params.append(int(empresa_id))
+
+        query += " ORDER BY id DESC"
+
+        cursor.execute(query, tuple(params))
+        return cursor.fetchall()
     finally:
         cursor.close()
-
 
 @app.post("/api/entregador/baixa")
 def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
