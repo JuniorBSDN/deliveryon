@@ -987,7 +987,7 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Remoção do filtro estrito de empresa_id: permite que a frota veja a 'praça' global
+        # Libera para mostrar qualquer pedido despachado, mesmo que o entregador_id seja NULL
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -998,15 +998,9 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
             WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado')
         """
-        params = []
-
-        if entregador_id and entregador_id.isdigit():
-            query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
-            params.append(int(entregador_id))
-
         query += " ORDER BY p.id DESC"
 
-        cursor.execute(query, tuple(params))
+        cursor.execute(query)
         return cursor.fetchall()
     except Exception as e:
         print(f"Erro Crítico em get_entregador_rotas: {str(e)}")
@@ -1019,30 +1013,20 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
 def get_entregador_extrato(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Traz todos os pedidos com status 'Entregue' para alimentar o extrato do motoboy na praça
         query = """
             SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
                    TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
                    COALESCE(hora, '--:--') as hora, '6,50' as taxa
             FROM pedidos 
-            WHERE status = 'Entregue'
+            WHERE LOWER(COALESCE(status, '')) = 'entregue'
+            ORDER BY id DESC
         """
-        params = []
-        
-        # Filtra o extrato pelas entregas feitas pelo motoboy, sem prender ao ID da loja
-        if entregador_id and entregador_id.isdigit():
-            query += " AND entregador_id = %s"
-            params.append(int(entregador_id))
-        elif empresa_id and empresa_id not in ("null", "undefined", ""):
-            query += " AND empresa_id = %s"
-            params.append(int(empresa_id))
-
-        query += " ORDER BY id DESC"
-
-        cursor.execute(query, tuple(params))
+        cursor.execute(query)
         return cursor.fetchall()
     finally:
         cursor.close()
-
+        
 @app.post("/api/entregador/baixa")
 def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
     cursor = db.cursor()
