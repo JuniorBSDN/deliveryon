@@ -636,9 +636,9 @@
             
             if (statusAtual !== 'Disponível') return;
 
-            let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
+           let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
             if (entregadorId) url += `&entregador_id=${entregadorId}`;
-
+            
             try {
                 const response = await fetch(url);
                 if (response.ok) {
