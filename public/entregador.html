@@ -627,23 +627,27 @@
         }
     }
     
-    function iniciarPollingDespacho() {
+ function iniciarPollingDespacho() {
         pararPollingDespacho();
         intervaloPolling = setInterval(async () => {
             const statusAtual = localStorage.getItem('deliveryon_entregador_status');
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || '';
-            const entregadorId = localStorage.getItem('deliveryon_entregador_id') || ''; // ID adicionado
+            const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
+            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+            
             if (statusAtual !== 'Disponível') return;
 
+            let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
+            if (entregadorId) url += `&entregador_id=${entregadorId}`;
+
             try {
-                // Fetch corrigido para enviar o entregador_id
-                const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`);
+                const response = await fetch(url);
                 if (response.ok) {
                     const rotas = await response.json();
                     if (rotas && rotas.length > 0) {
                         const maisRecente = rotas[0];
-                        if (maisRecente.id !== ultimaCorridaNotificadaId) {
-                            ultimaCorridaNotificadaId = maisRecente.id;
+                        
+                        if (String(maisRecente.id) !== String(ultimaCorridaNotificadaId)) {
+                            ultimaCorridaNotificadaId = String(maisRecente.id);
                             tocarAlertaSonoro();
                             exibirAlertaNovaCorrida(maisRecente.id, maisRecente.taxa || '6,50');
                         }
