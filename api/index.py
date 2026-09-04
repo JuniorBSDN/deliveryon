@@ -984,10 +984,9 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
+def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Filtro corrigido para retornar apenas pedidos com status real de despacho
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -999,22 +998,21 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
             WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado')
         """
         params = []
-        
-        if empresa_id and empresa_id not in ("null", "undefined"):
+
+        if empresa_id and empresa_id not in ("null", "undefined", ""):
             query += " AND p.empresa_id = %s"
             params.append(int(empresa_id))
-            
-        if entregador_id:
-            # Exibe rotas atribuídas ao entregador específico ou abertas na praça
+
+        if entregador_id and entregador_id.isdigit():
             query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
-            params.append(entregador_id)
+            params.append(int(entregador_id))
 
         query += " ORDER BY p.id DESC"
-        
+
         cursor.execute(query, tuple(params))
         return cursor.fetchall()
     except Exception as e:
-        print(f"Erro ao buscar rotas do entregador: {str(e)}")
+        print(f"Erro ao buscar rotas: {str(e)}")
         return []
     finally:
         cursor.close()
