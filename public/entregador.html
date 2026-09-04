@@ -714,79 +714,107 @@
     }
 
     async function carregarRotasAtivas() {
+        const container = document.getElementById('ent-lista-rotas');
+        if (!container) return;
 
-        const empresaId = localStorage.getItem('deliveryon_empresa_id') || '';
-        const entregadorId = localStorage.getItem('deliveryon_entregador_id') || '';
         container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
         try {
-            let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
-            if (entregadorId) url += `&entregador_id=${entregadorId}`;
-            
-            const response = await fetch(url);
-            
-            container.innerHTML = '';
+            const response = await fetch(`${API_BASE_URL}/entregador/rotas`);
+            const rotas = await response.json();
 
             if (!rotas || rotas.length === 0) {
-                container.innerHTML = `
-                    <div class="card" style="text-align:center; padding: 30px; color: var(--text-muted);">
-                        <i class="ph ph-motorcycle" style="font-size: 3rem; margin-bottom: 10px; color: var(--brand-primary);"></i>
-                        <h3>Você está online e pronto!</h3>
-                        <p style="margin-top: 5px;">Aguardando novas solicitações de entrega na praça.</p>
-                    </div>`;
+                container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
                 return;
             }
 
-            rotas.forEach(rota => {
+            container.innerHTML = '';
+            rotas.forEach(item => {
                 container.innerHTML += `
-                    <div class="card" id="card-pedido-${rota.id}">
-                        <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                            <div>
-                                <span class="badge" style="background: var(--brand-primary); font-size: 0.85rem;">Pedido #${rota.id}</span>
-                                <h3 style="font-size: 1.2rem; margin-top: 5px;">Cliente: ${rota.cliente}</h3>
-                            </div>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="ph ph-clock"></i> Saiu às ${rota.hora || '--:--'}</span>
+                    <div class="card-rota" id="card-pedido-${item.id}" style="background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong>#${item.id} - ${item.cliente}</strong>
+                            <span class="badge badge-warning">${item.status || 'Saiu para entrega'}</span>
                         </div>
-
-                        <div style="margin-bottom: 15px;">
-                            <p style="font-weight: 600; margin-bottom: 4px;"><i class="ph ph-map-pin" style="color: var(--brand-primary);"></i> Endereço de Entrega:</p>
-                            <p style="color: var(--text-muted); font-size: 0.95rem;">${rota.endereco}</p>
-                        </div>
-
-                        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Total da Nota</span>
-                                <h4 style="font-size: 1.1rem; color: var(--text-main);">R$ ${rota.valor} <span style="font-size: 0.75rem; color: var(--success); font-weight: bold;">(${rota.status_pag || 'PIX'})</span></h4>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 6px; flex: 1; border: 1px solid var(--border-color);">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Sua Taxa</span>
-                                <h4 style="font-size: 1.1rem; color: var(--success);">R$ ${rota.taxa || '6,50'}</h4>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label><i class="ph ph-compass"></i> Rota GPS Integrada</label>
-                            <div id="mapa-rota-${rota.id}" style="height: 220px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); z-index: 10; margin-top: 10px;"></div>
-                        </div>
-
-                        <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end; gap: 10px;">
-                            <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1;"><i class="ph ph-navigation-arrow"></i> Abrir no Google Maps</a>
-                            <button class="btn btn-success" style="flex: 1;" onclick="abrirModalConclusao('${rota.id}', '${rota.cliente}', 'R$ ${rota.valor}')"><i class="ph ph-check-circle"></i> Concluir Entrega</button>
+                        <p style="margin: 5px 0; color: var(--text-muted);"><i class="ph ph-map-pin"></i> ${item.endereco || ''}</p>
+                        <p style="margin: 5px 0;"><strong>Total:</strong> R$ ${parseFloat(item.valor || 0).toFixed(2).replace('.', ',')} | <strong>Pagamento:</strong> ${item.status_pag || 'Dinheiro'}</p>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-success" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;" onclick="abrirModalConclusao('${item.id}', '${item.cliente}', 'R$ ${parseFloat(item.valor || 0).toFixed(2).replace('.', ',')}')">
+                                <i class="ph ph-check-circle"></i> Concluir Entrega
+                            </button>
                         </div>
                     </div>
                 `;
-                setTimeout(() => inicializarMapaGps(rota.lat || -0.9270, rota.lng || -48.1390, rota.endereco, `mapa-rota-${rota.id}`), 300);
             });
-
         } catch (error) {
-            container.innerHTML = `
-                <div class="card" style="text-align:center; padding: 20px; color: var(--text-muted);">
-                    <i class="ph ph-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: 5px;"></i>
-                    <p>Nenhuma rota pendente no momento. Sistema sincronizado com sucesso.</p>
-                </div>`;
+            container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--danger);">Erro ao carregar rotas ativas.</p>';
         }
     }
 
+    async function filtrarExtrato() {
+        const tbody = document.getElementById('tabela-extrato');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin"></i> Buscando histórico...</td></tr>';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/entregador/extrato`);
+            const extrato = await response.json();
+            
+            const dataFiltro = document.getElementById('filtro-data')?.value || ''; 
+            const mesFiltro = document.getElementById('filtro-mes')?.value || '';    
+            const anoFiltro = document.getElementById('filtro-ano')?.value || '';    
+            
+            let qtdVisiveis = 0;
+            let valorTotal = 0;
+            tbody.innerHTML = '';
+            
+            if (!extrato || extrato.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada.</td></tr>';
+                document.getElementById('total-qtd').innerText = '0 Entregas';
+                document.getElementById('total-valor').innerText = 'R$ 0,00';
+                return;
+            }
+
+            extrato.forEach(item => {
+                const dataItem = item.data_filtragem || item.data || '';
+                const [anoL, mesL, diaL] = dataItem.split('-');
+                
+                let match = true;
+                if (dataFiltro && dataItem !== dataFiltro) match = false;
+                if (mesFiltro && mesL !== mesFiltro) match = false;
+                if (anoFiltro && anoL !== anoFiltro) match = false;
+                
+                if (match) {
+                    qtdVisiveis++;
+                    const taxaAtual = parseFloat(item.taxa || 6.50);
+                    valorTotal += taxaAtual;
+                    
+                    const dataFormatada = diaL ? `${diaL}/${mesL}/${anoL}` : dataItem;
+                    
+                    tbody.innerHTML += `
+                        <tr data-data="${dataItem}">
+                            <td><strong>#${item.id} - ${item.cliente}</strong><br><small style="color:var(--text-muted)">${item.endereco || ''}</small></td>
+                            <td>${dataFormatada} ${item.hora || ''}</td>
+                            <td><span class="badge badge-success">R$ ${taxaAtual.toFixed(2).replace('.', ',')}</span></td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            if (qtdVisiveis === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
+            }
+            
+            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
+            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+            
+        } catch (error) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--danger); padding:20px;">Erro ao carregar extrato.</td></tr>';
+        }
+    }
+    
+    
     function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
         const latLoja = -0.9234; 
         const lngLoja = -48.1321;
