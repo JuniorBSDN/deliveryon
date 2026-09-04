@@ -987,7 +987,7 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Libera para mostrar qualquer pedido despachado, mesmo que o entregador_id seja NULL
+        # Usamos LOWER e TRIM para ignorar diferenças de maiúsculas/minúsculas e espaços extras
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -996,12 +996,21 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
                    p.status, p.entregador_id
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado')
+            WHERE LOWER(TRIM(COALESCE(p.status, ''))) IN (
+                'saiu para entrega', 
+                'saiu pra entrega', 
+                'pronto', 
+                'despachado', 
+                'solicitado', 
+                'pendente'
+            )
         """
         query += " ORDER BY p.id DESC"
 
         cursor.execute(query)
-        return cursor.fetchall()
+        resultado = cursor.fetchall()
+        print(f"DEBUG - Rotas encontradas para o entregador: {len(resultado)}")
+        return resultado
     except Exception as e:
         print(f"Erro Crítico em get_entregador_rotas: {str(e)}")
         return []
