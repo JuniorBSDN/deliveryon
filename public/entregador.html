@@ -293,6 +293,7 @@
         <div class="content-container">
             <!-- TELA: ROTAS ATIVAS -->
             <section id="sec-rotas" class="page-section">
+               
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-map-pin"></i> Rotas de Entrega Ativas</h1>
                     <button class="btn btn-secondary" onclick="carregarRotasAtivas()"><i class="ph ph-arrows-clockwise"></i> Atualizar Rotas</button>
@@ -984,9 +985,14 @@
     function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
     function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-    document.addEventListener("DOMContentLoaded", () => {
+   document.addEventListener("DOMContentLoaded", () => {
         verificarAcessoEntregador();
+        carregarRotasAtivas();
+        if (typeof iniciarPollingDespacho === 'function') {
+            iniciarPollingDespacho();
+        }
     });
+    
 </script>
 </body>
 </html>
