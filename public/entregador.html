@@ -565,16 +565,16 @@
         }
     }
 
-    function fazerLogoutEntregador() {
-    // Apaga APENAS as chaves do entregador, protegendo a sessão do Admin
-    localStorage.removeItem('deliveryon_entregador_token');
-    localStorage.removeItem('deliveryon_entregador_nome');
-    localStorage.removeItem('deliveryon_entregador_id');
-    localStorage.removeItem('deliveryon_entregador_status');
-    localStorage.removeItem('ultimo_pedido_notificado');
-    
-    window.location.reload();
-}
+   function fazerLogoutEntregador() {
+        // Remove APENAS as chaves do entregador, mantendo o Admin intacto
+        localStorage.removeItem('deliveryon_entregador_token');
+        localStorage.removeItem('deliveryon_entregador_nome');
+        localStorage.removeItem('deliveryon_entregador_id');
+        localStorage.removeItem('deliveryon_entregador_status');
+        localStorage.removeItem('ultimo_pedido_notificado');
+
+        window.location.reload();
+    }
 
     // ================= CONTROLES DO PAINEL =================
     function inicializarPainelEntregador() {
