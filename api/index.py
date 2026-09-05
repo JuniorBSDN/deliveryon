@@ -986,30 +986,21 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
+def get_entregador_rotas(db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Consulta SQL direta e blindada contra qualquer divergência de maiúsculas/minúsculas
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
                    '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng,
+                   -0.9270 as lat, -48.1390 as lng,
                    p.status, p.entregador_id
             FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome
             WHERE LOWER(TRIM(COALESCE(p.status, ''))) IN ('saiu para entrega', 'saiu pra entrega', 'pronto', 'despachado')
+            ORDER BY p.id DESC
         """
-        params = []
-        
-        # Se quiser restringir por empresa, descomente abaixo. 
-        # Como os pedidos estão espalhados nas empresas 3 e 4, deixamos global para o motoboy ver a praça inteira:
-        # if empresa_id and empresa_id not in ("null", "undefined", ""):
-        #     query += " AND p.empresa_id = %s"
-        #     params.append(int(empresa_id))
-
-        query += " ORDER BY p.id DESC"
-
-        cursor.execute(query, tuple(params))
+        cursor.execute(query)
         rows = cursor.fetchall()
 
         resultado = []
@@ -1018,7 +1009,7 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
                 "id": r[0],
                 "cliente": r[1],
                 "endereco": r[2],
-                "valor": r[3],
+                "valor": float(r[3]) if r[3] is not None else 0.0,
                 "status_pag": r[4],
                 "taxa": r[5],
                 "hora": r[6],
@@ -1029,10 +1020,11 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
             })
         return resultado
     except Exception as e:
-        print(f"Erro nas rotas: {str(e)}")
+        print(f"Erro crítico nas rotas: {str(e)}")
         return []
     finally:
         cursor.close()
+
 
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(db=Depends(get_db)):
@@ -1040,7 +1032,7 @@ def get_entregador_extrato(db=Depends(get_db)):
     try:
         query = """
             SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
-                   TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
+                   COALESCE(TO_CHAR(data, 'YYYY-MM-DD'), TO_CHAR(NOW(), 'YYYY-MM-DD')) as data_filtragem, 
                    COALESCE(hora, '--:--') as hora, '6,50' as taxa
             FROM pedidos 
             WHERE LOWER(TRIM(COALESCE(status, ''))) = 'entregue'
@@ -1048,19 +1040,22 @@ def get_entregador_extrato(db=Depends(get_db)):
         """
         cursor.execute(query)
         rows = cursor.fetchall()
-        
+
         resultado = []
         for r in rows:
             resultado.append({
                 "id": r[0],
                 "cliente": r[1],
                 "endereco": r[2],
-                "total": r[3],
+                "total": float(r[3]) if r[3] is not None else 0.0,
                 "data_filtragem": r[4],
                 "hora": r[5],
                 "taxa": r[6]
             })
         return resultado
+    except Exception as e:
+        print(f"Erro crítico no extrato: {str(e)}")
+        return []
     finally:
         cursor.close()
         
