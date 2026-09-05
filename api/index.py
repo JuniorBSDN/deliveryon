@@ -986,7 +986,7 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(db=Depends(get_db)):
+def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         query = """
@@ -998,11 +998,20 @@ def get_entregador_rotas(db=Depends(get_db)):
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
             WHERE LOWER(TRIM(COALESCE(p.status, ''))) IN ('saiu para entrega', 'saiu pra entrega', 'pronto', 'despachado')
-            ORDER BY p.id DESC
         """
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        params = []
         
+        # Se quiser restringir por empresa, descomente abaixo. 
+        # Como os pedidos estão espalhados nas empresas 3 e 4, deixamos global para o motoboy ver a praça inteira:
+        # if empresa_id and empresa_id not in ("null", "undefined", ""):
+        #     query += " AND p.empresa_id = %s"
+        #     params.append(int(empresa_id))
+
+        query += " ORDER BY p.id DESC"
+
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+
         resultado = []
         for r in rows:
             resultado.append({
@@ -1024,7 +1033,6 @@ def get_entregador_rotas(db=Depends(get_db)):
         return []
     finally:
         cursor.close()
-
 
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(db=Depends(get_db)):
