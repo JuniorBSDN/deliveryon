@@ -714,84 +714,66 @@
         }
     }
 
- async function carregarRotasAtivas() {
-    const container = document.getElementById('ent-lista-rotas');
-    if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
+async function carregarRotasAtivas() {
+        const container = document.getElementById('ent-lista-rotas');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
-    const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
-    const entregadorId = localStorage.getItem('deliveryon_entregador_id'); // Novo parâmetro
+        const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
+        const entregadorId = localStorage.getItem('deliveryon_entregador_id'); // Novo parâmetro
 
-    try {
-        let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
-        if (entregadorId) url += `&entregador_id=${entregadorId}`; // Envia para o backend
-
-        const response = await fetch(url);
-        const rotas = await response.json();
-        // ... O restante da função original segue igual
-    async function filtrarExtrato() {
-        const tbody = document.getElementById('tabela-extrato');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin"></i> Buscando histórico...</td></tr>';
-        
         try {
-            const response = await fetch(`${API_BASE_URL}/entregador/extrato`);
-            const extrato = await response.json();
-            
-            const dataFiltro = document.getElementById('filtro-data')?.value || ''; 
-            const mesFiltro = document.getElementById('filtro-mes')?.value || '';    
-            const anoFiltro = document.getElementById('filtro-ano')?.value || '';    
-            
-            let qtdVisiveis = 0;
-            let valorTotal = 0;
-            tbody.innerHTML = '';
-            
-            if (!extrato || extrato.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada.</td></tr>';
-                document.getElementById('total-qtd').innerText = '0 Entregas';
-                document.getElementById('total-valor').innerText = 'R$ 0,00';
+            let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
+            if (entregadorId) url += `&entregador_id=${entregadorId}`; // Envia para o backend
+
+            const response = await fetch(url);
+            const rotas = await response.json();
+
+            container.innerHTML = ''; 
+
+            if (!rotas || rotas.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
                 return;
             }
 
-            extrato.forEach(item => {
-                const dataItem = item.data_filtragem || item.data || '';
-                const [anoL, mesL, diaL] = dataItem.split('-');
-                
-                let match = true;
-                if (dataFiltro && dataItem !== dataFiltro) match = false;
-                if (mesFiltro && mesL !== mesFiltro) match = false;
-                if (anoFiltro && anoL !== anoFiltro) match = false;
-                
-                if (match) {
-                    qtdVisiveis++;
-                    const taxaAtual = parseFloat(item.taxa || 6.50);
-                    valorTotal += taxaAtual;
-                    
-                    const dataFormatada = diaL ? `${diaL}/${mesL}/${anoL}` : dataItem;
-                    
-                    tbody.innerHTML += `
-                        <tr data-data="${dataItem}">
-                            <td><strong>#${item.id} - ${item.cliente}</strong><br><small style="color:var(--text-muted)">${item.endereco || ''}</small></td>
-                            <td>${dataFormatada} ${item.hora || ''}</td>
-                            <td><span class="badge badge-success">R$ ${taxaAtual.toFixed(2).replace('.', ',')}</span></td>
-                        </tr>
-                    `;
-                }
+            rotas.forEach(rota => {
+                const taxa = rota.taxa ? parseFloat(rota.taxa.replace(',', '.')).toFixed(2).replace('.', ',') : '6,50';
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.id = 'card-pedido-' + rota.id;
+                div.style.transition = 'opacity 0.3s ease';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        <div>
+                            <span class="badge badge-warning" style="margin-bottom:5px;">Pedido #${rota.id}</span>
+                            <h3 style="margin: 0; font-size: 1.1rem;">${rota.cliente}</h3>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-size:1.2rem; font-weight:bold; color:var(--success);">R$ ${taxa}</span>
+                        </div>
+                    </div>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
+                        <i class="ph ph-map-pin"></i> ${rota.endereco}
+                    </p>
+                    <div id="mapa-${rota.id}" style="width: 100%; height: 150px; border-radius: 8px; margin-bottom: 15px; background: #eee; z-index: 1;"></div>
+                    <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
+                        <i class="ph ph-check-circle"></i> Concluir Entrega
+                    </button>
+                `;
+                container.appendChild(div);
+
+                setTimeout(() => {
+                    const lat = rota.lat || -0.9270;
+                    const lng = rota.lng || -48.1390;
+                    inicializarMapaGps(lat, lng, rota.endereco, 'mapa-' + rota.id);
+                }, 100);
             });
-            
-            if (qtdVisiveis === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
-            }
-            
-            document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
-            document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-            
+
         } catch (error) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--danger); padding:20px;">Erro ao carregar extrato.</td></tr>';
+            console.error("Erro ao carregar rotas:", error);
+            container.innerHTML = '<p style="text-align:center; color:var(--danger); padding: 20px;">Erro ao buscar entregas.</p>';
         }
     }
-    
     
     function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
         const latLoja = -0.9234; 
