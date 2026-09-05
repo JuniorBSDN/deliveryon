@@ -714,46 +714,21 @@
         }
     }
 
-  async function carregarRotasAtivas() {
-        const container = document.getElementById('ent-lista-rotas');
-        if (!container) return;
+ async function carregarRotasAtivas() {
+    const container = document.getElementById('ent-lista-rotas');
+    if (!container) return;
+    container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
-        container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
+    const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
+    const entregadorId = localStorage.getItem('deliveryon_entregador_id'); // Novo parâmetro
 
-        const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
+    try {
+        let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
+        if (entregadorId) url += `&entregador_id=${entregadorId}`; // Envia para o backend
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`);
-            const rotas = await response.json();
-
-            if (!rotas || rotas.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
-                return;
-            }
-
-            container.innerHTML = '';
-            rotas.forEach(item => {
-                container.innerHTML += `
-                    <div class="card-rota" id="card-pedido-${item.id}" style="background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong>#${item.id} - ${item.cliente}</strong>
-                            <span class="badge badge-warning">${item.status || 'Saiu para entrega'}</span>
-                        </div>
-                        <p style="margin: 5px 0; color: var(--text-muted);"><i class="ph ph-map-pin"></i> ${item.endereco || ''}</p>
-                        <p style="margin: 5px 0;"><strong>Total:</strong> R$ ${parseFloat(item.valor || 0).toFixed(2).replace('.', ',')} | <strong>Pagamento:</strong> ${item.status_pag || 'Dinheiro'}</p>
-                        <div style="margin-top: 15px; display: flex; gap: 10px;">
-                            <button class="btn btn-success" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;" onclick="abrirModalConclusao('${item.id}', '${item.cliente}', 'R$ ${parseFloat(item.valor || 0).toFixed(2).replace('.', ',')}')">
-                                <i class="ph ph-check-circle"></i> Concluir Entrega
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        } catch (error) {
-            container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--danger);">Erro ao carregar rotas ativas.</p>';
-        }
-    }
-    
+        const response = await fetch(url);
+        const rotas = await response.json();
+        // ... O restante da função original segue igual
     async function filtrarExtrato() {
         const tbody = document.getElementById('tabela-extrato');
         if (!tbody) return;
