@@ -986,10 +986,9 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
 
 
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(db=Depends(get_db)):
+def get_entregador_rotas(empresa_id: Optional[int] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Consulta SQL direta e blindada contra qualquer divergência de maiúsculas/minúsculas
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -998,29 +997,29 @@ def get_entregador_rotas(db=Depends(get_db)):
                    p.status, p.entregador_id
             FROM pedidos p
             WHERE LOWER(TRIM(COALESCE(p.status, ''))) IN ('saiu para entrega', 'saiu pra entrega', 'pronto', 'despachado')
-            ORDER BY p.id DESC
         """
-        cursor.execute(query)
+        params = []
+
+        if empresa_id:
+            query += " AND p.empresa_id = %s"
+            params.append(empresa_id)
+
+        if entregador_id:
+            query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
+            params.append(entregador_id)
+
+        query += " ORDER BY p.id DESC"
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
 
         resultado = []
         for r in rows:
             resultado.append({
-                "id": r[0],
-                "cliente": r[1],
-                "endereco": r[2],
-                "valor": float(r[3]) if r[3] is not None else 0.0,
-                "status_pag": r[4],
-                "taxa": r[5],
-                "hora": r[6],
-                "lat": r[7],
-                "lng": r[8],
-                "status": r[9],
-                "entregador_id": r[10]
+                "id": r[0], "cliente": r[1], "endereco": r[2], "valor": float(r[3]) if r[3] is not None else 0.0,
+                "status_pag": r[4], "taxa": r[5], "hora": r[6], "lat": r[7], "lng": r[8], "status": r[9], "entregador_id": r[10]
             })
         return resultado
     except Exception as e:
-        print(f"Erro crítico nas rotas: {str(e)}")
         return []
     finally:
         cursor.close()
