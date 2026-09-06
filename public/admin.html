@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Gestor - DeliveryON</title>
+    <title>Painel do Gestor - deliveryON</title>
 
     <!-- Ícones Modernos -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -214,7 +214,9 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-recent-orders"></tbody>
+                            <tbody id="tbody-recent-orders">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -237,7 +239,23 @@
                                     <option value="">Selecione uma categoria</option>
                                     <option value="hamburgueres">🍔 Hambúrgueres</option>
                                     <option value="pizzas">🍕 Pizzas</option>
+                                    <option value="hot-dogs">🌭 Hot Dogs</option>
+                                    <option value="acompanhamentos">🍟 Acompanhamentos</option>
+                                    <option value="petiscos">🍗 Petiscos</option>
+                                    <option value="salgados">🥟 Salgados</option>
+                                    <option value="refeicoes">🥘 Refeições</option>
+                                    <option value="marmitas">🍱 Marmitas</option>
+                                    <option value="crepes">🥞 Crepes</option>
+                                    <option value="tortas-bolos">🥧 Tortas e Bolos</option>
+                                    <option value="acai">🍧 Açaí</option>
+                                    <option value="sorvetes">🍦 Sorvetes</option>
+                                    <option value="picoles">🍭 Picolés</option>
                                     <option value="bebidas">🥤 Bebidas</option>
+                                    <option value="cafes-chas">☕ Cafés e Chás</option>
+                                    <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
+                                    <option value="milkshakes">🥛 Milkshakes</option>
+                                    <option value="sobremesas">🍰 Sobremesas</option>
+                                    <option value="combos-promocoes">🎁 Combos e Promoções</option>
                                     <option value="outra">➕ Outra Categoria</option>
                                 </select>
                             </div>
@@ -250,10 +268,16 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color);">
+                        <input type="text" class="form-control" placeholder="Buscar por cod/nome/categoria..." style="width: 100%; max-width: 300px;">
+                        <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir Lista</button>
+                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-products"></tbody>
+                            <tbody id="tbody-products">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -278,16 +302,21 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color);">
+                        <input type="text" class="form-control" placeholder="Buscar nome/telefone/ref..." style="width: 100%;">
+                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Nome</th><th>Telefone</th><th>Referência Local</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-clients"></tbody>
+                            <tbody id="tbody-clients">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- COLABORADORES (EQUIPE INTERNA - SEM MOTOBOY) -->
+            <!-- COLABORADORES -->
             <section id="sec-colaboradores" class="page-section hidden">
                 <div class="page-header flex justify-between align-center action-bar-mobile">
                     <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Equipe Interna</h1>
@@ -336,10 +365,27 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
+                        <div class="flex gap-10 action-bar-mobile" style="flex-wrap: wrap; flex: 1;">
+                            <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 100%;">
+                            <select class="form-control" style="width: 100%;">
+                                <option value="">Filtrar Função...</option>
+                                <option value="Caixa">Caixa</option>
+                                <option value="Gerente">Gerente</option>
+                                <option value="Cozinheiro">Cozinheiro</option>
+                            </select>
+                            <input type="date" class="form-control" title="Data de Nascimento">
+                            <button class="btn btn-secondary"><i class="ph ph-magnifying-glass"></i> Buscar</button>
+                        </div>
+                        <button class="btn btn-outline"><i class="ph ph-printer"></i> Imprimir</button>
+                    </div>
+
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-colaboradores"></tbody>
+                            <tbody id="tbody-colaboradores">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -356,19 +402,45 @@
                     <div class="tabs-header">
                         <button class="tab-btn active" onclick="switchTab(this, 'tab-vendas')">Vendas</button>
                         <button class="tab-btn" onclick="switchTab(this, 'tab-pedidos')">Pedidos</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-finan')">Financeiro / Pagamentos</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-estoque')">Estoque / Produtos</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'tab-entregas')">Entregas</button>
                     </div>
 
                     <div id="tab-vendas" class="tab-content">
                         <h3 class="mb-20">Relatórios de Vendas</h3>
                         <div class="form-grid">
                             <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('vendas-periodo')"><i class="ph ph-calendar"></i> Vendas por Período / Dia / Hora</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('vendas-categoria')"><i class="ph ph-hamburger"></i> Vendas por Categoria / Produto</button>
                             <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('faturamento')"><i class="ph ph-trend-up"></i> Faturamento Bruto e Líquido</button>
                         </div>
                     </div>
                     <div id="tab-pedidos" class="tab-content hidden">
                         <h3 class="mb-20">Relatórios de Pedidos</h3>
                         <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-status')"><i class="ph ph-list-numbers"></i> Total e Status</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-status')"><i class="ph ph-list-numbers"></i> Total e Status (Concluídos/Cancelados)</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-tempo')"><i class="ph ph-clock"></i> Tempos Médios (Preparo e Entrega)</button>
+                        </div>
+                    </div>
+                    <div id="tab-finan" class="tab-content hidden">
+                        <h3 class="mb-20">Financeiro e Pagamentos</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('financeiro-tipos')"><i class="ph ph-wallet"></i> Recebimentos por Tipo (PIX, Cartão, Dinheiro)</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('financeiro-taxas')"><i class="ph ph-receipt"></i> Taxas, Descontos e Estornos</button>
+                        </div>
+                    </div>
+                    <div id="tab-estoque" class="tab-content hidden">
+                        <h3 class="mb-20">Estoque e Produtos</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('estoque-baixo')"><i class="ph ph-package"></i> Posição Atual / Estoque Baixo</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('estoque-esgotado')"><i class="ph ph-chart-line-down"></i> Produtos Esgotados / Sem Venda</button>
+                        </div>
+                    </div>
+                    <div id="tab-entregas" class="tab-content hidden">
+                        <h3 class="mb-20">Entregas e Regiões</h3>
+                        <div class="form-grid">
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('entregas-regiao')"><i class="ph ph-map-pin"></i> Entregas por Bairro/Região</button>
+                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('entregas-desempenho')"><i class="ph ph-motorcycle"></i> Desempenho dos Entregadores</button>
                         </div>
                     </div>
                 </div>
@@ -377,11 +449,27 @@
             <!-- OUVIDORIA -->
             <section id="sec-ouvidoria" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
+
+                <div class="card" style="border: 1px solid var(--danger); background: #fff5f5;">
+                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 5px;">
+                        <h3 style="color: var(--danger);"><i class="ph ph-warning-circle"></i> Feed Crítico em Destaque</h3>
+                        <span style="font-size: 0.85rem; color: #999;" id="critical-feed-date">Aguardando dados...</span>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;" id="critical-feed-rating"><strong>Avaliação: --</strong></p>
+                    <p style="color: var(--text-muted); font-style: italic;" id="critical-feed-desc">"Nenhum alerta crítico carregado."</p>
+                </div>
+
                 <div class="card" style="padding: 0;">
+                    <div class="action-bar-mobile" style="padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color);">
+                        <input type="date" class="form-control" style="width: 100%;">
+                        <button class="btn btn-primary"><i class="ph ph-magnifying-glass"></i> Buscar Feeds</button>
+                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-ouvidoria"></tbody>
+                            <tbody id="tbody-ouvidoria">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -411,10 +499,19 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);"><h3>Meus Chamados</h3></div>
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                        <h3>Meus Chamados</h3>
+                    </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>ID / Data</th><th>Resumo / Descrição</th><th>Status</th><th>Técnico Responsável</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>ID / Data</th>
+                                    <th>Resumo / Descrição</th>
+                                    <th>Status</th>
+                                    <th>Técnico Responsável</th>
+                                </tr>
+                            </thead>
                             <tbody id="tbody-gestor-helpdesk">
                                 <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
                             </tbody>
@@ -423,7 +520,7 @@
                 </div>
             </section>
 
-            <!-- CONFIGURAÇÕES -->
+           <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
 
@@ -435,6 +532,7 @@
                         <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
                         <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
                         <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
+                        <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
                     </div>
 
                     <div>
@@ -449,9 +547,18 @@
                         <div class="card">
                             <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
                             <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
+                            <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                                <div class="form-group"><label>Agendar Backup Automático</label>
+                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
+                                </div>
+                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
+                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
+                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Configurações</button>
+                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
                         </div>
                     </div>
                 </div>
@@ -460,7 +567,16 @@
         </div>
     </main>
 
-    <!-- MODAL DE DESPACHO UNIFICADO (COM APP DO ENTREGADOR) -->
+    <!-- ================= MODAIS COMPLETOS ================= -->
+    <div class="modal-overlay" id="modalVerPedido">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="ph ph-receipt"></i> Detalhes do Pedido</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
+            <div class="modal-body" id="modal-ver-pedido-body"></div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button><button class="btn btn-primary" onclick="alert('Imprimindo via...')"><i class="ph ph-printer"></i> Imprimir Via</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DESPACHO / ESCOLHA DE MOTOBOY -->
     <div class="modal-overlay" id="modalDespachoPedido">
         <div class="modal-content" style="max-width: 480px;">
             <div class="modal-header">
@@ -469,11 +585,11 @@
             </div>
             <div class="modal-body">
                 <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Escolha como deseja realizar esta entrega:</p>
-                
+
                 <div class="form-group">
                     <label><strong>Opção 1: Entregador Fixo / Exclusivo</strong></label>
                     <select class="form-control" id="select-motoboy-interno">
-                        <option value="">Carregando entregadores online...</option>
+                        <option value="">Carregando entregadores do App...</option>
                     </select>
                 </div>
                 <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="confirmarDespachoInterno()"><i class="ph ph-check"></i> Atribuir Entregador Fixo</button>
@@ -494,39 +610,216 @@
         </div>
     </div>
 
-    <!-- MODAL DE VISUALIZAÇÃO DE PEDIDO -->
-    <div class="modal-overlay" id="modalVerPedido">
+    <!-- MODAL DE EDIÇÃO DE PRODUTO -->
+    <div class="modal-overlay" id="modalEditarProduto">
         <div class="modal-content">
-            <div class="modal-header"><h3><i class="ph ph-receipt"></i> Detalhes do Pedido</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
-            <div class="modal-body" id="modal-ver-pedido-body"></div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button></div>
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Produto</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-produto" onsubmit="event.preventDefault(); salvarEdicaoProduto();">
+                    <input type="hidden" id="edit-prod-id">
+                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-name" required></div>
+                    <div class="form-group"><label>Categoria</label>
+                        <select class="form-control" id="edit-prod-cat" required>
+                            <option value="hamburgueres">Hambúrgueres</option>
+                            <option value="pizzas">Pizzas</option>
+                            <option value="salgados">Salgados</option>
+                            <option value="bebidas">Bebidas</option>
+                            <option value="sobremesas">Sobremesas</option>
+                            <option value="outra">Outra Categoria</option>
+                        </select>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="edit-prod-price" required></div>
+                        <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-stock" required></div>
+                    </div>
+                    <div class="form-group"><label>Nova Foto (Opcional)</label><input type="file" class="form-control" id="edit-prod-file"></div>
+                    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <script>
+    <!-- MODAL DE EDIÇÃO DE COLABORADOR -->
+    <div class="modal-overlay" id="modalEditarColaborador">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-identification-badge"></i> Editar Colaborador</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarColaborador')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
+                    <input type="hidden" id="edit-colab-id">
+
+                    <div class="form-group">
+                        <label>Nova Foto (Deixe em branco para manter a atual)</label>
+                        <input type="file" class="form-control" id="edit-colab-file">
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-colab-name" required></div>
+                        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-colab-phone" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" class="form-control" id="edit-colab-email" required></div>
+                        <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
+                        <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
+                        <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
+
+                        <div class="form-group">
+                            <label>Função</label>
+                            <select class="form-control" id="edit-colab-funcao" required>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Gerente">Gerente</option>
+                                <option value="Caixa">Caixa</option>
+                                <option value="Cozinheiro">Cozinheiro</option>
+                                <option value="Auxiliar">Auxiliar de cozinha</option>
+                                <option value="Recepcionista">Recepcionista</option>
+                                <option value="Estoquista">Estoquista</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" id="edit-colab-status">
+                                <option value="Disponível">Disponível</option>
+                                <option value="Pausado">Pausado</option>
+                                <option value="Indisponível">Indisponível</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
+
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE CLIENTE -->
+    <div class="modal-overlay" id="modalEditarCliente">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Cliente</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
+                    <input type="hidden" id="edit-cli-id">
+
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" class="form-control" id="edit-cli-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="text" class="form-control" id="edit-cli-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" class="form-control" id="edit-cli-email">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" class="form-control" id="edit-cli-address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Referência Local</label>
+                        <input type="text" class="form-control" id="edit-cli-ref">
+                    </div>
+
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+  <script>
         const API_BASE_URL = "/api";
+        let currentActiveId = null;
         let chartFluxoInstance = null;
         let chartOuvidoriaInstance = null;
         let pedidoParaDespacharId = null;
 
+        async function configurarGraficoOuvidoria() {
+            const ctxOuvidoria = document.getElementById('chartOuvidoria');
+            if (!ctxOuvidoria) return;
+
+            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            atualizarDadosOuvidoriaGrafico();
+        }
+
+        async function atualizarDadosOuvidoriaGrafico() {
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas');
+
+            if (estatisticas && chartOuvidoriaInstance) {
+                chartOuvidoriaInstance.data.datasets[0].data = [
+                    estatisticas.otimo || 0,
+                    estatisticas.bom || 0,
+                    estatisticas.regular || 0,
+                    estatisticas.ruim || 0,
+                    estatisticas.pessimo || 0
+                ];
+                chartOuvidoriaInstance.update();
+            }
+        }
+
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id');
+
                 if (!empresaId) {
+                    console.error("Sessão inválida! ID da empresa não encontrado.");
                     document.getElementById('auth-overlay').style.display = 'flex';
                     return null;
                 }
+
                 let url = `${API_BASE_URL}${endpoint}`;
-                const options = { method: method, headers: { 'Content-Type': 'application/json' } };
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+
                 if (method === 'GET' || method === 'DELETE') {
-                    url += (url.includes('?') ? '&' : '?') + `empresa_id=${empresaId}`;
-                } else if (data) {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url += `${separator}empresa_id=${empresaId}`;
+                }
+                else if (method === 'POST' || method === 'PUT') {
+                    if (!data) data = {};
                     data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
                 }
+
                 const response = await fetch(url, options);
-                return response.ok ? await response.json() : null;
-            } catch (error) { return null; }
+                if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+                return await response.json();
+            } catch (error) {
+                console.error("Falha na comunicação com a API Python:", error);
+                return null;
+            }
         }
 
         async function fazerLoginGestor() {
@@ -537,50 +830,75 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cnpj: cnpjInput })
                 });
+
                 if (res.ok) {
                     const dados = await res.json();
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
+                    localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
+
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
-                    alert("CNPJ não encontrado.");
+                    alert("CNPJ não encontrado ou empresa inativa na base de dados.");
                 }
-            } catch (err) { alert("Erro de conexão."); }
+            } catch (err) {
+                alert("Erro ao conectar com o servidor da API.");
+            }
         }
 
         function logoutGestor() {
             localStorage.removeItem('deliveryon_empresa_id');
+            localStorage.removeItem('deliveryon_empresa_nome');
             location.reload();
         }
 
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
-                document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
-                document.getElementById('val-delivered-count').innerText = data.entregues || 0;
-                document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
-                document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
+                const waitingEl = document.getElementById('val-waiting-count');
+                const deliveredEl = document.getElementById('val-delivered-count');
+                const canceledEl = document.getElementById('val-canceled-count');
+                const revenueEl = document.getElementById('val-revenue-total');
+
+                if (waitingEl) waitingEl.innerText = data.aguardando || 0;
+                if (deliveredEl) deliveredEl.innerText = data.entregues || 0;
+                if (canceledEl) canceledEl.innerText = data.cancelados || 0;
+                if (revenueEl) revenueEl.innerText = `R$ ${data.receita || '0,00'}`;
             }
             loadOrders();
+        }
+
+        async function atualizarGraficoFluxo() {
+            const dadosFluxo = await apiRequest('/dashboard/fluxo');
+            if (dadosFluxo && chartFluxoInstance) {
+                const labels = dadosFluxo.map(item => item.hora);
+                const totais = dadosFluxo.map(item => item.total);
+
+                chartFluxoInstance.data.labels = labels;
+                chartFluxoInstance.data.datasets[0].data = totais;
+                chartFluxoInstance.update();
+            }
         }
 
         async function loadOrders() {
             const orders = await apiRequest('/orders');
             const tbody = document.getElementById('tbody-recent-orders');
             if (!tbody) return;
+
             tbody.innerHTML = '';
             if (!orders || orders.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
                 return;
             }
+
             orders.forEach(order => {
                 tbody.innerHTML += `
-                    <tr>
-                        <td><strong>#${order.id}</strong><br><small>${order.hora || ''}</small></td>
-                        <td>${order.cliente || 'Cliente'}<br><small>${order.endereco || ''}</small></td>
+                    <tr data-id="${order.id}">
+                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
+                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
                         <td>R$ ${order.total || '0,00'}</td>
                         <td>
-                            <select class="form-control" style="padding: 5px; font-size: 0.85rem;" onchange="tratarMudancaStatusPedido('${order.id}', this)">
+                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="tratarMudancaStatusPedido('${order.id}', this)">
                                 <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
                                 <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
                                 <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
@@ -588,7 +906,9 @@
                                 <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
                             </select>
                         </td>
-                        <td style="text-align: right;"><button class="btn-action" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
+                        </td>
                     </tr>
                 `;
             });
@@ -596,33 +916,43 @@
 
         async function tratarMudancaStatusPedido(orderId, selectElement) {
             const novoStatus = selectElement.value;
+
             if (novoStatus === 'Saiu para entrega') {
                 pedidoParaDespacharId = orderId;
                 await carregarMotoboysDisponiveisNoModal();
                 document.getElementById('despacho-pedido-id').innerText = orderId;
-                openModal('modalDespachoPedido');
+                document.getElementById('modalDespachoPedido').classList.add('active');
                 return;
             }
+
             await atualizarStatusBackend(orderId, novoStatus);
         }
 
         async function carregarMotoboysDisponiveisNoModal() {
             const selectMotoboy = document.getElementById('select-motoboy-interno');
             selectMotoboy.innerHTML = '<option value="">Buscando entregadores online...</option>';
+
             const entregadores = await apiRequest('/entregadores/disponiveis');
-            selectMotoboy.innerHTML = '<option value="">Selecione um entregador...</option>';
-            if (entregadores && entregadores.length > 0) {
-                entregadores.forEach(m => {
-                    selectMotoboy.innerHTML += `<option value="${m.id}">${m.nome} (${m.veiculo_modelo || 'Moto'})</option>`;
-                });
-            } else {
+            selectMotoboy.innerHTML = '';
+
+            if (!entregadores || entregadores.length === 0) {
                 selectMotoboy.innerHTML = '<option value="">Nenhum entregador online no momento</option>';
+                return;
             }
+
+            selectMotoboy.innerHTML = '<option value="">Selecione um entregador...</option>';
+            entregadores.forEach(m => {
+                selectMotoboy.innerHTML += `<option value="${m.id}">${m.nome} (${m.veiculo_modelo || 'Moto'})</option>`;
+            });
         }
 
         async function confirmarDespachoInterno() {
             const motoboyId = document.getElementById('select-motoboy-interno').value;
-            if (!motoboyId) { alert("Selecione um entregador."); return; }
+            if (!motoboyId) {
+                alert("Por favor, selecione um motoboy da equipe própria.");
+                return;
+            }
+
             await apiRequest(`/orders/${pedidoParaDespacharId}/atribuir-motoboy`, 'POST', { motoboy_id: parseInt(motoboyId) });
             await atualizarStatusBackend(pedidoParaDespacharId, 'Saiu para entrega');
             closeModal('modalDespachoPedido');
@@ -631,68 +961,153 @@
         async function confirmarDespachoExterno() {
             await apiRequest(`/orders/${pedidoParaDespacharId}/despachar-proximos`, 'POST');
             await atualizarStatusBackend(pedidoParaDespacharId, 'Saiu para entrega');
-            alert("Alerta enviado para a praça!");
+            alert("Alerta enviado para os motoboys próximos na região via sistema!");
             closeModal('modalDespachoPedido');
         }
 
         async function atualizarStatusBackend(orderId, status) {
             const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: status });
-            if (response) loadDashboardData();
+            if (response) {
+                loadDashboardData();
+            } else {
+                alert("Erro ao atualizar o status do pedido.");
+            }
         }
 
         async function loadProducts() {
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
-            if (!tbody) return;
+            if(!tbody) return;
             tbody.innerHTML = '';
+
             if (!products || products.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
                 return;
             }
+
             products.forEach(p => {
+                let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
+                if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
+                    imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
+                }
+
+                const produtoJson = encodeURIComponent(JSON.stringify(p));
                 tbody.innerHTML += `
-                    <tr>
-                        <td><div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div></td>
+                    <tr data-id="${p.codigo}">
+                        <td>${imagemHtml}</td>
                         <td>${p.codigo}</td>
-                        <td><strong>${p.nome}</strong></td>
+                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
                         <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
-                        <td style="text-align: right;"><button class="btn-action" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicao('${produtoJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
+                        </td>
                     </tr>
                 `;
             });
         }
 
         async function createProduct() {
+            const form = document.getElementById('form-produto');
+            const precoInput = document.getElementById('input-new-prod-price').value;
+            const fileInput = document.getElementById('input-new-prod-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
             const payload = {
                 nome: document.getElementById('input-new-prod-name').value,
                 categoria: document.getElementById('categoria').value,
-                preco: parseFloat(document.getElementById('input-new-prod-price').value.replace(',', '.')),
+                preco: parseFloat(precoInput.replace(',', '.')),
                 estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
-                descricao: document.getElementById('textarea-new-prod-desc').value
+                descricao: document.getElementById('textarea-new-prod-desc').value,
+                foto: fotoBase64
             };
+
             const res = await apiRequest('/products', 'POST', payload);
-            if (res) { alert('Produto cadastrado!'); document.getElementById('form-produto').reset(); loadProducts(); }
+            if (res) {
+                alert('Produto cadastrado com sucesso!');
+                form.reset();
+                loadProducts();
+            } else {
+                alert('Falha ao cadastrar o produto.');
+            }
         }
 
         async function deleteProduct(code) {
-            if (confirm("Excluir produto?")) { await apiRequest(`/products/${code}`, 'DELETE'); loadProducts(); }
+            if(confirm("Deseja realmente excluir este produto?")) {
+                const res = await apiRequest(`/products/${code}`, 'DELETE');
+                if (res) loadProducts();
+            }
+        }
+
+        function abrirModalEdicao(produtoStr) {
+            const p = JSON.parse(decodeURIComponent(produtoStr));
+            document.getElementById('edit-prod-id').value = p.codigo;
+            document.getElementById('edit-prod-name').value = p.nome;
+            document.getElementById('edit-prod-cat').value = p.categoria || 'outra';
+            document.getElementById('edit-prod-price').value = p.preco;
+            document.getElementById('edit-prod-stock').value = p.estoque || 100;
+            document.getElementById('edit-prod-desc').value = p.descricao || '';
+            document.getElementById('modalEditarProduto').classList.add('active');
+        }
+
+        async function salvarEdicaoProduto() {
+            const id = document.getElementById('edit-prod-id').value;
+            const fileInput = document.getElementById('edit-prod-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-prod-name').value,
+                categoria: document.getElementById('edit-prod-cat').value,
+                preco: parseFloat(document.getElementById('edit-prod-price').value.replace(',', '.')),
+                estoque: parseInt(document.getElementById('edit-prod-stock').value) || 0,
+                descricao: document.getElementById('edit-prod-desc').value,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/products/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Produto atualizado!');
+                closeModal('modalEditarProduto');
+                loadProducts();
+            }
         }
 
         async function loadClients() {
             const clients = await apiRequest('/clients');
             const tbody = document.getElementById('tbody-clients');
-            if (!tbody) return;
+            if(!tbody) return;
             tbody.innerHTML = '';
+
             if (!clients || clients.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
                 return;
             }
+
             clients.forEach(c => {
-                tbody.innerHTML += `<tr><td><strong>${c.nome}</strong></td><td>${c.telefone}</td><td>${c.referencia || '-'}</td><td style="text-align: right;">-</td></tr>`;
+                const clienteJson = encodeURIComponent(JSON.stringify(c));
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.nome}</strong></td>
+                        <td>${c.telefone}</td>
+                        <td>${c.referencia || '-'}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
         async function createClient() {
+            const form = document.getElementById('form-cliente');
             const payload = {
                 nome: document.getElementById('input-cli-name').value,
                 telefone: document.getElementById('input-cli-phone').value,
@@ -701,33 +1116,91 @@
                 referencia: document.getElementById('input-cli-ref').value
             };
             const res = await apiRequest('/clients', 'POST', payload);
-            if (res) { alert('Cliente salvo!'); document.getElementById('form-cliente').reset(); loadClients(); }
+            if (res) {
+                alert('Cliente salvo!');
+                form.reset();
+                loadClients();
+            }
+        }
+
+        async function deleteClient(id) {
+            if(confirm("Deseja excluir este cliente?")) {
+                await apiRequest(`/clients/${id}`, 'DELETE');
+                loadClients();
+            }
+        }
+
+        function abrirModalEdicaoCliente(clienteStr) {
+            const c = JSON.parse(decodeURIComponent(clienteStr));
+            document.getElementById('edit-cli-id').value = c.id;
+            document.getElementById('edit-cli-name').value = c.nome || '';
+            document.getElementById('edit-cli-phone').value = c.telefone || '';
+            document.getElementById('edit-cli-email').value = c.email || '';
+            document.getElementById('edit-cli-address').value = c.endereco || '';
+            document.getElementById('edit-cli-ref').value = c.referencia || '';
+            document.getElementById('modalEditarCliente').classList.add('active');
+        }
+
+        async function salvarEdicaoCliente() {
+            const id = document.getElementById('edit-cli-id').value;
+            const payload = {
+                nome: document.getElementById('edit-cli-name').value,
+                telefone: document.getElementById('edit-cli-phone').value,
+                email: document.getElementById('edit-cli-email').value,
+                endereco: document.getElementById('edit-cli-address').value,
+                referencia: document.getElementById('edit-cli-ref').value
+            };
+            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Cliente atualizado!');
+                closeModal('modalEditarCliente');
+                loadClients();
+            }
         }
 
         async function loadColaboradores() {
             const colabs = await apiRequest('/colaboradores');
             const tbody = document.getElementById('tbody-colaboradores');
-            if (!tbody) return;
+            if(!tbody) return;
             tbody.innerHTML = '';
+
             if (!colabs || colabs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
                 return;
             }
+
             colabs.forEach(cb => {
+                let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
+                if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
+                    fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
+                }
+                const colabJson = encodeURIComponent(JSON.stringify(cb));
                 tbody.innerHTML += `
                     <tr>
-                        <td><div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div></td>
+                        <td>${fotoHtml}</td>
                         <td><strong>${cb.nome}</strong></td>
                         <td>${cb.cpf || '-'}</td>
                         <td>${cb.funcao}</td>
                         <td>${cb.telefone}</td>
                         <td><span class="badge badge-success">${cb.status}</span></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoColaborador('${colabJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
                     </tr>
                 `;
             });
         }
 
         async function createColab() {
+            const form = document.getElementById('form-colaborador');
+            const funcao = document.getElementById('select-funcao').value;
+            const fileInput = document.getElementById('input-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
             const payload = {
                 nome: document.getElementById('input-colab-name').value,
                 telefone: document.getElementById('input-colab-phone').value,
@@ -735,25 +1208,91 @@
                 cpf: document.getElementById('input-colab-cpf').value,
                 data_nascimento: document.getElementById('input-colab-dob').value,
                 endereco: document.getElementById('input-colab-address').value,
-                funcao: document.getElementById('select-funcao').value,
+                funcao: funcao,
                 status: document.getElementById('select-colab-status').value,
-                observacoes: document.getElementById('textarea-colab-obs').value
+                observacoes: document.getElementById('textarea-colab-obs').value,
+                foto: fotoBase64
             };
+
             const res = await apiRequest('/colaboradores', 'POST', payload);
-            if (res) { alert('Colaborador cadastrado!'); document.getElementById('form-colaborador').reset(); loadColaboradores(); }
+            if (res) {
+                alert('Colaborador cadastrado!');
+                form.reset();
+                loadColaboradores();
+            }
         }
 
-        async function loadHelpdeskGestor() {
-            const chamados = await apiRequest('/helpdesk');
-            const tbody = document.getElementById('tbody-gestor-helpdesk');
-            if (!tbody) return;
+        async function deleteColab(id) {
+            if(confirm("Deseja excluir este colaborador?")) {
+                await apiRequest(`/colaboradores/${id}`, 'DELETE');
+                loadColaboradores();
+            }
+        }
+
+        function abrirModalEdicaoColaborador(colabStr) {
+            const c = JSON.parse(decodeURIComponent(colabStr));
+            document.getElementById('edit-colab-id').value = c.id;
+            document.getElementById('edit-colab-name').value = c.nome || '';
+            document.getElementById('edit-colab-phone').value = c.telefone || '';
+            document.getElementById('edit-colab-email').value = c.email || '';
+            document.getElementById('edit-colab-cpf').value = c.cpf || '';
+            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
+            document.getElementById('edit-colab-address').value = c.endereco || '';
+            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
+            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
+            document.getElementById('edit-colab-obs').value = c.observacoes || '';
+
+            document.getElementById('modalEditarColaborador').classList.add('active');
+        }
+
+        async function salvarEdicaoColaborador() {
+            const id = document.getElementById('edit-colab-id').value;
+            const funcao = document.getElementById('edit-colab-funcao').value;
+            const fileInput = document.getElementById('edit-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-colab-name').value,
+                telefone: document.getElementById('edit-colab-phone').value,
+                email: document.getElementById('edit-colab-email').value,
+                cpf: document.getElementById('edit-colab-cpf').value,
+                data_nascimento: document.getElementById('edit-colab-dob').value,
+                endereco: document.getElementById('edit-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('edit-colab-status').value,
+                observacoes: document.getElementById('edit-colab-obs').value,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Colaborador atualizado!');
+                closeModal('modalEditarColaborador');
+                loadColaboradores();
+            }
+        }
+
+        async function loadOuvidoria() {
+            const feeds = await apiRequest('/ouvidoria');
+            const tbody = document.getElementById('tbody-ouvidoria');
+            if(!tbody) return;
             tbody.innerHTML = '';
-            if (!chamados || chamados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+            if (!feeds || feeds.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback.</td></tr>`;
                 return;
             }
-            chamados.forEach(c => {
-                tbody.innerHTML += `<tr><td><strong>#${c.id}</strong></td><td><strong>${c.resumo_problema}</strong></td><td><span class="badge badge-warning">${c.status || 'aberto'}</span></td><td>${c.tecnico_responsavel || 'Aguardando'}</td></tr>`;
+            feeds.forEach(f => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
+                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
+                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
+                    </tr>
+                `;
             });
         }
 
@@ -763,40 +1302,133 @@
                 descricao: document.getElementById('textarea-hd-desc').value
             };
             const res = await apiRequest('/helpdesk', 'POST', payload);
-            if (res) { alert('Chamado aberto!'); loadHelpdeskGestor(); }
+            if (res) {
+                alert('Chamado aberto com sucesso!');
+                document.getElementById('input-hd-resumo').value = '';
+                document.getElementById('textarea-hd-desc').value = '';
+                loadHelpdeskGestor();
+            }
+        }
+
+        async function loadHelpdeskGestor() {
+            const chamados = await apiRequest('/helpdesk');
+            const tbody = document.getElementById('tbody-gestor-helpdesk');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+                return;
+            }
+            chamados.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
+                        <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
+                        <td><span class="badge badge-warning" style="text-transform: uppercase;">${c.status || 'aberto'}</span></td>
+                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function loadConfigurations() {
+            const config = await apiRequest('/configuracoes');
+            if (config) {
+                document.getElementById('input-config-title').value = config.titulo || '';
+                document.getElementById('input-config-slogan').value = config.slogan || '';
+                document.getElementById('input-config-address').value = config.endereco || '';
+                document.getElementById('input-config-phone').value = config.telefone || '';
+                document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
+                if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
+                if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
+                window.currentLogoBase64 = config.logo_url || '';
+                atualizarExibicaoLogotipo(window.currentLogoBase64);
+            }
         }
 
         async function saveConfigurations() {
+            const configAtual = await apiRequest('/configuracoes') || {};
+            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { logoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
             const payload = {
                 titulo: document.getElementById('input-config-title').value,
                 slogan: document.getElementById('input-config-slogan').value,
                 endereco: document.getElementById('input-config-address').value,
                 telefone: document.getElementById('input-config-phone').value,
+                horario_funcionamento: document.getElementById('textarea-config-hours').value,
                 cor_primaria: document.getElementById('input-config-cor1').value,
-                cor_secundaria: document.getElementById('input-config-cor2').value
+                cor_secundaria: document.getElementById('input-config-cor2').value,
+                logo_url: logoBase64
             };
+
             const res = await apiRequest('/configuracoes', 'PUT', payload);
-            if (res) alert('Configurações salvas!');
+            if (res) {
+                alert('Configurações salvas!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            }
         }
 
-        async function triggerBackup() { await apiRequest('/backup', 'POST'); alert('Backup executado.'); }
-        async function fetchReport(tipo) { alert(`Gerando relatório de [${tipo}]...`); }
+        async function aplicarIdentidadeVisualDaEmpresa() {
+            try {
+                const config = await apiRequest('/configuracoes');
+                if (!config) return;
+                const root = document.documentElement;
+                if (config.cor_primaria) root.style.setProperty('--brand-primary', config.cor_primaria);
+                if (config.cor_secundaria) root.style.setProperty('--brand-secondary', config.cor_secundaria);
+            } catch (e) {}
+        }
+
+        async function triggerBackup() {
+            await apiRequest('/backup', 'POST');
+            alert('Backup executado com sucesso.');
+        }
+
+        async function fetchReport(tipo) {
+            alert(`Gerando relatório de [${tipo}]...`);
+        }
+
+        function atualizarExibicaoLogotipo(logoBase64) {
+            const containers = document.querySelectorAll('.logo-preview-box');
+            containers.forEach(container => {
+                if (logoBase64 && logoBase64.trim() !== '') {
+                    container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
+                } else {
+                    container.innerHTML = `<span class="on-logo-top">ON</span><span class="on-logo-bottom">delivery</span>`;
+                }
+            });
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
 
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            if (clickedElement) clickedElement.classList.add('active');
+            if(clickedElement) clickedElement.classList.add('active');
+
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
             if (sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
-                document.getElementById('mobile-overlay').style.display = 'none';
+                overlay.classList.remove('active');
             }
         }
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('mobile-overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+            document.getElementById('mobile-overlay').classList.toggle('active');
         }
 
         function switchTab(btn, targetId) {
@@ -806,34 +1438,61 @@
             document.getElementById(targetId).classList.remove('hidden');
         }
 
-        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
-        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
 
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
             loadClients();
             loadColaboradores();
+            loadOuvidoria();
+            loadConfigurations();
             loadHelpdeskGestor();
+            aplicarIdentidadeVisualDaEmpresa();
 
-            if (document.getElementById('chartFluxo')) {
-                chartFluxoInstance = new Chart(document.getElementById('chartFluxo').getContext('2d'), {
+            if(document.getElementById('chartFluxo')) {
+                const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
+                chartFluxoInstance = new Chart(ctxFluxo, {
                     type: 'line',
-                    data: { labels: ['17h', '18h', '19h', '20h', '21h'], datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', tension: 0.4 }] },
+                    data: {
+                        labels: ['17h', '18h', '19h', '20h', '21h'],
+                        datasets: [{
+                            data: [0, 0, 0, 0, 0],
+                            borderColor: '#ff5722',
+                            backgroundColor: 'rgba(255,87,34,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
+                atualizarGraficoFluxo();
             }
-            if (document.getElementById('chartOuvidoria')) {
-                chartOuvidoriaInstance = new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+
+            if(document.getElementById('chartOuvidoria')) {
+                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
                     type: 'doughnut',
                     data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
             }
+
+            setInterval(() => {
+                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
+                    loadColaboradores();
+                }
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
+                    loadDashboardData();
+                    atualizarGraficoFluxo();
+                }
+            }, 5000);
         }
 
         window.onload = function() {
-            if (localStorage.getItem('deliveryon_empresa_id')) {
+            const empresaId = localStorage.getItem('deliveryon_empresa_id');
+            if (empresaId) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 inicializarPainel();
             } else {
