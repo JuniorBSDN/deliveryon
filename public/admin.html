@@ -604,22 +604,22 @@
                 <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Escolha como deseja realizar esta entrega:</p>
                 
                 <div class="form-group">
-                    <label><strong>Opção 1: Motoboy Próprio da Casa</strong></label>
+                    <label><strong>Opção 1: Entregador Fixo / Exclusivo</strong></label>
                     <select class="form-control" id="select-motoboy-interno">
-                        <option value="">Carregando motoboys disponíveis...</option>
+                        <option value="">Carregando entregadores do App...</option>
                     </select>
                 </div>
-                <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="confirmarDespachoInterno()"><i class="ph ph-check"></i> Atribuir Motoboy Próprio</button>
+                <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="confirmarDespachoInterno()"><i class="ph ph-check"></i> Atribuir Entregador Fixo</button>
 
                 <div style="margin: 25px 0 15px 0; border-top: 1px dashed var(--border-color); text-align: center; position: relative;">
                     <span style="background: white; padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; position: relative; top: -10px;">OU</span>
                 </div>
 
                 <div class="form-group">
-                    <label><strong>Opção 2: Frota Próxima / Terceirizada</strong></label>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Envia um alerta com cronômetro para o entregador livre mais próximo na região.</p>
+                    <label><strong>Opção 2: Jogar na Praça (Matchmaking Geral)</strong></label>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Dispara o pedido para todos os motoboys livres na rede para quem aceitar primeiro.</p>
                 </div>
-                <button class="btn btn-primary" style="width: 100%; background: #6c5ce7;" onclick="confirmarDespachoExterno()"><i class="ph ph-radar"></i> Disparar para Motoboys Próximos</button>
+                <button class="btn btn-primary" style="width: 100%; background: #6c5ce7;" onclick="confirmarDespachoExterno()"><i class="ph ph-radar"></i> Disparar para a Praça</button>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalDespachoPedido')">Cancelar</button>
@@ -955,24 +955,23 @@
         }
 
         async function carregarMotoboysDisponiveisNoModal() {
-            const selectMotoboy = document.getElementById('select-motoboy-interno');
-            selectMotoboy.innerHTML = '<option value="">Buscando motoboys disponíveis...</option>';
+    const selectMotoboy = document.getElementById('select-motoboy-interno');
+    selectMotoboy.innerHTML = '<option value="">Buscando entregadores online...</option>';
 
-            const colabs = await apiRequest('/colaboradores');
-            selectMotoboy.innerHTML = '';
+    // Busca direto da API unificada do app de entregadores
+    const entregadores = await apiRequest('/entregadores/disponiveis');
+    selectMotoboy.innerHTML = '';
 
-            const motoboysDisponiveis = colabs.filter(c => c.funcao === 'Motoboy' && c.status === 'Disponível');
+    if (!entregadores || entregadores.length === 0) {
+        selectMotoboy.innerHTML = '<option value="">Nenhum entregador online no momento</option>';
+        return;
+    }
 
-            if (motoboysDisponiveis.length === 0) {
-                selectMotoboy.innerHTML = '<option value="">Nenhum motoboy próprio disponível no momento</option>';
-                return;
-            }
-
-            selectMotoboy.innerHTML = '<option value="">Selecione um motoboy da casa...</option>';
-            motoboysDisponiveis.forEach(m => {
-                selectMotoboy.innerHTML += `<option value="${m.id}">${m.nome} (${m.veiculo_modelo || 'Moto'})</option>`;
-            });
-        }
+    selectMotoboy.innerHTML = '<option value="">Selecione um entregador...</option>';
+    entregadores.forEach(m => {
+        selectMotoboy.innerHTML += `<option value="${m.id}">${m.nome} (${m.veiculo_modelo || 'Moto'})</option>`;
+    });
+}
 
         async function confirmarDespachoInterno() {
             const motoboyId = document.getElementById('select-motoboy-interno').value;
