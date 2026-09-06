@@ -6,10 +6,17 @@
     <title id="app-title">deliveryON - Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ícones e Leaflet CSS para o mapa de rastreio -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         :root {
             --brand-primary: #ff5722;
             --brand-secondary: #ffffff;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
         }
         .bg-brand { background-color: var(--brand-primary); }
         .text-brand { color: var(--brand-primary); }
@@ -32,19 +39,38 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-        [vw] [vw-access-button] { left: 10px !important; right: auto !important; bottom: 10px !important; }
-        [vw] .vw-plugin-wrapper { left: 10px !important; right: auto !important; }
+        .order-tracking-banner { background: linear-gradient(135deg, #1a1a1a, #333); color: white; padding: 15px 20px; border-radius: 12px; margin: 20px auto; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 95%; }
+        .order-tracking-banner:hover { opacity: 0.95; }
+
+        /* TIMELINE DO PEDIDO */
+        .timeline { position: relative; padding-left: 30px; margin: 20px 0; text-align: left; }
+        .timeline::before { content: ''; position: absolute; left: 10px; top: 5px; bottom: 5px; width: 3px; background: #e0e0e0; }
+        .timeline-step { position: relative; margin-bottom: 25px; }
+        .timeline-step::before { content: ''; position: absolute; left: -24px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #e0e0e0; border: 2px solid white; }
+        .timeline-step.active::before { background: var(--success); box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.2); }
+        .timeline-step h5 { font-size: 1rem; margin-bottom: 2px; font-weight: bold; color: #333; }
+        .timeline-step p { font-size: 0.85rem; color: #777; }
+
+        /* MODAIS PADRÃO */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; float: right; }
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; width: 100%; margin-bottom: 15px; outline: none; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #777; display: block; }
 
         .app-footer { margin-top: auto; padding: 20px 25px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; color: #6b7280; font-size: 0.85rem; flex-wrap: wrap; gap: 10px; background-color: #ffffff; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans pb-20 md:pb-0 min-h-screen flex flex-col" style="transition: font-size 0.2s ease;">
 
+    <!-- FERRAMENTAS DE ACESSIBILIDADE -->
     <div class="accessibility-tools no-print" style="position: fixed; top: 35%; left: 0; transform: translateY(-50%); z-index: 80; background: white; border: 1px solid #ccc; border-left: none; border-radius: 0 8px 8px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
         <button onclick="changeFontSize(1)" style="padding: 10px 15px; border: none; border-bottom: 1px solid #eee; background: transparent; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: #333;" title="Aumentar Fonte">A+</button>
         <button onclick="changeFontSize(-1)" style="padding: 10px 15px; border: none; background: transparent; cursor: pointer; font-weight: bold; font-size: 1rem; color: #333;" title="Diminuir Fonte">A-</button>
     </div>
 
+    <!-- HEADER -->
     <header id="app-header" class="bg-white text-gray-900 shadow-sm sticky top-0 z-40 border-b-4" style="border-color: var(--brand-primary);">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center overflow-x-auto scrollbar-hide">
             <div class="flex items-center space-x-4 shrink-0 pr-2 cursor-pointer" onclick="voltarParaHub()">
@@ -58,7 +84,7 @@
             </div>
 
             <div class="flex items-center space-x-2 md:space-x-3 shrink-0">
-                <button id="cart-btn" class="relative p-2.5 rounded-full text-white transition shadow-md shrink-0" style="background-color: var(--brand-primary);">
+                <button id="cart-btn" class="relative p-2.5 rounded-full text-white transition shadow-md shrink-0 bg-brand">
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow">0</span>
                 </button>
@@ -66,12 +92,25 @@
         </div>
     </header>
 
+    <!-- PAINEL LED / MARQUEE -->
     <div class="led-panel">
         <div class="led-text">
             🔥 <span id="app-slogan">O maior shopping de comida da região</span> &nbsp;&nbsp;&nbsp;⚡ VÁRIOS RESTAURANTES EM UM SÓ LUGAR! &nbsp;&nbsp;&nbsp;🚀 PEÇA AGORA E ACOMPANHE NO MAPA!
         </div>
     </div>
 
+    <!-- BANNER DE RASTREIO ATIVO (APARECE QUANDO HÁ PEDIDO EM ANDAMENTO) -->
+    <div class="container mx-auto px-4">
+        <div id="banner-acompanhamento" class="order-tracking-banner hidden" onclick="abrirModalAcompanhamento()">
+            <div>
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--warning); font-weight: bold;"><i class="ph ph-clock"></i> Pedido em Andamento</span>
+                <h3 id="banner-status-texto" style="font-size: 1.1rem; margin-top: 2px;">Toque para acompanhar o status em tempo real</h3>
+            </div>
+            <i class="fas fa-chevron-right text-xl"></i>
+        </div>
+    </div>
+
+    <!-- BARRA DE BUSCA GLOBAL -->
     <div class="container mx-auto px-4 mt-6">
         <div class="relative max-w-3xl mx-auto">
             <input type="text" id="global-search" placeholder="Busque por restaurantes, lanches, pizzas..." class="w-full p-4 pl-14 rounded-2xl border-2 border-gray-200 shadow-sm focus:border-orange-500 outline-none transition text-lg font-medium" onkeyup="filtrarLojas()">
@@ -79,7 +118,7 @@
         </div>
     </div>
 
-    <!-- SEÇÃO 1: HUB -->
+    <!-- SEÇÃO 1: HUB PRINCIPAL -->
     <section id="hub-section" class="py-8 bg-gray-50 flex-1">
         <div class="container mx-auto px-4">
             <div class="flex md:justify-center justify-start items-center mb-8 overflow-x-auto pb-3 scrollbar-hide relative">
@@ -185,48 +224,86 @@
     </div>
     <div id="backdrop" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden backdrop-blur-sm transition-opacity"></div>
 
-    <!-- MODAL DE AVALIAÇÃO AUTOMÁTICO (APP DO CLIENTE) -->
-<div class="modal-overlay" id="modalAvaliacaoCliente">
-    <div class="modal-content" style="max-width: 450px; text-align: center;">
-        <div class="modal-header">
-            <h3><i class="ph ph-star" style="color: var(--brand-primary);"></i> Avalie seu Pedido</h3>
-        </div>
-        <div class="modal-body">
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
-                Seu pedido foi entregue! Como você avalia nosso atendimento e produtos?
-            </p>
-            
-            <!-- Seleção de Avaliação por Botões/Opções -->
-            <div class="form-group" style="text-align: left;">
-                <label>Sua Avaliação</label>
-                <select class="form-control" id="select-avaliacao-cliente" required>
-                    <option value="Ótimo">🟢 Ótimo</option>
-                    <option value="Bom">🔵 Bom</option>
-                    <option value="Regular">🟡 Regular</option>
-                    <option value="Ruim">🟠 Ruim</option>
-                    <option value="Péssimo">🔴 Péssimo</option>
-                </select>
+    <!-- MODAL DE ACOMPANHAMENTO E TIMELINE DO PEDIDO (GPS) -->
+    <div class="modal-overlay" id="modalAcompanhamento">
+        <div class="modal-content text-center">
+            <button class="close-modal" onclick="closeModal('modalAcompanhamento')">&times;</button>
+            <h3 style="margin-bottom: 5px;" class="text-xl font-black text-gray-800"><i class="ph ph-map-pin text-brand"></i> Acompanhar Pedido #<span id="modal-acompanha-id"></span></h3>
+            <p style="font-size: 0.85rem; color: #777; margin-bottom: 15px;" id="modal-acompanha-loja">Status em Tempo Real</p>
+
+            <div class="timeline">
+                <div class="timeline-step" id="step-aguardando">
+                    <h5>Pedido Confirmado</h5>
+                    <p>O restaurante recebeu o seu pedido.</p>
+                </div>
+                <div class="timeline-step" id="step-preparando">
+                    <h5>Em Preparo</h5>
+                    <p>A cozinha está preparando os itens com capricho.</p>
+                </div>
+                <div class="timeline-step" id="step-entrega">
+                    <h5>Saiu para Entrega</h5>
+                    <p id="info-motoboy-cliente">O entregador retirou o pedido e está a caminho.</p>
+                </div>
+                <div class="timeline-step" id="step-entregue">
+                    <h5>Entregue</h5>
+                    <p>Pedido finalizado. Bom apetite!</p>
+                </div>
             </div>
 
-            <div class="form-group" style="text-align: left;">
-                <label>Deixe seu relato / comentários</label>
-                <textarea class="form-control" id="textarea-relato-cliente" rows="3" placeholder="Conte-nos o que achou..."></textarea>
+            <!-- MAPA GPS QUANDO SAI PARA ENTREGA -->
+            <div id="container-mapa-cliente" class="hidden" style="margin-top: 15px; text-align: left;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #777; display: block; margin-bottom: 5px;"><i class="ph ph-compass"></i> Rota GPS do Entregador</label>
+                <div id="mapa-acompanhamento-gps" style="height: 180px; width: 100%; border-radius: 6px; border: 1px solid #e0e0e0;"></div>
             </div>
-        </div>
-        <div class="modal-footer" style="justify-content: center;">
-            <button class="btn btn-primary" style="width: 100%;" onclick="enviarAvaliacaoOuvidoria()">Enviar Avaliação</button>
         </div>
     </div>
-</div>
 
+    <!-- MODAL DE AVALIAÇÃO AUTOMÁTICO APÓS ENTREGA -->
+    <div class="modal-overlay" id="modalAvaliacaoCliente">
+        <div class="modal-content text-center">
+            <div class="modal-header">
+                <h3 class="text-xl font-bold text-gray-800"><i class="ph ph-star text-brand"></i> Avalie seu Pedido</h3>
+            </div>
+            <div class="modal-body">
+                <p style="color: #777; font-size: 0.9rem; margin-bottom: 15px;">
+                    Seu pedido foi entregue! Como você avalia nosso atendimento e produtos?
+                </p>
+                
+                <div class="form-group text-left">
+                    <label>Sua Avaliação</label>
+                    <select class="form-control" id="select-avaliacao-cliente" required>
+                        <option value="Ótimo">🟢 Ótimo</option>
+                        <option value="Bom">🔵 Bom</option>
+                        <option value="Regular">🟡 Regular</option>
+                        <option value="Ruim">🟠 Ruim</option>
+                        <option value="Péssimo">🔴 Péssimo</option>
+                    </select>
+                </div>
+
+                <div class="form-group text-left">
+                    <label>Deixe seu relato / comentários</label>
+                    <textarea class="form-control" id="textarea-relato-cliente" rows="3" placeholder="Conte-nos o que achou..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn bg-brand text-white font-bold py-3 px-6 rounded-xl w-full" onclick="enviarAvaliacaoOuvidoria()">Enviar Avaliação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VLibras -->
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
     <script>new window.VLibras.Widget('https://vlibras.gov.br/app');</script>
+    <!-- Leaflet JS para mapas -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
         let destaquesGlobais = []; 
         const API_BASE_URL = "/api"; 
 
         let pedidoAvaliadoId = null;
+        let pedidoAtivoId = null;
+        let mapaClienteInstancia = null;
         let lojaAtualId = null; 
         let carrinhoLojaId = null; 
         let telefoneWhatsapp = ""; 
@@ -258,6 +335,14 @@
             carregarLojasAPI();
             carregarDestaquesAPI();
             setupEventListeners();
+
+            // Restaura pedido ativo salvo se houver
+            const pedidoSalvo = localStorage.getItem('deliveryon_pedido_ativo_id');
+            if (pedidoSalvo) {
+                pedidoAtivoId = pedidoSalvo;
+                document.getElementById('banner-acompanhamento').classList.remove('hidden');
+                iniciarPollingStatusPedido();
+            }
         }
 
         async function carregarLojasAPI() {
@@ -512,7 +597,7 @@
                 const dataAtual = new Date().toISOString().split('T')[0];
             
                 try {
-                    await fetch(`${API_BASE_URL}/orders`, {
+                    const res = await fetch(`${API_BASE_URL}/orders`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -530,6 +615,13 @@
                             hora: horaAtual
                         })
                     });
+                    if (res.ok) {
+                        const dadosPedido = await res.json();
+                        pedidoAtivoId = dadosPedido.id || dadosPedido.pedido_id;
+                        localStorage.setItem('deliveryon_pedido_ativo_id', pedidoAtivoId);
+                        document.getElementById('banner-acompanhamento').classList.remove('hidden');
+                        iniciarPollingStatusPedido();
+                    }
                 } catch (e) {
                     console.error("Erro de conexão ao enviar pedido para o painel:", e);
                 }
@@ -555,6 +647,135 @@
                 updateCartUI();
                 toggleCart();
             });
+        }
+
+        // SISTEMA DE ACOMPANHAMENTO EM TEMPO REAL (POLLING)
+        function iniciarPollingStatusPedido() {
+            if (!pedidoAtivoId) return;
+
+            const intervalo = setInterval(async () => {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${lojaAtualId || 1}`);
+                    if (res.ok) {
+                        const pedido = await res.json();
+                        atualizarTimelineVisual(pedido.status, pedido.motoboy_nome);
+                        verificarSePrecisaAvaliar(pedido);
+
+                        if (pedido.status === 'Entregue' || pedido.status === 'Cancelado') {
+                            clearInterval(intervalo);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Erro no polling do pedido:", e);
+                }
+            }, 5000);
+        }
+
+        async function abrirModalAcompanhamento() {
+            if (!pedidoAtivoId) return;
+            document.getElementById('modal-acompanha-id').innerText = pedidoAtivoId;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${lojaAtualId || 1}`);
+                if (res.ok) {
+                    const pedido = await res.json();
+                    atualizarTimelineVisual(pedido.status, pedido.motoboy_nome);
+                }
+            } catch(e) {}
+
+            document.getElementById('modalAcompanhamento').classList.add('active');
+        }
+
+        function atualizarTimelineVisual(status, motoboyNome) {
+            const stepAguardando = document.getElementById('step-aguardando');
+            const stepPreparando = document.getElementById('step-preparando');
+            const stepEntrega = document.getElementById('step-entrega');
+            const stepEntregue = document.getElementById('step-entregue');
+            const bannerTexto = document.getElementById('banner-status-texto');
+            const infoMotoboy = document.getElementById('info-motoboy-cliente');
+            const containerMapa = document.getElementById('container-mapa-cliente');
+
+            stepAguardando.className = 'timeline-step';
+            stepPreparando.className = 'timeline-step';
+            stepEntrega.className = 'timeline-step';
+            stepEntregue.className = 'timeline-step';
+
+            if (status === 'Aguardando pagamento') {
+                stepAguardando.classList.add('active');
+                bannerTexto.innerText = "Seu pedido aguarda confirmação de pagamento";
+            } else if (status === 'Aprovado / Preparando') {
+                stepAguardando.classList.add('active');
+                stepPreparando.classList.add('active');
+                bannerTexto.innerText = "Seu pedido está em preparo na cozinha 🍳";
+            } else if (status === 'Saiu para entrega') {
+                stepAguardando.classList.add('active');
+                stepPreparando.classList.add('active');
+                stepEntrega.classList.add('active');
+                bannerTexto.innerText = "Seu pedido saiu para entrega! 🛵";
+                
+                if (motoboyNome) {
+                    infoMotoboy.innerText = `Entregador: ${motoboyNome} está a caminho.`;
+                }
+
+                containerMapa.classList.remove('hidden');
+                setTimeout(() => inicializarMapaClienteGps(), 300);
+            } else if (status === 'Entregue') {
+                stepAguardando.classList.add('active');
+                stepPreparando.classList.add('active');
+                stepEntrega.classList.add('active');
+                stepEntregue.classList.add('active');
+                bannerTexto.innerText = "Pedido entregue com sucesso! 🎉";
+            }
+        }
+
+        function inicializarMapaClienteGps() {
+            const elementoId = 'mapa-acompanhamento-gps';
+            if (mapaClienteInstancia) {
+                mapaClienteInstancia.remove();
+            }
+
+            const latLoja = -0.9234; 
+            const lngLoja = -48.1321;
+            const latCliente = -0.9270;
+            const lngCliente = -48.1390;
+
+            const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
+            mapaClienteInstancia = mapa;
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapa);
+
+            L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b>');
+            L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup('<b>Seu Endereço</b>').openPopup();
+        }
+
+        function verificarSePrecisaAvaliar(pedido) {
+            if (pedido.status === 'Entregue' && pedido.id !== pedidoAvaliadoId) {
+                pedidoAvaliadoId = pedido.id;
+                document.getElementById('modalAvaliacaoCliente').classList.add('active');
+                localStorage.removeItem('deliveryon_pedido_ativo_id');
+            }
+        }
+
+        async function enviarAvaliacaoOuvidoria() {
+            const avaliacao = document.getElementById('select-avaliacao-cliente').value;
+            const relato = document.getElementById('textarea-relato-cliente').value;
+
+            const payload = {
+                pedido_id: pedidoAvaliadoId,
+                avaliacao: avaliacao,
+                relato: relato
+            };
+
+            const res = await apiRequest('/ouvidoria', 'POST', payload);
+            if (res) {
+                alert('Muito obrigado pelo feedback! Sua opinião foi registrada.');
+                document.getElementById('modalAvaliacaoCliente').classList.remove('active');
+            } else {
+                alert('Erro ao enviar avaliação.');
+            }
         }
 
         function addToCart(e) {
@@ -628,33 +849,43 @@
 
         function openImageModal(imgSrc) { document.getElementById('modal-image-src').src = imgSrc; document.getElementById('image-modal').classList.remove('hidden'); }
         function closeImageModal() { document.getElementById('image-modal').classList.add('hidden'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-        function verificarSePrecisaAvaliar(pedido) {
-    if (pedido.status === 'Entregue' && pedido.id !== pedidoAvaliadoId) {
-        pedidoAvaliadoId = pedido.id;
-        document.getElementById('modalAvaliacaoCliente').classList.add('active');
+async function recuperarPedidoAtivo(pedidoId) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/orders/${pedidoId}`);
+        if (!res.ok) return;
+
+        const pedido = await res.json();
+
+        // Se o pedido já foi finalizado, limpamos a memória do celular
+        if (pedido.status === 'Entregue' || pedido.status === 'Cancelado') {
+            localStorage.removeItem('deliveryon_pedido_ativo');
+            return;
+        }
+
+        // Caso contrário, ele ainda está ativo!
+        // AQUI VOCÊ CHAMA A SUA FUNÇÃO QUE ABRE O MODAL DO CLIENTE
+        // Exemplo: 
+        // document.getElementById('status-texto').innerText = pedido.status;
+        // openModal('modalAcompanhamento');
+        
+    } catch (error) {
+        console.error("Erro ao buscar pedido ativo:", error);
     }
 }
+        
 
-async function enviarAvaliacaoOuvidoria() {
-    const avaliacao = document.getElementById('select-avaliacao-cliente').value;
-    const relato = document.getElementById('textarea-relato-cliente').value;
-
-    const payload = {
-        pedido_id: pedidoAvaliadoId,
-        avaliacao: avaliacao,
-        relato: relato
-    };
-
-    const res = await apiRequest('/ouvidoria', 'POST', payload);
-    if (res) {
-        alert('Muito obrigado pelo feedback! Sua opinião foi registrada.');
-        document.getElementById('modalAvaliacaoCliente').classList.remove('active');
-    } else {
-        alert('Erro ao enviar avaliação.');
+document.addEventListener("DOMContentLoaded", () => {
+    // Verifica se o cliente tem um pedido em andamento salvo no navegador
+    const pedidoAtivo = localStorage.getItem('deliveryon_pedido_ativo');
+    
+    if (pedidoAtivo) {
+        recuperarPedidoAtivo(pedidoAtivo);
     }
-}
-
+});
+        
+        
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
