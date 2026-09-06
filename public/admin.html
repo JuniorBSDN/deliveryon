@@ -214,9 +214,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-recent-orders">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-recent-orders"></tbody>
                         </table>
                     </div>
                 </div>
@@ -275,9 +273,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-products">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-products"></tbody>
                         </table>
                     </div>
                 </div>
@@ -308,9 +304,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Nome</th><th>Telefone</th><th>Referência Local</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-clients">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-clients"></tbody>
                         </table>
                     </div>
                 </div>
@@ -383,9 +377,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-colaboradores">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-colaboradores"></tbody>
                         </table>
                     </div>
                 </div>
@@ -467,9 +459,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-ouvidoria">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-ouvidoria"></tbody>
                         </table>
                     </div>
                 </div>
@@ -584,6 +574,14 @@
                 <button class="close-modal" onclick="closeModal('modalDespachoPedido')">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="form-group">
+                    <label><strong>Equipe Própria</strong></label>
+                    <select class="form-control" id="select-motoboy-interno">
+                        <option value="">Carregando motoboys...</option>
+                    </select>
+                </div>
+                <button class="btn btn-success mb-20" style="width: 100%;" onclick="confirmarDespachoInterno()"><i class="ph ph-user-check"></i> Atribuir Entregador Próprio</button>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
                 <div class="form-group">
                     <label><strong>(Matchmaking Geral)</strong></label>
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Dispara o pedido para todos os motoboys livres na rede para quem aceitar primeiro.</p>
@@ -732,7 +730,7 @@
         </div>
     </div>
 
-  <script>
+ <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
         let chartFluxoInstance = null;
