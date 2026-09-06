@@ -214,7 +214,9 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-recent-orders"></tbody>
+                            <tbody id="tbody-recent-orders">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -273,7 +275,9 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-products"></tbody>
+                            <tbody id="tbody-products">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -304,7 +308,9 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Nome</th><th>Telefone</th><th>Referência Local</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-clients"></tbody>
+                            <tbody id="tbody-clients">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -313,7 +319,7 @@
             <!-- COLABORADORES -->
             <section id="sec-colaboradores" class="page-section hidden">
                 <div class="page-header flex justify-between align-center action-bar-mobile">
-                    <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Equipe Interna</h1>
+                    <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1>
                 </div>
 
                 <div class="card">
@@ -330,7 +336,7 @@
 
                             <div class="form-group">
                                 <label>Função</label>
-                                <select class="form-control" id="select-funcao" required>
+                                <select class="form-control" id="select-funcao" onchange="toggleMotoboyFields(this.value, 'campos-motoboy')" required>
                                     <option value="">Selecione...</option>
                                     <option value="Administrador">Administrador</option>
                                     <option value="Gerente">Gerente</option>
@@ -339,6 +345,7 @@
                                     <option value="Auxiliar">Auxiliar de cozinha</option>
                                     <option value="Recepcionista">Recepcionista</option>
                                     <option value="Estoquista">Estoquista</option>
+                                    <option value="Motoboy">Entregador / Motoboy</option>
                                     <option value="Outro">Outro</option>
                                 </select>
                             </div>
@@ -349,7 +356,24 @@
                                     <option value="Disponível">Disponível</option>
                                     <option value="Pausado">Pausado</option>
                                     <option value="Indisponível">Indisponível</option>
+                                    <option value="Em entrega">Em entrega</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- CAMPOS CONDICIONAIS EXCLUSIVOS DO MOTOBOY -->
+                        <div id="campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                            <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
+                            <div class="form-grid">
+                                <div class="form-group"><label>Código do Entregador</label><input type="text" class="form-control" placeholder="Gerado automaticamente" readonly></div>
+                                <div class="form-group"><label>Tipo de Veículo</label>
+                                    <select class="form-control"><option>Moto</option><option>Bicicleta</option><option>Carro</option></select>
+                                </div>
+                                <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" placeholder="Ex: Honda CG 160"></div>
+                                <div class="form-group"><label>Cor</label><input type="text" class="form-control" placeholder="Ex: Preta"></div>
+                                <div class="form-group"><label>Placa</label><input type="text" class="form-control" placeholder="AAA-0000"></div>
+                                <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" placeholder="Ex: Zona Sul, Centro"></div>
+                                <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" placeholder="6.50"></div>
                             </div>
                         </div>
 
@@ -365,8 +389,7 @@
                             <select class="form-control" style="width: 100%;">
                                 <option value="">Filtrar Função...</option>
                                 <option value="Caixa">Caixa</option>
-                                <option value="Gerente">Gerente</option>
-                                <option value="Cozinheiro">Cozinheiro</option>
+                                <option value="Motoboy">Entregador / Motoboy</option>
                             </select>
                             <input type="date" class="form-control" title="Data de Nascimento">
                             <button class="btn btn-secondary"><i class="ph ph-magnifying-glass"></i> Buscar</button>
@@ -377,7 +400,9 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-colaboradores"></tbody>
+                            <tbody id="tbody-colaboradores">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -459,7 +484,9 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-ouvidoria"></tbody>
+                            <tbody id="tbody-ouvidoria">
+                                <!-- Dados carregados dinamicamente via API Python -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -574,19 +601,25 @@
                 <button class="close-modal" onclick="closeModal('modalDespachoPedido')">&times;</button>
             </div>
             <div class="modal-body">
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Escolha como deseja realizar esta entrega:</p>
+
                 <div class="form-group">
-                    <label><strong>Equipe Própria</strong></label>
+                    <label><strong>Opção 1: Motoboy Próprio da Casa</strong></label>
                     <select class="form-control" id="select-motoboy-interno">
-                        <option value="">Carregando motoboys...</option>
+                        <option value="">Carregando motoboys disponíveis...</option>
                     </select>
                 </div>
-                <button class="btn btn-success mb-20" style="width: 100%;" onclick="confirmarDespachoInterno()"><i class="ph ph-user-check"></i> Atribuir Entregador Próprio</button>
-                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-                <div class="form-group">
-                    <label><strong>(Matchmaking Geral)</strong></label>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Dispara o pedido para todos os motoboys livres na rede para quem aceitar primeiro.</p>
+                <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="confirmarDespachoInterno()"><i class="ph ph-check"></i> Atribuir Motoboy Próprio</button>
+
+                <div style="margin: 25px 0 15px 0; border-top: 1px dashed var(--border-color); text-align: center; position: relative;">
+                    <span style="background: white; padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; position: relative; top: -10px;">OU</span>
                 </div>
-                <button class="btn btn-primary" style="width: 100%; background: #6c5ce7;" onclick="confirmarDespachoExterno()"><i class="ph ph-radar"></i> Disparar para a Praça</button>
+
+                <div class="form-group">
+                    <label><strong>Opção 2: Frota Próxima / Terceirizada (Autônomos)</strong></label>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Envia um alerta com cronômetro para o entregador autônomo livre mais próximo na região.</p>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; background: #6c5ce7;" onclick="confirmarDespachoExterno()"><i class="ph ph-radar"></i> Disparar para Motoboys Autônomos</button>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalDespachoPedido')">Cancelar</button>
@@ -656,14 +689,11 @@
 
                         <div class="form-group">
                             <label>Função</label>
-                            <select class="form-control" id="edit-colab-funcao" required>
+                            <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
                                 <option value="Administrador">Administrador</option>
                                 <option value="Gerente">Gerente</option>
                                 <option value="Caixa">Caixa</option>
-                                <option value="Cozinheiro">Cozinheiro</option>
-                                <option value="Auxiliar">Auxiliar de cozinha</option>
-                                <option value="Recepcionista">Recepcionista</option>
-                                <option value="Estoquista">Estoquista</option>
+                                <option value="Motoboy">Entregador / Motoboy</option>
                                 <option value="Outro">Outro</option>
                             </select>
                         </div>
@@ -675,6 +705,18 @@
                                 <option value="Pausado">Pausado</option>
                                 <option value="Indisponível">Indisponível</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div id="edit-campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <h4 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i> Dados do Veículo</h4>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Tipo</label><select class="form-control" id="edit-colab-t-veiculo"><option>Moto</option><option>Bicicleta</option></select></div>
+                            <div class="form-group"><label>Modelo</label><input type="text" class="form-control" id="edit-colab-v-modelo"></div>
+                            <div class="form-group"><label>Cor</label><input type="text" class="form-control" id="edit-colab-v-cor"></div>
+                            <div class="form-group"><label>Placa</label><input type="text" class="form-control" id="edit-colab-v-placa"></div>
+                            <div class="form-group"><label>Área</label><input type="text" class="form-control" id="edit-colab-area"></div>
+                            <div class="form-group"><label>Valor Entrega (R$)</label><input type="number" step="0.01" class="form-control" id="edit-colab-v-entrega"></div>
                         </div>
                     </div>
 
@@ -730,7 +772,7 @@
         </div>
     </div>
 
- <script>
+  <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
         let chartFluxoInstance = null;
@@ -914,18 +956,20 @@
 
         async function carregarMotoboysDisponiveisNoModal() {
             const selectMotoboy = document.getElementById('select-motoboy-interno');
-            selectMotoboy.innerHTML = '<option value="">Buscando entregadores online...</option>';
+            selectMotoboy.innerHTML = '<option value="">Buscando motoboys disponíveis...</option>';
 
-            const entregadores = await apiRequest('/entregadores/disponiveis');
+            const colabs = await apiRequest('/colaboradores');
             selectMotoboy.innerHTML = '';
 
-            if (!entregadores || entregadores.length === 0) {
-                selectMotoboy.innerHTML = '<option value="">Nenhum entregador online no momento</option>';
+            const motoboysDisponiveis = colabs.filter(c => c.funcao === 'Motoboy' && c.status === 'Disponível');
+
+            if (motoboysDisponiveis.length === 0) {
+                selectMotoboy.innerHTML = '<option value="">Nenhum motoboy próprio disponível no momento</option>';
                 return;
             }
 
-            selectMotoboy.innerHTML = '<option value="">Selecione um entregador...</option>';
-            entregadores.forEach(m => {
+            selectMotoboy.innerHTML = '<option value="">Selecione um motoboy da casa...</option>';
+            motoboysDisponiveis.forEach(m => {
                 selectMotoboy.innerHTML += `<option value="${m.id}">${m.nome} (${m.veiculo_modelo || 'Moto'})</option>`;
             });
         }
@@ -945,7 +989,7 @@
         async function confirmarDespachoExterno() {
             await apiRequest(`/orders/${pedidoParaDespacharId}/despachar-proximos`, 'POST');
             await atualizarStatusBackend(pedidoParaDespacharId, 'Saiu para entrega');
-            alert("Alerta enviado para os motoboys próximos na região via sistema!");
+            alert("Alerta enviado para os motoboys autônomos próximos na região via sistema!");
             closeModal('modalDespachoPedido');
         }
 
@@ -1185,6 +1229,20 @@
                 try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
 
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                const containerMotoboy = document.getElementById('campos-motoboy');
+                const inputsMoto = containerMotoboy.querySelectorAll('input, select');
+                tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
+                veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
+                veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
+                veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
+                areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
+                valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
+            }
+
             const payload = {
                 nome: document.getElementById('input-colab-name').value,
                 telefone: document.getElementById('input-colab-phone').value,
@@ -1195,6 +1253,12 @@
                 funcao: funcao,
                 status: document.getElementById('select-colab-status').value,
                 observacoes: document.getElementById('textarea-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
                 foto: fotoBase64
             };
 
@@ -1202,6 +1266,7 @@
             if (res) {
                 alert('Colaborador cadastrado!');
                 form.reset();
+                document.getElementById('campos-motoboy').classList.add('hidden');
                 loadColaboradores();
             }
         }
@@ -1226,6 +1291,14 @@
             document.getElementById('edit-colab-status').value = c.status || 'Disponível';
             document.getElementById('edit-colab-obs').value = c.observacoes || '';
 
+            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
+            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
+            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
+            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
+            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
+            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
+
+            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
             document.getElementById('modalEditarColaborador').classList.add('active');
         }
 
@@ -1238,6 +1311,19 @@
                 try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
 
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
+                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
+                veiculoCor = document.getElementById('edit-colab-v-cor').value;
+                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
+                areaAtuacao = document.getElementById('edit-colab-area').value;
+                const valEnt = document.getElementById('edit-colab-v-entrega').value;
+                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
+            }
+
             const payload = {
                 nome: document.getElementById('edit-colab-name').value,
                 telefone: document.getElementById('edit-colab-phone').value,
@@ -1248,6 +1334,12 @@
                 funcao: funcao,
                 status: document.getElementById('edit-colab-status').value,
                 observacoes: document.getElementById('edit-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
                 foto: fotoBase64
             };
 
@@ -1394,6 +1486,14 @@
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = error => reject(error);
             });
+        }
+
+        function toggleMotoboyFields(funcao, idContainer) {
+            const camposMotoboy = document.getElementById(idContainer);
+            if (camposMotoboy) {
+                if (funcao === 'Motoboy') camposMotoboy.classList.remove('hidden');
+                else camposMotoboy.classList.add('hidden');
+            }
         }
 
         function navigate(sectionId, clickedElement) {
