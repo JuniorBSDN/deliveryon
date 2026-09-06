@@ -584,22 +584,8 @@
                 <button class="close-modal" onclick="closeModal('modalDespachoPedido')">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Escolha como deseja realizar esta entrega:</p>
-
                 <div class="form-group">
-                    <label><strong>Opção 1: Entregador Fixo / Exclusivo</strong></label>
-                    <select class="form-control" id="select-motoboy-interno">
-                        <option value="">Carregando entregadores do App...</option>
-                    </select>
-                </div>
-                <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="confirmarDespachoInterno()"><i class="ph ph-check"></i> Atribuir Entregador Fixo</button>
-
-                <div style="margin: 25px 0 15px 0; border-top: 1px dashed var(--border-color); text-align: center; position: relative;">
-                    <span style="background: white; padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; position: relative; top: -10px;">OU</span>
-                </div>
-
-                <div class="form-group">
-                    <label><strong>Opção 2: Jogar na Praça (Matchmaking Geral)</strong></label>
+                    <label><strong>(Matchmaking Geral)</strong></label>
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Dispara o pedido para todos os motoboys livres na rede para quem aceitar primeiro.</p>
                 </div>
                 <button class="btn btn-primary" style="width: 100%; background: #6c5ce7;" onclick="confirmarDespachoExterno()"><i class="ph ph-radar"></i> Disparar para a Praça</button>
