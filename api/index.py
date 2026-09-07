@@ -996,8 +996,9 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
                    p.status, p.entregador_id
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado')
-        """
+            
+            WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado', 'aguardando pagamento', 'aprovado / preparando')        
+            """
         params = []
         
         if empresa_id and empresa_id not in ("null", "undefined"):
