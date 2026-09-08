@@ -508,11 +508,12 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Erro ao cadastrar');
 
-                localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
-                localStorage.setItem('deliveryon_entregador_nome', data.nome);
-                localStorage.setItem('deliveryon_entregador_id', data.id);
-                localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
-                localStorage.setItem('deliveryon_entregador_status', 'Disponível');
+                // CHAVES ISOLADAS (app_motoboy_)
+                localStorage.setItem('app_motoboy_token', data.token || 'token_ativo');
+                localStorage.setItem('app_motoboy_nome', data.nome);
+                localStorage.setItem('app_motoboy_id', data.id);
+                localStorage.setItem('app_motoboy_empresa_id', data.empresa_id || 1);
+                localStorage.setItem('app_motoboy_status', 'Disponível');
                 
                 verificarAcessoEntregador();
             } catch (error) {
@@ -542,11 +543,12 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Erro ao autenticar');
 
-                localStorage.setItem('deliveryon_entregador_token', data.token || 'token_ativo');
-                localStorage.setItem('deliveryon_entregador_nome', data.nome || 'Entregador');
-                localStorage.setItem('deliveryon_entregador_id', data.id || 1);
-                localStorage.setItem('deliveryon_empresa_id', data.empresa_id || 1);
-                localStorage.setItem('deliveryon_entregador_status', data.status || 'Disponível');
+                // CHAVES ISOLADAS (app_motoboy_)
+                localStorage.setItem('app_motoboy_token', data.token || 'token_ativo');
+                localStorage.setItem('app_motoboy_nome', data.nome || 'Entregador');
+                localStorage.setItem('app_motoboy_id', data.id || 1);
+                localStorage.setItem('app_motoboy_empresa_id', data.empresa_id || 1);
+                localStorage.setItem('app_motoboy_status', data.status || 'Disponível');
                 
                 verificarAcessoEntregador();
             } catch (error) {
@@ -558,7 +560,7 @@
         }
 
         function verificarAcessoEntregador() {
-            const token = localStorage.getItem('deliveryon_entregador_token');
+            const token = localStorage.getItem('app_motoboy_token');
             const modalLogin = document.getElementById('modalLoginEntregador');
             
             if (!token) {
@@ -570,21 +572,23 @@
         }
 
         function fazerLogoutEntregador() {
-            localStorage.removeItem('deliveryon_entregador_token');
-            localStorage.removeItem('deliveryon_entregador_nome');
-            localStorage.removeItem('deliveryon_entregador_id');
-            localStorage.removeItem('deliveryon_entregador_status');
-            localStorage.removeItem('ultimo_pedido_notificado');
+            // Limpa APENAS as chaves do entregador
+            localStorage.removeItem('app_motoboy_token');
+            localStorage.removeItem('app_motoboy_nome');
+            localStorage.removeItem('app_motoboy_id');
+            localStorage.removeItem('app_motoboy_empresa_id');
+            localStorage.removeItem('app_motoboy_status');
+            localStorage.removeItem('app_motoboy_ultimo_pedido');
 
             window.location.reload();
         }
 
         // ================= CONTROLES DO PAINEL =================
         function inicializarPainelEntregador() {
-            const nome = localStorage.getItem('deliveryon_entregador_nome') || 'Entregador';
+            const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
 
-            const statusSalvo = localStorage.getItem('deliveryon_entregador_status') || 'Disponível';
+            const statusSalvo = localStorage.getItem('app_motoboy_status') || 'Disponível';
             const select = document.getElementById('ent-status-select');
             if(select) {
                 select.value = statusSalvo;
@@ -601,7 +605,7 @@
         }
 
         async function alterarStatusEntregador(novoStatus) {
-            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+            const entregadorId = localStorage.getItem('app_motoboy_id');
             const select = document.getElementById('ent-status-select');
 
             if(novoStatus === 'Disponível') select.className = 'badge badge-success';
@@ -609,7 +613,7 @@
             else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
             else select.className = 'badge badge-danger';
 
-            localStorage.setItem('deliveryon_entregador_status', novoStatus);
+            localStorage.setItem('app_motoboy_status', novoStatus);
 
             if (novoStatus === 'Disponível') {
                 iniciarPollingDespacho();
@@ -631,24 +635,28 @@
             }
         }
         
+        // ================= SISTEMA DE MATCHMAKING CORRIGIDO =================
         function iniciarPollingDespacho() {
             pararPollingDespacho();
             intervaloPolling = setInterval(async () => {
-                const statusAtual = localStorage.getItem('deliveryon_entregador_status');
-                const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
-                const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+                const statusAtual = localStorage.getItem('app_motoboy_status');
+                const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
+                const entregadorId = localStorage.getItem('app_motoboy_id');
                 
                 if (statusAtual !== 'Disponível') return;
 
-                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
-                if (entregadorId) url += `&entregador_id=${entregadorId}`;
+                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
                 
                 try {
                     const response = await fetch(url);
                     if (response.ok) {
                         const rotas = await response.json();
-                        if (rotas && rotas.length > 0) {
-                            const maisRecente = rotas[0];
+                        
+                        // CORREÇÃO: Filtra apenas as rotas que não têm motoboy (estão "na praça")
+                        const corridasNaPraca = rotas.filter(r => r.entregador_id === null || r.entregador_id === undefined);
+
+                        if (corridasNaPraca && corridasNaPraca.length > 0) {
+                            const maisRecente = corridasNaPraca[0];
                             
                             if (String(maisRecente.id) !== String(ultimaCorridaNotificadaId)) {
                                 ultimaCorridaNotificadaId = String(maisRecente.id);
@@ -692,18 +700,39 @@
             }, 1000);
         }
 
-        function responderDespacho(aceitou) {
+        async function responderDespacho(aceitou) {
             clearInterval(timerDespacho);
             document.getElementById('modalNovaCorrida').classList.remove('active');
 
             if (aceitou) {
-                alterarStatusEntregador('Em Entrega');
-                carregarRotasAtivas();
+                try {
+                    const entregadorId = localStorage.getItem('app_motoboy_id');
+                    
+                    // CORREÇÃO: Avisa o backend que este motoboy pegou a corrida
+                    const res = await fetch(`${API_BASE_URL}/orders/${corridaAtualId}/atribuir-motoboy`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ motoboy_id: parseInt(entregadorId) })
+                    });
+                    
+                    if (res.ok) {
+                        // Muda o status para Em Entrega na tela do app
+                        alterarStatusEntregador('Em Entrega');
+                        // Atualiza a lista de rotas para mostrar o mapa
+                        carregarRotasAtivas();
+                    } else {
+                        alert("Erro: A corrida já pode ter sido aceita por outro motoboy.");
+                    }
+                } catch(e) {
+                    alert("Erro de conexão ao aceitar a corrida.");
+                }
+            } else {
+                console.log("Corrida recusada ou ignorada.");
             }
         }
 
         async function carregarIdentidadeVisualEmpresa() {
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+            const empresaId = localStorage.getItem('app_motoboy_empresa_id') || 1;
             try {
                 const response = await fetch(`${API_BASE_URL}/configuracoes?empresa_id=${empresaId}`);
                 const config = await response.json();
@@ -721,8 +750,8 @@
             if (!container) return;
             container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
 
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || '1';
-            const entregadorId = localStorage.getItem('deliveryon_entregador_id');
+            const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
+            const entregadorId = localStorage.getItem('app_motoboy_id');
 
             try {
                 let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
@@ -850,13 +879,13 @@
         }
 
         async function filtrarExtrato() {
-            const empresaId = localStorage.getItem('deliveryon_empresa_id') || 1;
+            const empresaId = localStorage.getItem('app_motoboy_empresa_id') || 1;
             const tbody = document.getElementById('tabela-extrato');
             
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin"></i> Buscando histórico...</td></tr>';
             
             try {
-                const entregadorId = localStorage.getItem('deliveryon_entregador_id') || '';
+                const entregadorId = localStorage.getItem('app_motoboy_id') || '';
                 let url = `${API_BASE_URL}/entregador/extrato?empresa_id=${empresaId}`;
                 if (entregadorId) url += `&entregador_id=${entregadorId}`;
                 
