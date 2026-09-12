@@ -1093,17 +1093,20 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
     try:
         is_colaborador = False
         if entregador_id and str(entregador_id) not in ("null", "undefined", ""):
-            cursor.execute("SELECT funcao FROM colaboradores WHERE id = %s", (int(entregador_id),))
-            colab = cursor.fetchone()
-            if colab and colab.get('funcao') in ['Motoboy', 'Administrador', 'Gerente']:
-                is_colaborador = True
+            try:
+                cursor.execute("SELECT funcao FROM colaboradores WHERE id = %s", (int(entregador_id),))
+                colab = cursor.fetchone()
+                if colab and colab.get('funcao') in ['Motoboy', 'Administrador', 'Gerente']:
+                    is_colaborador = True
+            except Exception:
+                pass
 
         query = """
-            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
-                   p.valor_total as valor, p.pagamento as status_pag, 
+            SELECT p.id, COALESCE(p.cliente_nome, 'Cliente') AS cliente, COALESCE(p.endereco_entrega, 'Endereço não informado') AS endereco, 
+                   COALESCE(p.valor_total, 0.00) as valor, COALESCE(p.pagamento, 'Dinheiro') as status_pag, 
                    '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
                    COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng,
-                   p.status, p.entregador_id
+                   COALESCE(p.status, 'Pendente') as status, p.entregador_id
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
             WHERE LOWER(COALESCE(p.status, '')) IN ('aguardando pagamento', 'saiu para entrega', 'pronto', 'despachado', 'aprovado / preparando')
@@ -1111,20 +1114,45 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
         params = []
         
         if empresa_id and empresa_id not in ("null", "undefined", ""):
-            query += " AND p.empresa_id = %s"
-            params.append(int(empresa_id))
+            try:
+                query += " AND p.empresa_id = %s"
+                params.append(int(empresa_id))
+            except ValueError:
+                pass
             
         if entregador_id and str(entregador_id) not in ("null", "undefined", ""):
-            if is_colaborador:
-                query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
-                params.append(int(entregador_id))
-            else:
+            try:
+                e_id_val = int(entregador_id)
+                if is_colaborador:
+                    query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
+                    params.append(e_id_val)
+                else:
+                    query += " AND p.entregador_id IS NULL"
+            except ValueError:
                 query += " AND p.entregador_id IS NULL"
 
         query += " ORDER BY p.id DESC LIMIT 10"
         
         cursor.execute(query, tuple(params))
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+        
+        resultados = []
+        for row in rows:
+            val = row.get('valor', 0)
+            val_str = f"{float(val):.2f}".replace('.', ',') if val is not None else "0,00"
+            resultados.append({
+                "id": row['id'],
+                "cliente": row['cliente'],
+                "endereco": row['endereco'],
+                "valor": val_str,
+                "status_pag": row['status_pag'],
+                "taxa": row['taxa'],
+                "hora": row['hora'],
+                "lat": row['lat'],
+                "lng": row['lng'],
+                "status": row['status']
+            })
+        return resultados
     except Exception as e:
         print(f"Erro ao buscar rotas do entregador: {str(e)}")
         return []
