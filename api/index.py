@@ -684,27 +684,33 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
 @app.get("/api/orders/{order_id}")
 def get_order_by_id(order_id: int, db=Depends(get_db)):
     cursor = db.cursor()
-    # JOIN adicionado para resgatar o nome do motoboy atrelado ao pedido
-    cursor.execute("""
-        SELECT p.id, p.status, p.valor_total as total, p.endereco_entrega as endereco, 
-               p.entregador_id as motoboy_id, e.nome as motoboy_nome
-        FROM pedidos p 
-        LEFT JOIN entregadores_app e ON p.entregador_id = e.id
-        WHERE p.id = %s
-    """, (order_id,))
-    order = cursor.fetchone()
-    cursor.close()
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    try:
+        cursor.execute("""
+            SELECT p.id, p.status, p.valor_total as total, p.endereco_entrega as endereco, 
+                   p.entregador_id as motoboy_id, e.nome as motoboy_nome
+            FROM pedidos p 
+            LEFT JOIN entregadores_app e ON p.entregador_id = e.id
+            WHERE p.id = %s
+        """, (order_id,))
+        order = cursor.fetchone()
         
-    return {
-        "id": order['id'],
-        "status": order['status'],
-        "total": f"{float(order['total']):.2f}".replace('.', ',') if order['total'] else "0,00",
-        "endereco": order['endereco'],
-        "motoboy_nome": order['motoboy_nome'] # Variável agora acessível no index.html
-    }
+        if not order:
+            raise HTTPException(status_code=404, detail="Pedido não encontrado")
+            
+        total_val = order.get('total')
+        total_str = f"{float(total_val):.2f}".replace('.', ',') if total_val is not None else "0,00"
+
+        return {
+            "id": order['id'],
+            "status": order['status'] or "Pendente",
+            "total": total_str,
+            "endereco": order.get('endereco') or "",
+            "motoboy_nome": order.get('motoboy_nome') or "Não atribuído"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
 
 @app.post("/api/orders/{order_id}/despachar-proximos")
 def despachar_proximos(order_id: int, db=Depends(get_db)):
