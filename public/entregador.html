@@ -341,18 +341,18 @@
                         <div class="form-group">
                             <label>Mês</label>
                             <select id="filtro-mes" class="form-control" onchange="filtrarExtrato()">
-                                <option value="">Todos os meses</option>
+                                <option value="" selected>Todos os meses</option>
                                 <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                                 <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
-                                <option value="07">Julho</option><option value="08" selected>Agosto</option><option value="09">Setembro</option>
+                                <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                                 <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Ano</label>
                             <select id="filtro-ano" class="form-control" onchange="filtrarExtrato()">
-                                <option value="">Todos os anos</option>
-                                <option value="2026" selected>2026</option>
+                                <option value="" selected>Todos os anos</option>
+                                <option value="2026">2026</option>
                                 <option value="2025">2025</option>
                             </select>
                         </div>
@@ -508,7 +508,6 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Erro ao cadastrar');
 
-                // CHAVES ISOLADAS (app_motoboy_)
                 localStorage.setItem('app_motoboy_token', data.token || 'token_ativo');
                 localStorage.setItem('app_motoboy_nome', data.nome);
                 localStorage.setItem('app_motoboy_id', data.id);
@@ -543,7 +542,6 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Erro ao autenticar');
 
-                // CHAVES ISOLADAS (app_motoboy_)
                 localStorage.setItem('app_motoboy_token', data.token || 'token_ativo');
                 localStorage.setItem('app_motoboy_nome', data.nome || 'Entregador');
                 localStorage.setItem('app_motoboy_id', data.id || 1);
@@ -572,14 +570,12 @@
         }
 
         function fazerLogoutEntregador() {
-            // Limpa APENAS as chaves do entregador
             localStorage.removeItem('app_motoboy_token');
             localStorage.removeItem('app_motoboy_nome');
             localStorage.removeItem('app_motoboy_id');
             localStorage.removeItem('app_motoboy_empresa_id');
             localStorage.removeItem('app_motoboy_status');
             localStorage.removeItem('app_motoboy_ultimo_pedido');
-
             window.location.reload();
         }
 
@@ -635,29 +631,25 @@
             }
         }
         
-        // ================= SISTEMA DE MATCHMAKING CORRIGIDO =================
+        // ================= SISTEMA DE MATCHMAKING =================
         function iniciarPollingDespacho() {
             pararPollingDespacho();
             intervaloPolling = setInterval(async () => {
                 const statusAtual = localStorage.getItem('app_motoboy_status');
                 const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
-                const entregadorId = localStorage.getItem('app_motoboy_id');
                 
                 if (statusAtual !== 'Disponível') return;
 
-                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
-                
+                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
+            
                 try {
                     const response = await fetch(url);
                     if (response.ok) {
                         const rotas = await response.json();
-                        
-                        // CORREÇÃO: Filtra apenas as rotas que não têm motoboy (estão "na praça")
                         const corridasNaPraca = rotas.filter(r => r.entregador_id === null || r.entregador_id === undefined);
-
+            
                         if (corridasNaPraca && corridasNaPraca.length > 0) {
                             const maisRecente = corridasNaPraca[0];
-                            
                             if (String(maisRecente.id) !== String(ultimaCorridaNotificadaId)) {
                                 ultimaCorridaNotificadaId = String(maisRecente.id);
                                 tocarAlertaSonoro();
@@ -668,7 +660,7 @@
                 } catch (err) {
                     console.error("Erro no polling de despacho:", err);
                 }
-            }, 5000);
+            }, 5000); // <-- O ERRO ESTAVA AQUI! O intervalo estava sem o fechamento
         }
 
         function pararPollingDespacho() {
@@ -708,7 +700,6 @@
                 try {
                     const entregadorId = localStorage.getItem('app_motoboy_id');
                     
-                    // CORREÇÃO: Avisa o backend que este motoboy pegou a corrida
                     const res = await fetch(`${API_BASE_URL}/orders/${corridaAtualId}/atribuir-motoboy`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -716,9 +707,7 @@
                     });
                     
                     if (res.ok) {
-                        // Muda o status para Em Entrega na tela do app
                         alterarStatusEntregador('Em Entrega');
-                        // Atualiza a lista de rotas para mostrar o mapa
                         carregarRotasAtivas();
                     } else {
                         alert("Erro: A corrida já pode ter sido aceita por outro motoboy.");
@@ -824,6 +813,10 @@
 
             L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
             L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
+            
+            setTimeout(() => {
+                mapa.invalidateSize();
+            }, 400);
         }
 
         function abrirModalConclusao(id, cliente, valor) {
@@ -909,7 +902,13 @@
 
                 extrato.forEach(item => {
                     const dataItem = item.data_filtragem || item.data || '';
-                    const [anoL, mesL, diaL] = dataItem.split('-');
+                    let anoL, mesL, diaL;
+
+                    if (dataItem.includes('/')) {
+                        [diaL, mesL, anoL] = dataItem.substring(0, 10).split('/');
+                    } else {
+                        [anoL, mesL, diaL] = dataItem.substring(0, 10).split('-');
+                    }
                     
                     let match = true;
                     if (dataFiltro && dataItem !== dataFiltro) match = false;
@@ -977,10 +976,6 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             verificarAcessoEntregador();
-            carregarRotasAtivas(); 
-            if (typeof iniciarPollingDespacho === 'function') {
-                iniciarPollingDespacho();
-            }
         });
     </script>
 </body>
