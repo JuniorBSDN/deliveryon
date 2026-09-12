@@ -632,36 +632,43 @@
         }
         
         // ================= SISTEMA DE MATCHMAKING =================
-        function iniciarPollingDespacho() {
-            pararPollingDespacho();
-            intervaloPolling = setInterval(async () => {
-                const statusAtual = localStorage.getItem('app_motoboy_status');
-                const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
-                
-                if (statusAtual !== 'Disponível') return;
+       function iniciarPollingDespacho() {
+    pararPollingDespacho();
+    intervaloPolling = setInterval(async () => {
+        const statusAtual = localStorage.getItem('app_motoboy_status');
+        const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
+        const entregadorId = localStorage.getItem('app_motoboy_id') || '';
 
-                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
-            
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const rotas = await response.json();
-                        const corridasNaPraca = rotas.filter(r => r.entregador_id === null || r.entregador_id === undefined);
-            
-                        if (corridasNaPraca && corridasNaPraca.length > 0) {
-                            const maisRecente = corridasNaPraca[0];
-                            if (String(maisRecente.id) !== String(ultimaCorridaNotificadaId)) {
-                                ultimaCorridaNotificadaId = String(maisRecente.id);
-                                tocarAlertaSonoro();
-                                exibirAlertaNovaCorrida(maisRecente.id, maisRecente.taxa || '6,50');
-                            }
-                        }
+        if (statusAtual !== 'Disponível') return;
+
+        let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
+
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const rotas = await response.json();
+                
+                const corridasNaPraca = rotas.filter(r => 
+                    r.entregador_id === null || 
+                    r.entregador_id === undefined || 
+                    String(r.entregador_id) === String(entregadorId)
+                );
+
+                if (corridasNaPraca && corridasNaPraca.length > 0) {
+                    const maisRecente = corridasNaPraca[0];
+                    
+                    if (String(maisRecente.id) !== String(ultimaCorridaNotificadaId)) {
+                        ultimaCorridaNotificadaId = String(maisRecente.id);
+                        tocarAlertaSonoro();
+                        exibirAlertaNovaCorrida(maisRecente.id, maisRecente.taxa || '6,50');
                     }
-                } catch (err) {
-                    console.error("Erro no polling de despacho:", err);
                 }
-            }, 5000); // <-- O ERRO ESTAVA AQUI! O intervalo estava sem o fechamento
+            }
+        } catch (err) {
+            console.error("Erro no polling de despacho:", err);
         }
+    }, 5000);
+}
 
         function pararPollingDespacho() {
             if (intervaloPolling) {
