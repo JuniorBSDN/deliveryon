@@ -739,6 +739,31 @@
         </div>
     </div>
 
+
+    <!-- MODAL DE ESCOLHA DE TIPO DE ENTREGADOR -->
+<div class="modal-overlay" id="modalEscolhaEntregador">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="modal-header">
+            <h3><i class="ph ph-motorcycle"></i> Despachar Pedido</h3>
+            <button class="close-modal" onclick="closeModal('modalEscolhaEntregador')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 20px; color: var(--text-muted);">Como você deseja despachar este pedido?</p>
+            <input type="hidden" id="despacho-pedido-id">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" style="padding: 12px;" onclick="despacharParaTipo('empresa')">
+                    <i class="ph ph-buildings"></i> Entregador da Empresa (Fixo)
+                </button>
+                <button class="btn btn-success" style="padding: 12px;" onclick="despacharParaTipo('autonomo')">
+                    <i class="ph ph-users-three"></i> Enviar para Praça (Autônomo / Geral)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
   <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
@@ -1522,6 +1547,27 @@
                     atualizarGraficoFluxo(); // Mantido do seu código original
                 }
             }, 5000);
+        }
+
+      function abrirModalDespacho(orderId) {
+            document.getElementById('despacho-pedido-id').value = orderId;
+            document.getElementById('modalEscolhaEntregador').classList.add('active');
+        }
+        
+        async function despacharParaTipo(tipo) {
+            const orderId = document.getElementById('despacho-pedido-id').value;
+            closeModal('modalEscolhaEntregador');
+        
+            let endpoint = `/orders/${orderId}/despachar-proximos`;
+            let payload = { status: 'Saiu para entrega', tipo_despacho: tipo };
+        
+            const res = await apiRequest(endpoint, 'POST', payload);
+            if (res) {
+                alert(`Pedido #${orderId} despachado com sucesso via ${tipo === 'empresa' ? 'Frota Própria' : 'Autônomo'}!`);
+                loadOrders();
+            } else {
+                alert("Erro ao despachar o pedido.");
+            }
         }
 
         window.onload = function() {
