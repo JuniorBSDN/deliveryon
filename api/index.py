@@ -1046,6 +1046,13 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
 def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        is_colaborador = False
+        if entregador_id and str(entregador_id) not in ("null", "undefined", ""):
+            cursor.execute("SELECT funcao FROM colaboradores WHERE id = %s", (int(entregador_id),))
+            colab = cursor.fetchone()
+            if colab and colab.get('funcao') in ['Motoboy', 'Administrador', 'Gerente']:
+                is_colaborador = True
+
         query = """
             SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
                    p.valor_total as valor, p.pagamento as status_pag, 
@@ -1054,7 +1061,7 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
                    p.status, p.entregador_id
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(COALESCE(p.status, '')) IN ('saiu para entrega', 'pronto', 'despachado', 'aprovado / preparando')
+            WHERE LOWER(COALESCE(p.status, '')) IN ('aguardando pagamento', 'saiu para entrega', 'pronto', 'despachado', 'aprovado / preparando')
         """
         params = []
         
@@ -1063,8 +1070,11 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
             params.append(int(empresa_id))
             
         if entregador_id and str(entregador_id) not in ("null", "undefined", ""):
-            query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
-            params.append(int(entregador_id))
+            if is_colaborador:
+                query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
+                params.append(int(entregador_id))
+            else:
+                query += " AND p.entregador_id IS NULL"
 
         query += " ORDER BY p.id DESC LIMIT 10"
         
@@ -1075,6 +1085,7 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
         return []
     finally:
         cursor.close()
+
 
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
