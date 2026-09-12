@@ -240,7 +240,52 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
     cursor.close()
     return {"status": "Banco atualizado com sucesso!", "logs": resultados}
 
-
+@app.post("/api/orders/{order_id}/despachar-proximos")
+def despachar_proximos(order_id: int, data: dict, db=Depends(get_db)):
+    cursor = db.cursor()
+    tipo_despacho = data.get("tipo_despacho", "autonomo")
+    empresa_id = data.get("empresa_id", 1)
+    
+    try:
+        if tipo_despacho == 'empresa':
+            # Tenta encontrar automaticamente o primeiro colaborador cadastrado como Motoboy nesta empresa
+            cursor.execute("""
+                SELECT id FROM colaboradores 
+                WHERE empresa_id = %s AND LOWER(funcao) LIKE '%%motoboy%%' 
+                LIMIT 1
+            """, (empresa_id,))
+            colab = cursor.fetchone()
+            
+            if colab:
+                # Se achou o funcionário fixo, já amarra o pedido diretamente ao ID dele
+                cursor.execute("""
+                    UPDATE pedidos 
+                    SET status = 'Saiu para entrega', entregador_id = %s 
+                    WHERE id = %s
+                """, (colab['id'], order_id))
+            else:
+                # Se não houver colaborador fixo cadastrado, joga para a praça (NULL) para não travar
+                cursor.execute("""
+                    UPDATE pedidos 
+                    SET status = 'Saiu para entrega', entregador_id = NULL 
+                    WHERE id = %s
+                """, (order_id,))
+        else:
+            # Opção Autônomo / Praça: zera o entregador_id (fica NULL) para aparecer no app de qualquer autônomo livre
+            cursor.execute("""
+                UPDATE pedidos 
+                SET status = 'Saiu para entrega', entregador_id = NULL 
+                WHERE id = %s
+            """, (order_id,))
+            
+        db.commit()
+        return {"success": True, "message": f"Pedido despachado com sucesso via {tipo_despacho}!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+        
 
 @app.get("/api/ouvidoria/estatisticas")
 def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
