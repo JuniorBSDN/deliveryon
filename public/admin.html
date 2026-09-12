@@ -1508,14 +1508,20 @@
 
             // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
             setInterval(() => {
+                // 1. Verifica se o gestor está com o mouse/foco em um menu de status (SELECT)
+                const isEditing = document.activeElement.tagName === 'SELECT';
+            
+                // 2. Mantém a atualização da aba de colaboradores normal
                 if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
                     loadColaboradores();
                 }
-                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
+                
+                // 3. Atualiza o dashboard APENAS se o gestor não estiver editando um status no momento
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden') && !isEditing) {
                     loadDashboardData();
-                    atualizarGraficoFluxo();
+                    atualizarGraficoFluxo(); // Mantido do seu código original
                 }
-            }, 5000); 
+            }, 5000);
         }
 
         window.onload = function() {
