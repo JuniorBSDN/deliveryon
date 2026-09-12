@@ -221,6 +221,8 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);",
+        "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS atendimento VARCHAR(100) DEFAULT 'Geral';",
+        "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS cliente_nome VARCHAR(255);",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS entregador_id INTEGER;",
         "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
     ]
@@ -238,6 +240,40 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
     cursor.close()
     return {"status": "Banco atualizado com sucesso!", "logs": resultados}
 
+
+
+@app.get("/api/ouvidoria/estatisticas")
+def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT LOWER(avaliacao) as av, COUNT(*) as total 
+            FROM ouvidoria 
+            WHERE empresa_id = %s 
+            GROUP BY LOWER(avaliacao)
+        """, (empresa_id,))
+        rows = cursor.fetchall()
+
+        stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+        for row in rows:
+            av = row['av']
+            total = row['total']
+            if "ótimo" in av or "otimo" in av:
+                stats["otimo"] = total
+            elif "bom" in av:
+                stats["bom"] = total
+            elif "regular" in av:
+                stats["regular"] = total
+            elif "ruim" in av:
+                stats["ruim"] = total
+            elif "péssimo" in av or "pessimo" in av:
+                stats["pessimo"] = total
+        return stats
+    except Exception as e:
+        db.rollback()
+        return {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+    finally:
+        cursor.close()
 
 # ================= ROTAS DO MASTER (COMPLETAS) =================
 @app.post("/api/master/auth")
