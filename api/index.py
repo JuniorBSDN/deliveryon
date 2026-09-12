@@ -684,9 +684,13 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
 @app.get("/api/orders/{order_id}")
 def get_order_by_id(order_id: int, db=Depends(get_db)):
     cursor = db.cursor()
+    # JOIN adicionado para resgatar o nome do motoboy atrelado ao pedido
     cursor.execute("""
-        SELECT id, status, valor_total as total, endereco_entrega as endereco, motoboy_id 
-        FROM pedidos WHERE id = %s
+        SELECT p.id, p.status, p.valor_total as total, p.endereco_entrega as endereco, 
+               p.entregador_id as motoboy_id, e.nome as motoboy_nome
+        FROM pedidos p 
+        LEFT JOIN entregadores_app e ON p.entregador_id = e.id
+        WHERE p.id = %s
     """, (order_id,))
     order = cursor.fetchone()
     cursor.close()
@@ -698,7 +702,8 @@ def get_order_by_id(order_id: int, db=Depends(get_db)):
         "id": order['id'],
         "status": order['status'],
         "total": f"{float(order['total']):.2f}".replace('.', ',') if order['total'] else "0,00",
-        "endereco": order['endereco']
+        "endereco": order['endereco'],
+        "motoboy_nome": order['motoboy_nome'] # Variável agora acessível no index.html
     }
 
 @app.post("/api/orders/{order_id}/despachar-proximos")
@@ -714,17 +719,37 @@ def despachar_proximos(order_id: int, db=Depends(get_db)):
     finally:
         cursor.close()
 
+
 @app.post("/api/orders/{order_id}/atribuir-motoboy")
 def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
     motoboy_id = data.get("motoboy_id")
     cursor = db.cursor()
     try:
-        cursor.execute("UPDATE pedidos SET status = 'Saiu para entrega', entregador_id = %s WHERE id = %s", (motoboy_id, order_id))
+        # A trava IS NULL garante que o pedido só é atualizado se estiver sem entregador
+        cursor.execute("""
+            UPDATE pedidos 
+            SET status = 'Saiu para entrega', entregador_id = %s 
+            WHERE id = %s AND entregador_id IS NULL
+        """, (motoboy_id, order_id))
+        
+        # Se 0 linhas foram alteradas, o pedido já tinha dono (ou não existe)
+        if cursor.rowcount == 0:
+            cursor.execute("SELECT entregador_id FROM pedidos WHERE id = %s", (order_id,))
+            pedido = cursor.fetchone()
+            
+            if not pedido:
+                raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+            else:
+                raise HTTPException(status_code=400, detail="Este pedido já foi aceito por outro motoboy.")
+
         db.commit()
         return {"success": True, "message": "Motoboy atribuído com sucesso!"}
+    except HTTPException:
+        # Repassa o erro 400 ou 404 sem modificar
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
 
