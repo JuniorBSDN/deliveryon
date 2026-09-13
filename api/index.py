@@ -651,6 +651,7 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
 # ================= ROTAS DE PEDIDOS (UNIFICADAS E CORRIGIDAS) =================
 
 @app.get("/api/pedidos") 
+@app.get("/api/orders")
 def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
     cur = db.cursor()
     try:
