@@ -490,17 +490,41 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute(
-        "SELECT id, nome_fantasia, cnpj, status FROM empresas WHERE REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', '') = REPLACE(REPLACE(REPLACE(%s, '.', ''), '/', ''), '-', '')",
-        (auth.cnpj,))
-    empresa = cursor.fetchone()
-    cursor.close()
-    if not empresa:
-        raise HTTPException(status_code=404, detail="CNPJ não encontrado na base de dados.")
-    if empresa['status'] != 'ativo':
-        raise HTTPException(status_code=403, detail="Esta empresa está inativa ou com o acesso suspenso.")
-    return {"autorizado": True, "empresa_id": empresa['id'], "nome_fantasia": empresa['nome_fantasia']}
+    try:
+        # 1. Tratamento no Python: extrai APENAS os números do CNPJ/CPF digitado
+        doc_limpo = ''.join(filter(str.isdigit, auth.cnpj))
+        
+        if not doc_limpo:
+            raise HTTPException(status_code=400, detail="CNPJ ou CPF inválido.")
 
+        # 2. Busca no banco limpando os caracteres da coluna para garantir o "Match" perfeito
+        cursor.execute("""
+            SELECT id, nome_fantasia, cnpj, status 
+            FROM empresas 
+            WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s
+        """, (doc_limpo,))
+        
+        empresa = cursor.fetchone()
+        
+        if not empresa:
+            raise HTTPException(status_code=404, detail="CNPJ/CPF não encontrado na base de dados.")
+            
+        if empresa.get('status') != 'ativo':
+            raise HTTPException(status_code=403, detail="Esta empresa está inativa ou com o acesso suspenso.")
+            
+        return {
+            "autorizado": True, 
+            "empresa_id": empresa['id'], 
+            "nome_fantasia": empresa['nome_fantasia']
+        }
+    except HTTPException:
+        # Repassa os erros 400, 403 e 404 para o front-end exibir o alerta correto
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro interno de conexão: {str(e)}")
+    finally:
+        cursor.close()
 @app.get("/api/configuracoes")
 def get_configuracoes(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
