@@ -173,6 +173,25 @@ class ChamadoConcluir(BaseModel):
 class ChamadoCancelar(BaseModel):
     motivo: str
 
+
+@app.get("/api/orders")
+def get_orders_admin(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
+    cur = db.cursor()
+    try:
+        e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
+        
+        cur.execute("""
+            SELECT id, empresa_id, hora, cliente_nome AS cliente, endereco_entrega AS endereco, 
+                   valor_total AS total, pagamento, status, entregador_id
+            FROM pedidos 
+            WHERE empresa_id = %s 
+            ORDER BY id DESC LIMIT 100
+        """, (e_id,))
+        return cur.fetchall()
+    except Exception as e:
+        return []
+    finally:
+        cur.close()
 # ================= MIGRAÇÃO / ATUALIZAÇÃO DO BANCO =================
 @app.post("/api/atualizar-banco")
 def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db)):
