@@ -66,7 +66,7 @@ class ProdutoCreate(BaseModel):
     descricao: str
     foto: Optional[str] = None
     
-class ProdutoUpdate(BaseModel):
+class ProdutoUpdate(ProdutoCreate):
     empresa_id: int
     nome: str
     categoria: str
@@ -83,7 +83,7 @@ class ClienteCreate(BaseModel):
     endereco: str
     referencia: Optional[str] = None
 
-class ClienteUpdate(BaseModel):
+class ClienteUpdate(ClienteCreate):
     empresa_id: int
     nome: str
     telefone: str
@@ -658,8 +658,11 @@ def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
         e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
         cur.execute("""
             SELECT 
-                id, empresa_id, hora, cliente_nome AS cliente, cliente_nome, endereco_entrega AS endereco, 
-                valor_total, valor_total AS total, pagamento, status, entregador_id
+                id, empresa_id, hora, 
+                cliente_nome AS cliente, 
+                endereco_entrega AS endereco, 
+                valor_total AS total, 
+                pagamento, status, entregador_id
             FROM pedidos 
             WHERE empresa_id = %s 
             ORDER BY id DESC LIMIT 50
