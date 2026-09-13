@@ -630,32 +630,7 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
     return dados_grafico
 
 # ================= ROTAS DE PEDIDOS (UNIFICADAS E CORRIGIDAS) =================
-@app.post("/api/orders")
-def create_order(order: OrderCreate, db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        emp_id = order.empresa_id if order.empresa_id else 1
-        
-        cursor.execute("""
-            INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, itens, valor_total, status, hora, data) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
-        """, (
-            emp_id, order.cliente, order.telefone, order.endereco, order.pagamento, 
-            order.itens, float(order.total) if order.total else 0.00, 
-            order.status or "Aprovado / Preparando", 
-            order.hora or datetime.now().strftime("%H:%M"), 
-            order.data or date.today().isoformat()
-        ))
-        db.commit()
-        novo_id = cursor.fetchone()['id']
-        return {"success": True, "mensagem": "Pedido salvo com sucesso", "id": novo_id, "pedido_id": novo_id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        cursor.close()
 
-@app.get("/api/orders")
 @app.get("/api/pedidos") 
 def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
     cur = db.cursor()
@@ -708,6 +683,7 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     finally:
         cur.close()
 
+
 @app.get("/api/orders/{order_id}")
 def get_order_by_id(order_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -739,73 +715,104 @@ def get_order_by_id(order_id: int, db=Depends(get_db)):
     finally:
         cursor.close()
 
-@app.post("/api/orders/{order_id}/despachar-proximos")
-def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(get_db)):
+
+
+# 1. CRIAÇÃO DO PEDIDO (Nasce oculto para o motoboy)
+@app.post("/api/orders")
+def create_order(order: OrderCreate, db=Depends(get_db)):
     cursor = db.cursor()
-    if not data:
-        data = {}
-    
-    tipo_despacho = data.get("tipo_despacho", "autonomo")
-    empresa_id = data.get("empresa_id", 1)
-    
     try:
-        if tipo_despacho == 'empresa':
-            cursor.execute("""
-                SELECT id FROM colaboradores 
-                WHERE empresa_id = %s AND LOWER(funcao) LIKE '%%motoboy%%' 
-                LIMIT 1
-            """, (empresa_id,))
-            colab = cursor.fetchone()
-            
-            if colab:
-                cursor.execute("""
-                    UPDATE pedidos 
-                    SET status = 'Saiu para entrega', entregador_id = %s 
-                    WHERE id = %s
-                """, (colab['id'], order_id))
-            else:
-                cursor.execute("""
-                    UPDATE pedidos 
-                    SET status = 'Saiu para entrega', entregador_id = NULL 
-                    WHERE id = %s
-                """, (order_id,))
-        else:
-            cursor.execute("""
-                UPDATE pedidos 
-                SET status = 'Saiu para entrega', entregador_id = NULL 
-                WHERE id = %s
-            """, (order_id,))
-            
+        emp_id = order.empresa_id if order.empresa_id else 1
+        cursor.execute("""
+            INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, valor_total, status, hora, data) 
+            VALUES (%s, %s, %s, %s, %s, %s, 'Aprovado / Preparando', %s, %s) RETURNING id;
+        """, (
+            emp_id, order.cliente, order.telefone, order.endereco, order.pagamento, 
+            float(order.total) if order.total else 0.00, 
+            order.hora or datetime.now().strftime("%H:%M"), 
+            order.data or date.today().isoformat()
+        ))
         db.commit()
-        return {"success": True, "message": f"Pedido despachado com sucesso via {tipo_despacho}!"}
+        return {"success": True, "id": cursor.fetchone()['id']}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
 
+# 2. DESPACHO DO GESTOR (Libera no radar dos motoboys)
+@app.post("/api/orders/{order_id}/despachar-proximos")
+def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(get_db)):
+    cursor = db.cursor()
+    data = data or {}
+    tipo_despacho = data.get("tipo_despacho", "autonomo")
+    empresa_id = data.get("empresa_id", 1)
+    
+    try:
+        if tipo_despacho == 'empresa':
+            cursor.execute("SELECT id FROM colaboradores WHERE empresa_id = %s AND LOWER(funcao) LIKE '%%motoboy%%' LIMIT 1", (empresa_id,))
+            colab = cursor.fetchone()
+            if colab:
+                cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = %s WHERE id = %s", (colab['id'], order_id))
+            else:
+                cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s", (order_id,))
+        else:
+            cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s", (order_id,))
+            
+        db.commit()
+        return {"success": True, "message": "Despachado com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
+# 3. MATCHMAKING DO MOTOBOY (Só enxerga o que está aguardando ele)
+@app.get("/api/entregador/rotas")
+def get_entregador_rotas(empresa_id: Optional[str] = '1', entregador_id: Optional[str] = None, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
+        
+        query = """
+            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
+                   p.valor_total as valor, '6,50' as taxa, p.hora, p.status, p.entregador_id,
+                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng
+            FROM pedidos p
+            LEFT JOIN clientes c ON p.cliente_nome = c.nome
+            WHERE p.empresa_id = %s AND p.status = 'Aguardando Entregador'
+        """
+        params = [e_id]
+        
+        if entregador_id and str(entregador_id).lower() not in ("null", "undefined", ""):
+            query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
+            params.append(int(entregador_id))
+        else:
+            query += " AND p.entregador_id IS NULL"
+
+        cursor.execute(query + " ORDER BY p.id DESC", tuple(params))
+        return cursor.fetchall()
+    except Exception:
+        return []
+    finally:
+        cursor.close()
+
+# 4. ACEITE DO MOTOBOY (Trava o ID e muda para 'Saiu para entrega')
 @app.post("/api/orders/{order_id}/atribuir-motoboy")
 def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
-    motoboy_id = data.get("motoboy_id")
     cursor = db.cursor()
     try:
         cursor.execute("""
             UPDATE pedidos 
             SET status = 'Saiu para entrega', entregador_id = %s 
-            WHERE id = %s AND entregador_id IS NULL
-        """, (motoboy_id, order_id))
+            WHERE id = %s AND status = 'Aguardando Entregador'
+        """, (data.get("motoboy_id"), order_id))
         
         if cursor.rowcount == 0:
-            cursor.execute("SELECT entregador_id FROM pedidos WHERE id = %s", (order_id,))
-            pedido = cursor.fetchone()
-            
-            if not pedido:
-                raise HTTPException(status_code=404, detail="Pedido não encontrado.")
-            else:
-                raise HTTPException(status_code=400, detail="Este pedido já foi aceito por outro motoboy.")
+            raise HTTPException(status_code=400, detail="Corrida indisponível ou já aceita.")
 
         db.commit()
-        return {"success": True, "message": "Motoboy atribuído com sucesso!"}
+        return {"success": True, "message": "Corrida aceita!"}
     except HTTPException:
         raise
     except Exception as e:
@@ -1085,77 +1092,6 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     finally:
         cursor.close()
 
-@app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        is_colaborador = False
-        if entregador_id and str(entregador_id) not in ("null", "undefined", ""):
-            try:
-                cursor.execute("SELECT funcao FROM colaboradores WHERE id = %s", (int(entregador_id),))
-                colab = cursor.fetchone()
-                if colab and colab.get('funcao') in ['Motoboy', 'Administrador', 'Gerente']:
-                    is_colaborador = True
-            except Exception:
-                pass
-
-        query = """
-            SELECT p.id, COALESCE(p.cliente_nome, 'Cliente') AS cliente, COALESCE(p.endereco_entrega, 'Endereço não informado') AS endereco, 
-                   COALESCE(p.valor_total, 0.00) as valor, COALESCE(p.pagamento, 'Dinheiro') as status_pag, 
-                   '6,50' as taxa, COALESCE(p.hora, '--:--') as hora, 
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng,
-                   COALESCE(p.status, 'Pendente') as status, p.entregador_id
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE LOWER(COALESCE(p.status, '')) IN ('aguardando pagamento', 'saiu para entrega', 'pronto', 'despachado', 'aprovado / preparando')
-        """
-        params = []
-        
-        if empresa_id and empresa_id not in ("null", "undefined", ""):
-            try:
-                query += " AND p.empresa_id = %s"
-                params.append(int(empresa_id))
-            except ValueError:
-                pass
-            
-        if entregador_id and str(entregador_id) not in ("null", "undefined", ""):
-            try:
-                e_id_val = int(entregador_id)
-                if is_colaborador:
-                    query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
-                    params.append(e_id_val)
-                else:
-                    query += " AND p.entregador_id IS NULL"
-            except ValueError:
-                query += " AND p.entregador_id IS NULL"
-
-        query += " ORDER BY p.id DESC LIMIT 10"
-        
-        cursor.execute(query, tuple(params))
-        rows = cursor.fetchall()
-        
-        resultados = []
-        for row in rows:
-            val = row.get('valor', 0)
-            val_str = f"{float(val):.2f}".replace('.', ',') if val is not None else "0,00"
-            resultados.append({
-                "id": row['id'],
-                "cliente": row['cliente'],
-                "endereco": row['endereco'],
-                "valor": val_str,
-                "status_pag": row['status_pag'],
-                "taxa": row['taxa'],
-                "hora": row['hora'],
-                "lat": row['lat'],
-                "lng": row['lng'],
-                "status": row['status']
-            })
-        return resultados
-    except Exception as e:
-        print(f"Erro ao buscar rotas do entregador: {str(e)}")
-        return []
-    finally:
-        cursor.close()
 
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
