@@ -1570,6 +1570,27 @@
             }
         }
 
+      async function carregarPedidosAdmin() {
+    // Busca o ID da empresa em qualquer uma das chaves possíveis do localStorage (fallback seguro)
+    const empresaId = localStorage.getItem('deliveryon_empresa_id') || 
+                      localStorage.getItem('app_motoboy_empresa_id') || 
+                      localStorage.getItem('empresa_id') || '1';
+
+    try {
+        // Envia o empresa_id na query string para o backend
+        const response = await fetch(`/api/pedidos?empresa_id=${empresaId}`);
+        if (!response.ok) throw new Error("Erro ao buscar pedidos no servidor");
+
+        const pedidos = await response.json();
+        
+        // Aqui continua a sua lógica normal de renderizar os pedidos na tela do admin...
+        renderizarTabelaPedidos(pedidos);
+
+    } catch (error) {
+        console.error("Erro ao carregar pedidos do admin:", error);
+    }
+}
+
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
