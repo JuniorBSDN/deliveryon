@@ -10,7 +10,7 @@ from psycopg2 import pool
 
 app = FastAPI(
     title="DeliveryON API - Produção Completa e Consolidada",
-    description="API integrada ponta a ponta com todas as rotas (Cliente, Entregador, Gestor, Master)"
+    description="API integrada ponta a ponta com todas as rotas unificadas e corrigidas"
 )
 
 app.add_middleware(
@@ -24,7 +24,6 @@ app.add_middleware(
 DATABASE_URL = os.getenv("ON_DATA_URL", "postgresql://user:password@host/dbname")
 MASTER_SECRET = os.getenv("SENHA_MASTER", "master123")
 
-# Pool de conexões otimizado para Neon DB
 db_pool = pool.ThreadedConnectionPool(
     minconn=2,
     maxconn=20,
@@ -38,7 +37,6 @@ def get_db():
         yield conn
     finally:
         db_pool.putconn(conn)
-
 
 # ================= MODELOS PYDANTIC =================
 
@@ -113,14 +111,14 @@ class ColaboradorCreate(BaseModel):
     foto: Optional[str] = None  
 
 class OrderCreate(BaseModel):
-    empresa_id: int
+    empresa_id: Optional[int] = 1
     cliente: str
-    telefone: str
+    telefone: Optional[str] = ""
     endereco: str
     pagamento: str
-    itens: str
+    itens: Optional[str] = ""
     total: float
-    status: Optional[str] = "Aguardando pagamento"
+    status: Optional[str] = "Aprovado / Preparando"
     hora: Optional[str] = None
     data: Optional[str] = None
 
@@ -174,7 +172,6 @@ class ChamadoConcluir(BaseModel):
 
 class ChamadoCancelar(BaseModel):
     motivo: str
-
 
 # ================= MIGRAÇÃO / ATUALIZAÇÃO DO BANCO =================
 @app.post("/api/atualizar-banco")
@@ -240,87 +237,8 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
     cursor.close()
     return {"status": "Banco atualizado com sucesso!", "logs": resultados}
 
-@app.post("/api/orders/{order_id}/despachar-proximos")
-def despachar_proximos(order_id: int, data: dict, db=Depends(get_db)):
-    cursor = db.cursor()
-    tipo_despacho = data.get("tipo_despacho", "autonomo")
-    empresa_id = data.get("empresa_id", 1)
-    
-    try:
-        if tipo_despacho == 'empresa':
-            # Tenta encontrar automaticamente o primeiro colaborador cadastrado como Motoboy nesta empresa
-            cursor.execute("""
-                SELECT id FROM colaboradores 
-                WHERE empresa_id = %s AND LOWER(funcao) LIKE '%%motoboy%%' 
-                LIMIT 1
-            """, (empresa_id,))
-            colab = cursor.fetchone()
-            
-            if colab:
-                # Se achou o funcionário fixo, já amarra o pedido diretamente ao ID dele
-                cursor.execute("""
-                    UPDATE pedidos 
-                    SET status = 'Saiu para entrega', entregador_id = %s 
-                    WHERE id = %s
-                """, (colab['id'], order_id))
-            else:
-                # Se não houver colaborador fixo cadastrado, joga para a praça (NULL) para não travar
-                cursor.execute("""
-                    UPDATE pedidos 
-                    SET status = 'Saiu para entrega', entregador_id = NULL 
-                    WHERE id = %s
-                """, (order_id,))
-        else:
-            # Opção Autônomo / Praça: zera o entregador_id (fica NULL) para aparecer no app de qualquer autônomo livre
-            cursor.execute("""
-                UPDATE pedidos 
-                SET status = 'Saiu para entrega', entregador_id = NULL 
-                WHERE id = %s
-            """, (order_id,))
-            
-        db.commit()
-        return {"success": True, "message": f"Pedido despachado com sucesso via {tipo_despacho}!"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        cursor.close()
-        
 
-@app.get("/api/ouvidoria/estatisticas")
-def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        cursor.execute("""
-            SELECT LOWER(avaliacao) as av, COUNT(*) as total 
-            FROM ouvidoria 
-            WHERE empresa_id = %s 
-            GROUP BY LOWER(avaliacao)
-        """, (empresa_id,))
-        rows = cursor.fetchall()
-
-        stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
-        for row in rows:
-            av = row['av']
-            total = row['total']
-            if "ótimo" in av or "otimo" in av:
-                stats["otimo"] = total
-            elif "bom" in av:
-                stats["bom"] = total
-            elif "regular" in av:
-                stats["regular"] = total
-            elif "ruim" in av:
-                stats["ruim"] = total
-            elif "péssimo" in av or "pessimo" in av:
-                stats["pessimo"] = total
-        return stats
-    except Exception as e:
-        db.rollback()
-        return {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
-    finally:
-        cursor.close()
-
-# ================= ROTAS DO MASTER (COMPLETAS) =================
+# ================= ROTAS DO MASTER =================
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
     if auth.senha == MASTER_SECRET:
@@ -453,16 +371,12 @@ def get_master_helpdesk_indicadores(db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'aberto'")
     abertos = cursor.fetchone()['total']
-
     cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('em_atendimento', 'em_andamento')")
     andamento = cursor.fetchone()['total']
-
     cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('resolvido', 'concluido')")
     concluidos = cursor.fetchone()['total']
-
     cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'pendente'")
     pendentes = cursor.fetchone()['total']
-
     cursor.close()
     return {"abertos": abertos, "em_andamento": andamento, "concluidos": concluidos, "pendentes": pendentes}
 
@@ -496,7 +410,6 @@ def concluir_chamado(id: int, data: ChamadoConcluir, db=Depends(get_db)):
         SET status = 'resolvido', tecnico_responsavel = %s 
         WHERE id = %s
     """, (data.tecnico, id))
-    
     try:
         cursor.execute("""
             INSERT INTO historico_chamados (chamado_id, descricao, data_hora)
@@ -504,7 +417,6 @@ def concluir_chamado(id: int, data: ChamadoConcluir, db=Depends(get_db)):
         """, (id, f"Chamado concluído pelo técnico: {data.tecnico}"))
     except Exception:
         db.rollback()
-
     db.commit()
     cursor.close()
     return {"mensagem": "Chamado concluído"}
@@ -520,7 +432,6 @@ def cancelar_chamado(id: int, data: ChamadoCancelar, db=Depends(get_db)):
         """, (id, f"Chamado cancelado. Motivo: {data.motivo}"))
     except Exception:
         db.rollback()
-
     db.commit()
     cursor.close()
     return {"mensagem": "Chamado cancelado"}
@@ -575,8 +486,7 @@ def delete_notificacao(id: int, db=Depends(get_db)):
         cursor.close()
     return {"mensagem": "Notificação resolvida."}
 
-
-# ================= ROTAS DO GESTOR E CONFIGURAÇÕES =================
+# ================= ROTAS DO GESTOR =================
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
@@ -585,12 +495,10 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
         (auth.cnpj,))
     empresa = cursor.fetchone()
     cursor.close()
-
     if not empresa:
         raise HTTPException(status_code=404, detail="CNPJ não encontrado na base de dados.")
     if empresa['status'] != 'ativo':
         raise HTTPException(status_code=403, detail="Esta empresa está inativa ou com o acesso suspenso.")
-
     return {"autorizado": True, "empresa_id": empresa['id'], "nome_fantasia": empresa['nome_fantasia']}
 
 @app.get("/api/configuracoes")
@@ -697,25 +605,26 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
         
     return dados_grafico
 
-
-# ================= ROTAS DE CLIENTE E PEDIDOS =================
+# ================= ROTAS DE PEDIDOS (UNIFICADAS E CORRIGIDAS) =================
 @app.post("/api/orders")
 def create_order(order: OrderCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        emp_id = order.empresa_id if order.empresa_id else 1
+        
         cursor.execute("""
             INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, itens, valor_total, status, hora, data) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
         """, (
-            order.empresa_id, order.cliente, order.telefone, order.endereco, order.pagamento, 
+            emp_id, order.cliente, order.telefone, order.endereco, order.pagamento, 
             order.itens, float(order.total) if order.total else 0.00, 
-            order.status or "Aguardando pagamento", 
+            order.status or "Aprovado / Preparando", 
             order.hora or datetime.now().strftime("%H:%M"), 
             order.data or date.today().isoformat()
         ))
         db.commit()
         novo_id = cursor.fetchone()['id']
-        return {"mensagem": "Pedido salvo com sucesso", "id": novo_id, "pedido_id": novo_id}
+        return {"success": True, "mensagem": "Pedido salvo com sucesso", "id": novo_id, "pedido_id": novo_id}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -723,30 +632,43 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
         cursor.close()
 
 @app.get("/api/orders")
-def get_orders(empresa_id: int = Query(1), db=Depends(get_db)):
+@app.get("/api/pedidos") 
+def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
     cur = db.cursor()
-    cur.execute("""
-        SELECT 
-            id, hora, cliente_nome AS cliente, endereco_entrega AS endereco, 
-            valor_total AS total, status 
-        FROM pedidos 
-        WHERE empresa_id = %s 
-        ORDER BY id DESC LIMIT 50
-    """, (empresa_id,))
-    rows = cur.fetchall()
-    cur.close()
+    try:
+        e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
+        cur.execute("""
+            SELECT 
+                id, empresa_id, hora, cliente_nome AS cliente, cliente_nome, endereco_entrega AS endereco, 
+                valor_total, valor_total AS total, pagamento, status, entregador_id
+            FROM pedidos 
+            WHERE empresa_id = %s 
+            ORDER BY id DESC LIMIT 50
+        """, (e_id,))
+        rows = cur.fetchall()
 
-    orders = []
-    for row in rows:
-        orders.append({
-            "id": row['id'],
-            "hora": str(row['hora']) if row['hora'] else "",
-            "cliente": row['cliente'],
-            "endereco": row['endereco'],
-            "total": f"{float(row['total']):.2f}".replace('.', ',') if row['total'] else "0,00",
-            "status": row['status']
-        })
-    return orders
+        orders = []
+        for row in rows:
+            val = row.get('valor_total') or row.get('total') or 0.00
+            orders.append({
+                "id": row['id'],
+                "empresa_id": row.get('empresa_id', 1),
+                "hora": str(row['hora']) if row['hora'] else "",
+                "cliente": row.get('cliente') or row.get('cliente_nome') or "",
+                "cliente_nome": row.get('cliente') or row.get('cliente_nome') or "",
+                "endereco": row['endereco'],
+                "pagamento": row.get('pagamento') or "",
+                "total": f"{float(val):.2f}".replace('.', ','),
+                "valor_total": val,
+                "status": row['status'],
+                "entregador_id": row.get('entregador_id')
+            })
+        return orders
+    except Exception as e:
+        print(f"Erro ao listar pedidos: {str(e)}")
+        return []
+    finally:
+        cur.close()
 
 @app.put("/api/orders/{order_id}/status")
 def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
@@ -794,32 +716,61 @@ def get_order_by_id(order_id: int, db=Depends(get_db)):
         cursor.close()
 
 @app.post("/api/orders/{order_id}/despachar-proximos")
-def despachar_proximos(order_id: int, db=Depends(get_db)):
+def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(get_db)):
     cursor = db.cursor()
+    if not data:
+        data = {}
+    
+    tipo_despacho = data.get("tipo_despacho", "autonomo")
+    empresa_id = data.get("empresa_id", 1)
+    
     try:
-        cursor.execute("UPDATE pedidos SET status = 'Saiu para entrega' WHERE id = %s", (order_id,))
+        if tipo_despacho == 'empresa':
+            cursor.execute("""
+                SELECT id FROM colaboradores 
+                WHERE empresa_id = %s AND LOWER(funcao) LIKE '%%motoboy%%' 
+                LIMIT 1
+            """, (empresa_id,))
+            colab = cursor.fetchone()
+            
+            if colab:
+                cursor.execute("""
+                    UPDATE pedidos 
+                    SET status = 'Saiu para entrega', entregador_id = %s 
+                    WHERE id = %s
+                """, (colab['id'], order_id))
+            else:
+                cursor.execute("""
+                    UPDATE pedidos 
+                    SET status = 'Saiu para entrega', entregador_id = NULL 
+                    WHERE id = %s
+                """, (order_id,))
+        else:
+            cursor.execute("""
+                UPDATE pedidos 
+                SET status = 'Saiu para entrega', entregador_id = NULL 
+                WHERE id = %s
+            """, (order_id,))
+            
         db.commit()
-        return {"success": True, "message": "Pedido despachado para a praça com sucesso!"}
+        return {"success": True, "message": f"Pedido despachado com sucesso via {tipo_despacho}!"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
 
-
 @app.post("/api/orders/{order_id}/atribuir-motoboy")
 def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
     motoboy_id = data.get("motoboy_id")
     cursor = db.cursor()
     try:
-        # A trava IS NULL garante que o pedido só é atualizado se estiver sem entregador
         cursor.execute("""
             UPDATE pedidos 
             SET status = 'Saiu para entrega', entregador_id = %s 
             WHERE id = %s AND entregador_id IS NULL
         """, (motoboy_id, order_id))
         
-        # Se 0 linhas foram alteradas, o pedido já tinha dono (ou não existe)
         if cursor.rowcount == 0:
             cursor.execute("SELECT entregador_id FROM pedidos WHERE id = %s", (order_id,))
             pedido = cursor.fetchone()
@@ -832,14 +783,12 @@ def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
         db.commit()
         return {"success": True, "message": "Motoboy atribuído com sucesso!"}
     except HTTPException:
-        # Repassa o erro 400 ou 404 sem modificar
         raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-
 
 # ================= ROTAS DE PRODUTOS, CLIENTES E COLABORADORES =================
 @app.get("/api/products")
@@ -1007,8 +956,7 @@ def delete_colaborador(id: int, db=Depends(get_db)):
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
-
-# ================= ROTAS DE ENTREGADOR E MATCHMAKING (CORRIGIDAS) =================
+# ================= ROTAS DE ENTREGADOR E MATCHMAKING =================
 @app.post("/api/auth/entregador")
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
@@ -1159,12 +1107,11 @@ def get_entregador_rotas(empresa_id: Optional[str] = None, entregador_id: Option
     finally:
         cursor.close()
 
-
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        if not empresa_id or empresa_id in ("null", "undefined", ""):
+        if not empresa_id or str(empresa_id).lower() in ("null", "undefined", ""):
             cursor.execute("""
                 SELECT id, cliente_nome AS cliente, endereco_entrega AS endereco, valor_total as total, 
                        TO_CHAR(data, 'YYYY-MM-DD') as data_filtragem, 
@@ -1201,6 +1148,39 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
 
 
 # ================= ROTAS DE HELPDESK E OUVIDORIA =================
+@app.get("/api/ouvidoria/estatisticas")
+def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT LOWER(avaliacao) as av, COUNT(*) as total 
+            FROM ouvidoria 
+            WHERE empresa_id = %s 
+            GROUP BY LOWER(avaliacao)
+        """, (empresa_id,))
+        rows = cursor.fetchall()
+
+        stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+        for row in rows:
+            av = row['av']
+            total = row['total']
+            if "ótimo" in av or "otimo" in av:
+                stats["otimo"] = total
+            elif "bom" in av:
+                stats["bom"] = total
+            elif "regular" in av:
+                stats["regular"] = total
+            elif "ruim" in av:
+                stats["ruim"] = total
+            elif "péssimo" in av or "pessimo" in av:
+                stats["pessimo"] = total
+        return stats
+    except Exception as e:
+        db.rollback()
+        return {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+    finally:
+        cursor.close()
+
 @app.post("/api/helpdesk")
 def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -1297,37 +1277,6 @@ def listar_produtos_destaques(db=Depends(get_db)):
     finally:
         cursor.close()
     return res
-
-@app.post("/api/orders")
-def criar_pedido(pedido: PedidoSchema, db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        # Garante que a empresa_id nunca seja salva como nula se não vier no payload
-        empresa_id = pedido.empresa_id if pedido.empresa_id else 1
-        
-        query = """
-            INSERT INTO pedidos (empresa_id, cliente_nome, endereco_entrega, valor_total, pagamento, status, hora)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            RETURNING id;
-        """
-        cursor.execute(query, (
-            empresa_id,
-            pedido.cliente_nome,
-            pedido.endereco_entrega,
-            pedido.valor_total,
-            pedido.pagamento,
-            'Aprovado / Preparando', # Status inicial padrão para aparecer no admin
-            pedido.hora
-        ))
-        pedido_id = cursor.fetchone()['id']
-        db.commit()
-        return {"success": True, "id": pedido_id}
-    except Exception as e:
-        db.rollback()
-        print(f"Erro ao criar pedido: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
 
 @app.post("/api/backup")
 def backup():
