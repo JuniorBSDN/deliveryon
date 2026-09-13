@@ -985,26 +985,51 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        cursor.execute("""
+        # 1. Limpeza do Python: extrai apenas os números do telefone digitado
+        tel_limpo = ''.join(filter(str.isdigit, auth.telefone))
+        
+        if not tel_limpo:
+            raise HTTPException(status_code=400, detail="Telefone inválido.")
+
+        # Função SQL para limpar a coluna de telefone na hora da busca
+        sql_limpeza_tel = "REPLACE(REPLACE(REPLACE(REPLACE(telefone, '(', ''), ')', ''), '-', ''), ' ', '')"
+
+        # 2. Busca na tabela de entregadores do App (Autônomos)
+        cursor.execute(f"""
             SELECT id, 1 as empresa_id, nome, status, senha, cpf 
-            FROM entregadores_app WHERE telefone = %s
-        """, (auth.telefone,))
+            FROM entregadores_app 
+            WHERE {sql_limpeza_tel} = %s
+        """, (tel_limpo,))
         colab = cursor.fetchone()
 
+        # 3. Fallback: Busca na tabela de colaboradores fixos da empresa
         if not colab:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT id, empresa_id, nome, status, COALESCE(cpf, '123456') as senha, cpf 
-                FROM colaboradores WHERE telefone = %s AND LOWER(funcao) LIKE '%%motoboy%%'
-            """, (auth.telefone,))
+                FROM colaboradores 
+                WHERE {sql_limpeza_tel} = %s AND LOWER(funcao) LIKE '%%motoboy%%'
+            """, (tel_limpo,))
             colab = cursor.fetchone()
 
         if not colab:
             raise HTTPException(status_code=401, detail="Telefone não cadastrado como entregador.")
 
+        # 4. Validação Híbrida de Senha/CPF (Blindada contra máscaras)
         senha_cadastrada = str(colab['senha']) if colab['senha'] else '123456'
         cpf_cadastrado = str(colab['cpf']) if colab['cpf'] else ''
+        senha_digitada = auth.senha.strip()
         
-        if auth.senha != senha_cadastrada and auth.senha != '123456' and auth.senha != cpf_cadastrado:
+        # Limpa os números da senha e do CPF para comparar com segurança
+        senha_dig_numeros = ''.join(filter(str.isdigit, senha_digitada))
+        cpf_cad_numeros = ''.join(filter(str.isdigit, cpf_cadastrado))
+        
+        senha_correta = False
+        if senha_digitada == senha_cadastrada or senha_digitada == '123456':
+            senha_correta = True
+        elif senha_dig_numeros and cpf_cad_numeros and senha_dig_numeros == cpf_cad_numeros:
+            senha_correta = True
+            
+        if not senha_correta:
             raise HTTPException(status_code=401, detail="Senha ou CPF incorretos.")
 
         return {
@@ -1018,7 +1043,8 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     except HTTPException as he:
         raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
     finally:
         cursor.close()
 
