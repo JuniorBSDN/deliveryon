@@ -1298,6 +1298,37 @@ def listar_produtos_destaques(db=Depends(get_db)):
         cursor.close()
     return res
 
+@app.post("/api/orders")
+def criar_pedido(pedido: PedidoSchema, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Garante que a empresa_id nunca seja salva como nula se não vier no payload
+        empresa_id = pedido.empresa_id if pedido.empresa_id else 1
+        
+        query = """
+            INSERT INTO pedidos (empresa_id, cliente_nome, endereco_entrega, valor_total, pagamento, status, hora)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id;
+        """
+        cursor.execute(query, (
+            empresa_id,
+            pedido.cliente_nome,
+            pedido.endereco_entrega,
+            pedido.valor_total,
+            pedido.pagamento,
+            'Aprovado / Preparando', # Status inicial padrão para aparecer no admin
+            pedido.hora
+        ))
+        pedido_id = cursor.fetchone()['id']
+        db.commit()
+        return {"success": True, "id": pedido_id}
+    except Exception as e:
+        db.rollback()
+        print(f"Erro ao criar pedido: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
