@@ -908,8 +908,9 @@
             }
         }
 
-        async function loadOrders() {
-            const orders = await apiRequest('/orders');
+       async function loadOrders() {
+            // Usa a função apiRequest para garantir que o empresa_id seja enviado corretamente
+            const orders = await apiRequest('/orders'); 
             const tbody = document.getElementById('tbody-recent-orders');
             if (!tbody) return;
             
@@ -920,21 +921,24 @@
             }
 
             orders.forEach(order => {
+                const statusAtual = order.status || 'Aprovado / Preparando';
                 tbody.innerHTML += `
                     <tr data-id="${order.id}">
                         <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
-                        <td>R$ ${order.total || '0,00'}</td>
+                        <td>${order.cliente || order.cliente_nome || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || order.endereco_entrega || ''}</span></td>
+                        <td>R$ ${order.total || order.valor_total || '0,00'}</td>
                         <td>
                             <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                                <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                                <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                                <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                                <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                                <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                                <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
+                                <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
+                                <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
+                                <option value="Saiu para entrega" ${statusAtual === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
+                                <option value="Entregue" ${statusAtual === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
                             </select>
                         </td>
                         <td style="text-align: right;">
+                            <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${order.id}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
                             <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
                         </td>
                     </tr>
