@@ -124,6 +124,7 @@ class OrderCreate(BaseModel):
 
 class OuvidoriaCreate(BaseModel):
     empresa_id: Optional[int] = 1
+    pedido_id: Optional[str] = None
     cliente_nome: Optional[str] = "Cliente"
     atendimento: Optional[str] = "Geral"
     avaliacao: str
