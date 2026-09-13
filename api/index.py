@@ -1228,7 +1228,7 @@ def listar_chamados_gestor(empresa_id: int = Query(1), db=Depends(get_db)):
     return res
 
 @app.post("/api/ouvidoria")
-def create_ouvidoria(ouv: OuvidoriaCreate, db=Depends(get_db)):
+def create_ouvidoria(ouv: OuvidoriesCreate if False else OuvidoriaCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         cursor.execute("""
