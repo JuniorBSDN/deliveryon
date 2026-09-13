@@ -762,13 +762,16 @@
         async function enviarAvaliacaoOuvidoria() {
             const avaliacao = document.getElementById('select-avaliacao-cliente').value;
             const relato = document.getElementById('textarea-relato-cliente').value;
-
+            const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
+        
             const payload = {
-                pedido_id: pedidoAvaliadoId,
+                empresa_id: empresaIdFinal,
                 avaliacao: avaliacao,
-                relato: relato
+                relato: relato,
+                atendimento: "Geral",
+                cliente_nome: document.getElementById('cli-nome') ? document.getElementById('cli-nome').value : "Cliente"
             };
-
+        
             const res = await apiRequest('/ouvidoria', 'POST', payload);
             if (res) {
                 alert('Muito obrigado pelo feedback! Sua opinião foi registrada.');
