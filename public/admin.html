@@ -216,7 +216,7 @@
                         <table>
                             <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
                             <tbody id="tbody-recent-orders">
-                                <!-- Dados carregados dinamicamente via API -->
+                                <!-- Dados carregados dinamicamente via API Python -->
                             </tbody>
                         </table>
                     </div>
@@ -640,7 +640,7 @@
             <div class="modal-body">
                 <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
                     <input type="hidden" id="edit-colab-id">
-
+                    
                     <div class="form-group">
                         <label>Nova Foto (Deixe em branco para manter a atual)</label>
                         <input type="file" class="form-control" id="edit-colab-file">
@@ -653,7 +653,7 @@
                         <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
                         <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
                         <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
-
+                        
                         <div class="form-group">
                             <label>Função</label>
                             <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
@@ -688,7 +688,7 @@
                     </div>
 
                     <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
-
+                    
                     <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
                         <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
                         <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
@@ -708,7 +708,7 @@
             <div class="modal-body">
                 <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
                     <input type="hidden" id="edit-cli-id">
-
+                    
                     <div class="form-group">
                         <label>Nome Completo</label>
                         <input type="text" class="form-control" id="edit-cli-name" required>
@@ -739,224 +739,298 @@
         </div>
     </div>
 
+
     <!-- MODAL DE ESCOLHA DE TIPO DE ENTREGADOR -->
-    <div class="modal-overlay" id="modalEscolhaEntregador">
-        <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <div class="modal-header">
-                <h3><i class="ph ph-motorcycle"></i> Despachar Pedido</h3>
-                <button class="close-modal" onclick="closeModal('modalEscolhaEntregador')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p style="margin-bottom: 20px; color: var(--text-muted);">Como você deseja despachar este pedido?</p>
-                <input type="hidden" id="despacho-pedido-id">
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button class="btn btn-primary" style="padding: 12px;" onclick="despacharParaTipo('empresa')">
-                        <i class="ph ph-buildings"></i> Entregador da Empresa (Fixo)
-                    </button>
-                    <button class="btn btn-success" style="padding: 12px;" onclick="despacharParaTipo('autonomo')">
-                        <i class="ph ph-users-three"></i> Enviar para Praça (Autônomo / Geral)
-                    </button>
-                </div>
+<div class="modal-overlay" id="modalEscolhaEntregador">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="modal-header">
+            <h3><i class="ph ph-motorcycle"></i> Despachar Pedido</h3>
+            <button class="close-modal" onclick="closeModal('modalEscolhaEntregador')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 20px; color: var(--text-muted);">Como você deseja despachar este pedido?</p>
+            <input type="hidden" id="despacho-pedido-id">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" style="padding: 12px;" onclick="despacharParaTipo('empresa')">
+                    <i class="ph ph-buildings"></i> Entregador da Empresa (Fixo)
+                </button>
+                <button class="btn btn-success" style="padding: 12px;" onclick="despacharParaTipo('autonomo')">
+                    <i class="ph ph-users-three"></i> Enviar para Praça (Autônomo / Geral)
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-    const API_BASE_URL = "/api";
-    let chartFluxoInstance = null;
-    let chartOuvidoriaInstance = null;
+
     
-    async function apiRequest(endpoint, method = 'GET', data = null) {
-        try {
-            const empresaId = localStorage.getItem('deliveryon_empresa_id');
-            if (!empresaId) {
-                document.getElementById('auth-overlay').style.display = 'flex';
+  <script>
+        const API_BASE_URL = "/api";
+        let currentActiveId = null;
+        let chartFluxoInstance = null;
+        let chartOuvidoriaInstance = null;
+        
+        // Substitua a criação antiga do gráfico de ouvidoria dentro de inicializarPainel() por esta chamada:
+        async function configurarGraficoOuvidoria() {
+            const ctxOuvidoria = document.getElementById('chartOuvidoria');
+            if (!ctxOuvidoria) return;
+        
+            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        
+            atualizarDadosOuvidoriaGrafico();
+        }
+        
+        async function atualizarDadosOuvidoriaGrafico() {
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas'); // Rota que retorna contagem por categoria (ex: {otimo: 5, bom: 2, ...})
+            
+            if (estatisticas && chartOuvidoriaInstance) {
+                chartOuvidoriaInstance.data.datasets[0].data = [
+                    estatisticas.otimo || 0,
+                    estatisticas.bom || 0,
+                    estatisticas.regular || 0,
+                    estatisticas.ruim || 0,
+                    estatisticas.pessimo || 0
+                ];
+                chartOuvidoriaInstance.update();
+            }
+        }
+        // =========================================================================
+        // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
+        // =========================================================================
+        async function apiRequest(endpoint, method = 'GET', data = null) {
+            try {
+                const empresaId = localStorage.getItem('deliveryon_empresa_id');
+                
+                if (!empresaId) {
+                    console.error("Sessão inválida! ID da empresa não encontrado.");
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    return null;
+                }
+
+                let url = `${API_BASE_URL}${endpoint}`;
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+
+                // Garante o empresa_id na URL para buscas (GET) e exclusões (DELETE)
+                if (method === 'GET' || method === 'DELETE') {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url += `${separator}empresa_id=${empresaId}`;
+                } 
+                // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
+                else if (method === 'POST' || method === 'PUT') {
+                    if (!data) data = {}; 
+                    data.empresa_id = parseInt(empresaId);
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+                return await response.json();
+            } catch (error) {
+                console.error("Falha na comunicação com a API Python:", error);
                 return null;
             }
+        }
 
-            let url = `${API_BASE_URL}${endpoint}`;
-            const options = { method: method, headers: { 'Content-Type': 'application/json' } };
+        // =========================================================================
+        // 2. AUTENTICAÇÃO E SESSÃO
+        // =========================================================================
+        async function fazerLoginGestor() {
+            const cnpjInput = document.getElementById('input-login-cnpj').value;
+            try {
+                const res = await fetch(`${API_BASE_URL}/gestor/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cnpj: cnpjInput })
+                });
 
-            if (method === 'GET' || method === 'DELETE') {
-                const separator = url.includes('?') ? '&' : '?';
-                url += `${separator}empresa_id=${empresaId}`;
-            } else if (method === 'POST' || method === 'PUT') {
-                if (!data) data = {}; 
-                data.empresa_id = parseInt(empresaId);
-                options.body = JSON.stringify(data);
+                if (res.ok) {
+                    const dados = await res.json();
+                    localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
+                    localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
+
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    inicializarPainel();
+                } else {
+                    alert("CNPJ não encontrado ou empresa inativa na base de dados.");
+                }
+            } catch (err) {
+                alert("Erro ao conectar com o servidor da API.");
+            }
+        }
+
+        function logoutGestor() {
+            localStorage.removeItem('deliveryon_empresa_id');
+            localStorage.removeItem('deliveryon_empresa_nome');
+            location.reload();
+        }
+
+        // =========================================================================
+        // 3. DASHBOARD E GRÁFICOS DINÂMICOS
+        // =========================================================================
+        async function loadDashboardData() {
+            const data = await apiRequest('/dashboard');
+            if (data) {
+                const waitingEl = document.getElementById('val-waiting-count');
+                const deliveredEl = document.getElementById('val-delivered-count');
+                const canceledEl = document.getElementById('val-canceled-count');
+                const revenueEl = document.getElementById('val-revenue-total');
+
+                if (waitingEl) waitingEl.innerText = data.aguardando || 0;
+                if (deliveredEl) deliveredEl.innerText = data.entregues || 0;
+                if (canceledEl) canceledEl.innerText = data.cancelados || 0;
+                if (revenueEl) revenueEl.innerText = `R$ ${data.receita || '0,00'}`;
+            }
+            loadOrders();
+        }
+
+        async function atualizarGraficoFluxo() {
+            const dadosFluxo = await apiRequest('/dashboard/fluxo');
+            if (dadosFluxo && chartFluxoInstance) {
+                const labels = dadosFluxo.map(item => item.hora);
+                const totais = dadosFluxo.map(item => item.total);
+
+                chartFluxoInstance.data.labels = labels;
+                chartFluxoInstance.data.datasets[0].data = totais;
+                chartFluxoInstance.update();
+            }
+        }
+
+       async function loadOrders() {
+            // Usa a função apiRequest para garantir que o empresa_id seja enviado corretamente
+            const orders = await apiRequest('/orders'); 
+            const tbody = document.getElementById('tbody-recent-orders');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
+                return;
             }
 
-            const response = await fetch(url, options);
-            if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
-            return await response.json();
-        } catch (error) {
-            console.error("Erro na requisição:", error);
-            return null;
-        }
-    }
-
-    async function fazerLoginGestor() {
-        const cnpjInput = document.getElementById('input-login-cnpj').value;
-        try {
-            const res = await fetch(`${API_BASE_URL}/gestor/auth`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cnpj: cnpjInput })
+            orders.forEach(order => {
+                const statusAtual = order.status || 'Aprovado / Preparando';
+                tbody.innerHTML += `
+                    <tr data-id="${order.id}">
+                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
+                        <td>${order.cliente || order.cliente_nome || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || order.endereco_entrega || ''}</span></td>
+                        <td>R$ ${order.total || order.valor_total || '0,00'}</td>
+                        <td>
+                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
+                                <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
+                                <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
+                                <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
+                                <option value="Saiu para entrega" ${statusAtual === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
+                                <option value="Entregue" ${statusAtual === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                            </select>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${order.id}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
+                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
+                        </td>
+                    </tr>
+                `;
             });
+        }
 
-            if (res.ok) {
-                const dados = await res.json();
-                localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
-                localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
-                document.getElementById('auth-overlay').style.display = 'none';
-                inicializarPainel();
+        async function updateOrderStatus(orderId, selectElement) {
+            const novoStatus = selectElement.value;
+            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
+            if (response) {
+                loadDashboardData();
             } else {
-                alert("CNPJ não encontrado ou inativo.");
+                alert("Erro ao atualizar o status do pedido.");
             }
-        } catch (err) {
-            alert("Erro ao conectar com o servidor.");
-        }
-    }
-
-    function logoutGestor() {
-        localStorage.clear();
-        location.reload();
-    }
-
-    async function loadDashboardData() {
-        const data = await apiRequest('/dashboard');
-        if (data) {
-            document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
-            document.getElementById('val-delivered-count').innerText = data.entregues || 0;
-            document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
-            document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
-        }
-        loadOrders();
-    }
-
-    async function atualizarGraficoFluxo() {
-        const dadosFluxo = await apiRequest('/dashboard/fluxo');
-        if (dadosFluxo && chartFluxoInstance) {
-            chartFluxoInstance.data.labels = dadosFluxo.map(item => item.hora);
-            chartFluxoInstance.data.datasets[0].data = dadosFluxo.map(item => item.total);
-            chartFluxoInstance.update();
-        }
-    }
-
-    async function atualizarDadosOuvidoriaGrafico() {
-        const estatisticas = await apiRequest('/ouvidoria/estatisticas');
-        if (estatisticas && chartOuvidoriaInstance) {
-            chartOuvidoriaInstance.data.datasets[0].data = [
-                estatisticas.otimo || 0,
-                estatisticas.bom || 0,
-                estatisticas.regular || 0,
-                estatisticas.ruim || 0,
-                estatisticas.pessimo || 0
-            ];
-            chartOuvidoriaInstance.update();
-        }
-    }
-
-    async function loadOrders() {
-        const orders = await apiRequest('/orders'); 
-        const tbody = document.getElementById('tbody-recent-orders');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        if (!orders || orders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
-            return;
         }
 
-        orders.forEach(order => {
-            const statusAtual = order.status || 'Aprovado / Preparando';
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                    <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
-                    <td>R$ ${order.total || '0,00'}</td>
-                    <td>
-                        <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                            <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                            <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                            <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
-                            <option value="Saiu para entrega" ${statusAtual === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                            <option value="Entregue" ${statusAtual === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                            <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
-                        </select>
-                    </td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" title="Ver Detalhes" onclick="abrirDetalhesPedido('${order.id}')" style="margin-right: 5px;"><i class="ph ph-eye"></i></button>
-                        <button class="btn-action" title="Despachar" onclick="abrirModalDespacho('${order.id}')" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
+        // =========================================================================
+        // 4. GESTÃO DE PRODUTOS
+        // =========================================================================
+        async function loadProducts() {
+            const products = await apiRequest('/products');
+            const tbody = document.getElementById('tbody-products');
+            if(!tbody) return;
+            tbody.innerHTML = '';
 
-    async function updateOrderStatus(orderId, selectElement) {
-        await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: selectElement.value });
-        loadDashboardData();
-    }
+            if (!products || products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
+                return;
+            }
 
-    async function abrirDetalhesPedido(orderId) {
-        const order = await apiRequest(`/orders/${orderId}`);
-        const modalBody = document.getElementById('modal-ver-pedido-body');
-        if (order) {
-            modalBody.innerHTML = `
-                <p><strong>Pedido:</strong> #${order.id}</p>
-                <p><strong>Cliente:</strong> ${order.cliente}</p>
-                <p><strong>Endereço:</strong> ${order.endereco}</p>
-                <p><strong>Telefone:</strong> ${order.telefone || '-'}</p>
-                <p><strong>Total:</strong> R$ ${order.total}</p>
-                <p><strong>Status:</strong> ${order.status}</p>
-            `;
-            document.getElementById('modalVerPedido').classList.add('active');
+            products.forEach(p => {
+                let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
+                if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
+                    imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
+                }
+
+                const produtoJson = encodeURIComponent(JSON.stringify(p));
+                tbody.innerHTML += `
+                    <tr data-id="${p.codigo}">
+                        <td>${imagemHtml}</td>
+                        <td>${p.codigo}</td>
+                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
+                        <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicao('${produtoJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-    }
 
-    async function loadProducts() {
-        const products = await apiRequest('/products');
-        const tbody = document.getElementById('tbody-products');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        if (!products || products.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
-            return;
+        async function createProduct() {
+            const form = document.getElementById('form-produto');
+            const precoInput = document.getElementById('input-new-prod-price').value;
+            const fileInput = document.getElementById('input-new-prod-file');
+            let fotoBase64 = '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                nome: document.getElementById('input-new-prod-name').value,
+                categoria: document.getElementById('categoria').value,
+                preco: parseFloat(precoInput.replace(',', '.')),
+                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
+                descricao: document.getElementById('textarea-new-prod-desc').value,
+                foto: fotoBase64
+            };
+            
+            const res = await apiRequest('/products', 'POST', payload);
+            if (res) {
+                alert('Produto cadastrado com sucesso!');
+                form.reset();
+                loadProducts();
+            } else {
+                alert('Falha ao cadastrar o produto.');
+            }
         }
-        products.forEach(p => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${p.foto ? `<img src="${p.foto}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">` : 'Sem foto'}</td>
-                    <td>${p.id}</td>
-                    <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#777;">${p.descricao || ''}</span></td>
-                    <td>R$ ${p.preco}</td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" onclick="abrirModalEditarProduto('${p.id}')"><i class="ph ph-pencil"></i></button>
-                        <button class="btn-action" onclick="excluirProduto('${p.id}')" style="color: var(--danger);"><i class="ph ph-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
 
-    async function createProduct() {
-        const payload = {
-            nome: document.getElementById('input-new-prod-name').value,
-            categoria: document.getElementById('categoria').value,
-            preco: parseFloat(document.getElementById('input-new-prod-price.value') || document.getElementById('input-new-prod-price').value.replace(',', '.')) || 0,
-            estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
-            descricao: document.getElementById('textarea-new-prod-desc').value
-        };
-        const res = await apiRequest('/products', 'POST', payload);
-        if (res) { alert('Produto cadastrado com sucesso!'); loadProducts(); document.getElementById('form-produto').reset(); }
-    }
+        async function deleteProduct(code) {
+            if(confirm("Deseja realmente excluir este produto?")) {
+                const res = await apiRequest(`/products/${code}`, 'DELETE');
+                if (res) loadProducts();
+            }
+        }
 
-    async function abrirModalEditarProduto(id) {
-        const products = await apiRequest('/products');
-        const p = products.find(x => x.id == id);
-        if (p) {
-            document.getElementById('edit-prod-id').value = p.id;
+        function abrirModalEdicao(produtoStr) {
+            const p = JSON.parse(decodeURIComponent(produtoStr));
+            document.getElementById('edit-prod-id').value = p.codigo;
             document.getElementById('edit-prod-name').value = p.nome;
             document.getElementById('edit-prod-cat').value = p.categoria || 'outra';
             document.getElementById('edit-prod-price').value = p.preco;
@@ -964,376 +1038,572 @@
             document.getElementById('edit-prod-desc').value = p.descricao || '';
             document.getElementById('modalEditarProduto').classList.add('active');
         }
-    }
 
-    async function salvarEdicaoProduto() {
-        const id = document.getElementById('edit-prod-id').value;
-        const payload = {
-            nome: document.getElementById('edit-prod-name').value,
-            categoria: document.getElementById('edit-prod-cat').value,
-            preco: parseFloat(document.getElementById('edit-prod-price').value.replace(',', '.')) || 0,
-            estoque: parseInt(document.getElementById('edit-prod-stock').value) || 0,
-            descricao: document.getElementById('edit-prod-desc').value
-        };
-        const res = await apiRequest(`/products/${id}`, 'PUT', payload);
-        if (res) { alert('Produto atualizado!'); closeModal('modalEditarProduto'); loadProducts(); }
-    }
+        async function salvarEdicaoProduto() {
+            const id = document.getElementById('edit-prod-id').value;
+            const fileInput = document.getElementById('edit-prod-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
 
-    async function excluirProduto(id) {
-        if (confirm('Deseja realmente excluir este produto?')) {
-            await apiRequest(`/products/${id}`, 'DELETE');
-            loadProducts();
+            const payload = {
+                nome: document.getElementById('edit-prod-name').value,
+                categoria: document.getElementById('edit-prod-cat').value,
+                preco: parseFloat(document.getElementById('edit-prod-price').value.replace(',', '.')),
+                estoque: parseInt(document.getElementById('edit-prod-stock').value) || 0,
+                descricao: document.getElementById('edit-prod-desc').value,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/products/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Produto atualizado!');
+                closeModal('modalEditarProduto');
+                loadProducts();
+            }
         }
-    }
 
-    async function loadClients() {
-        const clients = await apiRequest('/clients');
-        const tbody = document.getElementById('tbody-clients');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (!clients || clients.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
-            return;
+        // =========================================================================
+        // 5. GESTÃO DE CLIENTES
+        // =========================================================================
+        async function loadClients() {
+            const clients = await apiRequest('/clients');
+            const tbody = document.getElementById('tbody-clients');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!clients || clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
+                return;
+            }
+
+            clients.forEach(c => {
+                const clienteJson = encodeURIComponent(JSON.stringify(c));
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.nome}</strong></td>
+                        <td>${c.telefone}</td>
+                        <td>${c.referencia || '-'}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-        clients.forEach(c => {
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${c.nome}</strong><br><span style="font-size:0.8rem; color:#777;">${c.email || ''}</span></td>
-                    <td>${c.telefone}</td>
-                    <td>${c.referencia || '-'}</td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" onclick="abrirModalEditarCliente('${c.id}')"><i class="ph ph-pencil"></i></button>
-                        <button class="btn-action" onclick="excluirCliente('${c.id}')" style="color: var(--danger);"><i class="ph ph-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
 
-    async function createClient() {
-        const payload = {
-            nome: document.getElementById('input-cli-name').value,
-            telefone: document.getElementById('input-cli-phone').value,
-            email: document.getElementById('input-cli-email').value,
-            endereco: document.getElementById('input-cli-address').value,
-            referencia: document.getElementById('input-cli-ref').value
-        };
-        const res = await apiRequest('/clients', 'POST', payload);
-        if (res) { alert('Cliente salvo!'); loadClients(); document.getElementById('form-cliente').reset(); }
-    }
+        async function createClient() {
+            const form = document.getElementById('form-cliente');
+            const payload = {
+                nome: document.getElementById('input-cli-name').value,
+                telefone: document.getElementById('input-cli-phone').value,
+                email: document.getElementById('input-cli-email').value,
+                endereco: document.getElementById('input-cli-address').value,
+                referencia: document.getElementById('input-cli-ref').value
+            };
+            const res = await apiRequest('/clients', 'POST', payload);
+            if (res) {
+                alert('Cliente salvo!');
+                form.reset();
+                loadClients();
+            }
+        }
 
-    async function abrirModalEditarCliente(id) {
-        const clients = await apiRequest('/clients');
-        const c = clients.find(x => x.id == id);
-        if (c) {
+        async function deleteClient(id) {
+            if(confirm("Deseja excluir este cliente?")) {
+                await apiRequest(`/clients/${id}`, 'DELETE');
+                loadClients();
+            }
+        }
+
+        function abrirModalEdicaoCliente(clienteStr) {
+            const c = JSON.parse(decodeURIComponent(clienteStr));
             document.getElementById('edit-cli-id').value = c.id;
-            document.getElementById('edit-cli-name').value = c.nome;
-            document.getElementById('edit-cli-phone').value = c.telefone;
+            document.getElementById('edit-cli-name').value = c.nome || '';
+            document.getElementById('edit-cli-phone').value = c.telefone || '';
             document.getElementById('edit-cli-email').value = c.email || '';
             document.getElementById('edit-cli-address').value = c.endereco || '';
             document.getElementById('edit-cli-ref').value = c.referencia || '';
             document.getElementById('modalEditarCliente').classList.add('active');
         }
-    }
 
-    async function salvarEdicaoCliente() {
-        const id = document.getElementById('edit-cli-id').value;
-        const payload = {
-            nome: document.getElementById('edit-cli-name').value,
-            telefone: document.getElementById('edit-cli-phone').value,
-            email: document.getElementById('edit-cli-email').value,
-            endereco: document.getElementById('edit-cli-address').value,
-            referencia: document.getElementById('edit-cli-ref').value
-        };
-        const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
-        if (res) { alert('Cliente atualizado!'); closeModal('modalEditarCliente'); loadClients(); }
-    }
-
-    async function excluirCliente(id) {
-        if (confirm('Deseja excluir este cliente?')) {
-            await apiRequest(`/clients/${id}`, 'DELETE');
-            loadClients();
+        async function salvarEdicaoCliente() {
+            const id = document.getElementById('edit-cli-id').value;
+            const payload = {
+                nome: document.getElementById('edit-cli-name').value,
+                telefone: document.getElementById('edit-cli-phone').value,
+                email: document.getElementById('edit-cli-email').value,
+                endereco: document.getElementById('edit-cli-address').value,
+                referencia: document.getElementById('edit-cli-ref').value
+            };
+            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Cliente atualizado!');
+                closeModal('modalEditarCliente');
+                loadClients();
+            }
         }
-    }
 
-    function toggleMotoboyFields(val, targetId) {
-        const el = document.getElementById(targetId);
-        if (!el) return;
-        if (val === 'Motoboy') {
-            el.classList.remove('hidden');
-        } else {
-            el.classList.add('hidden');
+        // =========================================================================
+        // 6. GESTÃO DE COLABORADORES
+        // =========================================================================
+        async function loadColaboradores() {
+            const colabs = await apiRequest('/colaboradores');
+            const tbody = document.getElementById('tbody-colaboradores');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!colabs || colabs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
+                return;
+            }
+
+            colabs.forEach(cb => {
+                let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
+                if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
+                    fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
+                }
+                const colabJson = encodeURIComponent(JSON.stringify(cb));
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${fotoHtml}</td>
+                        <td><strong>${cb.nome}</strong></td>
+                        <td>${cb.cpf || '-'}</td>
+                        <td>${cb.funcao}</td>
+                        <td>${cb.telefone}</td>
+                        <td><span class="badge badge-success">${cb.status}</span></td>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoColaborador('${colabJson}')"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-    }
 
-    async function loadColaboradores() {
-        const colabs = await apiRequest('/colaboradores');
-        const tbody = document.getElementById('tbody-colaboradores');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (!colabs || colabs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
-            return;
+        async function createColab() {
+            const form = document.getElementById('form-colaborador');
+            const funcao = document.getElementById('select-funcao').value;
+            const fileInput = document.getElementById('input-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+            
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                const containerMotoboy = document.getElementById('campos-motoboy');
+                const inputsMoto = containerMotoboy.querySelectorAll('input, select');
+                tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
+                veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
+                veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
+                veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
+                areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
+                valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('input-colab-name').value,
+                telefone: document.getElementById('input-colab-phone').value,
+                email: document.getElementById('input-colab-email').value,
+                cpf: document.getElementById('input-colab-cpf').value,
+                data_nascimento: document.getElementById('input-colab-dob').value,
+                endereco: document.getElementById('input-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('select-colab-status').value,
+                observacoes: document.getElementById('textarea-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64
+            };
+            
+            const res = await apiRequest('/colaboradores', 'POST', payload);
+            if (res) {
+                alert('Colaborador cadastrado!');
+                form.reset();
+                document.getElementById('campos-motoboy').classList.add('hidden');
+                loadColaboradores();
+            }
         }
-        colabs.forEach(cb => {
-            const badgeClass = cb.status === 'Disponível' ? 'badge-success' : 'badge-warning';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${cb.foto ? `<img src="${cb.foto}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">` : 'Sem foto'}</td>
-                    <td><strong>${cb.nome}</strong></td>
-                    <td>${cb.cpf || '-'}</td>
-                    <td>${cb.funcao}</td>
-                    <td>${cb.telefone}</td>
-                    <td><span class="badge ${badgeClass}">${cb.status || 'Ativo'}</span></td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" onclick="abrirModalEditarColaborador('${cb.id}')"><i class="ph ph-pencil"></i></button>
-                        <button class="btn-action" onclick="excluirColaborador('${cb.id}')" style="color: var(--danger);"><i class="ph ph-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
 
-    async function createColab() {
-        const payload = {
-            nome: document.getElementById('input-colab-name').value,
-            telefone: document.getElementById('input-colab-phone').value,
-            email: document.getElementById('input-colab-email').value,
-            cpf: document.getElementById('input-colab-cpf').value,
-            data_nascimento: document.getElementById('input-colab-dob').value,
-            endereco: document.getElementById('input-colab-address').value,
-            funcao: document.getElementById('select-funcao').value,
-            status: document.getElementById('select-colab-status').value,
-            observacoes: document.getElementById('textarea-colab-obs').value
-        };
-        const res = await apiRequest('/colaboradores', 'POST', payload);
-        if (res) { alert('Colaborador cadastrado!'); loadColaboradores(); document.getElementById('form-colaborador').reset(); }
-    }
+        async function deleteColab(id) {
+            if(confirm("Deseja excluir este colaborador?")) {
+                await apiRequest(`/colaboradores/${id}`, 'DELETE');
+                loadColaboradores();
+            }
+        }
 
-    async function abrirModalEditarColaborador(id) {
-        const colabs = await apiRequest('/colaboradores');
-        const cb = colabs.find(x => x.id == id);
-        if (cb) {
-            document.getElementById('edit-colab-id').value = cb.id;
-            document.getElementById('edit-colab-name').value = cb.nome;
-            document.getElementById('edit-colab-phone').value = cb.telefone;
-            document.getElementById('edit-colab-email').value = cb.email || '';
-            document.getElementById('edit-colab-cpf').value = cb.cpf || '';
-            document.getElementById('edit-colab-dob').value = cb.data_nascimento || '';
-            document.getElementById('edit-colab-address').value = cb.endereco || '';
-            document.getElementById('edit-colab-funcao').value = cb.funcao || 'Outro';
-            document.getElementById('edit-colab-status').value = cb.status || 'Disponível';
-            document.getElementById('edit-colab-obs').value = cb.observacoes || '';
-            toggleMotoboyFields(cb.funcao, 'edit-campos-motoboy');
+        function abrirModalEdicaoColaborador(colabStr) {
+            const c = JSON.parse(decodeURIComponent(colabStr));
+            document.getElementById('edit-colab-id').value = c.id;
+            document.getElementById('edit-colab-name').value = c.nome || '';
+            document.getElementById('edit-colab-phone').value = c.telefone || '';
+            document.getElementById('edit-colab-email').value = c.email || '';
+            document.getElementById('edit-colab-cpf').value = c.cpf || '';
+            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
+            document.getElementById('edit-colab-address').value = c.endereco || '';
+            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
+            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
+            document.getElementById('edit-colab-obs').value = c.observacoes || '';
+
+            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
+            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
+            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
+            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
+            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
+            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
+
+            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
             document.getElementById('modalEditarColaborador').classList.add('active');
         }
-    }
 
-    async function salvarEdicaoColaborador() {
-        const id = document.getElementById('edit-colab-id').value;
-        const payload = {
-            nome: document.getElementById('edit-colab-name').value,
-            telefone: document.getElementById('edit-colab-phone').value,
-            email: document.getElementById('edit-colab-email').value,
-            cpf: document.getElementById('edit-colab-cpf').value,
-            data_nascimento: document.getElementById('edit-colab-dob').value,
-            endereco: document.getElementById('edit-colab-address').value,
-            funcao: document.getElementById('edit-colab-funcao').value,
-            status: document.getElementById('edit-colab-status').value,
-            observacoes: document.getElementById('edit-colab-obs').value
-        };
-        const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
-        if (res) { alert('Colaborador atualizado!'); closeModal('modalEditarColaborador'); loadColaboradores(); }
-    }
-
-    async function excluirColaborador(id) {
-        if (confirm('Deseja excluir este colaborador?')) {
-            await apiRequest(`/colaboradores/${id}`, 'DELETE');
-            loadColaboradores();
-        }
-    }
-
-    async function loadOuvidoria() {
-        const feeds = await apiRequest('/ouvidoria');
-        const tbody = document.getElementById('tbody-ouvidoria');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (!feeds || feeds.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback registrado.</td></tr>`;
-            document.getElementById('critical-feed-desc').innerText = "Nenhum alerta crítico carregado.";
-            return;
-        }
-
-        // Pega o primeiro feed crítico ou o mais recente ruim
-        const critico = feeds.find(f => f.avaliacao === 'Ruim' || f.avaliacao === 'Péssimo') || feeds[0];
-        if (critico) {
-            document.getElementById('critical-feed-date').innerText = critico.data || '';
-            document.getElementById('critical-feed-rating').innerHTML = `<strong>Avaliação: ${critico.avaliacao}</strong>`;
-            document.getElementById('critical-feed-desc').innerText = `"${critico.relato}" - Cliente: ${critico.cliente}`;
-        }
-
-        feeds.forEach(f => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${f.data || ''}<br><strong>${f.cliente}</strong></td>
-                    <td><span class="badge badge-info">${f.avaliacao}</span></td>
-                    <td>${f.relato}</td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" onclick="alert('Detalhes do feed')"><i class="ph ph-eye"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    async function abrirChamadoHelpdesk() {
-        const payload = {
-            resumo_problema: document.getElementById('input-hd-resumo').value,
-            descricao: document.getElementById('textarea-hd-desc').value
-        };
-        const res = await apiRequest('/helpdesk', 'POST', payload);
-        if (res) { alert('Chamado enviado com sucesso!'); loadHelpdeskGestor(); }
-    }
-
-    async function loadHelpdeskGestor() {
-        const chamados = await apiRequest('/helpdesk');
-        const tbody = document.getElementById('tbody-gestor-helpdesk');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (!chamados || chamados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
-            return;
-        }
-        chamados.forEach(c => {
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>#${c.id}</strong><br><span style="font-size:0.8rem; color:#777;">${c.data || ''}</span></td>
-                    <td>${c.resumo_problema}</td>
-                    <td><span class="badge badge-warning">${c.status || 'Aberto'}</span></td>
-                    <td>${c.tecnico_responsavel || 'Aguardando Atendimento'}</td>
-                </tr>
-            `;
-        });
-    }
-
-    async function loadConfigurations() {
-        const config = await apiRequest('/configuracoes');
-        if (config) {
-            document.getElementById('input-config-title').value = config.titulo || '';
-            document.getElementById('input-config-slogan').value = config.slogan || '';
-            document.getElementById('input-config-address').value = config.endereco || '';
-            document.getElementById('input-config-phone').value = config.telefone || '';
-            document.getElementById('textarea-config-hours').value = config.horarios || '';
-        }
-    }
-
-    async function saveConfigurations() {
-        const payload = {
-            titulo: document.getElementById('input-config-title').value,
-            slogan: document.getElementById('input-config-slogan').value,
-            endereco: document.getElementById('input-config-address').value,
-            telefone: document.getElementById('input-config-phone').value,
-            horarios: document.getElementById('textarea-config-hours').value
-        };
-        const res = await apiRequest('/configuracoes', 'PUT', payload);
-        if (res) alert('Configurações salvas com sucesso!');
-    }
-
-    function triggerBackup() {
-        alert('Backup do sistema gerado e baixado com sucesso!');
-    }
-
-    function fetchReport(tipo) {
-        alert(`Gerando relatório: ${tipo}. Verifique os dados consolidados.`);
-    }
-
-    function switchTab(btnElement, targetTabId) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btnElement.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        document.getElementById(targetTabId).classList.remove('hidden');
-    }
-
-    function navigate(sectionId, clickedElement) {
-        document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
-        document.getElementById('sec-' + sectionId).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-        if(clickedElement) clickedElement.classList.add('active');
-    }
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-        document.getElementById('mobile-overlay').classList.toggle('active');
-    }
-
-    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
-
-    function abrirModalDespacho(orderId) {
-        document.getElementById('despacho-pedido-id').value = orderId;
-        document.getElementById('modalEscolhaEntregador').classList.add('active');
-    }
-
-    async function despacharParaTipo(tipo) {
-        const orderId = document.getElementById('despacho-pedido-id').value;
-        closeModal('modalEscolhaEntregador');
-        await apiRequest(`/orders/${orderId}/despachar-proximos`, 'POST', { tipo_despacho: tipo });
-        alert(`Pedido #${orderId} despachado para a modalidade: ${tipo === 'empresa' ? 'Frota Própria' : 'Autônomo'}`);
-        loadOrders();
-    }
-
-    function inicializarPainel() {
-        loadDashboardData();
-        loadProducts();
-        loadClients();
-        loadColaboradores();
-        loadOuvidoria();
-        loadConfigurations();
-        loadHelpdeskGestor();
-
-        const ctxFluxo = document.getElementById('chartFluxo');
-        if (ctxFluxo && !chartFluxoInstance) {
-            chartFluxoInstance = new Chart(ctxFluxo.getContext('2d'), {
-                type: 'line',
-                data: { 
-                    labels: ['17h', '18h', '19h', '20h', '21h'], 
-                    datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-            atualizarGraficoFluxo();
-        }
-
-        const ctxOuvidoria = document.getElementById('chartOuvidoria');
-        if (ctxOuvidoria && !chartOuvidoriaInstance) {
-            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
-                type: 'doughnut',
-                data: { 
-                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], 
-                    datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] 
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
-            atualizarDadosOuvidoriaGrafico();
-        }
-
-        setInterval(() => {
-            if (!document.getElementById('sec-dashboard').classList.contains('hidden') && document.activeElement.tagName !== 'SELECT') {
-                loadDashboardData();
-                atualizarGraficoFluxo();
-                atualizarDadosOuvidoriaGrafico();
+        async function salvarEdicaoColaborador() {
+            const id = document.getElementById('edit-colab-id').value;
+            const funcao = document.getElementById('edit-colab-funcao').value;
+            const fileInput = document.getElementById('edit-colab-file');
+            let fotoBase64 = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
             }
-        }, 5000);
-    }
 
-    window.onload = function() {
-        const empresaId = localStorage.getItem('deliveryon_empresa_id');
-        if (empresaId) {
-            document.getElementById('auth-overlay').style.display = 'none';
-            inicializarPainel();
-        } else {
-            document.getElementById('auth-overlay').style.display = 'flex';
+            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
+            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
+
+            if (funcao === 'Motoboy') {
+                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
+                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
+                veiculoCor = document.getElementById('edit-colab-v-cor').value;
+                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
+                areaAtuacao = document.getElementById('edit-colab-area').value;
+                const valEnt = document.getElementById('edit-colab-v-entrega').value;
+                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
+            }
+
+            const payload = {
+                nome: document.getElementById('edit-colab-name').value,
+                telefone: document.getElementById('edit-colab-phone').value,
+                email: document.getElementById('edit-colab-email').value,
+                cpf: document.getElementById('edit-colab-cpf').value,
+                data_nascimento: document.getElementById('edit-colab-dob').value,
+                endereco: document.getElementById('edit-colab-address').value,
+                funcao: funcao,
+                status: document.getElementById('edit-colab-status').value,
+                observacoes: document.getElementById('edit-colab-obs').value,
+                tipo_veiculo: tipoVeiculo,
+                veiculo_modelo: veiculoModelo,
+                veiculo_cor: veiculoCor,
+                veiculo_placa: veiculoPlaca,
+                area_atuacao: areaAtuacao,
+                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
+                foto: fotoBase64
+            };
+
+            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Colaborador atualizado!');
+                closeModal('modalEditarColaborador');
+                loadColaboradores();
+            }
         }
-    };
-</script>
+
+        // =========================================================================
+        // 7. OUVIDORIA, HELPDESK E CONFIGURAÇÕES
+        // =========================================================================
+        async function loadOuvidoria() {
+            const feeds = await apiRequest('/ouvidoria');
+            const tbody = document.getElementById('tbody-ouvidoria');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (!feeds || feeds.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback.</td></tr>`;
+                return;
+            }
+            feeds.forEach(f => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
+                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
+                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
+                        <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function abrirChamadoHelpdesk() {
+            const payload = {
+                resumo_problema: document.getElementById('input-hd-resumo').value,
+                descricao: document.getElementById('textarea-hd-desc').value
+            };
+            const res = await apiRequest('/helpdesk', 'POST', payload);
+            if (res) {
+                alert('Chamado aberto com sucesso!');
+                document.getElementById('input-hd-resumo').value = '';
+                document.getElementById('textarea-hd-desc').value = '';
+                loadHelpdeskGestor();
+            }
+        }
+
+        async function loadHelpdeskGestor() {
+            const chamados = await apiRequest('/helpdesk');
+            const tbody = document.getElementById('tbody-gestor-helpdesk');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
+                return;
+            }
+            chamados.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
+                        <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
+                        <td><span class="badge badge-warning" style="text-transform: uppercase;">${c.status || 'aberto'}</span></td>
+                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function loadConfigurations() {
+            const config = await apiRequest('/configuracoes');
+            if (config) {
+                document.getElementById('input-config-title').value = config.titulo || '';
+                document.getElementById('input-config-slogan').value = config.slogan || '';
+                document.getElementById('input-config-address').value = config.endereco || '';
+                document.getElementById('input-config-phone').value = config.telefone || '';
+                document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
+                if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
+                if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
+                window.currentLogoBase64 = config.logo_url || '';
+                atualizarExibicaoLogotipo(window.currentLogoBase64);
+            }
+        }
+
+        async function saveConfigurations() {
+            const configAtual = await apiRequest('/configuracoes') || {};
+            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
+            const fileInput = document.getElementById('input-config-logo-file');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try { logoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
+            }
+
+            const payload = {
+                titulo: document.getElementById('input-config-title').value,
+                slogan: document.getElementById('input-config-slogan').value,
+                endereco: document.getElementById('input-config-address').value,
+                telefone: document.getElementById('input-config-phone').value,
+                horario_funcionamento: document.getElementById('textarea-config-hours').value,
+                cor_primaria: document.getElementById('input-config-cor1').value,
+                cor_secundaria: document.getElementById('input-config-cor2').value,
+                logo_url: logoBase64
+            };
+
+            const res = await apiRequest('/configuracoes', 'PUT', payload);
+            if (res) {
+                alert('Configurações salvas!');
+                loadConfigurations();
+                aplicarIdentidadeVisualDaEmpresa();
+            }
+        }
+
+        async function aplicarIdentidadeVisualDaEmpresa() {
+            try {
+                const config = await apiRequest('/configuracoes');
+                if (!config) return;
+                const root = document.documentElement;
+                if (config.cor_primaria) root.style.setProperty('--brand-primary', config.cor_primaria);
+                if (config.cor_secundaria) root.style.setProperty('--brand-secondary', config.cor_secundaria);
+            } catch (e) {}
+        }
+
+        async function triggerBackup() {
+            await apiRequest('/backup', 'POST');
+            alert('Backup executado com sucesso.');
+        }
+
+        async function fetchReport(tipo) {
+            alert(`Gerando relatório de [${tipo}]...`);
+        }
+
+        // =========================================================================
+        // 8. UTILITÁRIOS E INICIALIZAÇÃO DO PAINEL
+        // =========================================================================
+        function atualizarExibicaoLogotipo(logoBase64) {
+            const containers = document.querySelectorAll('.logo-preview-box');
+            containers.forEach(container => {
+                if (logoBase64 && logoBase64.trim() !== '') {
+                    container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
+                } else {
+                    container.innerHTML = `<span class="on-logo-top">ON</span><span class="on-logo-bottom">delivery</span>`;
+                }
+            });
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function toggleMotoboyFields(funcao, idContainer) {
+            const camposMotoboy = document.getElementById(idContainer);
+            if (camposMotoboy) {
+                if (funcao === 'Motoboy') camposMotoboy.classList.remove('hidden');
+                else camposMotoboy.classList.add('hidden');
+            }
+        }
+
+        function navigate(sectionId, clickedElement) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            if(clickedElement) clickedElement.classList.add('active');
+
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('mobile-overlay').classList.toggle('active');
+        }
+
+        function switchTab(btn, targetId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            btn.classList.add('active');
+            document.getElementById(targetId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Função de Inicialização Única e Consolidada
+        function inicializarPainel() {
+            loadDashboardData();
+            loadProducts();
+            loadClients();
+            loadColaboradores();
+            loadOuvidoria();
+            loadConfigurations();
+            loadHelpdeskGestor();
+            aplicarIdentidadeVisualDaEmpresa();
+
+            // Configuração do Gráfico de Fluxo Dinâmico
+            if(document.getElementById('chartFluxo')) {
+                const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
+                chartFluxoInstance = new Chart(ctxFluxo, {
+                    type: 'line',
+                    data: { 
+                        labels: ['17h', '18h', '19h', '20h', '21h'], 
+                        datasets: [{ 
+                            data: [0, 0, 0, 0, 0], 
+                            borderColor: '#ff5722', 
+                            backgroundColor: 'rgba(255,87,34,0.1)', 
+                            fill: true, 
+                            tension: 0.4 
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+                atualizarGraficoFluxo();
+            }
+
+            // Gráfico de Ouvidoria
+            if(document.getElementById('chartOuvidoria')) {
+                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
+            setInterval(() => {
+                // 1. Verifica se o gestor está com o mouse/foco em um menu de status (SELECT)
+                const isEditing = document.activeElement.tagName === 'SELECT';
+            
+                // 2. Mantém a atualização da aba de colaboradores normal
+                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
+                    loadColaboradores();
+                }
+                
+                // 3. Atualiza o dashboard APENAS se o gestor não estiver editando um status no momento
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden') && !isEditing) {
+                    loadDashboardData();
+                    atualizarGraficoFluxo(); // Mantido do seu código original
+                }
+            }, 5000);
+        }
+
+      function abrirModalDespacho(orderId) {
+            document.getElementById('despacho-pedido-id').value = orderId;
+            document.getElementById('modalEscolhaEntregador').classList.add('active');
+        }
+        
+        async function despacharParaTipo(tipo) {
+            const orderId = document.getElementById('despacho-pedido-id').value;
+            closeModal('modalEscolhaEntregador');
+        
+            let endpoint = `/orders/${orderId}/despachar-proximos`;
+            let payload = { status: 'Saiu para entrega', tipo_despacho: tipo };
+        
+            const res = await apiRequest(endpoint, 'POST', payload);
+            if (res) {
+                alert(`Pedido #${orderId} despachado com sucesso via ${tipo === 'empresa' ? 'Frota Própria' : 'Autônomo'}!`);
+                loadOrders();
+            } else {
+                alert("Erro ao despachar o pedido.");
+            }
+        }
+
+      async function carregarPedidosAdmin() {
+    // Busca o ID da empresa em qualquer uma das chaves possíveis do localStorage (fallback seguro)
+    const empresaId = localStorage.getItem('deliveryon_empresa_id') || 
+                      localStorage.getItem('app_motoboy_empresa_id') || 
+                      localStorage.getItem('empresa_id') || '1';
+
+    try {
+        // Envia o empresa_id na query string para o backend
+        const response = await fetch(`/api/pedidos?empresa_id=${empresaId}`);
+        if (!response.ok) throw new Error("Erro ao buscar pedidos no servidor");
+
+        const pedidos = await response.json();
+        
+        // Aqui continua a sua lógica normal de renderizar os pedidos na tela do admin...
+        renderizarTabelaPedidos(pedidos);
+
+    } catch (error) {
+        console.error("Erro ao carregar pedidos do admin:", error);
+    }
+}
+
+        window.onload = function() {
+            const empresaId = localStorage.getItem('deliveryon_empresa_id');
+            if (empresaId) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                inicializarPainel();
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+            }
+        };
+    </script>
 </body>
 </html>
