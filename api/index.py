@@ -631,6 +631,32 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
 
 # ================= ROTAS DE PEDIDOS (UNIFICADAS E CORRIGIDAS) =================
 
+@app.put("/api/orders/{order_id}")
+def update_order_full(order_id: int, data: dict, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            UPDATE pedidos 
+            SET cliente_nome = %s, endereco_entrega = %s, valor_total = %s, pagamento = %s, itens = %s 
+            WHERE id = %s
+        """, (
+            data.get("cliente"),
+            data.get("endereco"),
+            float(data.get("total", 0)),
+            data.get("pagamento"),
+            data.get("itens"),
+            order_id
+        ))
+        db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+        return {"success": True, "message": "Pedido atualizado com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
 @app.get("/api/pedidos") 
 @app.get("/api/orders")
 def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
