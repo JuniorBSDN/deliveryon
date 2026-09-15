@@ -67,13 +67,7 @@ class ProdutoCreate(BaseModel):
     foto: Optional[str] = None
     
 class ProdutoUpdate(ProdutoCreate):
-    empresa_id: int
-    nome: str
-    categoria: str
-    preco: float
-    estoque: int
-    descricao: str
-    foto: Optional[str] = None
+    pass
 
 class ClienteCreate(BaseModel):
     empresa_id: int
@@ -84,12 +78,7 @@ class ClienteCreate(BaseModel):
     referencia: Optional[str] = None
 
 class ClienteUpdate(ClienteCreate):
-    empresa_id: int
-    nome: str
-    telefone: str
-    email: Optional[str] = None
-    endereco: str
-    referencia: Optional[str] = None
+    pass
 
 class ColaboradorCreate(BaseModel):
     empresa_id: int
@@ -224,6 +213,8 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS valor_total NUMERIC(10,2);",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento VARCHAR(50);",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS itens TEXT;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS itens_detalhes TEXT;",
+        "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS motivo_alteracao TEXT;",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS telefone VARCHAR(20);",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS endereco_entrega TEXT;",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS referencia TEXT;",
@@ -381,29 +372,37 @@ def master_historico_entregador(id: int):
 @app.get("/api/master/helpdesk/indicadores")
 def get_master_helpdesk_indicadores(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'aberto'")
-    abertos = cursor.fetchone()['total']
-    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('em_atendimento', 'em_andamento')")
-    andamento = cursor.fetchone()['total']
-    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('resolvido', 'concluido')")
-    concluidos = cursor.fetchone()['total']
-    cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'pendente'")
-    pendentes = cursor.fetchone()['total']
-    cursor.close()
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'aberto'")
+        abertos = cursor.fetchone()['total']
+        cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('em_atendimento', 'em_andamento')")
+        andamento = cursor.fetchone()['total']
+        cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status IN ('resolvido', 'concluido')")
+        concluidos = cursor.fetchone()['total']
+        cursor.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'pendente'")
+        pendentes = cursor.fetchone()['total']
+    except Exception:
+        abertos, andamento, concluidos, pendentes = 0, 0, 0, 0
+    finally:
+        cursor.close()
     return {"abertos": abertos, "em_andamento": andamento, "concluidos": concluidos, "pendentes": pendentes}
 
 @app.get("/api/master/helpdesk/chamados")
 def list_master_helpdesk_chamados(db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT c.id, c.empresa_id, e.nome_fantasia as empresa, c.resumo_problema, c.status, 
-               c.tecnico_responsavel, TO_CHAR(c.data_criacao, 'DD/MM/YYYY HH24:MI') as data
-        FROM chamados c
-        LEFT JOIN empresas e ON c.empresa_id = e.id
-        ORDER BY c.id DESC
-    """)
-    res = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute("""
+            SELECT c.id, c.empresa_id, e.nome_fantasia as empresa, c.resumo_problema, c.status, 
+                   c.tecnico_responsavel, TO_CHAR(c.data_criacao, 'DD/MM/YYYY HH24:MI') as data
+            FROM chamados c
+            LEFT JOIN empresas e ON c.empresa_id = e.id
+            ORDER BY c.id DESC
+        """)
+        res = cursor.fetchall()
+    except Exception:
+        res = []
+    finally:
+        cursor.close()
     return res
 
 @app.put("/api/master/helpdesk/chamados/{id}/status")
@@ -586,24 +585,26 @@ def update_configuracoes(data: dict, db=Depends(get_db)):
 @app.get("/api/dashboard")
 def get_dashboard(empresa_id: int = Query(1), db=Depends(get_db)):
     cur = db.cursor()
-    cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND LOWER(status) IN ('aguardando pagamento', 'aprovado / preparando')", (empresa_id,))
-    res_ag = cur.fetchone()
-    aguardando = res_ag[list(res_ag.keys())[0]] if res_ag else 0
+    try:
+        cur.execute("SELECT COUNT(*) as total FROM pedidos WHERE empresa_id = %s AND LOWER(status) IN ('aguardando pagamento', 'aprovado / preparando', 'aguardando entregador')", (empresa_id,))
+        res_ag = cur.fetchone()
+        aguardando = res_ag['total'] if res_ag else 0
 
-    cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND LOWER(status) = 'entregue'", (empresa_id,))
-    res_ent = cur.fetchone()
-    entregues = res_ent[list(res_ent.keys())[0]] if res_ent else 0
+        cur.execute("SELECT COUNT(*) as total FROM pedidos WHERE empresa_id = %s AND LOWER(status) = 'entregue'", (empresa_id,))
+        res_ent = cur.fetchone()
+        entregues = res_ent['total'] if res_ent else 0
 
-    cur.execute("SELECT COUNT(*) FROM pedidos WHERE empresa_id = %s AND LOWER(status) = 'cancelado'", (empresa_id,))
-    res_can = cur.fetchone()
-    cancelados = res_can[list(res_can.keys())[0]] if res_can else 0
+        cur.execute("SELECT COUNT(*) as total FROM pedidos WHERE empresa_id = %s AND LOWER(status) = 'cancelado'", (empresa_id,))
+        res_can = cur.fetchone()
+        cancelados = res_can['total'] if res_can else 0
 
-    cur.execute("SELECT SUM(valor_total) FROM pedidos WHERE empresa_id = %s AND LOWER(status) = 'entregue'", (empresa_id,))
-    row_receita = cur.fetchone()
-    receita = row_receita[list(row_receita.keys())[0]] if row_receita else 0.00
-    if not receita: 
-        receita = 0.00
-    cur.close()
+        cur.execute("SELECT SUM(valor_total) as soma FROM pedidos WHERE empresa_id = %s AND LOWER(status) = 'entregue'", (empresa_id,))
+        row_receita = cur.fetchone()
+        receita = row_receita['soma'] if row_receita and row_receita['soma'] else 0.00
+    except Exception:
+        aguardando, entregues, cancelados, receita = 0, 0, 0, 0.00
+    finally:
+        cur.close()
 
     return {
         "aguardando": aguardando,
@@ -652,16 +653,26 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
 def update_order_full(order_id: int, data: dict, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Tratamento seguro para serializar detalhes de itens e evitar erros de banco
+        import json
+        itens_detalhes_raw = data.get("itens_detalhes")
+        itens_detalhes_str = json.dumps(itens_detalhes_raw) if itens_detalhes_raw else None
+
         cursor.execute("""
             UPDATE pedidos 
-            SET cliente_nome = %s, endereco_entrega = %s, valor_total = %s, pagamento = %s, itens = %s 
+            SET cliente_nome = %s, telefone = %s, endereco_entrega = %s, 
+                valor_total = %s, pagamento = %s, itens = %s, 
+                itens_detalhes = %s, motivo_alteracao = %s
             WHERE id = %s
         """, (
             data.get("cliente"),
+            data.get("telefone"),
             data.get("endereco"),
             float(data.get("total", 0)),
             data.get("pagamento"),
             data.get("itens"),
+            itens_detalhes_str,
+            data.get("motivo_alteracao"),
             order_id
         ))
         db.commit()
@@ -684,9 +695,11 @@ def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
             SELECT 
                 id, empresa_id, hora, 
                 cliente_nome AS cliente, 
+                telefone,
                 endereco_entrega AS endereco, 
                 valor_total AS total, 
-                pagamento, status, entregador_id
+                pagamento, status, entregador_id,
+                itens, itens_detalhes
             FROM pedidos 
             WHERE empresa_id = %s 
             ORDER BY id DESC LIMIT 50
@@ -696,17 +709,29 @@ def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
         orders = []
         for row in rows:
             val = row.get('valor_total') or row.get('total') or 0.00
+            
+            # Desserializa itens_detalhes de forma segura se existir
+            detalhes_parsed = []
+            if row.get('itens_detalhes'):
+                try:
+                    import json
+                    detalhes_parsed = json.loads(row['itens_detalhes'])
+                except Exception:
+                    detalhes_parsed = []
+
             orders.append({
                 "id": row['id'],
                 "empresa_id": row.get('empresa_id', 1),
                 "hora": str(row['hora']) if row['hora'] else "",
-                "cliente": row.get('cliente') or row.get('cliente_nome') or "",
-                "cliente_nome": row.get('cliente') or row.get('cliente_nome') or "",
-                "endereco": row['endereco'],
+                "cliente": row.get('cliente') or "",
+                "telefone": row.get('telefone') or "",
+                "endereco": row.get('endereco') or "",
                 "pagamento": row.get('pagamento') or "",
+                "itens": row.get('itens') or "",
+                "itens_detalhes": detalhes_parsed,
                 "total": f"{float(val):.2f}".replace('.', ','),
                 "valor_total": val,
-                "status": row['status'],
+                "status": row['status'] or "Aprovado / Preparando",
                 "entregador_id": row.get('entregador_id')
             })
         return orders
@@ -767,13 +792,14 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
     try:
         emp_id = order.empresa_id if order.empresa_id else 1
         cursor.execute("""
-            INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, valor_total, status, hora, data) 
-            VALUES (%s, %s, %s, %s, %s, %s, 'Aprovado / Preparando', %s, %s) RETURNING id;
+            INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, valor_total, status, hora, data, itens) 
+            VALUES (%s, %s, %s, %s, %s, %s, 'Aprovado / Preparando', %s, %s, %s) RETURNING id;
         """, (
             emp_id, order.cliente, order.telefone, order.endereco, order.pagamento, 
             float(order.total) if order.total else 0.00, 
             order.hora or datetime.now().strftime("%H:%M"), 
-            order.data or date.today().isoformat()
+            order.data or date.today().isoformat(),
+            order.itens or ""
         ))
         db.commit()
         return {"success": True, "id": cursor.fetchone()['id']}
@@ -821,7 +847,7 @@ def get_entregador_rotas(empresa_id: Optional[str] = '1', entregador_id: Optiona
                    COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE p.empresa_id = %s AND p.status = 'Aguardando Entregador'
+            WHERE p.empresa_id = %s AND LOWER(p.status) = 'aguardando entregador'
         """
         params = [e_id]
         
@@ -845,7 +871,7 @@ def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
         cursor.execute("""
             UPDATE pedidos 
             SET status = 'Saiu para entrega', entregador_id = %s 
-            WHERE id = %s AND status = 'Aguardando Entregador'
+            WHERE id = %s
         """, (data.get("motoboy_id"), order_id))
         
         if cursor.rowcount == 0:
@@ -1225,14 +1251,18 @@ def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
 @app.get("/api/helpdesk")
 def listar_chamados_gestor(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT id, resumo_problema, descricao, status, 
-               TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI') as data_criacao, 
-               tecnico_responsavel
-        FROM chamados WHERE empresa_id = %s ORDER BY id DESC;
-    """, (empresa_id,))
-    res = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute("""
+            SELECT id, resumo_problema, descricao, status, 
+                   TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI') as data_criacao, 
+                   tecnico_responsavel
+            FROM chamados WHERE empresa_id = %s ORDER BY id DESC;
+        """, (empresa_id,))
+        res = cursor.fetchall()
+    except Exception:
+        res = []
+    finally:
+        cursor.close()
     return res
 
 @app.post("/api/ouvidoria")
@@ -1254,11 +1284,15 @@ def create_ouvidoria(ouv: OuvidoriaCreate, db=Depends(get_db)):
 @app.get("/api/ouvidoria")
 def list_ouvidoria(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute(
-        "SELECT id, cliente_nome as cliente, avaliacao, relato, TO_CHAR(criado_em, 'DD/MM/YYYY') as data FROM ouvidoria WHERE empresa_id = %s ORDER BY id DESC",
-        (empresa_id,))
-    res = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute(
+            "SELECT id, cliente_nome as cliente, avaliacao, relato, TO_CHAR(criado_em, 'DD/MM/YYYY') as data FROM ouvidoria WHERE empresa_id = %s ORDER BY id DESC",
+            (empresa_id,))
+        res = cursor.fetchall()
+    except Exception:
+        res = []
+    finally:
+        cursor.close()
     return res
 
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO =================
