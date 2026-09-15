@@ -592,10 +592,10 @@ def get_dashboard(empresa_id: int = Query(1), db=Depends(get_db)):
 def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Garante compatibilidade extraindo os dois primeiros dígitos da hora de forma segura
+        # Extrai os dois primeiros dígitos da hora e converte para inteiro para alinhar com o relógio
         cursor.execute("""
             SELECT 
-                SUBSTRING(TRIM(hora) FROM 1 for 2) as horario, 
+                CAST(SUBSTRING(TRIM(hora) FROM 1 for 2) AS INTEGER) as horario, 
                 COUNT(*) as total 
             FROM pedidos 
             WHERE empresa_id = %s AND hora IS NOT NULL AND TRIM(hora) != ''
@@ -603,23 +603,25 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
             ORDER BY horario ASC
         """, (empresa_id,))
         rows = cursor.fetchall()
-    except Exception:
+    except Exception as e:
         db.rollback()
         rows = []
     finally:
         cursor.close()
     
-    totais = {str(row['horario']): int(row['total']) for row in rows}
+    # Mapeia os totais encontrados no banco
+    totais = {int(row['horario']): int(row['total']) for row in rows}
     
+    # Gera o array fixo das 17h às 21h (ou expande se precisar de mais horários)
     dados_grafico = []
     for h in range(17, 22):
-        h_str = f"{h:02d}"
         dados_grafico.append({
-            "hora": f"{h_str}h",
-            "total": totais.get(h_str, totais.get(str(h), 0))
+            "hora": f"{h:02d}h",
+            "total": totais.get(h, 0)
         })
         
     return dados_grafico
+
 
 @app.get("/api/ouvidoria/estatisticas")
 def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
