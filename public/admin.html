@@ -769,41 +769,7 @@
         let currentActiveId = null;
         let chartFluxoInstance = null;
         let chartOuvidoriaInstance = null;
-        
-        // Substitua a criação antiga do gráfico de ouvidoria dentro de inicializarPainel() por esta chamada:
-        async function configurarGraficoOuvidoria() {
-            const ctxOuvidoria = document.getElementById('chartOuvidoria');
-            if (!ctxOuvidoria) return;
-        
-            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
-                    datasets: [{
-                        data: [0, 0, 0, 0, 0],
-                        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
-        
-            atualizarDadosOuvidoriaGrafico();
-        }
-        
-        async function atualizarDadosOuvidoriaGrafico() {
-            const estatisticas = await apiRequest('/ouvidoria/estatisticas'); // Rota que retorna contagem por categoria (ex: {otimo: 5, bom: 2, ...})
-            
-            if (estatisticas && chartOuvidoriaInstance) {
-                chartOuvidoriaInstance.data.datasets[0].data = [
-                    estatisticas.otimo || 0,
-                    estatisticas.bom || 0,
-                    estatisticas.regular || 0,
-                    estatisticas.ruim || 0,
-                    estatisticas.pessimo || 0
-                ];
-                chartOuvidoriaInstance.update();
-            }
-        }
+
         // =========================================================================
         // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
         // =========================================================================
@@ -823,12 +789,10 @@
                     headers: { 'Content-Type': 'application/json' }
                 };
 
-                // Garante o empresa_id na URL para buscas (GET) e exclusões (DELETE)
                 if (method === 'GET' || method === 'DELETE') {
                     const separator = url.includes('?') ? '&' : '?';
                     url += `${separator}empresa_id=${empresaId}`;
                 } 
-                // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
                 else if (method === 'POST' || method === 'PUT') {
                     if (!data) data = {}; 
                     data.empresa_id = parseInt(empresaId);
@@ -878,7 +842,7 @@
         }
 
         // =========================================================================
-        // 3. DASHBOARD E GRÁFICOS DINÂMICOS
+        // 3. DASHBOARD E GRÁFICOS DINÂMICOS CORRIGIDOS
         // =========================================================================
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
@@ -894,6 +858,8 @@
                 if (revenueEl) revenueEl.innerText = `R$ ${data.receita || '0,00'}`;
             }
             loadOrders();
+            atualizarGraficoFluxo();
+            atualizarDadosOuvidoriaGrafico();
         }
 
         async function atualizarGraficoFluxo() {
@@ -908,8 +874,21 @@
             }
         }
 
-       async function loadOrders() {
-            // Usa a função apiRequest para garantir que o empresa_id seja enviado corretamente
+        async function atualizarDadosOuvidoriaGrafico() {
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas');
+            if (estatisticas && chartOuvidoriaInstance) {
+                chartOuvidoriaInstance.data.datasets[0].data = [
+                    estatisticas.otimo || 0,
+                    estatisticas.bom || 0,
+                    estatisticas.regular || 0,
+                    estatisticas.ruim || 0,
+                    estatisticas.pessimo || 0
+                ];
+                chartOuvidoriaInstance.update();
+            }
+        }
+
+        async function loadOrders() {
             const orders = await apiRequest('/orders'); 
             const tbody = document.getElementById('tbody-recent-orders');
             if (!tbody) return;
@@ -1495,7 +1474,7 @@
             document.getElementById(modalId).classList.remove('active');
         }
 
-        // Função de Inicialização Única e Consolidada
+        // Função de Inicialização Consolidada
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
@@ -1526,34 +1505,38 @@
                 atualizarGraficoFluxo();
             }
 
-            // Gráfico de Ouvidoria
+            // Configuração do Gráfico de Ouvidoria Dinâmico
             if(document.getElementById('chartOuvidoria')) {
-                new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+                const ctxOuvidoria = document.getElementById('chartOuvidoria').getContext('2d');
+                chartOuvidoriaInstance = new Chart(ctxOuvidoria, {
                     type: 'doughnut',
-                    data: { labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] },
+                    data: { 
+                        labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], 
+                        datasets: [{ 
+                            data: [0, 0, 0, 0, 0], 
+                            backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] 
+                        }] 
+                    },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
                 });
+                atualizarDadosOuvidoriaGrafico();
             }
 
             // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
             setInterval(() => {
-                // 1. Verifica se o gestor está com o mouse/foco em um menu de status (SELECT)
                 const isEditing = document.activeElement.tagName === 'SELECT';
             
-                // 2. Mantém a atualização da aba de colaboradores normal
                 if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
                     loadColaboradores();
                 }
                 
-                // 3. Atualiza o dashboard APENAS se o gestor não estiver editando um status no momento
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden') && !isEditing) {
                     loadDashboardData();
-                    atualizarGraficoFluxo(); // Mantido do seu código original
                 }
             }, 5000);
         }
 
-      function abrirModalDespacho(orderId) {
+        function abrirModalDespacho(orderId) {
             document.getElementById('despacho-pedido-id').value = orderId;
             document.getElementById('modalEscolhaEntregador').classList.add('active');
         }
@@ -1573,79 +1556,6 @@
                 alert("Erro ao despachar o pedido.");
             }
         }
-
-      async function carregarPedidosAdmin() {
-    // Busca o ID da empresa em qualquer uma das chaves possíveis do localStorage (fallback seguro)
-    const empresaId = localStorage.getItem('deliveryon_empresa_id') || 
-                      localStorage.getItem('app_motoboy_empresa_id') || 
-                      localStorage.getItem('empresa_id') || '1';
-
-    try {
-        // Envia o empresa_id na query string para o backend
-        const response = await fetch(`/api/pedidos?empresa_id=${empresaId}`);
-        if (!response.ok) throw new Error("Erro ao buscar pedidos no servidor");
-
-        const pedidos = await response.json();
-        
-        // Aqui continua a sua lógica normal de renderizar os pedidos na tela do admin...
-        renderizarTabelaPedidos(pedidos);
-
-    } catch (error) {
-        console.error("Erro ao carregar pedidos do admin:", error);
-    }
-}
-
-      async function carregarGraficosGestor(empresaId) {
-    // 1. CARREGAR GRÁFICO DE FLUXO
-    try {
-        const resFluxo = await fetch(`/api/dashboard/fluxo?empresa_id=${empresaId}`);
-        if (resFluxo.ok) {
-            const fluxoData = await resFluxo.json();
-            // Aqui você alimenta o seu componente de gráfico de fluxo (ex: Chart.js ou SVG customizado)
-            renderizarGraficoFluxo(fluxoData);
-        }
-    } catch (e) {
-        console.error("Erro ao carregar fluxo:", e);
-    }
-
-    // 2. CARREGAR ESTATÍSTICAS DA OUVIDORIA
-    try {
-        const resOuv = await fetch(`/api/ouvidoria/estatisticas?empresa_id=${empresaId}`);
-        if (resOuv.ok) {
-            const ouvidoriaStats = await resOuv.json();
-            renderizarBarrasOuvidoria(ouvidoriaStats);
-        }
-    } catch (e) {
-        console.error("Erro ao carregar estatísticas da ouvidoria:", e);
-    }
-}
-
-function renderizarGraficoFluxo(dados) {
-    // Exemplo de integração se estiver usando Chart.js ou elemento visual equivalente no painel
-    // Certifique-se de que o elemento canvas ou container receba os totais: [dados[0].total, dados[1].total, ...]
-    console.log("Dados de fluxo recebidos:", dados);
-}
-
-function renderizarBarrasOuvidoria(stats) {
-    // stats retorna algo como: { otimo: 5, bom: 2, regular: 0, ruim: 1, pessimo: 0 }
-    const maxVal = Math.max(stats.otimo, stats.bom, stats.regular, stats.ruim, stats.pessimo, 1);
-    
-    // Atualize dinamicamente as larguras ou alturas das barras correspondentes às legendas na interface
-    const atualizarBarra = (idClass, valor) => {
-        const el = document.querySelector(idClass);
-        if (el) {
-            const porcentagem = (valor / maxVal) * 100;
-            el.style.width = `${porcentagem}%`;
-            el.setAttribute('title', `${valor} avaliações`);
-        }
-    };
-
-    atualizarBarra('.barra-otimo', stats.otimo);
-    atualizarBarra('.barra-bom', stats.bom);
-    atualizarBarra('.barra-regular', stats.regular);
-    atualizarBarra('.barra-ruim', stats.ruim);
-    atualizarBarra('.barra-pessimo', stats.pessimo);
-}
 
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
