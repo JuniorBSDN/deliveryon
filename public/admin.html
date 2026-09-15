@@ -35,7 +35,8 @@
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }
         .align-center { align-items: center; }
-        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
+        .gap-5 { gap: 5px; }
+        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; } .mb-10 { margin-bottom: 10px; }
 
         .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
         .badge-success { background-color: var(--success); }
@@ -639,7 +640,6 @@
                         <div class="flex gap-10">
                             <select id="select-add-produto" class="form-control" style="font-size: 0.85rem; padding: 6px;">
                                 <option value="">Selecione produto para adicionar...</option>
-                                <!-- Preenchido dinamicamente via JS -->
                             </select>
                             <button type="button" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="adicionarItemNoPedidoEdicao()"><i class="ph ph-plus"></i> Adicionar</button>
                         </div>
@@ -825,9 +825,9 @@
 
   <script>
         const API_BASE_URL = "/api";
-        let currentActiveId = null;
         let chartFluxoInstance = null;
         let chartOuvidoriaInstance = null;
+        let itensPedidoAtual = [];
         
         async function configurarGraficoOuvidoria() {
             const ctxOuvidoria = document.getElementById('chartOuvidoria');
@@ -850,7 +850,6 @@
         
         async function atualizarDadosOuvidoriaGrafico() {
             const estatisticas = await apiRequest('/ouvidoria/estatisticas'); 
-            
             if (estatisticas && chartOuvidoriaInstance) {
                 chartOuvidoriaInstance.data.datasets[0].data = [
                     estatisticas.otimo || 0,
@@ -866,9 +865,7 @@
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id');
-                
                 if (!empresaId) {
-                    console.error("Sessão inválida! ID da empresa não encontrado.");
                     document.getElementById('auth-overlay').style.display = 'flex';
                     return null;
                 }
@@ -931,15 +928,10 @@
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
-                const waitingEl = document.getElementById('val-waiting-count');
-                const deliveredEl = document.getElementById('val-delivered-count');
-                const canceledEl = document.getElementById('val-canceled-count');
-                const revenueEl = document.getElementById('val-revenue-total');
-
-                if (waitingEl) waitingEl.innerText = data.aguardando || 0;
-                if (deliveredEl) deliveredEl.innerText = data.entregues || 0;
-                if (canceledEl) canceledEl.innerText = data.cancelados || 0;
-                if (revenueEl) revenueEl.innerText = `R$ ${data.receita || '0,00'}`;
+                document.getElementById('val-waiting-count').innerText = data.aguardando || 0;
+                document.getElementById('val-delivered-count').innerText = data.entregues || 0;
+                document.getElementById('val-canceled-count').innerText = data.cancelados || 0;
+                document.getElementById('val-revenue-total').innerText = `R$ ${data.receita || '0,00'}`;
             }
             loadOrders();
         }
@@ -1002,30 +994,136 @@
             }
         }
 
-        function abrirModalEdicaoPedido(pedidoStr) {
+        // Funções do Modal de Edição Avançada de Pedido
+        async function abrirModalEdicaoPedido(pedidoStr) {
             const p = JSON.parse(decodeURIComponent(pedidoStr));
             document.getElementById('edit-order-id').value = p.id;
             document.getElementById('edit-order-cliente').value = p.cliente || p.cliente_nome || '';
+            document.getElementById('edit-order-telefone').value = p.telefone || '';
             document.getElementById('edit-order-endereco').value = p.endereco || '';
-            document.getElementById('edit-order-total').value = p.total || p.valor_total || '';
             document.getElementById('edit-order-pagamento').value = p.pagamento || '';
-            document.getElementById('edit-order-itens').value = p.itens || '';
+            document.getElementById('edit-order-motivo').value = '';
+
+            await popularSelectProdutosEdicao();
+
+            if (Array.isArray(p.itens_detalhes)) {
+                itensPedidoAtual = JSON.parse(JSON.stringify(p.itens_detalhes));
+            } else if (typeof p.itens === 'string' && p.itens.trim() !== '') {
+                itensPedidoAtual = [{ nome: p.itens, quantidade: 1, preco: parseFloat(p.valor_total || 0) }];
+            } else {
+                itensPedidoAtual = [];
+            }
+
+            renderizarTabelaItensEdicao();
             document.getElementById('modalEditarPedido').classList.add('active');
         }
 
-        async function salvarEdicaoPedido() {
+        async function popularSelectProdutosEdicao() {
+            const produtos = await apiRequest('/products');
+            const select = document.getElementById('select-add-produto');
+            if (!select) return;
+
+            select.innerHTML = `<option value="">Selecione produto para adicionar...</option>`;
+            if (produtos) {
+                produtos.forEach(prod => {
+                    select.innerHTML += `<option value="${prod.codigo || prod.id}" data-nome="${prod.nome}" data-preco="${prod.preco}">${prod.nome} - R$ ${Number(prod.preco).toFixed(2)}</option>`;
+                });
+            }
+        }
+
+        function adicionarItemNoPedidoEdicao() {
+            const select = document.getElementById('select-add-produto');
+            const opt = select.options[select.selectedIndex];
+            if (!select.value) return alert("Selecione um produto válido.");
+
+            const codigo = select.value;
+            const nome = opt.getAttribute('data-nome');
+            const preco = parseFloat(opt.getAttribute('data-preco')) || 0;
+
+            const existente = itensPedidoAtual.find(i => i.codigo === codigo || i.nome === nome);
+            if (existente) {
+                existente.quantidade += 1;
+            } else {
+                itensPedidoAtual.push({ codigo, nome, quantidade: 1, preco });
+            }
+
+            renderizarTabelaItensEdicao();
+            select.value = "";
+        }
+
+        function alterarQtdItemEdicao(index, delta) {
+            itensPedidoAtual[index].quantidade += delta;
+            if (itensPedidoAtual[index].quantidade <= 0) {
+                itensPedidoAtual.splice(index, 1);
+            }
+            renderizarTabelaItensEdicao();
+        }
+
+        function removerItemEdicao(index) {
+            itensPedidoAtual.splice(index, 1);
+            renderizarTabelaItensEdicao();
+        }
+
+        function renderizarTabelaItensEdicao() {
+            const tbody = document.getElementById('tbody-itens-pedido-edicao');
+            tbody.innerHTML = '';
+            let valorTotalGeral = 0;
+
+            if (itensPedidoAtual.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum item adicionado ao pedido.</td></tr>`;
+                atualizarTotalVisual(0);
+                return;
+            }
+
+            itensPedidoAtual.forEach((item, index) => {
+                const subtotal = (item.quantidade * item.preco);
+                valorTotalGeral += subtotal;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="padding: 8px;"><strong>${item.nome}</strong><br><span style="font-size: 0.75rem; color:#888;">R$ ${Number(item.preco).toFixed(2)} un.</span></td>
+                        <td style="padding: 8px; text-align: center;">
+                            <div class="flex align-center justify-center gap-5">
+                                <button type="button" class="btn-action" style="padding: 2px 6px; font-size: 0.8rem;" onclick="alterarQtdItemEdicao(${index}, -1)">-</button>
+                                <span>${item.quantidade}</span>
+                                <button type="button" class="btn-action" style="padding: 2px 6px; font-size: 0.8rem;" onclick="alterarQtdItemEdicao(${index}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td style="padding: 8px; text-align: right; font-weight: bold;">R$ ${subtotal.toFixed(2)}</td>
+                        <td style="padding: 8px; text-align: center;">
+                            <button type="button" class="btn-action" style="color: var(--danger); padding: 2px 6px;" onclick="removerItemEdicao(${index})"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            atualizarTotalVisual(valorTotalGeral);
+        }
+
+        function atualizarTotalVisual(total) {
+            document.getElementById('edit-order-total-view').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            document.getElementById('edit-order-total-val').value = total.toFixed(2);
+        }
+
+        async function salvarEdicaoPedidoCompleto() {
             const id = document.getElementById('edit-order-id').value;
+            const totalCalculado = parseFloat(document.getElementById('edit-order-total-val').value) || 0;
+            const descricaoItensResumida = itensPedidoAtual.map(i => `${i.quantidade}x ${i.nome}`).join(', ');
+
             const payload = {
                 cliente: document.getElementById('edit-order-cliente').value,
+                telefone: document.getElementById('edit-order-telefone').value,
                 endereco: document.getElementById('edit-order-endereco').value,
-                total: parseFloat(document.getElementById('edit-order-total').value.replace(',', '.')) || 0,
                 pagamento: document.getElementById('edit-order-pagamento').value,
-                itens: document.getElementById('edit-order-itens').value
+                motivo_alteracao: document.getElementById('edit-order-motivo').value,
+                total: totalCalculado,
+                itens: descricaoItensResumida,
+                itens_detalhes: itensPedidoAtual
             };
 
             const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
             if (res) {
-                alert('Pedido atualizado com sucesso!');
+                alert('Pedido e valores atualizados com sucesso!');
                 closeModal('modalEditarPedido');
                 loadDashboardData();
             } else {
@@ -1052,14 +1150,14 @@
 
                 const produtoJson = encodeURIComponent(JSON.stringify(p));
                 tbody.innerHTML += `
-                    <tr data-id="${p.codigo}">
+                    <tr data-id="${p.codigo || p.id}">
                         <td>${imagemHtml}</td>
-                        <td>${p.codigo}</td>
+                        <td>${p.codigo || p.id}</td>
                         <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
                         <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
                         <td style="text-align: right;">
                             <button class="btn-action" title="Editar" onclick="abrirModalEdicao('${produtoJson}')"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo}')"><i class="ph ph-trash"></i></button>
+                            <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo || p.id}')"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -1104,7 +1202,7 @@
 
         function abrirModalEdicao(produtoStr) {
             const p = JSON.parse(decodeURIComponent(produtoStr));
-            document.getElementById('edit-prod-id').value = p.codigo;
+            document.getElementById('edit-prod-id').value = p.codigo || p.id;
             document.getElementById('edit-prod-name').value = p.nome;
             document.getElementById('edit-prod-cat').value = p.categoria || 'outra';
             document.getElementById('edit-prod-price').value = p.preco;
@@ -1394,7 +1492,7 @@
             feeds.forEach(f => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${f.data}<br><strong>${f.cliente}</strong></td>
+                        <td>${f.data || ''}<br><strong>${f.cliente || f.cliente_nome || ''}</strong></td>
                         <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
                         <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
                         <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
@@ -1595,162 +1693,10 @@
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
                     loadDashboardData();
                     atualizarGraficoFluxo();
+                    atualizarDadosOuvidoriaGrafico();
                 }
             }, 5000); 
         }
-
-      // Array global temporário para guardar os itens do pedido que está sendo editado
-let itensPedidoAtual = [];
-
-// 1. Abre o modal e popula os dados e a tabela de itens
-async function abrirModalEdicaoPedido(pedidoStr) {
-    const p = JSON.parse(decodeURIComponent(pedidoStr));
-    document.getElementById('edit-order-id').value = p.id;
-    document.getElementById('edit-order-cliente').value = p.cliente || p.cliente_nome || '';
-    document.getElementById('edit-order-telefone').value = p.telefone || '';
-    document.getElementById('edit-order-endereco').value = p.endereco || '';
-    document.getElementById('edit-order-pagamento').value = p.pagamento || '';
-    document.getElementById('edit-order-motivo').value = '';
-
-    // Carrega os produtos disponíveis no select do modal para inclusão rápida
-    await popularSelectProdutosEdicao();
-
-    // Converte os itens do pedido para o array manipulável (Trata se vier como string ou array)
-    if (Array.isArray(p.itens_detalhes)) {
-        itensPedidoAtual = JSON.parse(JSON.stringify(p.itens_detalhes));
-    } else if (typeof p.itens === 'string') {
-        // Fallback básico caso venha em texto plano antigo
-        itensPedidoAtual = [{ nome: p.itens, quantidade: 1, preco: p.total || p.valor_total || 0 }];
-    } else {
-        itensPedidoAtual = [];
-    }
-
-    renderizarTabelaItensEdicao();
-    document.getElementById('modalEditarPedido').classList.add('active');
-}
-
-// 2. Popula o select com os produtos cadastrados na empresa
-async function popularSelectProdutosEdicao() {
-    const produtos = await apiRequest('/products');
-    const select = document.getElementById('select-add-produto');
-    if (!select) return;
-
-    select.innerHTML = `<option value="">Selecione produto para adicionar...</option>`;
-    if (produtos) {
-        produtos.forEach(prod => {
-            select.innerHTML += `<option value="${prod.codigo}" data-nome="${prod.nome}" data-preco="${prod.preco}">${prod.nome} - R$ ${Number(prod.preco).toFixed(2)}</option>`;
-        });
-    }
-}
-
-// 3. Adiciona um produto selecionado no array do pedido
-function adicionarItemNoPedidoEdicao() {
-    const select = document.getElementById('select-add-produto');
-    const opt = select.options[select.selectedIndex];
-    if (!select.value) return alert("Selecione um produto válido.");
-
-    const codigo = select.value;
-    const nome = opt.getAttribute('data-nome');
-    const preco = parseFloat(opt.getAttribute('data-preco')) || 0;
-
-    // Verifica se o item já existe no pedido para apenas somar a quantidade
-    const existente = itensPedidoAtual.find(i => i.codigo === codigo || i.nome === nome);
-    if (existente) {
-        existente.quantidade += 1;
-    } else {
-        itensPedidoAtual.push({ codigo, nome, quantidade: 1, preco });
-    }
-
-    renderizarTabelaItensEdicao();
-    select.value = ""; // Reseta o select
-}
-
-// 4. Altera a quantidade de um item diretamente na tabela
-function alterarQtdItemEdicao(index, delta) {
-    itensPedidoAtual[index].quantidade += delta;
-    if (itensPedidoAtual[index].quantidade <= 0) {
-        itensPedidoAtual.splice(index, 1); // Remove se zerar
-    }
-    renderizarTabelaItensEdicao();
-}
-
-// 5. Remove o item da lista
-function removerItemEdicao(index) {
-    itensPedidoAtual.splice(index, 1);
-    renderizarTabelaItensEdicao();
-}
-
-// 6. Renderiza a tabela interna e calcula o valor total em tempo real
-function renderizarTabelaItensEdicao() {
-    const tbody = document.getElementById('tbody-itens-pedido-edicao');
-    tbody.innerHTML = '';
-    let valorTotalGeral = 0;
-
-    if (itensPedidoAtual.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum item adicionado ao pedido.</td></tr>`;
-        atualizarTotalVisual(0);
-        return;
-    }
-
-    itensPedidoAtual.forEach((item, index) => {
-        const subtotal = (item.quantidade * item.preco);
-        valorTotalGeral += subtotal;
-
-        tbody.innerHTML += `
-            <tr>
-                <td style="padding: 8px;"><strong>${item.nome}</strong><br><span style="font-size: 0.75rem; color:#888;">R$ ${Number(item.preco).toFixed(2)} un.</span></td>
-                <td style="padding: 8px; text-align: center;">
-                    <div class="flex align-center justify-center gap-5">
-                        <button type="button" class="btn-action" style="padding: 2px 6px; font-size: 0.8rem;" onclick="alterarQtdItemEdicao(${index}, -1)">-</button>
-                        <span>${item.quantidade}</span>
-                        <button type="button" class="btn-action" style="padding: 2px 6px; font-size: 0.8rem;" onclick="alterarQtdItemEdicao(${index}, 1)">+</button>
-                    </div>
-                </td>
-                <td style="padding: 8px; text-align: right; font-weight: bold;">R$ ${subtotal.toFixed(2)}</td>
-                <td style="padding: 8px; text-align: center;">
-                    <button type="button" class="btn-action" style="color: var(--danger); padding: 2px 6px;" onclick="removerItemEdicao(${index})"><i class="ph ph-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-
-    atualizarTotalVisual(valorTotalGeral);
-}
-
-// 7. Atualiza o display visual e o input oculto do total
-function atualizarTotalVisual(total) {
-    document.getElementById('edit-order-total-view').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
-    document.getElementById('edit-order-total-val').value = total.toFixed(2);
-}
-
-// 8. Envia os dados completos recalculados para a API Python
-async function salvarEdicaoPedidoCompleto() {
-    const id = document.getElementById('edit-order-id').value;
-    const totalCalculado = parseFloat(document.getElementById('edit-order-total-val').value) || 0;
-
-    // Gera uma string resumida legível dos itens para compatibilidade com tabelas simples, além de mandar o array detalhado
-    const descricaoItensResumida = itensPedidoAtual.map(i => `${i.quantidade}x ${i.nome}`).join(', ');
-
-    const payload = {
-        cliente: document.getElementById('edit-order-cliente').value,
-        telefone: document.getElementById('edit-order-telefone').value,
-        endereco: document.getElementById('edit-order-endereco').value,
-        pagamento: document.getElementById('edit-order-pagamento').value,
-        motivo_alteracao: document.getElementById('edit-order-motivo').value,
-        total: totalCalculado,
-        itens: descricaoItensResumida,
-        itens_detalhes: itensPedidoAtual // Array estruturado para salvar no banco se necessário
-    };
-
-    const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
-    if (res) {
-        alert('Pedido e valores recalculados/atualizados com sucesso!');
-        closeModal('modalEditarPedido');
-        loadDashboardData();
-    } else {
-        alert('Erro ao atualizar o pedido.');
-    }
-}
 
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
