@@ -1595,6 +1595,58 @@
     }
 }
 
+      async function carregarGraficosGestor(empresaId) {
+    // 1. CARREGAR GRÁFICO DE FLUXO
+    try {
+        const resFluxo = await fetch(`/api/dashboard/fluxo?empresa_id=${empresaId}`);
+        if (resFluxo.ok) {
+            const fluxoData = await resFluxo.json();
+            // Aqui você alimenta o seu componente de gráfico de fluxo (ex: Chart.js ou SVG customizado)
+            renderizarGraficoFluxo(fluxoData);
+        }
+    } catch (e) {
+        console.error("Erro ao carregar fluxo:", e);
+    }
+
+    // 2. CARREGAR ESTATÍSTICAS DA OUVIDORIA
+    try {
+        const resOuv = await fetch(`/api/ouvidoria/estatisticas?empresa_id=${empresaId}`);
+        if (resOuv.ok) {
+            const ouvidoriaStats = await resOuv.json();
+            renderizarBarrasOuvidoria(ouvidoriaStats);
+        }
+    } catch (e) {
+        console.error("Erro ao carregar estatísticas da ouvidoria:", e);
+    }
+}
+
+function renderizarGraficoFluxo(dados) {
+    // Exemplo de integração se estiver usando Chart.js ou elemento visual equivalente no painel
+    // Certifique-se de que o elemento canvas ou container receba os totais: [dados[0].total, dados[1].total, ...]
+    console.log("Dados de fluxo recebidos:", dados);
+}
+
+function renderizarBarrasOuvidoria(stats) {
+    // stats retorna algo como: { otimo: 5, bom: 2, regular: 0, ruim: 1, pessimo: 0 }
+    const maxVal = Math.max(stats.otimo, stats.bom, stats.regular, stats.ruim, stats.pessimo, 1);
+    
+    // Atualize dinamicamente as larguras ou alturas das barras correspondentes às legendas na interface
+    const atualizarBarra = (idClass, valor) => {
+        const el = document.querySelector(idClass);
+        if (el) {
+            const porcentagem = (valor / maxVal) * 100;
+            el.style.width = `${porcentagem}%`;
+            el.setAttribute('title', `${valor} avaliações`);
+        }
+    };
+
+    atualizarBarra('.barra-otimo', stats.otimo);
+    atualizarBarra('.barra-bom', stats.bom);
+    atualizarBarra('.barra-regular', stats.regular);
+    atualizarBarra('.barra-ruim', stats.ruim);
+    atualizarBarra('.barra-pessimo', stats.pessimo);
+}
+
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
