@@ -35,8 +35,7 @@
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }
         .align-center { align-items: center; }
-        .gap-5 { gap: 5px; }
-        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; } .mb-10 { margin-bottom: 10px; }
+        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
 
         .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
         .badge-success { background-color: var(--success); }
@@ -113,12 +112,11 @@
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
 
-        @media (max-width: 1024px) {
-            .sidebar { transform: translateX(-100%); width: 280px; }
-            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; width: 100vw; }
-            .topbar { display: flex !important; position: sticky; top: 0; z-index: 990; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-            .menu-toggle { padding: 5px; font-size: 2rem; color: var(--brand-primary); }
+            .topbar { display: flex; }
             .content-container { padding: 15px; }
             .card { padding: 15px; margin-bottom: 15px; }
             .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
@@ -216,9 +214,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>ID/Hora</th><th>Cliente/Endereço</th><th>Total</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-recent-orders">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-recent-orders"></tbody>
                         </table>
                     </div>
                 </div>
@@ -241,23 +237,8 @@
                                     <option value="">Selecione uma categoria</option>
                                     <option value="hamburgueres">🍔 Hambúrgueres</option>
                                     <option value="pizzas">🍕 Pizzas</option>
-                                    <option value="hot-dogs">🌭 Hot Dogs</option>
-                                    <option value="acompanhamentos">🍟 Acompanhamentos</option>
-                                    <option value="petiscos">🍗 Petiscos</option>
-                                    <option value="salgados">🥟 Salgados</option>
-                                    <option value="refeicoes">🥘 Refeições</option>
-                                    <option value="marmitas">🍱 Marmitas</option>
-                                    <option value="crepes">🥞 Crepes</option>
-                                    <option value="tortas-bolos">🥧 Tortas e Bolos</option>
-                                    <option value="acai">🍧 Açaí</option>
-                                    <option value="sorvetes">🍦 Sorvetes</option>
-                                    <option value="picoles">🍭 Picolés</option>
                                     <option value="bebidas">🥤 Bebidas</option>
-                                    <option value="cafes-chas">☕ Cafés e Chás</option>
-                                    <option value="sucos-vitaminas">🧃 Sucos e Vitaminas</option>
-                                    <option value="milkshakes">🥛 Milkshakes</option>
                                     <option value="sobremesas">🍰 Sobremesas</option>
-                                    <option value="combos-promocoes">🎁 Combos e Promoções</option>
                                     <option value="outra">➕ Outra Categoria</option>
                                 </select>
                             </div>
@@ -270,16 +251,10 @@
                 </div>
 
                 <div class="card" style="padding: 0;">
-                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color);">
-                        <input type="text" class="form-control" placeholder="Buscar por cod/nome/categoria..." style="width: 100%; max-width: 300px;">
-                        <button class="btn btn-secondary"><i class="ph ph-printer"></i> Imprimir Lista</button>
-                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Cód</th><th>Nome / Descrição</th><th>Preço</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-products">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-products"></tbody>
                         </table>
                     </div>
                 </div>
@@ -288,7 +263,6 @@
             <!-- CLIENTES -->
             <section id="sec-clientes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-users"></i> Gestão de Clientes</h1></div>
-
                 <div class="card">
                     <h3 class="mb-20">Cadastrar Cliente Manual</h3>
                     <form id="form-cliente" onsubmit="event.preventDefault(); createClient();">
@@ -302,17 +276,11 @@
                         <div class="flex action-bar-mobile" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Cliente</button></div>
                     </form>
                 </div>
-
                 <div class="card" style="padding: 0;">
-                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color);">
-                        <input type="text" class="form-control" placeholder="Buscar nome/telefone/ref..." style="width: 100%;">
-                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Nome</th><th>Telefone</th><th>Referência Local</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-clients">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-clients"></tbody>
                         </table>
                     </div>
                 </div>
@@ -320,91 +288,12 @@
 
             <!-- COLABORADORES -->
             <section id="sec-colaboradores" class="page-section hidden">
-                <div class="page-header flex justify-between align-center action-bar-mobile">
-                    <h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1>
-                </div>
-
-                <div class="card">
-                    <h3 class="mb-20">Cadastrar Novo Colaborador</h3>
-                    <form id="form-colaborador" onsubmit="event.preventDefault(); createColab();">
-                        <div class="form-grid">
-                            <div class="form-group"><label>Foto (Arquivo)</label><input type="file" class="form-control" id="input-colab-file"></div>
-                            <div class="form-group"><label>Nome Completo</label><input type="text" class="form-control" id="input-colab-name" required></div>
-                            <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" class="form-control" id="input-colab-phone" required></div>
-                            <div class="form-group"><label>E-mail</label><input type="email" class="form-control" id="input-colab-email" required></div>
-                            <div class="form-group"><label>CPF / Documento</label><input type="text" class="form-control" id="input-colab-cpf" required></div>
-                            <div class="form-group"><label>Data de Nascimento</label><input type="date" class="form-control" id="input-colab-dob" required></div>
-                            <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="input-colab-address" required></div>
-
-                            <div class="form-group">
-                                <label>Função</label>
-                                <select class="form-control" id="select-funcao" onchange="toggleMotoboyFields(this.value, 'campos-motoboy')" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="Administrador">Administrador</option>
-                                    <option value="Gerente">Gerente</option>
-                                    <option value="Caixa">Caixa</option>
-                                    <option value="Cozinheiro">Cozinheiro</option>
-                                    <option value="Auxiliar">Auxiliar de cozinha</option>
-                                    <option value="Recepcionista">Recepcionista</option>
-                                    <option value="Estoquista">Estoquista</option>
-                                    <option value="Motoboy">Entregador / Motoboy</option>
-                                    <option value="Outro">Outro</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Status Inicial</label>
-                                <select class="form-control" id="select-colab-status">
-                                    <option value="Disponível">Disponível</option>
-                                    <option value="Pausado">Pausado</option>
-                                    <option value="Indisponível">Indisponível</option>
-                                    <option value="Em entrega">Em entrega</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- CAMPOS CONDICIONAIS EXCLUSIVOS DO MOTOBOY -->
-                        <div id="campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
-                            <h4 class="mb-20" style="color: var(--brand-primary); display: flex; align-items: center; gap: 8px;"><i class="ph ph-motorcycle"></i> Dados do Veículo e Logística</h4>
-                            <div class="form-grid">
-                                <div class="form-group"><label>Código do Entregador</label><input type="text" class="form-control" placeholder="Gerado automaticamente" readonly></div>
-                                <div class="form-group"><label>Tipo de Veículo</label>
-                                    <select class="form-control"><option>Moto</option><option>Bicicleta</option><option>Carro</option></select>
-                                </div>
-                                <div class="form-group"><label>Marca / Modelo</label><input type="text" class="form-control" placeholder="Ex: Honda CG 160"></div>
-                                <div class="form-group"><label>Cor</label><input type="text" class="form-control" placeholder="Ex: Preta"></div>
-                                <div class="form-group"><label>Placa</label><input type="text" class="form-control" placeholder="AAA-0000"></div>
-                                <div class="form-group"><label>Área de Atuação</label><input type="text" class="form-control" placeholder="Ex: Zona Sul, Centro"></div>
-                                <div class="form-group"><label>Valor Fixo por Entrega (R$)</label><input type="number" step="0.01" class="form-control" placeholder="6.50"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mt-20"><label>Observações Gerais</label><textarea class="form-control" id="textarea-colab-obs" rows="2"></textarea></div>
-                        <div class="flex action-bar-mobile mt-20" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Colaborador</button></div>
-                    </form>
-                </div>
-
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-identification-badge"></i> Gestão de Colaboradores</h1></div>
                 <div class="card" style="padding: 0;">
-                    <div class="action-bar-mobile" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
-                        <div class="flex gap-10 action-bar-mobile" style="flex-wrap: wrap; flex: 1;">
-                            <input type="text" class="form-control" placeholder="Buscar por nome ou CPF..." style="width: 100%;">
-                            <select class="form-control" style="width: 100%;">
-                                <option value="">Filtrar Função...</option>
-                                <option value="Caixa">Caixa</option>
-                                <option value="Motoboy">Entregador / Motoboy</option>
-                            </select>
-                            <input type="date" class="form-control" title="Data de Nascimento">
-                            <button class="btn btn-secondary"><i class="ph ph-magnifying-glass"></i> Buscar</button>
-                        </div>
-                        <button class="btn btn-outline"><i class="ph ph-printer"></i> Imprimir</button>
-                    </div>
-
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Telefone</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-colaboradores">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-colaboradores"></tbody>
                         </table>
                     </div>
                 </div>
@@ -412,456 +301,81 @@
 
             <!-- RELATÓRIOS -->
             <section id="sec-relatorios" class="page-section hidden">
-                <div class="page-header flex justify-between align-center action-bar-mobile">
-                    <h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1>
-                    <button class="btn btn-danger"><i class="ph ph-file-pdf"></i> Imprimir PDF</button>
-                </div>
-
-                <div class="card">
-                    <div class="tabs-header">
-                        <button class="tab-btn active" onclick="switchTab(this, 'tab-vendas')">Vendas</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-pedidos')">Pedidos</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-finan')">Financeiro / Pagamentos</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-estoque')">Estoque / Produtos</button>
-                        <button class="tab-btn" onclick="switchTab(this, 'tab-entregas')">Entregas</button>
-                    </div>
-
-                    <div id="tab-vendas" class="tab-content">
-                        <h3 class="mb-20">Relatórios de Vendas</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('vendas-periodo')"><i class="ph ph-calendar"></i> Vendas por Período / Dia / Hora</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('vendas-categoria')"><i class="ph ph-hamburger"></i> Vendas por Categoria / Produto</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('faturamento')"><i class="ph ph-trend-up"></i> Faturamento Bruto e Líquido</button>
-                        </div>
-                    </div>
-                    <div id="tab-pedidos" class="tab-content hidden">
-                        <h3 class="mb-20">Relatórios de Pedidos</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-status')"><i class="ph ph-list-numbers"></i> Total e Status (Concluídos/Cancelados)</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('pedidos-tempo')"><i class="ph ph-clock"></i> Tempos Médios (Preparo e Entrega)</button>
-                        </div>
-                    </div>
-                    <div id="tab-finan" class="tab-content hidden">
-                        <h3 class="mb-20">Financeiro e Pagamentos</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('financeiro-tipos')"><i class="ph ph-wallet"></i> Recebimentos por Tipo (PIX, Cartão, Dinheiro)</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('financeiro-taxas')"><i class="ph ph-receipt"></i> Taxas, Descontos e Estornos</button>
-                        </div>
-                    </div>
-                    <div id="tab-estoque" class="tab-content hidden">
-                        <h3 class="mb-20">Estoque e Produtos</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('estoque-baixo')"><i class="ph ph-package"></i> Posição Atual / Estoque Baixo</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('estoque-esgotado')"><i class="ph ph-chart-line-down"></i> Produtos Esgotados / Sem Venda</button>
-                        </div>
-                    </div>
-                    <div id="tab-entregas" class="tab-content hidden">
-                        <h3 class="mb-20">Entregas e Regiões</h3>
-                        <div class="form-grid">
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('entregas-regiao')"><i class="ph ph-map-pin"></i> Entregas por Bairro/Região</button>
-                            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="fetchReport('entregas-desempenho')"><i class="ph ph-motorcycle"></i> Desempenho dos Entregadores</button>
-                        </div>
-                    </div>
-                </div>
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-chart-bar"></i> Central de Relatórios</h1></div>
+                <div class="card"><p>Relatórios consolidados do sistema gerados via API.</p></div>
             </section>
 
             <!-- OUVIDORIA -->
             <section id="sec-ouvidoria" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-megaphone"></i> Ouvidoria e Feeds</h1></div>
-
-                <div class="card" style="border: 1px solid var(--danger); background: #fff5f5;">
-                    <div class="flex justify-between align-center mb-20" style="flex-wrap: wrap; gap: 5px;">
-                        <h3 style="color: var(--danger);"><i class="ph ph-warning-circle"></i> Feed Crítico em Destaque</h3>
-                        <span style="font-size: 0.85rem; color: #999;" id="critical-feed-date">Aguardando dados...</span>
-                    </div>
-                    <p style="font-size: 1.1rem; margin-bottom: 10px;" id="critical-feed-rating"><strong>Avaliação: --</strong></p>
-                    <p style="color: var(--text-muted); font-style: italic;" id="critical-feed-desc">"Nenhum alerta crítico carregado."</p>
-                </div>
-
                 <div class="card" style="padding: 0;">
-                    <div class="action-bar-mobile" style="padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color);">
-                        <input type="date" class="form-control" style="width: 100%;">
-                        <button class="btn btn-primary"><i class="ph ph-magnifying-glass"></i> Buscar Feeds</button>
-                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Data / Cliente</th><th>Avaliação</th><th>Relato</th><th style="text-align: right;">Ações</th></tr></thead>
-                            <tbody id="tbody-ouvidoria">
-                                <!-- Dados carregados dinamicamente via API Python -->
-                            </tbody>
+                            <tbody id="tbody-ouvidoria"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- HELPDESK DO GESTOR -->
+            <!-- HELPDESK -->
             <section id="sec-helpdesk" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-headset"></i> Helpdesk e Suporte</h1></div>
-
                 <div class="card">
                     <h3 class="mb-20">Abrir Novo Chamado</h3>
                     <form onsubmit="event.preventDefault(); abrirChamadoHelpdesk();">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Resumo do Problema</label>
-                                <input type="text" class="form-control" id="input-hd-resumo" placeholder="Ex: Erro ao imprimir pedido" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Descrição Detalhada</label>
-                            <textarea class="form-control" id="textarea-hd-desc" rows="3" placeholder="Explique o que está acontecendo..." required></textarea>
-                        </div>
-                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar Chamado ao Master</button>
-                        </div>
+                        <div class="form-group"><label>Resumo do Problema</label><input type="text" class="form-control" id="input-hd-resumo" required></div>
+                        <div class="form-group"><label>Descrição Detalhada</label><textarea class="form-control" id="textarea-hd-desc" rows="3" required></textarea></div>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i> Enviar Chamado</button>
                     </form>
                 </div>
-
                 <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
-                        <h3>Meus Chamados</h3>
-                    </div>
                     <div class="table-responsive">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>ID / Data</th>
-                                    <th>Resumo / Descrição</th>
-                                    <th>Status</th>
-                                    <th>Técnico Responsável</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-gestor-helpdesk">
-                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Carregando chamados...</td></tr>
-                            </tbody>
+                            <thead><tr><th>ID / Data</th><th>Resumo</th><th>Status</th><th>Técnico</th></tr></thead>
+                            <tbody id="tbody-gestor-helpdesk"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-           <!-- CONFIGURAÇÕES -->
+            <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
-
-                <div class="form-grid">
-                    <div class="card">
-                        <h3 class="mb-20"><i class="ph ph-storefront"></i> Dados Cadastrais</h3>
-                        <div class="form-group"><label>Logo da Empresa (Upload)</label><input type="file" class="form-control" id="input-config-logo-file"></div>
-                        <div class="form-group"><label>Título da Empresa</label><input type="text" class="form-control" id="input-config-title"></div>
-                        <div class="form-group"><label>Slogan / Subtítulo</label><input type="text" class="form-control" id="input-config-slogan" value="O melhor delivery da região"></div>
-                        <div class="form-group"><label>Endereço Oficial</label><input type="text" class="form-control" id="input-config-address" value="Av. Central, 1000"></div>
-                        <div class="form-group"><label>Telefone Principal</label><input type="text" class="form-control" id="input-config-phone" value="(11) 99999-9999"></div>
-                        <div class="form-group"><label>Horários de Funcionamento</label><textarea class="form-control" id="textarea-config-hours" rows="2">Seg a Dom: 18h às 23h</textarea></div>
-                    </div>
-
-                    <div>
-                        <div class="card">
-                            <h3 class="mb-20"><i class="ph ph-palette"></i> Personalização (Layout)</h3>
-                            <div class="flex gap-10" style="flex-wrap: wrap;">
-                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Principal</label><input type="color" class="form-control" id="input-config-cor1" value="#ff5722" style="height: 45px; padding: 2px;"></div>
-                                <div class="form-group" style="flex:1; min-width: 100px;"><label>Cor Secundária</label><input type="color" class="form-control" id="input-config-cor2" value="#e64a19" style="height: 45px; padding: 2px;"></div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h3 class="mb-20"><i class="ph ph-database"></i> Rotinas de Backup</h3>
-                            <button class="btn btn-primary mb-20" style="width: 100%;" onclick="triggerBackup()"><i class="ph ph-download-simple"></i> Fazer Backup Agora</button>
-                            <div style="border-top: 1px solid #eee; padding-top: 15px;">
-                                <div class="form-group"><label>Agendar Backup Automático</label>
-                                    <select class="form-control"><option>Desativado</option><option selected>Diário</option><option>Semanal</option></select>
-                                </div>
-                                <div class="form-group"><label>Enviar cópia para Email</label><input type="email" class="form-control" value="admin@ondelivery.com"></div>
-                                <div class="form-group"><label>Limpeza Automática (LGPD)</label>
-                                    <select class="form-control"><option>Não limpar</option><option>A cada 15 Dias</option><option>Mensal (30 dias)</option><option selected>Semestral</option></select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
-                        </div>
-                    </div>
+                <div class="card">
+                    <h3 class="mb-20">Dados Cadastrais</h3>
+                    <div class="form-group"><label>Título da Empresa</label><input type="text" class="form-control" id="input-config-title"></div>
+                    <button class="btn btn-success mt-20" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Configurações</button>
                 </div>
             </section>
 
         </div>
     </main>
 
-    <!-- ================= MODAIS COMPLETOS ================= -->
+    <!-- MODAIS NECESSÁRIOS -->
     <div class="modal-overlay" id="modalVerPedido">
         <div class="modal-content">
-            <div class="modal-header"><h3><i class="ph ph-receipt"></i> Detalhes do Pedido</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
+            <div class="modal-header"><h3>Detalhes do Pedido</h3><button class="close-modal" onclick="closeModal('modalVerPedido')">&times;</button></div>
             <div class="modal-body" id="modal-ver-pedido-body"></div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalVerPedido')">Fechar</button><button class="btn btn-primary" onclick="alert('Imprimindo via...')"><i class="ph ph-printer"></i> Imprimir Via</button></div>
         </div>
     </div>
 
-   <!-- MODAL DE EDIÇÃO DE PEDIDO AVANÇADO -->
-<div class="modal-overlay" id="modalEditarPedido">
-    <div class="modal-content" style="max-width: 700px;">
-        <div class="modal-header">
-            <h3><i class="ph ph-pencil"></i> Editar Pedido e Itens</h3>
-            <button class="close-modal" onclick="closeModal('modalEditarPedido')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="form-editar-pedido" onsubmit="event.preventDefault(); salvarEdicaoPedidoCompleto();">
-                <input type="hidden" id="edit-order-id">
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nome do Cliente</label>
-                        <input type="text" class="form-control" id="edit-order-cliente" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone / WhatsApp</label>
-                        <input type="text" class="form-control" id="edit-order-telefone">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Endereço de Entrega</label>
-                    <input type="text" class="form-control" id="edit-order-endereco" required>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Forma de Pagamento</label>
-                        <input type="text" class="form-control" id="edit-order-pagamento" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Motivo / Alteração Realizada (Opcional)</label>
-                        <input type="text" class="form-control" id="edit-order-motivo" placeholder="Ex: Cliente retirou cebola">
-                    </div>
-                </div>
-
-                <!-- SEÇÃO DE ITENS DO PEDIDO (DINÂMICA) -->
-                <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                    <div class="flex justify-between align-center mb-10">
-                        <label style="font-weight: bold; color: var(--text-main);">Itens do Pedido</label>
-                        <div class="flex gap-10">
-                            <select id="select-add-produto" class="form-control" style="font-size: 0.85rem; padding: 6px;">
-                                <option value="">Selecione produto para adicionar...</option>
-                            </select>
-                            <button type="button" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="adicionarItemNoPedidoEdicao()"><i class="ph ph-plus"></i> Adicionar</button>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive" style="max-height: 200px; border: 1px solid var(--border-color); border-radius: 6px;">
-                        <table style="width: 100%;">
-                            <thead>
-                                <tr style="background: #f9f9f9; position: sticky; top: 0;">
-                                    <th style="padding: 8px;">Produto</th>
-                                    <th style="padding: 8px; width: 80px; text-align: center;">Qtd</th>
-                                    <th style="padding: 8px; text-align: right;">Subtotal</th>
-                                    <th style="padding: 8px; width: 50px; text-align: center;">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-itens-pedido-edicao">
-                                <!-- Itens carregados via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TOTAL CALCULADO AUTOMATICAMENTE -->
-                <div class="flex justify-between align-center" style="margin-top: 20px; background: #f4f7f6; padding: 12px 15px; border-radius: 6px;">
-                    <span style="font-weight: 600; font-size: 1.1rem;">Valor Total do Pedido:</span>
-                    <h2 style="color: var(--brand-primary); font-size: 1.5rem;" id="edit-order-total-view">R$ 0,00</h2>
-                    <input type="hidden" id="edit-order-total-val" value="0">
-                </div>
-
-                <div class="modal-footer" style="padding: 0; border: none; margin-top: 20px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarPedido')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-    <!-- MODAL DE EDIÇÃO DE PRODUTO -->
-    <div class="modal-overlay" id="modalEditarProduto">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="ph ph-pencil"></i> Editar Produto</h3>
-                <button class="close-modal" onclick="closeModal('modalEditarProduto')">&times;</button>
-            </div>
+    <div class="modal-overlay" id="modalEscolhaEntregador">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header"><h3>Despachar Pedido</h3><button class="close-modal" onclick="closeModal('modalEscolhaEntregador')">&times;</button></div>
             <div class="modal-body">
-                <form id="form-editar-produto" onsubmit="event.preventDefault(); salvarEdicaoProduto();">
-                    <input type="hidden" id="edit-prod-id">
-                    <div class="form-group"><label>Nome do Produto</label><input type="text" class="form-control" id="edit-prod-name" required></div>
-                    <div class="form-group"><label>Categoria</label>
-                        <select class="form-control" id="edit-prod-cat" required>
-                            <option value="hamburgueres">Hambúrgueres</option>
-                            <option value="pizzas">Pizzas</option>
-                            <option value="salgados">Salgados</option>
-                            <option value="bebidas">Bebidas</option>
-                            <option value="sobremesas">Sobremesas</option>
-                            <option value="outra">Outra Categoria</option>
-                        </select>
-                    </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Preço (R$)</label><input type="text" class="form-control" id="edit-prod-price" required></div>
-                        <div class="form-group"><label>Estoque</label><input type="number" class="form-control" id="edit-prod-stock" required></div>
-                    </div>
-                    <div class="form-group"><label>Nova Foto (Opcional)</label><input type="file" class="form-control" id="edit-prod-file"></div>
-                    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="edit-prod-desc" rows="2"></textarea></div>
-                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarProduto')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                    </div>
-                </form>
+                <input type="hidden" id="despacho-pedido-id">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="despacharParaTipo('empresa')">Frota Própria</button>
+                <button class="btn btn-success" style="width: 100%;" onclick="despacharParaTipo('autonomo')">Autônomo / Praça</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE COLABORADOR -->
-    <div class="modal-overlay" id="modalEditarColaborador">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header">
-                <h3><i class="ph ph-identification-badge"></i> Editar Colaborador</h3>
-                <button class="close-modal" onclick="closeModal('modalEditarColaborador')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-editar-colaborador" onsubmit="event.preventDefault(); salvarEdicaoColaborador();">
-                    <input type="hidden" id="edit-colab-id">
-                    
-                    <div class="form-group">
-                        <label>Nova Foto (Deixe em branco para manter a atual)</label>
-                        <input type="file" class="form-control" id="edit-colab-file">
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group"><label>Nome</label><input type="text" class="form-control" id="edit-colab-name" required></div>
-                        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="edit-colab-phone" required></div>
-                        <div class="form-group"><label>Email</label><input type="email" class="form-control" id="edit-colab-email" required></div>
-                        <div class="form-group"><label>CPF</label><input type="text" class="form-control" id="edit-colab-cpf"></div>
-                        <div class="form-group"><label>Data Nascimento</label><input type="date" class="form-control" id="edit-colab-dob"></div>
-                        <div class="form-group"><label>Endereço</label><input type="text" class="form-control" id="edit-colab-address"></div>
-                        
-                        <div class="form-group">
-                            <label>Função</label>
-                            <select class="form-control" id="edit-colab-funcao" onchange="toggleMotoboyFields(this.value, 'edit-campos-motoboy')" required>
-                                <option value="Administrador">Administrador</option>
-                                <option value="Gerente">Gerente</option>
-                                <option value="Caixa">Caixa</option>
-                                <option value="Motoboy">Entregador / Motoboy</option>
-                                <option value="Outro">Outro</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select class="form-control" id="edit-colab-status">
-                                <option value="Disponível">Disponível</option>
-                                <option value="Pausado">Pausado</option>
-                                <option value="Indisponível">Indisponível</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="edit-campos-motoboy" class="hidden" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px;">
-                        <h4 class="mb-20" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i> Dados do Veículo</h4>
-                        <div class="form-grid">
-                            <div class="form-group"><label>Tipo</label><select class="form-control" id="edit-colab-t-veiculo"><option>Moto</option><option>Bicicleta</option></select></div>
-                            <div class="form-group"><label>Modelo</label><input type="text" class="form-control" id="edit-colab-v-modelo"></div>
-                            <div class="form-group"><label>Cor</label><input type="text" class="form-control" id="edit-colab-v-cor"></div>
-                            <div class="form-group"><label>Placa</label><input type="text" class="form-control" id="edit-colab-v-placa"></div>
-                            <div class="form-group"><label>Área</label><input type="text" class="form-control" id="edit-colab-area"></div>
-                            <div class="form-group"><label>Valor Entrega (R$)</label><input type="number" step="0.01" class="form-control" id="edit-colab-v-entrega"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-group mt-20"><label>Observações</label><textarea class="form-control" id="edit-colab-obs" rows="2"></textarea></div>
-                    
-                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarColaborador')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE EDIÇÃO DE CLIENTE -->
-    <div class="modal-overlay" id="modalEditarCliente">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3><i class="ph ph-pencil"></i> Editar Cliente</h3>
-                <button class="close-modal" onclick="closeModal('modalEditarCliente')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-editar-cliente" onsubmit="event.preventDefault(); salvarEdicaoCliente();">
-                    <input type="hidden" id="edit-cli-id">
-                    
-                    <div class="form-group">
-                        <label>Nome Completo</label>
-                        <input type="text" class="form-control" id="edit-cli-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone / WhatsApp</label>
-                        <input type="text" class="form-control" id="edit-cli-phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label>E-mail</label>
-                        <input type="email" class="form-control" id="edit-cli-email">
-                    </div>
-                    <div class="form-group">
-                        <label>Endereço</label>
-                        <input type="text" class="form-control" id="edit-cli-address" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Referência Local</label>
-                        <input type="text" class="form-control" id="edit-cli-ref">
-                    </div>
-
-                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarCliente')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-  <script>
+    <script>
         const API_BASE_URL = "/api";
         let chartFluxoInstance = null;
         let chartOuvidoriaInstance = null;
-        let itensPedidoAtual = [];
         
-        async function configurarGraficoOuvidoria() {
-            const ctxOuvidoria = document.getElementById('chartOuvidoria');
-            if (!ctxOuvidoria) return;
-        
-            chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
-                    datasets: [{
-                        data: [0, 0, 0, 0, 0],
-                        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
-        
-            atualizarDadosOuvidoriaGrafico();
-        }
-        
-        async function atualizarDadosOuvidoriaGrafico() {
-            const estatisticas = await apiRequest('/ouvidoria/estatisticas'); 
-            if (estatisticas && chartOuvidoriaInstance) {
-                chartOuvidoriaInstance.data.datasets[0].data = [
-                    estatisticas.otimo || 0,
-                    estatisticas.bom || 0,
-                    estatisticas.regular || 0,
-                    estatisticas.ruim || 0,
-                    estatisticas.pessimo || 0
-                ];
-                chartOuvidoriaInstance.update();
-            }
-        }
-
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id');
@@ -871,16 +385,12 @@
                 }
 
                 let url = `${API_BASE_URL}${endpoint}`;
-                const options = {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' }
-                };
+                const options = { method: method, headers: { 'Content-Type': 'application/json' } };
 
                 if (method === 'GET' || method === 'DELETE') {
                     const separator = url.includes('?') ? '&' : '?';
                     url += `${separator}empresa_id=${empresaId}`;
-                } 
-                else if (method === 'POST' || method === 'PUT') {
+                } else if (method === 'POST' || method === 'PUT') {
                     if (!data) data = {}; 
                     data.empresa_id = parseInt(empresaId);
                     options.body = JSON.stringify(data);
@@ -890,7 +400,7 @@
                 if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
                 return await response.json();
             } catch (error) {
-                console.error("Falha na comunicação com a API Python:", error);
+                console.error("Erro na requisição:", error);
                 return null;
             }
         }
@@ -908,20 +418,18 @@
                     const dados = await res.json();
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
                     localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
-
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
-                    alert("CNPJ não encontrado ou empresa inativa na base de dados.");
+                    alert("CNPJ não encontrado ou inativo.");
                 }
             } catch (err) {
-                alert("Erro ao conectar com o servidor da API.");
+                alert("Erro ao conectar com o servidor.");
             }
         }
 
         function logoutGestor() {
-            localStorage.removeItem('deliveryon_empresa_id');
-            localStorage.removeItem('deliveryon_empresa_nome');
+            localStorage.clear();
             location.reload();
         }
 
@@ -939,17 +447,28 @@
         async function atualizarGraficoFluxo() {
             const dadosFluxo = await apiRequest('/dashboard/fluxo');
             if (dadosFluxo && chartFluxoInstance) {
-                const labels = dadosFluxo.map(item => item.hora);
-                const totais = dadosFluxo.map(item => item.total);
-
-                chartFluxoInstance.data.labels = labels;
-                chartFluxoInstance.data.datasets[0].data = totais;
+                chartFluxoInstance.data.labels = dadosFluxo.map(item => item.hora);
+                chartFluxoInstance.data.datasets[0].data = dadosFluxo.map(item => item.total);
                 chartFluxoInstance.update();
             }
         }
 
+        async function atualizarDadosOuvidoriaGrafico() {
+            const estatisticas = await apiRequest('/ouvidoria/estatisticas');
+            if (estatisticas && chartOuvidoriaInstance) {
+                chartOuvidoriaInstance.data.datasets[0].data = [
+                    estatisticas.otimo || 0,
+                    estatisticas.bom || 0,
+                    estatisticas.regular || 0,
+                    estatisticas.ruim || 0,
+                    estatisticas.pessimo || 0
+                ];
+                chartOuvidoriaInstance.update();
+            }
+        }
+
         async function loadOrders() {
-            const orders = await apiRequest('/orders');
+            const orders = await apiRequest('/orders'); 
             const tbody = document.getElementById('tbody-recent-orders');
             if (!tbody) return;
             
@@ -960,24 +479,24 @@
             }
 
             orders.forEach(order => {
-                const pedidoJson = encodeURIComponent(JSON.stringify(order));
+                const statusAtual = order.status || 'Aprovado / Preparando';
                 tbody.innerHTML += `
-                    <tr data-id="${order.id}">
+                    <tr>
                         <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                        <td>${order.cliente || order.cliente_nome || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
-                        <td>R$ ${order.total || order.valor_total || '0,00'}</td>
+                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
+                        <td>R$ ${order.total || '0,00'}</td>
                         <td>
                             <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                                <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                                <option ${order.status === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                                <option ${order.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                                <option ${order.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                                <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                                <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
+                                <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
+                                <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
+                                <option value="Saiu para entrega" ${statusAtual === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
+                                <option value="Entregue" ${statusAtual === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
                             </select>
                         </td>
-                        <td style="text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
-                            <button class="btn-action" title="Editar Pedido" onclick="abrirModalEdicaoPedido('${pedidoJson}')"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
+                        <td style="text-align: right;">
+                            <button class="btn-action" title="Despachar" onclick="abrirModalDespacho('${order.id}')" style="color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
                         </td>
                     </tr>
                 `;
@@ -985,150 +504,8 @@
         }
 
         async function updateOrderStatus(orderId, selectElement) {
-            const novoStatus = selectElement.value;
-            const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
-            if (response) {
-                loadDashboardData();
-            } else {
-                alert("Erro ao atualizar o status do pedido.");
-            }
-        }
-
-        // Funções do Modal de Edição Avançada de Pedido
-        async function abrirModalEdicaoPedido(pedidoStr) {
-            const p = JSON.parse(decodeURIComponent(pedidoStr));
-            document.getElementById('edit-order-id').value = p.id;
-            document.getElementById('edit-order-cliente').value = p.cliente || p.cliente_nome || '';
-            document.getElementById('edit-order-telefone').value = p.telefone || '';
-            document.getElementById('edit-order-endereco').value = p.endereco || '';
-            document.getElementById('edit-order-pagamento').value = p.pagamento || '';
-            document.getElementById('edit-order-motivo').value = '';
-
-            await popularSelectProdutosEdicao();
-
-            if (Array.isArray(p.itens_detalhes)) {
-                itensPedidoAtual = JSON.parse(JSON.stringify(p.itens_detalhes));
-            } else if (typeof p.itens === 'string' && p.itens.trim() !== '') {
-                itensPedidoAtual = [{ nome: p.itens, quantidade: 1, preco: parseFloat(p.valor_total || 0) }];
-            } else {
-                itensPedidoAtual = [];
-            }
-
-            renderizarTabelaItensEdicao();
-            document.getElementById('modalEditarPedido').classList.add('active');
-        }
-
-        async function popularSelectProdutosEdicao() {
-            const produtos = await apiRequest('/products');
-            const select = document.getElementById('select-add-produto');
-            if (!select) return;
-
-            select.innerHTML = `<option value="">Selecione produto para adicionar...</option>`;
-            if (produtos) {
-                produtos.forEach(prod => {
-                    select.innerHTML += `<option value="${prod.codigo || prod.id}" data-nome="${prod.nome}" data-preco="${prod.preco}">${prod.nome} - R$ ${Number(prod.preco).toFixed(2)}</option>`;
-                });
-            }
-        }
-
-        function adicionarItemNoPedidoEdicao() {
-            const select = document.getElementById('select-add-produto');
-            const opt = select.options[select.selectedIndex];
-            if (!select.value) return alert("Selecione um produto válido.");
-
-            const codigo = select.value;
-            const nome = opt.getAttribute('data-nome');
-            const preco = parseFloat(opt.getAttribute('data-preco')) || 0;
-
-            const existente = itensPedidoAtual.find(i => i.codigo === codigo || i.nome === nome);
-            if (existente) {
-                existente.quantidade += 1;
-            } else {
-                itensPedidoAtual.push({ codigo, nome, quantidade: 1, preco });
-            }
-
-            renderizarTabelaItensEdicao();
-            select.value = "";
-        }
-
-        function alterarQtdItemEdicao(index, delta) {
-            itensPedidoAtual[index].quantidade += delta;
-            if (itensPedidoAtual[index].quantidade <= 0) {
-                itensPedidoAtual.splice(index, 1);
-            }
-            renderizarTabelaItensEdicao();
-        }
-
-        function removerItemEdicao(index) {
-            itensPedidoAtual.splice(index, 1);
-            renderizarTabelaItensEdicao();
-        }
-
-        function renderizarTabelaItensEdicao() {
-            const tbody = document.getElementById('tbody-itens-pedido-edicao');
-            tbody.innerHTML = '';
-            let valorTotalGeral = 0;
-
-            if (itensPedidoAtual.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum item adicionado ao pedido.</td></tr>`;
-                atualizarTotalVisual(0);
-                return;
-            }
-
-            itensPedidoAtual.forEach((item, index) => {
-                const subtotal = (item.quantidade * item.preco);
-                valorTotalGeral += subtotal;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="padding: 8px;"><strong>${item.nome}</strong><br><span style="font-size: 0.75rem; color:#888;">R$ ${Number(item.preco).toFixed(2)} un.</span></td>
-                        <td style="padding: 8px; text-align: center;">
-                            <div class="flex align-center justify-center gap-5">
-                                <button type="button" class="btn-action" style="padding: 2px 6px; font-size: 0.8rem;" onclick="alterarQtdItemEdicao(${index}, -1)">-</button>
-                                <span>${item.quantidade}</span>
-                                <button type="button" class="btn-action" style="padding: 2px 6px; font-size: 0.8rem;" onclick="alterarQtdItemEdicao(${index}, 1)">+</button>
-                            </div>
-                        </td>
-                        <td style="padding: 8px; text-align: right; font-weight: bold;">R$ ${subtotal.toFixed(2)}</td>
-                        <td style="padding: 8px; text-align: center;">
-                            <button type="button" class="btn-action" style="color: var(--danger); padding: 2px 6px;" onclick="removerItemEdicao(${index})"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            atualizarTotalVisual(valorTotalGeral);
-        }
-
-        function atualizarTotalVisual(total) {
-            document.getElementById('edit-order-total-view').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
-            document.getElementById('edit-order-total-val').value = total.toFixed(2);
-        }
-
-        async function salvarEdicaoPedidoCompleto() {
-            const id = document.getElementById('edit-order-id').value;
-            const totalCalculado = parseFloat(document.getElementById('edit-order-total-val').value) || 0;
-            const descricaoItensResumida = itensPedidoAtual.map(i => `${i.quantidade}x ${i.nome}`).join(', ');
-
-            const payload = {
-                cliente: document.getElementById('edit-order-cliente').value,
-                telefone: document.getElementById('edit-order-telefone').value,
-                endereco: document.getElementById('edit-order-endereco').value,
-                pagamento: document.getElementById('edit-order-pagamento').value,
-                motivo_alteracao: document.getElementById('edit-order-motivo').value,
-                total: totalCalculado,
-                itens: descricaoItensResumida,
-                itens_detalhes: itensPedidoAtual
-            };
-
-            const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
-            if (res) {
-                alert('Pedido e valores atualizados com sucesso!');
-                closeModal('modalEditarPedido');
-                loadDashboardData();
-            } else {
-                alert('Erro ao atualizar o pedido.');
-            }
+            await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: selectElement.value });
+            loadDashboardData();
         }
 
         async function loadProducts() {
@@ -1136,507 +513,26 @@
             const tbody = document.getElementById('tbody-products');
             if(!tbody) return;
             tbody.innerHTML = '';
-
             if (!products || products.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum produto cadastrado.</td></tr>`;
                 return;
             }
-
             products.forEach(p => {
-                let imagemHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="ph ph-pizza"></i></div>`;
-                if (p.foto && p.foto.trim() !== '' && p.foto !== 'null') {
-                    imagemHtml = `<img src="${p.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="Foto">`;
-                }
-
-                const produtoJson = encodeURIComponent(JSON.stringify(p));
-                tbody.innerHTML += `
-                    <tr data-id="${p.codigo || p.id}">
-                        <td>${imagemHtml}</td>
-                        <td>${p.codigo || p.id}</td>
-                        <td><strong>${p.nome}</strong><br><span style="font-size:0.8rem; color:#888;">${p.descricao || ''}</span></td>
-                        <td>R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2).replace('.', ',') : p.preco}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="abrirModalEdicao('${produtoJson}')"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-action" title="Excluir" style="color:var(--danger);" onclick="deleteProduct('${p.codigo || p.id}')"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr><td>${p.id}</td><td><strong>${p.nome}</strong></td><td>R$ ${p.preco}</td></tr>`;
             });
         }
 
-        async function createProduct() {
-            const form = document.getElementById('form-produto');
-            const precoInput = document.getElementById('input-new-prod-price').value;
-            const fileInput = document.getElementById('input-new-prod-file');
-            let fotoBase64 = '';
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
-            }
-
-            const payload = {
-                nome: document.getElementById('input-new-prod-name').value,
-                categoria: document.getElementById('categoria').value,
-                preco: parseFloat(precoInput.replace(',', '.')),
-                estoque: parseInt(document.getElementById('input-new-prod-stock').value) || 0,
-                descricao: document.getElementById('textarea-new-prod-desc').value,
-                foto: fotoBase64
-            };
-            
-            const res = await apiRequest('/products', 'POST', payload);
-            if (res) {
-                alert('Produto cadastrado com sucesso!');
-                form.reset();
-                loadProducts();
-            } else {
-                alert('Falha ao cadastrar o produto.');
-            }
-        }
-
-        async function deleteProduct(code) {
-            if(confirm("Deseja realmente excluir este produto?")) {
-                const res = await apiRequest(`/products/${code}`, 'DELETE');
-                if (res) loadProducts();
-            }
-        }
-
-        function abrirModalEdicao(produtoStr) {
-            const p = JSON.parse(decodeURIComponent(produtoStr));
-            document.getElementById('edit-prod-id').value = p.codigo || p.id;
-            document.getElementById('edit-prod-name').value = p.nome;
-            document.getElementById('edit-prod-cat').value = p.categoria || 'outra';
-            document.getElementById('edit-prod-price').value = p.preco;
-            document.getElementById('edit-prod-stock').value = p.estoque || 100;
-            document.getElementById('edit-prod-desc').value = p.descricao || '';
-            document.getElementById('modalEditarProduto').classList.add('active');
-        }
-
-        async function salvarEdicaoProduto() {
-            const id = document.getElementById('edit-prod-id').value;
-            const fileInput = document.getElementById('edit-prod-file');
-            let fotoBase64 = '';
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
-            }
-
-            const payload = {
-                nome: document.getElementById('edit-prod-name').value,
-                categoria: document.getElementById('edit-prod-cat').value,
-                preco: parseFloat(document.getElementById('edit-prod-price').value.replace(',', '.')),
-                estoque: parseInt(document.getElementById('edit-prod-stock').value) || 0,
-                descricao: document.getElementById('edit-prod-desc').value,
-                foto: fotoBase64
-            };
-
-            const res = await apiRequest(`/products/${id}`, 'PUT', payload);
-            if (res) {
-                alert('Produto atualizado!');
-                closeModal('modalEditarProduto');
-                loadProducts();
-            }
-        }
-
-        async function loadClients() {
-            const clients = await apiRequest('/clients');
-            const tbody = document.getElementById('tbody-clients');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-
-            if (!clients || clients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum cliente cadastrado.</td></tr>`;
-                return;
-            }
-
-            clients.forEach(c => {
-                const clienteJson = encodeURIComponent(JSON.stringify(c));
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${c.nome}</strong></td>
-                        <td>${c.telefone}</td>
-                        <td>${c.referencia || '-'}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoCliente('${clienteJson}')"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteClient('${c.id}')"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function createClient() {
-            const form = document.getElementById('form-cliente');
-            const payload = {
-                nome: document.getElementById('input-cli-name').value,
-                telefone: document.getElementById('input-cli-phone').value,
-                email: document.getElementById('input-cli-email').value,
-                endereco: document.getElementById('input-cli-address').value,
-                referencia: document.getElementById('input-cli-ref').value
-            };
-            const res = await apiRequest('/clients', 'POST', payload);
-            if (res) {
-                alert('Cliente salvo!');
-                form.reset();
-                loadClients();
-            }
-        }
-
-        async function deleteClient(id) {
-            if(confirm("Deseja excluir este cliente?")) {
-                await apiRequest(`/clients/${id}`, 'DELETE');
-                loadClients();
-            }
-        }
-
-        function abrirModalEdicaoCliente(clienteStr) {
-            const c = JSON.parse(decodeURIComponent(clienteStr));
-            document.getElementById('edit-cli-id').value = c.id;
-            document.getElementById('edit-cli-name').value = c.nome || '';
-            document.getElementById('edit-cli-phone').value = c.telefone || '';
-            document.getElementById('edit-cli-email').value = c.email || '';
-            document.getElementById('edit-cli-address').value = c.endereco || '';
-            document.getElementById('edit-cli-ref').value = c.referencia || '';
-            document.getElementById('modalEditarCliente').classList.add('active');
-        }
-
-        async function salvarEdicaoCliente() {
-            const id = document.getElementById('edit-cli-id').value;
-            const payload = {
-                nome: document.getElementById('edit-cli-name').value,
-                telefone: document.getElementById('edit-cli-phone').value,
-                email: document.getElementById('edit-cli-email').value,
-                endereco: document.getElementById('edit-cli-address').value,
-                referencia: document.getElementById('edit-cli-ref').value
-            };
-            const res = await apiRequest(`/clients/${id}`, 'PUT', payload);
-            if (res) {
-                alert('Cliente atualizado!');
-                closeModal('modalEditarCliente');
-                loadClients();
-            }
-        }
-
-        async function loadColaboradores() {
-            const colabs = await apiRequest('/colaboradores');
-            const tbody = document.getElementById('tbody-colaboradores');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-
-            if (!colabs || colabs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</td></tr>`;
-                return;
-            }
-
-            colabs.forEach(cb => {
-                let fotoHtml = `<div style="width:40px; height:40px; background:#ddd; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="ph ph-user"></i></div>`;
-                if (cb.foto && cb.foto.trim() !== '' && cb.foto !== 'null') {
-                    fotoHtml = `<img src="${cb.foto}" style="width:40px; height:40px; object-fit:cover; border-radius:50%;" alt="Foto">`;
-                }
-                const colabJson = encodeURIComponent(JSON.stringify(cb));
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${fotoHtml}</td>
-                        <td><strong>${cb.nome}</strong></td>
-                        <td>${cb.cpf || '-'}</td>
-                        <td>${cb.funcao}</td>
-                        <td>${cb.telefone}</td>
-                        <td><span class="badge badge-success">${cb.status}</span></td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Editar" onclick="abrirModalEdicaoColaborador('${colabJson}')"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-action" title="Excluir" style="color: var(--danger);" onclick="deleteColab('${cb.id}')"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function createColab() {
-            const form = document.getElementById('form-colaborador');
-            const funcao = document.getElementById('select-funcao').value;
-            const fileInput = document.getElementById('input-colab-file');
-            let fotoBase64 = '';
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
-            }
-            
-            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
-            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
-
-            if (funcao === 'Motoboy') {
-                const containerMotoboy = document.getElementById('campos-motoboy');
-                const inputsMoto = containerMotoboy.querySelectorAll('input, select');
-                tipoVeiculo = inputsMoto[1] ? inputsMoto[1].value : null;
-                veiculoModelo = inputsMoto[2] ? inputsMoto[2].value : null;
-                veiculoCor = inputsMoto[3] ? inputsMoto[3].value : null;
-                veiculoPlaca = inputsMoto[4] ? inputsMoto[4].value : null;
-                areaAtuacao = inputsMoto[5] ? inputsMoto[5].value : null;
-                valorEntrega = inputsMoto[6] && inputsMoto[6].value ? parseFloat(inputsMoto[6].value.replace(',', '.')) : 0.00;
-            }
-
-            const payload = {
-                nome: document.getElementById('input-colab-name').value,
-                telefone: document.getElementById('input-colab-phone').value,
-                email: document.getElementById('input-colab-email').value,
-                cpf: document.getElementById('input-colab-cpf').value,
-                data_nascimento: document.getElementById('input-colab-dob').value,
-                endereco: document.getElementById('input-colab-address').value,
-                funcao: funcao,
-                status: document.getElementById('select-colab-status').value,
-                observacoes: document.getElementById('textarea-colab-obs').value,
-                tipo_veiculo: tipoVeiculo,
-                veiculo_modelo: veiculoModelo,
-                veiculo_cor: veiculoCor,
-                veiculo_placa: veiculoPlaca,
-                area_atuacao: areaAtuacao,
-                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
-                foto: fotoBase64
-            };
-            
-            const res = await apiRequest('/colaboradores', 'POST', payload);
-            if (res) {
-                alert('Colaborador cadastrado!');
-                form.reset();
-                document.getElementById('campos-motoboy').classList.add('hidden');
-                loadColaboradores();
-            }
-        }
-
-        async function deleteColab(id) {
-            if(confirm("Deseja excluir este colaborador?")) {
-                await apiRequest(`/colaboradores/${id}`, 'DELETE');
-                loadColaboradores();
-            }
-        }
-
-        function abrirModalEdicaoColaborador(colabStr) {
-            const c = JSON.parse(decodeURIComponent(colabStr));
-            document.getElementById('edit-colab-id').value = c.id;
-            document.getElementById('edit-colab-name').value = c.nome || '';
-            document.getElementById('edit-colab-phone').value = c.telefone || '';
-            document.getElementById('edit-colab-email').value = c.email || '';
-            document.getElementById('edit-colab-cpf').value = c.cpf || '';
-            document.getElementById('edit-colab-dob').value = c.data_nascimento || '';
-            document.getElementById('edit-colab-address').value = c.endereco || '';
-            document.getElementById('edit-colab-funcao').value = c.funcao || 'Outro';
-            document.getElementById('edit-colab-status').value = c.status || 'Disponível';
-            document.getElementById('edit-colab-obs').value = c.observacoes || '';
-
-            document.getElementById('edit-colab-t-veiculo').value = c.tipo_veiculo || 'Moto';
-            document.getElementById('edit-colab-v-modelo').value = c.veiculo_modelo || '';
-            document.getElementById('edit-colab-v-cor').value = c.veiculo_cor || '';
-            document.getElementById('edit-colab-v-placa').value = c.veiculo_placa || '';
-            document.getElementById('edit-colab-area').value = c.area_atuacao || '';
-            document.getElementById('edit-colab-v-entrega').value = c.valor_entrega || '';
-
-            toggleMotoboyFields(c.funcao, 'edit-campos-motoboy');
-            document.getElementById('modalEditarColaborador').classList.add('active');
-        }
-
-        async function salvarEdicaoColaborador() {
-            const id = document.getElementById('edit-colab-id').value;
-            const funcao = document.getElementById('edit-colab-funcao').value;
-            const fileInput = document.getElementById('edit-colab-file');
-            let fotoBase64 = '';
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { fotoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
-            }
-
-            let tipoVeiculo = null, veiculoModelo = null, veiculoCor = null;
-            let veiculoPlaca = null, areaAtuacao = null, valorEntrega = 0.00;
-
-            if (funcao === 'Motoboy') {
-                tipoVeiculo = document.getElementById('edit-colab-t-veiculo').value;
-                veiculoModelo = document.getElementById('edit-colab-v-modelo').value;
-                veiculoCor = document.getElementById('edit-colab-v-cor').value;
-                veiculoPlaca = document.getElementById('edit-colab-v-placa').value;
-                areaAtuacao = document.getElementById('edit-colab-area').value;
-                const valEnt = document.getElementById('edit-colab-v-entrega').value;
-                valorEntrega = valEnt ? parseFloat(valEnt.replace(',', '.')) : 0.00;
-            }
-
-            const payload = {
-                nome: document.getElementById('edit-colab-name').value,
-                telefone: document.getElementById('edit-colab-phone').value,
-                email: document.getElementById('edit-colab-email').value,
-                cpf: document.getElementById('edit-colab-cpf').value,
-                data_nascimento: document.getElementById('edit-colab-dob').value,
-                endereco: document.getElementById('edit-colab-address').value,
-                funcao: funcao,
-                status: document.getElementById('edit-colab-status').value,
-                observacoes: document.getElementById('edit-colab-obs').value,
-                tipo_veiculo: tipoVeiculo,
-                veiculo_modelo: veiculoModelo,
-                veiculo_cor: veiculoCor,
-                veiculo_placa: veiculoPlaca,
-                area_atuacao: areaAtuacao,
-                valor_entrega: isNaN(valorEntrega) ? 0.00 : valorEntrega,
-                foto: fotoBase64
-            };
-
-            const res = await apiRequest(`/colaboradores/${id}`, 'PUT', payload);
-            if (res) {
-                alert('Colaborador atualizado!');
-                closeModal('modalEditarColaborador');
-                loadColaboradores();
-            }
-        }
-
-        async function loadOuvidoria() {
-            const feeds = await apiRequest('/ouvidoria');
-            const tbody = document.getElementById('tbody-ouvidoria');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            if (!feeds || feeds.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum feedback.</td></tr>`;
-                return;
-            }
-            feeds.forEach(f => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${f.data || ''}<br><strong>${f.cliente || f.cliente_nome || ''}</strong></td>
-                        <td><span style="color: var(--success); font-weight: bold;">${f.avaliacao}</span></td>
-                        <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.relato}</td>
-                        <td style="text-align: right;"><button class="btn-action" title="Ver"><i class="ph ph-eye"></i></button></td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function abrirChamadoHelpdesk() {
-            const payload = {
-                resumo_problema: document.getElementById('input-hd-resumo').value,
-                descricao: document.getElementById('textarea-hd-desc').value
-            };
-            const res = await apiRequest('/helpdesk', 'POST', payload);
-            if (res) {
-                alert('Chamado aberto com sucesso!');
-                document.getElementById('input-hd-resumo').value = '';
-                document.getElementById('textarea-hd-desc').value = '';
-                loadHelpdeskGestor();
-            }
-        }
-
-        async function loadHelpdeskGestor() {
-            const chamados = await apiRequest('/helpdesk');
-            const tbody = document.getElementById('tbody-gestor-helpdesk');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            if (!chamados || chamados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>`;
-                return;
-            }
-            chamados.forEach(c => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>#${c.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${c.data_criacao || ''}</span></td>
-                        <td><strong>${c.resumo_problema}</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">${c.descricao || ''}</span></td>
-                        <td><span class="badge badge-warning" style="text-transform: uppercase;">${c.status || 'aberto'}</span></td>
-                        <td>${c.tecnico_responsavel || 'Aguardando atribuição'}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function loadConfigurations() {
-            const config = await apiRequest('/configuracoes');
-            if (config) {
-                document.getElementById('input-config-title').value = config.titulo || '';
-                document.getElementById('input-config-slogan').value = config.slogan || '';
-                document.getElementById('input-config-address').value = config.endereco || '';
-                document.getElementById('input-config-phone').value = config.telefone || '';
-                document.getElementById('textarea-config-hours').value = config.horario_funcionamento || '';
-                if(config.cor_primaria) document.getElementById('input-config-cor1').value = config.cor_primaria;
-                if(config.cor_secundaria) document.getElementById('input-config-cor2').value = config.cor_secundaria;
-                window.currentLogoBase64 = config.logo_url || '';
-                atualizarExibicaoLogotipo(window.currentLogoBase64);
-            }
-        }
-
-        async function saveConfigurations() {
-            const configAtual = await apiRequest('/configuracoes') || {};
-            let logoBase64 = window.currentLogoBase64 || configAtual.logo_url || '';
-            const fileInput = document.getElementById('input-config-logo-file');
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                try { logoBase64 = await convertFileToBase64(fileInput.files[0]); } catch (err) {}
-            }
-
-            const payload = {
-                titulo: document.getElementById('input-config-title').value,
-                slogan: document.getElementById('input-config-slogan').value,
-                endereco: document.getElementById('input-config-address').value,
-                telefone: document.getElementById('input-config-phone').value,
-                horario_funcionamento: document.getElementById('textarea-config-hours').value,
-                cor_primaria: document.getElementById('input-config-cor1').value,
-                cor_secundaria: document.getElementById('input-config-cor2').value,
-                logo_url: logoBase64
-            };
-
-            const res = await apiRequest('/configuracoes', 'PUT', payload);
-            if (res) {
-                alert('Configurações salvas!');
-                loadConfigurations();
-                aplicarIdentidadeVisualDaEmpresa();
-            }
-        }
-
-        async function aplicarIdentidadeVisualDaEmpresa() {
-            try {
-                const config = await apiRequest('/configuracoes');
-                if (!config) return;
-                const root = document.documentElement;
-                if (config.cor_primaria) root.style.setProperty('--brand-primary', config.cor_primaria);
-                if (config.cor_secundaria) root.style.setProperty('--brand-secondary', config.cor_secundaria);
-            } catch (e) {}
-        }
-
-        async function triggerBackup() {
-            await apiRequest('/backup', 'POST');
-            alert('Backup executado com sucesso.');
-        }
-
-        async function fetchReport(tipo) {
-            alert(`Gerando relatório de [${tipo}]...`);
-        }
-
-        function atualizarExibicaoLogotipo(logoBase64) {
-            const containers = document.querySelectorAll('.logo-preview-box');
-            containers.forEach(container => {
-                if (logoBase64 && logoBase64.trim() !== '') {
-                    container.innerHTML = `<img src="${logoBase64}" alt="Logo da Empresa">`;
-                } else {
-                    container.innerHTML = `<span class="on-logo-top">ON</span><span class="on-logo-bottom">delivery</span>`;
-                }
-            });
-        }
-
-        function convertFileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        function toggleMotoboyFields(funcao, idContainer) {
-            const camposMotoboy = document.getElementById(idContainer);
-            if (camposMotoboy) {
-                if (funcao === 'Motoboy') camposMotoboy.classList.remove('hidden');
-                else camposMotoboy.classList.add('hidden');
-            }
-        }
+        async function loadClients() { const c = await apiRequest('/clients'); }
+        async function loadColaboradores() { const cb = await apiRequest('/colaboradores'); }
+        async function loadOuvidoria() { const o = await apiRequest('/ouvidoria'); }
+        async function loadConfigurations() { const cfg = await apiRequest('/configuracoes'); }
+        async function loadHelpdeskGestor() { const h = await apiRequest('/helpdesk'); }
 
         function navigate(sectionId, clickedElement) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('sec-' + sectionId).classList.remove('hidden');
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             if(clickedElement) clickedElement.classList.add('active');
-
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-            }
         }
 
         function toggleSidebar() {
@@ -1644,15 +540,17 @@
             document.getElementById('mobile-overlay').classList.toggle('active');
         }
 
-        function switchTab(btn, targetId) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            btn.classList.add('active');
-            document.getElementById(targetId).classList.remove('hidden');
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+        function abrirModalDespacho(orderId) {
+            document.getElementById('despacho-pedido-id').value = orderId;
+            document.getElementById('modalEscolhaEntregador').classList.add('active');
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
+        async function despacharParaTipo(tipo) {
+            const orderId = document.getElementById('despacho-pedido-id').value;
+            closeModal('modalEscolhaEntregador');
+            await apiRequest(`/orders/${orderId}/despachar-proximos`, 'POST', { tipo_despacho: tipo });
+            loadOrders();
         }
 
         function inicializarPainel() {
@@ -1663,39 +561,43 @@
             loadOuvidoria();
             loadConfigurations();
             loadHelpdeskGestor();
-            aplicarIdentidadeVisualDaEmpresa();
 
-            if(document.getElementById('chartFluxo')) {
-                const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
-                chartFluxoInstance = new Chart(ctxFluxo, {
+            // GRÁFICO DE FLUXO (Linha)
+            const ctxFluxo = document.getElementById('chartFluxo');
+            if (ctxFluxo && !chartFluxoInstance) {
+                chartFluxoInstance = new Chart(ctxFluxo.getContext('2d'), {
                     type: 'line',
                     data: { 
                         labels: ['17h', '18h', '19h', '20h', '21h'], 
-                        datasets: [{ 
-                            data: [0, 0, 0, 0, 0], 
-                            borderColor: '#ff5722', 
-                            backgroundColor: 'rgba(255,87,34,0.1)', 
-                            fill: true, 
-                            tension: 0.4 
-                        }]
+                        datasets: [{ data: [0, 0, 0, 0, 0], borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,0.1)', fill: true, tension: 0.4 }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
                 atualizarGraficoFluxo();
             }
 
-            configurarGraficoOuvidoria();
+            // GRÁFICO DE OUVIDORIA (Doughnut) - Instância global fixa correta
+            const ctxOuvidoria = document.getElementById('chartOuvidoria');
+            if (ctxOuvidoria && !chartOuvidoriaInstance) {
+                chartOuvidoriaInstance = new Chart(ctxOuvidoria.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { 
+                        labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'], 
+                        datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545'] }] 
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+                atualizarDadosOuvidoriaGrafico();
+            }
 
+            // Atualização em tempo real (5 segundos)
             setInterval(() => {
-                if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
-                    loadColaboradores();
-                }
-                if (!document.getElementById('sec-dashboard').classList.contains('hidden')) {
+                if (!document.getElementById('sec-dashboard').classList.contains('hidden') && document.activeElement.tagName !== 'SELECT') {
                     loadDashboardData();
                     atualizarGraficoFluxo();
                     atualizarDadosOuvidoriaGrafico();
                 }
-            }, 5000); 
+            }, 5000);
         }
 
         window.onload = function() {
@@ -1707,6 +609,6 @@
                 document.getElementById('auth-overlay').style.display = 'flex';
             }
         };
-  </script>
+    </script>
 </body>
 </html>
