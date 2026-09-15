@@ -592,27 +592,33 @@ def get_dashboard(empresa_id: int = Query(1), db=Depends(get_db)):
 def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Extrai os dois primeiros dígitos da hora e converte para inteiro para alinhar com o relógio
         cursor.execute("""
             SELECT 
-                CAST(SUBSTRING(TRIM(hora) FROM 1 for 2) AS INTEGER) as horario, 
+                SUBSTRING(CAST(hora AS TEXT) FROM 1 for 2) as horario, 
                 COUNT(*) as total 
             FROM pedidos 
-            WHERE empresa_id = %s AND hora IS NOT NULL AND TRIM(hora) != ''
+            WHERE empresa_id = %s AND hora IS NOT NULL 
             GROUP BY horario 
             ORDER BY horario ASC
         """, (empresa_id,))
         rows = cursor.fetchall()
+        print("DIAGNOSTICO FLUXO - Rows retornadas do banco:", rows) # Olhe o terminal do uvicorn!
     except Exception as e:
+        print("ERRO CRITICO NA QUERY DE FLUXO:", str(e)) # O erro real vai aparecer aqui
         db.rollback()
         rows = []
     finally:
         cursor.close()
     
-    # Mapeia os totais encontrados no banco
-    totais = {int(row['horario']): int(row['total']) for row in rows}
+    totais = {}
+    for row in rows:
+        try:
+            h_clean = ''.join(filter(str.isdigit, str(row['horario'])))
+            if h_clean:
+                totais[int(h_clean)] = int(row['total'])
+        except Exception:
+            pass
     
-    # Gera o array fixo das 17h às 21h (ou expande se precisar de mais horários)
     dados_grafico = []
     for h in range(17, 22):
         dados_grafico.append({
