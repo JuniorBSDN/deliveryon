@@ -111,34 +111,21 @@
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
-        .rich-text-editor { border: 1px solid #ccc; border-radius: 6px; min-height: 200px; padding: 10px; width: 100%; }
 
-       @media (max-width: 1024px) {
-    .sidebar { transform: translateX(-100%); width: 280px; }
-    .sidebar.open { transform: translateX(0); box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
-    .main-content { margin-left: 0; width: 100vw; }
-    
-    /* Força a barra superior a aparecer fixa no mobile e tablets */
-    .topbar { 
-        display: flex !important; 
-        position: sticky; 
-        top: 0; 
-        z-index: 990; 
-        width: 100%; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    
-    /* Aumenta a área de clique do botão hambúrguer */
-    .menu-toggle { padding: 5px; font-size: 2rem; color: var(--brand-primary); }
-    
-    .content-container { padding: 15px; }
-    .card { padding: 15px; margin-bottom: 15px; }
-    .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
-    .form-grid { grid-template-columns: 1fr; }
-    .chart-grid { grid-template-columns: 1fr; }
-    .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
-    .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
-}
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); width: 280px; }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
+            .main-content { margin-left: 0; width: 100vw; }
+            .topbar { display: flex !important; position: sticky; top: 0; z-index: 990; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+            .menu-toggle { padding: 5px; font-size: 2rem; color: var(--brand-primary); }
+            .content-container { padding: 15px; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+            .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
+        }
     </style>
 </head>
 <body>
@@ -607,6 +594,49 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO DE PEDIDO -->
+    <div class="modal-overlay" id="modalEditarPedido">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="ph ph-pencil"></i> Editar Pedido</h3>
+                <button class="close-modal" onclick="closeModal('modalEditarPedido')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-pedido" onsubmit="event.preventDefault(); salvarEdicaoPedido();">
+                    <input type="hidden" id="edit-order-id">
+                    
+                    <div class="form-group">
+                        <label>Nome do Cliente</label>
+                        <input type="text" class="form-control" id="edit-order-cliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço de Entrega</label>
+                        <input type="text" class="form-control" id="edit-order-endereco" required>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Valor Total (R$)</label>
+                            <input type="text" class="form-control" id="edit-order-total" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Forma de Pagamento</label>
+                            <input type="text" class="form-control" id="edit-order-pagamento" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Itens do Pedido</label>
+                        <textarea class="form-control" id="edit-order-itens" rows="3"></textarea>
+                    </div>
+
+                    <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarPedido')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE EDIÇÃO DE PRODUTO -->
     <div class="modal-overlay" id="modalEditarProduto">
         <div class="modal-content">
@@ -791,9 +821,7 @@
                 chartOuvidoriaInstance.update();
             }
         }
-        // =========================================================================
-        // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
-        // =========================================================================
+
         async function apiRequest(endpoint, method = 'GET', data = null) {
             try {
                 const empresaId = localStorage.getItem('deliveryon_empresa_id');
@@ -810,12 +838,10 @@
                     headers: { 'Content-Type': 'application/json' }
                 };
 
-                // Garante o empresa_id na URL para buscas (GET) e exclusões (DELETE)
                 if (method === 'GET' || method === 'DELETE') {
                     const separator = url.includes('?') ? '&' : '?';
                     url += `${separator}empresa_id=${empresaId}`;
                 } 
-                // Garante o empresa_id de forma forçada e isolada no corpo de envios (POST e PUT)
                 else if (method === 'POST' || method === 'PUT') {
                     if (!data) data = {}; 
                     data.empresa_id = parseInt(empresaId);
@@ -831,9 +857,6 @@
             }
         }
 
-        // =========================================================================
-        // 2. AUTENTICAÇÃO E SESSÃO
-        // =========================================================================
         async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
@@ -864,9 +887,6 @@
             location.reload();
         }
 
-        // =========================================================================
-        // 3. DASHBOARD E GRÁFICOS DINÂMICOS
-        // =========================================================================
         async function loadDashboardData() {
             const data = await apiRequest('/dashboard');
             if (data) {
@@ -907,11 +927,12 @@
             }
 
             orders.forEach(order => {
+                const pedidoJson = encodeURIComponent(JSON.stringify(order));
                 tbody.innerHTML += `
                     <tr data-id="${order.id}">
                         <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                        <td>${order.cliente || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
-                        <td>R$ ${order.total || '0,00'}</td>
+                        <td>${order.cliente || order.cliente_nome || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || ''}</span></td>
+                        <td>R$ ${order.total || order.valor_total || '0,00'}</td>
                         <td>
                             <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
                                 <option ${order.status === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
@@ -921,7 +942,8 @@
                                 <option ${order.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
                             </select>
                         </td>
-                        <td style="text-align: right;">
+                        <td style="text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
+                            <button class="btn-action" title="Editar Pedido" onclick="abrirModalEdicaoPedido('${pedidoJson}')"><i class="ph ph-pencil"></i></button>
                             <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
                         </td>
                     </tr>
@@ -939,9 +961,37 @@
             }
         }
 
-        // =========================================================================
-        // 4. GESTÃO DE PRODUTOS
-        // =========================================================================
+        function abrirModalEdicaoPedido(pedidoStr) {
+            const p = JSON.parse(decodeURIComponent(pedidoStr));
+            document.getElementById('edit-order-id').value = p.id;
+            document.getElementById('edit-order-cliente').value = p.cliente || p.cliente_nome || '';
+            document.getElementById('edit-order-endereco').value = p.endereco || '';
+            document.getElementById('edit-order-total').value = p.total || p.valor_total || '';
+            document.getElementById('edit-order-pagamento').value = p.pagamento || '';
+            document.getElementById('edit-order-itens').value = p.itens || '';
+            document.getElementById('modalEditarPedido').classList.add('active');
+        }
+
+        async function salvarEdicaoPedido() {
+            const id = document.getElementById('edit-order-id').value;
+            const payload = {
+                cliente: document.getElementById('edit-order-cliente').value,
+                endereco: document.getElementById('edit-order-endereco').value,
+                total: parseFloat(document.getElementById('edit-order-total').value.replace(',', '.')) || 0,
+                pagamento: document.getElementById('edit-order-pagamento').value,
+                itens: document.getElementById('edit-order-itens').value
+            };
+
+            const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
+            if (res) {
+                alert('Pedido atualizado com sucesso!');
+                closeModal('modalEditarPedido');
+                loadDashboardData();
+            } else {
+                alert('Erro ao atualizar o pedido.');
+            }
+        }
+
         async function loadProducts() {
             const products = await apiRequest('/products');
             const tbody = document.getElementById('tbody-products');
@@ -1047,9 +1097,6 @@
             }
         }
 
-        // =========================================================================
-        // 5. GESTÃO DE CLIENTES
-        // =========================================================================
         async function loadClients() {
             const clients = await apiRequest('/clients');
             const tbody = document.getElementById('tbody-clients');
@@ -1129,9 +1176,6 @@
             }
         }
 
-        // =========================================================================
-        // 6. GESTÃO DE COLABORADORES
-        // =========================================================================
         async function loadColaboradores() {
             const colabs = await apiRequest('/colaboradores');
             const tbody = document.getElementById('tbody-colaboradores');
@@ -1297,9 +1341,6 @@
             }
         }
 
-        // =========================================================================
-        // 7. OUVIDORIA, HELPDESK E CONFIGURAÇÕES
-        // =========================================================================
         async function loadOuvidoria() {
             const feeds = await apiRequest('/ouvidoria');
             const tbody = document.getElementById('tbody-ouvidoria');
@@ -1417,9 +1458,6 @@
             alert(`Gerando relatório de [${tipo}]...`);
         }
 
-        // =========================================================================
-        // 8. UTILITÁRIOS E INICIALIZAÇÃO DO PAINEL
-        // =========================================================================
         function atualizarExibicaoLogotipo(logoBase64) {
             const containers = document.querySelectorAll('.logo-preview-box');
             containers.forEach(container => {
@@ -1478,7 +1516,6 @@
             document.getElementById(modalId).classList.remove('active');
         }
 
-        // Função de Inicialização Única e Consolidada
         function inicializarPainel() {
             loadDashboardData();
             loadProducts();
@@ -1489,7 +1526,6 @@
             loadHelpdeskGestor();
             aplicarIdentidadeVisualDaEmpresa();
 
-            // Configuração do Gráfico de Fluxo Dinâmico
             if(document.getElementById('chartFluxo')) {
                 const ctxFluxo = document.getElementById('chartFluxo').getContext('2d');
                 chartFluxoInstance = new Chart(ctxFluxo, {
@@ -1509,10 +1545,8 @@
                 atualizarGraficoFluxo();
             }
 
-            // Inicializar Gráfico de Ouvidoria Dinamicamente
             configurarGraficoOuvidoria();
 
-            // --- AUTO ATUALIZAÇÃO EM TEMPO REAL A CADA 5 SEGUNDOS ---
             setInterval(() => {
                 if (!document.getElementById('sec-colaboradores').classList.contains('hidden')) {
                     loadColaboradores();
