@@ -67,13 +67,7 @@ class ProdutoCreate(BaseModel):
     foto: Optional[str] = None
     
 class ProdutoUpdate(ProdutoCreate):
-    empresa_id: int
-    nome: str
-    categoria: str
-    preco: float
-    estoque: int
-    descricao: str
-    foto: Optional[str] = None
+    pass
 
 class ClienteCreate(BaseModel):
     empresa_id: int
@@ -84,12 +78,7 @@ class ClienteCreate(BaseModel):
     referencia: Optional[str] = None
 
 class ClienteUpdate(ClienteCreate):
-    empresa_id: int
-    nome: str
-    telefone: str
-    email: Optional[str] = None
-    endereco: str
-    referencia: Optional[str] = None
+    pass
 
 class ColaboradorCreate(BaseModel):
     empresa_id: int
@@ -174,25 +163,6 @@ class ChamadoConcluir(BaseModel):
 class ChamadoCancelar(BaseModel):
     motivo: str
 
-
-@app.get("/api/orders")
-def get_orders_admin(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
-    cur = db.cursor()
-    try:
-        e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
-        
-        cur.execute("""
-            SELECT id, empresa_id, hora, cliente_nome AS cliente, endereco_entrega AS endereco, 
-                   valor_total AS total, pagamento, status, entregador_id
-            FROM pedidos 
-            WHERE empresa_id = %s 
-            ORDER BY id DESC LIMIT 100
-        """, (e_id,))
-        return cur.fetchall()
-    except Exception as e:
-        return []
-    finally:
-        cur.close()
 # ================= MIGRAÇÃO / ATUALIZAÇÃO DO BANCO =================
 @app.post("/api/atualizar-banco")
 def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db)):
@@ -373,7 +343,7 @@ def master_listar_entregadores(db=Depends(get_db)):
                 "total_entregas": 0
             })
         return lista_final
-    except Exception as e:
+    except Exception:
         db.rollback()
         return []
     finally:
@@ -511,13 +481,10 @@ def delete_notificacao(id: int, db=Depends(get_db)):
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # 1. Tratamento no Python: extrai APENAS os números do CNPJ/CPF digitado
         doc_limpo = ''.join(filter(str.isdigit, auth.cnpj))
-        
         if not doc_limpo:
             raise HTTPException(status_code=400, detail="CNPJ ou CPF inválido.")
 
-        # 2. Busca no banco limpando os caracteres da coluna para garantir o "Match" perfeito
         cursor.execute("""
             SELECT id, nome_fantasia, cnpj, status 
             FROM empresas 
@@ -525,7 +492,6 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
         """, (doc_limpo,))
         
         empresa = cursor.fetchone()
-        
         if not empresa:
             raise HTTPException(status_code=404, detail="CNPJ/CPF não encontrado na base de dados.")
             
@@ -538,13 +504,13 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
             "nome_fantasia": empresa['nome_fantasia']
         }
     except HTTPException:
-        # Repassa os erros 400, 403 e 404 para o front-end exibir o alerta correto
         raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Erro interno de conexão: {str(e)}")
     finally:
         cursor.close()
+
 @app.get("/api/configuracoes")
 def get_configuracoes(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
@@ -649,7 +615,7 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
         
     return dados_grafico
 
-# ================= ROTAS DE PEDIDOS (UNIFICADAS E CORRIGIDAS) =================
+# ================= ROTAS DE PEDIDOS (UNIFICADAS) =================
 
 @app.get("/api/pedidos") 
 @app.get("/api/orders")
@@ -707,7 +673,6 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     finally:
         cur.close()
 
-
 @app.get("/api/orders/{order_id}")
 def get_order_by_id(order_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -739,9 +704,6 @@ def get_order_by_id(order_id: int, db=Depends(get_db)):
     finally:
         cursor.close()
 
-
-
-# 1. CRIAÇÃO DO PEDIDO (Nasce oculto para o motoboy)
 @app.post("/api/orders")
 def create_order(order: OrderCreate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -764,7 +726,6 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
     finally:
         cursor.close()
 
-# 2. DESPACHO DO GESTOR (Libera no radar dos motoboys)
 @app.post("/api/orders/{order_id}/despachar-proximos")
 def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(get_db)):
     cursor = db.cursor()
@@ -791,7 +752,6 @@ def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(ge
     finally:
         cursor.close()
 
-# 3. MATCHMAKING DO MOTOBOY (Só enxerga o que está aguardando ele)
 @app.get("/api/entregador/rotas")
 def get_entregador_rotas(empresa_id: Optional[str] = '1', entregador_id: Optional[str] = None, db=Depends(get_db)):
     cursor = db.cursor()
@@ -821,7 +781,6 @@ def get_entregador_rotas(empresa_id: Optional[str] = '1', entregador_id: Optiona
     finally:
         cursor.close()
 
-# 4. ACEITE DO MOTOBOY (Trava o ID e muda para 'Saiu para entrega')
 @app.post("/api/orders/{order_id}/atribuir-motoboy")
 def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
     cursor = db.cursor()
@@ -845,7 +804,7 @@ def atribuir_motoboy(order_id: int, data: dict, db=Depends(get_db)):
     finally:
         cursor.close()
 
-# ================= ROTAS DE PRODUTOS, CLIENTES E COLABORADORES =================
+# ================= PRODUTOS, CLIENTES E COLABORADORES =================
 @app.get("/api/products")
 def list_products(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
@@ -1016,16 +975,12 @@ def delete_colaborador(id: int, db=Depends(get_db)):
 def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # 1. Limpeza do Python: extrai apenas os números do telefone digitado
         tel_limpo = ''.join(filter(str.isdigit, auth.telefone))
-        
         if not tel_limpo:
             raise HTTPException(status_code=400, detail="Telefone inválido.")
 
-        # Função SQL para limpar a coluna de telefone na hora da busca
         sql_limpeza_tel = "REPLACE(REPLACE(REPLACE(REPLACE(telefone, '(', ''), ')', ''), '-', ''), ' ', '')"
 
-        # 2. Busca na tabela de entregadores do App (Autônomos)
         cursor.execute(f"""
             SELECT id, 1 as empresa_id, nome, status, senha, cpf 
             FROM entregadores_app 
@@ -1033,7 +988,6 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
         """, (tel_limpo,))
         colab = cursor.fetchone()
 
-        # 3. Fallback: Busca na tabela de colaboradores fixos da empresa
         if not colab:
             cursor.execute(f"""
                 SELECT id, empresa_id, nome, status, COALESCE(cpf, '123456') as senha, cpf 
@@ -1045,12 +999,10 @@ def auth_entregador(auth: EntregadorAuth, db=Depends(get_db)):
         if not colab:
             raise HTTPException(status_code=401, detail="Telefone não cadastrado como entregador.")
 
-        # 4. Validação Híbrida de Senha/CPF (Blindada contra máscaras)
         senha_cadastrada = str(colab['senha']) if colab['senha'] else '123456'
         cpf_cadastrado = str(colab['cpf']) if colab['cpf'] else ''
         senha_digitada = auth.senha.strip()
         
-        # Limpa os números da senha e do CPF para comparar com segurança
         senha_dig_numeros = ''.join(filter(str.isdigit, senha_digitada))
         cpf_cad_numeros = ''.join(filter(str.isdigit, cpf_cadastrado))
         
@@ -1116,7 +1068,6 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     finally:
         cursor.close()
 
-
 @app.get("/api/entregador/extrato")
 def get_entregador_extrato(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
@@ -1156,8 +1107,7 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
     finally:
         cursor.close()
 
-
-# ================= ROTAS DE HELPDESK E OUVIDORIA =================
+# ================= HELPDESK E OUVIDORIA =================
 @app.get("/api/ouvidoria/estatisticas")
 def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
@@ -1185,7 +1135,7 @@ def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
             elif "péssimo" in av or "pessimo" in av:
                 stats["pessimo"] = total
         return stats
-    except Exception as e:
+    except Exception:
         db.rollback()
         return {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
     finally:
@@ -1228,7 +1178,7 @@ def listar_chamados_gestor(empresa_id: int = Query(1), db=Depends(get_db)):
     return res
 
 @app.post("/api/ouvidoria")
-def create_ouvidoria(ouv: OuvidoriesCreate if False else OuvidoriaCreate, db=Depends(get_db)):
+def create_ouvidoria(ouv: OuvidoriaCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         cursor.execute("""
@@ -1252,7 +1202,6 @@ def list_ouvidoria(empresa_id: int = Query(1), db=Depends(get_db)):
     res = cursor.fetchall()
     cursor.close()
     return res
-
 
 # ================= ROTAS PÚBLICAS DO HUB E CARDÁPIO =================
 @app.get("/api/empresas")
