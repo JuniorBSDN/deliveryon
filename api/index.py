@@ -197,6 +197,15 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
             status VARCHAR(20) DEFAULT 'Disponível',
             empresa_id INTEGER DEFAULT 1
         );""",
+        """CREATE TABLE IF NOT EXISTS ouvidoria (
+            id SERIAL PRIMARY KEY,
+            empresa_id INTEGER NOT NULL,
+            cliente_nome VARCHAR(255),
+            atendimento VARCHAR(100) DEFAULT 'Geral',
+            avaliacao VARCHAR(50) NOT NULL,
+            relato TEXT,
+            criado_em TIMESTAMP DEFAULT NOW()
+        );""",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS empresa_id INTEGER DEFAULT 1;",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS cpf VARCHAR(50);",
         "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS data_nascimento VARCHAR(50);",
@@ -222,6 +231,7 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);",
         "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS atendimento VARCHAR(100) DEFAULT 'Geral';",
         "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS cliente_nome VARCHAR(255);",
+        "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS criado_em TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS entregador_id INTEGER;",
         "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
     ]
@@ -605,26 +615,33 @@ def get_dashboard(empresa_id: int = Query(1), db=Depends(get_db)):
 @app.get("/api/dashboard/fluxo")
 def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT 
-            SUBSTRING(hora FROM 1 for 2) as horario, 
-            COUNT(*) as total 
-        FROM pedidos 
-        WHERE empresa_id = %s AND hora IS NOT NULL AND hora != ''
-        GROUP BY horario 
-        ORDER BY horario ASC
-    """, (empresa_id,))
-    rows = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute("""
+            SELECT 
+                SUBSTRING(TRIM(hora) FROM 1 for 2) as horario, 
+                COUNT(*) as total 
+            FROM pedidos 
+            WHERE empresa_id = %s AND hora IS NOT NULL AND hora != ''
+            GROUP BY horario 
+            ORDER BY horario ASC
+        """, (empresa_id,))
+        rows = cursor.fetchall()
+    except Exception:
+        rows = []
+    finally:
+        cursor.close()
     
-    totais = {row['horario']: row['total'] for row in rows}
+    totais = {}
+    for row in rows:
+        h_key = str(row['horario']).replace('h', '').strip()
+        totais[h_key] = row['total']
     
     dados_grafico = []
     for h in range(17, 22):
         h_str = f"{h:02d}"
         dados_grafico.append({
             "hora": f"{h_str}h",
-            "total": totais.get(h_str, 0)
+            "total": totais.get(h_str, totais.get(str(h), 0))
         })
         
     return dados_grafico
