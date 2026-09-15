@@ -599,11 +599,47 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT MASTER INTEGRADO -->
+    <!-- JAVASCRIPT MASTER INTEGRADO E BLINDADO COM JWT -->
     <script>
         let alertasGlobaisCache = [];
 
         window.onload = autenticarMaster;
+
+        async function masterApiRequest(endpoint, method = 'GET', data = null) {
+            const token = localStorage.getItem('deliveryon_master_token');
+            if (!token) {
+                autenticarMaster();
+                return null;
+            }
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            const options = { method, headers };
+            if (data && (method === 'POST' || method === 'PUT')) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`/api/master${endpoint}`, options);
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('deliveryon_master_token');
+                    alert("Sessão expirada ou não autorizada. Faça login novamente.");
+                    autenticarMaster();
+                    return null;
+                }
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `Erro HTTP: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error("Erro na requisição Master:", error);
+                return null;
+            }
+        }
 
         async function autenticarMaster() {
             const tokenExistente = localStorage.getItem('deliveryon_master_token');
@@ -656,18 +692,14 @@
         async function carregarNotificacoesReais() {
             const container = document.getElementById('advancedAlertsList');
             const dataFiltro = document.getElementById('filtro-data-notificacoes').value;
-            const url = dataFiltro ? `/api/master/notificacoes?data=${dataFiltro}` : '/api/master/notificacoes';
+            const urlQuery = dataFiltro ? `/notificacoes?data=${dataFiltro}` : '/notificacoes';
 
-            try {
-                const res = await fetch(url);
-                if (res.ok) {
-                    alertasGlobaisCache = await res.json();
-                    renderizarAlertas(alertasGlobaisCache);
-                } else {
-                    container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--danger);">Falha ao buscar alertas do banco.</div>';
-                }
-            } catch (error) {
-                container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--danger);">Erro de conexão com o servidor.</div>';
+            const data = await masterApiRequest(urlQuery);
+            if (data) {
+                alertasGlobaisCache = data;
+                renderizarAlertas(alertasGlobaisCache);
+            } else {
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--danger);">Falha ao buscar alertas do banco ou sessão expirada.</div>';
             }
         }
 
@@ -735,135 +767,103 @@
 
         async function resolverAlerta(id, btnElement) {
             if(!confirm("Marcar notificação como resolvida?")) return;
-            try {
-                const res = await fetch(`/api/master/notificacoes/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    const bloco = btnElement.closest('.adv-list-item');
-                    bloco.style.opacity = '0';
-                    setTimeout(() => {
-                        bloco.remove();
-                        alertasGlobaisCache = alertasGlobaisCache.filter(a => a.id !== id);
-                        if (alertasGlobaisCache.length === 0) renderizarAlertas([]);
-                    }, 300);
-                } else { alert('Erro ao excluir alerta do banco.'); }
-            } catch (e) { alert('Erro de rede.'); }
+            const res = await masterApiRequest(`/notificacoes/${id}`, 'DELETE');
+            if (res) {
+                const bloco = btnElement.closest('.adv-list-item');
+                bloco.style.opacity = '0';
+                setTimeout(() => {
+                    bloco.remove();
+                    alertasGlobaisCache = alertasGlobaisCache.filter(a => a.id !== id);
+                    if (alertasGlobaisCache.length === 0) renderizarAlertas([]);
+                }, 300);
+            }
         }
 
         async function carregarMetricas() {
-            try {
-                const res = await fetch('/api/master/metrics');
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('metric-disk').textContent = data.db_disk_usage || '--';
-                    document.getElementById('metric-clientes').textContent = data.total_clientes || '--';
-                    document.getElementById('metric-mrr').textContent = data.mrr || '--';
-                }
-            } catch (err) { console.error("Erro ao carregar métricas"); }
+            const data = await masterApiRequest('/metrics');
+            if (data) {
+                document.getElementById('metric-disk').textContent = data.db_disk_usage || '--';
+                document.getElementById('metric-clientes').textContent = data.total_clientes || '--';
+                document.getElementById('metric-mrr').textContent = data.mrr || '--';
+            }
         }
 
         async function carregarEmpresas() {
             const tbody = document.getElementById('tabela-empresas');
-            try {
-                const res = await fetch('/api/master/empresas');
-                if (res.ok) {
-                    const empresas = await res.json();
-                    if (empresas.length === 0) { 
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada no Neon DB.</td></tr>'; 
-                        return; 
-                    }
-                    tbody.innerHTML = '';
-                    empresas.forEach(emp => {
-                        const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
-                        const statusTexto = emp.status === 'ativo' ? 'Ativo' : 'Inativo';
-                        
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${emp.nome_fantasia}</strong><br><small style="color:var(--text-muted);">${emp.razao_social || ''}</small></td>
-                                <td>${emp.cnpj}</td>
-                                <td style="text-transform: uppercase;">${emp.plano}</td>
-                                <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
-                                <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                                    <button class="btn-action" title="Carimbar e Autenticar Pagamento" onclick="carimbarPagamentoMaster(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>    
-                                    <button class="btn-action" title="Configurar e Enviar Pix" onclick="abrirModalConfigurarPix(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-qr-code"></i></button>
-                                    <button class="btn-action" title="Ativar/Desativar" onclick="toggleStatus(${emp.id})"><i class="ph ph-arrows-clockwise"></i></button>
-                                    <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
-                                    <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
-                                    <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${emp.id}, '${emp.nome_fantasia}', 'empresa')"><i class="ph ph-clock-counter-clockwise"></i></button>    
-                                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+            const empresas = await masterApiRequest('/empresas');
+            if (empresas) {
+                if (empresas.length === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma empresa cadastrada no Neon DB.</td></tr>'; 
+                    return; 
                 }
-            } catch (err) { 
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Erro de conexão com DB.</td></tr>'; 
+                tbody.innerHTML = '';
+                empresas.forEach(emp => {
+                    const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
+                    const statusTexto = emp.status === 'ativo' ? 'Ativo' : 'Inativo';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${emp.nome_fantasia}</strong><br><small style="color:var(--text-muted);">${emp.razao_social || ''}</small></td>
+                            <td>${emp.cnpj}</td>
+                            <td style="text-transform: uppercase;">${emp.plano}</td>
+                            <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
+                            <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                                <button class="btn-action" title="Carimbar e Autenticar Pagamento" onclick="carimbarPagamentoMaster(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-seal-check text-success" style="color: var(--success);"></i></button>    
+                                <button class="btn-action" title="Configurar e Enviar Pix" onclick="abrirModalConfigurarPix(${emp.id}, '${emp.nome_fantasia}')"><i class="ph ph-qr-code"></i></button>
+                                <button class="btn-action" title="Editar" onclick='abrirEditar(${JSON.stringify(emp)})'><i class="ph ph-pencil-simple"></i></button>
+                                <button class="btn-action" title="Gerar Contrato" onclick="openModal('modalContrato')"><i class="ph ph-scroll"></i></button>
+                                <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${emp.id}, '${emp.nome_fantasia}', 'empresa')"><i class="ph ph-clock-counter-clockwise"></i></button>    
+                                <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
             }
         }
 
         async function carregarEntregadores() {
-    const tbody = document.getElementById('tabela-entregadores');
-    if (!tbody) return;
+            const tbody = document.getElementById('tabela-entregadores');
+            if (!tbody) return;
 
-    try {
-        const res = await fetch('/api/master/entregadores');
-        if (!res.ok) throw new Error("Erro na API do servidor");
+            const entregadores = await masterApiRequest('/entregadores');
+            if (entregadores) {
+                let online = 0, emRota = 0, bloqueados = 0;
 
-        const data = await res.json();
-        // Garante que é um array, mesmo se o backend retornar outro formato
-        const entregadores = Array.isArray(data) ? data : (data.entregadores || []);
-
-        let online = 0, emRota = 0, bloqueados = 0;
-
-        if (entregadores.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum entregador cadastrado na rede global.</td></tr>';
-            document.getElementById('ind-ent-total').innerText = 0;
-            document.getElementById('ind-ent-online').innerText = 0;
-            document.getElementById('ind-ent-rota').innerText = 0;
-            document.getElementById('ind-ent-bloqueados').innerText = 0;
-            return;
-        }
-
-        tbody.innerHTML = '';
-        entregadores.forEach(ent => {
-            const status = ent.status || 'Disponível';
-            if (status === 'Disponível' || status === 'Online') online++;
-            if (status === 'Em Entrega' || status === 'Em Rota') emRota++;
-            if (status === 'Bloqueado') bloqueados++;
-
-            const badgeClass = status === 'Disponível' || status === 'Online' ? 'badge-success' : (status === 'Bloqueado' ? 'badge-danger' : 'badge-info');
-
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${ent.nome || 'Entregador sem nome'}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo || 'Moto'}</small></td>
-                    <td>${ent.telefone || '--'}</td>
-                    <td><span class="badge ${badgeClass}">${status}</span></td>
-                    <td>${ent.total_entregas || 0}</td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome || 'Entregador'}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('ind-ent-total').innerText = entregadores.length;
-        document.getElementById('ind-ent-online').innerText = online;
-        document.getElementById('ind-ent-rota').innerText = emRota;
-        document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
-
-    } catch (err) {
-        console.error("Erro ao carregar entregadores no master:", err);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger); padding: 20px;">Erro ao sincronizar com o banco de dados. Verifique a rota do backend.</td></tr>';
-    }
-}
-
-        async function bloquearEntregadorAdmin(id, nome) {
-            if(confirm(`Deseja alterar o status de bloqueio do entregador ${nome}?`)) {
-                try {
-                    await fetch(`/api/master/entregadores/${id}/bloqueio`, { method: 'PUT' });
-                    carregarEntregadores();
-                } catch(e) {
-                    alert("Erro ao alterar bloqueio.");
+                if (entregadores.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum entregador cadastrado na rede global.</td></tr>';
+                    document.getElementById('ind-ent-total').innerText = 0;
+                    document.getElementById('ind-ent-online').innerText = 0;
+                    document.getElementById('ind-ent-rota').innerText = 0;
+                    document.getElementById('ind-ent-bloqueados').innerText = 0;
+                    return;
                 }
+
+                tbody.innerHTML = '';
+                entregadores.forEach(ent => {
+                    const status = ent.status || 'Disponível';
+                    if (status === 'Disponível' || status === 'Online') online++;
+                    if (status === 'Em Entrega' || status === 'Em Rota') emRota++;
+                    if (status === 'Bloqueado') bloqueados++;
+
+                    const badgeClass = status === 'Disponível' || status === 'Online' ? 'badge-success' : (status === 'Bloqueado' ? 'badge-danger' : 'badge-info');
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${ent.nome || 'Entregador'}</strong><br><small style="color:var(--text-muted);">Veículo: ${ent.veiculo || 'Moto'}</small></td>
+                            <td>${ent.telefone || '--'}</td>
+                            <td><span class="badge ${badgeClass}">${status}</span></td>
+                            <td>${ent.total_entregas || 0}</td>
+                            <td style="text-align: right;">
+                                <button class="btn-action" title="Histórico" onclick="abrirHistoricoGlobal(${ent.id}, '${ent.nome || 'Entregador'}', 'entregador')"><i class="ph ph-clock-counter-clockwise"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('ind-ent-total').innerText = entregadores.length;
+                document.getElementById('ind-ent-online').innerText = online;
+                document.getElementById('ind-ent-rota').innerText = emRota;
+                document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
             }
         }
 
@@ -873,33 +873,15 @@
             const payload = {
                 razao_social: document.getElementById('cad-razao').value, nome_fantasia: document.getElementById('cad-fantasia').value, cnpj: document.getElementById('cad-cnpj').value, responsavel: document.getElementById('cad-resp').value, contato: document.getElementById('cad-contato').value, email_admin: document.getElementById('cad-email').value, endereco: document.getElementById('cad-endereco').value, plano: document.getElementById('cad-plano').value, vencimento: parseInt(document.getElementById('cad-vencimento').value), limite_usuarios: parseInt(document.getElementById('cad-limite').value)
             };
-            try {
-                const res = await fetch('/api/master/empresas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (res.ok) { 
-                    alert("Cliente cadastrado com sucesso!"); 
-                    document.getElementById('form-cad-empresa').reset(); 
-                    toggleCadastroForm(); 
-                    carregarEmpresas(); 
-                    carregarMetricas(); 
-                } else { 
-                    alert("Erro ao cadastrar. Verifique os dados."); 
-                }
-            } catch (err) { alert("Erro de API."); } finally { btn.disabled = false; }
-        }
-
-        function abrirEditar(emp) {
-            document.getElementById('edit-id').value = emp.id;
-            document.getElementById('edit-razao').value = emp.razao_social || '';
-            document.getElementById('edit-fantasia').value = emp.nome_fantasia || '';
-            document.getElementById('edit-cnpj').value = emp.cnpj || '';
-            document.getElementById('edit-resp').value = emp.responsavel || '';
-            document.getElementById('edit-contato').value = emp.contato || '';
-            document.getElementById('edit-email').value = emp.email_admin || '';
-            document.getElementById('edit-endereco').value = emp.endereco || '';
-            document.getElementById('edit-plano').value = emp.plano || 'basic';
-            document.getElementById('edit-vencimento').value = emp.vencimento || 10;
-            document.getElementById('edit-limite').value = emp.limite_usuarios || 5;
-            openModal('modalEditar');
+            const res = await masterApiRequest('/empresas', 'POST', payload);
+            if (res) { 
+                alert("Cliente cadastrado com sucesso!"); 
+                document.getElementById('form-cad-empresa').reset(); 
+                toggleCadastroForm(); 
+                carregarEmpresas(); 
+                carregarMetricas(); 
+            }
+            btn.disabled = false;
         }
 
         async function salvarEdicao(e) {
@@ -918,28 +900,208 @@
                 limite_usuarios: parseInt(document.getElementById('edit-limite').value)
             };
 
-            try {
-                const res = await fetch(`/api/master/empresas/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if(res.ok) {
-                    alert("Dados atualizados com sucesso no Neon DB!");
-                    closeModal('modalEditar');
-                    carregarEmpresas();
-                } else {
-                    alert("Erro ao salvar alterações.");
-                }
-            } catch(err) {
-                alert("Erro de conexão com o servidor.");
+            const res = await masterApiRequest(`/empresas/${id}`, 'PUT', payload);
+            if (res) {
+                alert("Dados atualizados com sucesso no Neon DB!");
+                closeModal('modalEditar');
+                carregarEmpresas();
             }
         }
 
         async function deletarEmpresa(id) {
             if(confirm("Deseja realmente excluir este cliente do Neon DB?")) {
-                try { const res = await fetch(`/api/master/empresas/${id}`, { method: 'DELETE' }); if(res.ok) { carregarEmpresas(); carregarMetricas(); } } catch(e) {}
+                const res = await masterApiRequest(`/empresas/${id}`, 'DELETE');
+                if(res) { carregarEmpresas(); carregarMetricas(); }
             }
+        }
+
+        async function carimbarPagamentoMaster(id, nome) {
+            if(confirm(`Deseja autenticar e carimbar o pagamento da empresa "${nome}"?\n\nIsso mudará o status para ATIVO e enviará o comprovante ao Gestor.`)) {
+                const res = await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST');
+                if(res) {
+                    alert(res.mensagem || "Pagamento carimbado com sucesso.");
+                    carregarEmpresas();        
+                    carregarNotificacoesReais(); 
+                }
+            }
+        }
+
+        async function salvarConfiguracaoPix() {
+            const id = document.getElementById('pix-empresa-id').value;
+            const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
+            const copiaECola = document.getElementById('input-copia-cola-master').value;
+
+            if(!imagemBase64) {
+                alert("Por favor, selecione a imagem do QR Code no seu dispositivo.");
+                return;
+            }
+
+            const payload = { qrcode_imagem: imagemBase64, copia_e_cola: copiaECola };
+            const res = await masterApiRequest(`/empresas/${id}/pix`, 'PUT', payload);
+            if(res) {
+                alert("QR Code e Código Pix enviados com sucesso para o painel do Gestor!");
+                closeModal('modalPixMaster');
+            }
+        }
+
+        async function abrirHistoricoGlobal(id, nome, tipo) {
+            document.getElementById('historico-empresa-nome').innerText = nome;
+            const listaContainer = document.getElementById('lista-historico-modal');
+            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
+            
+            openModal('modalHistorico');
+
+            const urlPath = tipo === 'empresa' ? `/empresas/${id}/historico` : `/entregadores/${id}/historico`;
+            const historicos = await masterApiRequest(urlPath);
+            
+            if (historicos) {
+                if (historicos.length === 0) {
+                    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro encontrado.</li>';
+                    return;
+                }
+                listaContainer.innerHTML = '';
+                historicos.forEach(h => {
+                    listaContainer.innerHTML += `
+                        <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
+                            <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data || h.data_hora || ''}</span>
+                            <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao || h.detalhe || ''}</span>
+                        </li>
+                    `;
+                });
+            } else {
+                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
+            }
+        }
+
+        async function carregarHelpdesk() {
+            const ind = await masterApiRequest('/helpdesk/indicadores');
+            if(ind) {
+                document.getElementById('ind-abertos').innerText = ind.abertos || 0;
+                document.getElementById('ind-atendimento').innerText = ind.em_andamento || 0; 
+                document.getElementById('ind-pendentes').innerText = ind.pendentes || 0;
+                document.getElementById('ind-resolvidos').innerText = ind.concluidos || 0; 
+            }
+
+            const dataFiltro = document.getElementById('filtro-data-hd').value;
+            const urlPath = dataFiltro ? `/helpdesk/chamados?data=${dataFiltro}` : '/helpdesk/chamados';
+            
+            const chamados = await masterApiRequest(urlPath);
+            const tbody = document.getElementById('tabela-chamados');
+            
+            if(chamados) {
+                if(chamados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum chamado registrado.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = '';
+                chamados.forEach(c => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${c.empresa || 'Empresa Desconhecida'}</strong><br><small>${c.data || ''}</small></td>
+                            <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${c.resumo_problema}</td>
+                            <td>
+                                <select class="form-control" style="padding: 4px; font-size: 0.8rem; width: auto;" onchange="alterarStatusChamado(${c.id}, this.value)">
+                                    <option value="aberto" ${c.status === 'aberto' ? 'selected' : ''}>Aberto</option>
+                                    <option value="em_atendimento" ${c.status === 'em_atendimento' || c.status === 'em_andamento' ? 'selected' : ''}>Análise / Em Atendimento</option>
+                                    <option value="pendente" ${c.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                                    <option value="concluido" ${c.status === 'concluido' || c.status === 'resolvido' ? 'selected' : ''}>Concluído</option>
+                                </select>
+                            </td>
+                            <td>${c.tecnico_responsavel || 'Não atribuído'}</td>
+                            <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                                <button class="btn-action" title="Concluir Chamado e Enviar Comprovante" onclick="abrirModalConcluir(${c.id})"><i class="ph ph-seal-check" style="color: var(--success);"></i></button>
+                                <button class="btn-action" title="Histórico do Chamado" onclick="abrirHistoricoChamado(${c.id})"><i class="ph ph-clock-counter-clockwise"></i></button>
+                                <button class="btn-action" title="Cancelar Chamado" onclick="abrirModalCancelar(${c.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        async function alterarStatusChamado(id, novoStatus) {
+            const res = await masterApiRequest(`/helpdesk/chamados/${id}/status`, 'PUT', { status: novoStatus });
+            if(res) carregarHelpdesk();
+        }
+
+        function abrirModalConcluir(id) {
+            document.getElementById('concluir-chamado-id').value = id;
+            document.getElementById('input-tecnico-nome').value = '';
+            openModal('modalConcluirChamado');
+        }
+
+        async function salvarConclusaoChamado() {
+            const id = document.getElementById('concluir-chamado-id').value;
+            const tecnico = document.getElementById('input-tecnico-nome').value;
+            const enviarComp = document.getElementById('check-envia-comprovante').checked;
+
+            if(!tecnico) { alert("Informe o nome do técnico responsável."); return; }
+
+            const res = await masterApiRequest(`/helpdesk/chamados/${id}/concluir`, 'POST', { tecnico: tecnico, enviar_comprovante: enviarComp });
+            if(res) {
+                alert("Chamado concluído com sucesso! Comprovante automático gerado e disparado.");
+                closeModal('modalConcluirChamado');
+                carregarHelpdesk();
+            }
+        }
+
+        function abrirModalCancelar(id) {
+            document.getElementById('cancelar-chamado-id').value = id;
+            document.getElementById('textarea-motivo-cancelamento').value = '';
+            openModal('modalCancelarChamado');
+        }
+
+        async function salvarCancelamentoChamado() {
+            const id = document.getElementById('cancelar-chamado-id').value;
+            const motivo = document.getElementById('textarea-motivo-cancelamento').value;
+
+            if(!motivo) { alert("Informe o motivo do cancelamento."); return; }
+
+            const res = await masterApiRequest(`/helpdesk/chamados/${id}/cancelar`, 'POST', { motivo: motivo });
+            if(res) {
+                alert("Chamado cancelado e registrado no histórico.");
+                closeModal('modalCancelarChamado');
+                carregarHelpdesk();
+            }
+        }
+
+        async function abrirHistoricoChamado(id) {
+            document.getElementById('hist-chamado-id').innerText = id;
+            const lista = document.getElementById('lista-historico-chamado');
+            lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando...</li>';
+            openModal('modalHistoricoChamado');
+
+            const historicos = await masterApiRequest(`/helpdesk/chamados/${id}/historico`);
+            if(historicos) {
+                if(historicos.length === 0) {
+                    lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico deste chamado.</li>';
+                    return;
+                }
+                lista.innerHTML = '';
+                historicos.forEach(h => {
+                    lista.innerHTML += `
+                        <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
+                            <span style="font-size: 0.8rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 3px 6px; border-radius: 4px;">${h.data}</span>
+                            <span style="font-size: 0.9rem;">${h.descricao}</span>
+                        </li>
+                    `;
+                });
+            }
+        }
+
+        function abrirEditar(emp) {
+            document.getElementById('edit-id').value = emp.id;
+            document.getElementById('edit-razao').value = emp.razao_social || '';
+            document.getElementById('edit-fantasia').value = emp.nome_fantasia || '';
+            document.getElementById('edit-cnpj').value = emp.cnpj || '';
+            document.getElementById('edit-resp').value = emp.responsavel || '';
+            document.getElementById('edit-contato').value = emp.contato || '';
+            document.getElementById('edit-email').value = emp.email_admin || '';
+            document.getElementById('edit-endereco').value = emp.endereco || '';
+            document.getElementById('edit-plano').value = emp.plano || 'basic';
+            document.getElementById('edit-vencimento').value = emp.vencimento || 10;
+            document.getElementById('edit-limite').value = emp.limite_usuarios || 5;
+            openModal('modalEditar');
         }
 
         function navigate(sectionId, clickedElement) {
@@ -993,238 +1155,6 @@
             document.getElementById('input-copia-cola-master').value = '';
 
             openModal('modalPixMaster');
-        }
-
-        async function salvarConfiguracaoPix() {
-            const id = document.getElementById('pix-empresa-id').value;
-            const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
-            const copiaECola = document.getElementById('input-copia-cola-master').value;
-
-            if(!imagemBase64) {
-                alert("Por favor, selecione a imagem do QR Code no seu dispositivo.");
-                return;
-            }
-
-            const payload = {
-                qrcode_imagem: imagemBase64,
-                copia_e_cola: copiaECola
-            };
-
-            try {
-                const res = await fetch(`/api/master/empresas/${id}/pix`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if(res.ok) {
-                    alert("QR Code do dispositivo e Código Pix enviados com sucesso para o painel do Gestor!");
-                    closeModal('modalPixMaster');
-                } else {
-                    alert("Erro ao salvar configuração.");
-                }
-            } catch(e) {
-                alert("Erro de comunicação com o servidor.");
-            }
-        }
-
-        async function carimbarPagamentoMaster(id, nome) {
-            if(confirm(`Deseja autenticar e carimbar o pagamento da empresa "${nome}"?\n\nIsso mudará o status para ATIVO e enviará o comprovante ao Gestor.`)) {
-                try {
-                    const res = await fetch(`/api/master/empresas/${id}/carimbar-pagamento`, { method: 'POST' });
-                    if(res.ok) {
-                        const data = await res.json();
-                        alert(data.mensagem);
-                        carregarEmpresas();        
-                        carregarNotificacoesReais(); 
-                    } else {
-                        alert("Erro ao processar autenticação.");
-                    }
-                } catch(e) {
-                    alert("Erro de comunicação com o servidor.");
-                }
-            }
-        }
-
-        async function abrirHistoricoGlobal(id, nome, tipo) {
-            document.getElementById('historico-empresa-nome').innerText = nome;
-            const listaContainer = document.getElementById('lista-historico-modal');
-            listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>';
-            
-            openModal('modalHistorico');
-
-            const url = tipo === 'empresa' 
-                ? `/api/master/empresas/${id}/historico` 
-                : `/api/master/entregadores/${id}/historico`;
-
-            try {
-                const res = await fetch(url);
-                if (res.ok) {
-                    const historicos = await res.json();
-                    if (historicos.length === 0) {
-                        listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro encontrado.</li>';
-                        return;
-                    }
-                    listaContainer.innerHTML = '';
-                    historicos.forEach(h => {
-                        listaContainer.innerHTML += `
-                            <li style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
-                                <span style="font-size: 0.85rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 4px 8px; border-radius: 4px;">${h.data || h.data_hora}</span>
-                                <span style="font-size: 0.95rem; color: var(--text-main);">${h.descricao || h.detalhe}</span>
-                            </li>
-                        `;
-                    });
-                } else {
-                    listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar o histórico.</li>';
-                }
-            } catch (e) {
-                listaContainer.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro de comunicação com o servidor.</li>';
-            }
-        }
-
-        async function carregarHelpdesk() {
-            try {
-                const resInd = await fetch('/api/master/helpdesk/indicadores');
-                if(resInd.ok) {
-                    const ind = await resInd.json();
-                    document.getElementById('ind-abertos').innerText = ind.abertos || 0;
-                    document.getElementById('ind-atendimento').innerText = ind.em_andamento || 0; 
-                    document.getElementById('ind-pendentes').innerText = ind.pendentes || 0;
-                    document.getElementById('ind-resolvidos').innerText = ind.concluidos || 0; 
-                }
-
-                const dataFiltro = document.getElementById('filtro-data-hd').value;
-                const url = dataFiltro ? `/api/master/helpdesk/chamados?data=${dataFiltro}` : '/api/master/helpdesk/chamados';
-                
-                const resList = await fetch(url);
-                const tbody = document.getElementById('tabela-chamados');
-                
-                if(resList.ok) {
-                    const chamados = await resList.json();
-                    if(chamados.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum chamado registrado.</td></tr>';
-                        return;
-                    }
-                    tbody.innerHTML = '';
-                    chamados.forEach(c => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${c.empresa || 'Empresa Desconhecida'}</strong><br><small>${c.data || ''}</small></td>
-                                <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${c.resumo_problema}</td>
-                                <td>
-                                    <select class="form-control" style="padding: 4px; font-size: 0.8rem; width: auto;" onchange="alterarStatusChamado(${c.id}, this.value)">
-                                        <option value="aberto" ${c.status === 'aberto' ? 'selected' : ''}>Aberto</option>
-                                        <option value="em_atendimento" ${c.status === 'em_atendimento' || c.status === 'em_andamento' ? 'selected' : ''}>Análise / Em Atendimento</option>
-                                        <option value="pendente" ${c.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-                                        <option value="concluido" ${c.status === 'concluido' || c.status === 'resolvido' ? 'selected' : ''}>Concluído</option>
-                                    </select>
-                                </td>
-                                <td>${c.tecnico_responsavel || 'Não atribuído'}</td>
-                                <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                                    <button class="btn-action" title="Concluir Chamado e Enviar Comprovante" onclick="abrirModalConcluir(${c.id})"><i class="ph ph-seal-check" style="color: var(--success);"></i></button>
-                                    <button class="btn-action" title="Histórico do Chamado" onclick="abrirHistoricoChamado(${c.id})"><i class="ph ph-clock-counter-clockwise"></i></button>
-                                    <button class="btn-action" title="Cancelar Chamado" onclick="abrirModalCancelar(${c.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch(e) {
-                console.error("Erro ao carregar Helpdesk", e);
-            }
-        }
-
-        async function alterarStatusChamado(id, novoStatus) {
-            try {
-                await fetch(`/api/master/helpdesk/chamados/${id}/status`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ status: novoStatus })
-                });
-                carregarHelpdesk();
-            } catch(e) { alert("Erro ao atualizar status."); }
-        }
-
-        function abrirModalConcluir(id) {
-            document.getElementById('concluir-chamado-id').value = id;
-            document.getElementById('input-tecnico-nome').value = '';
-            openModal('modalConcluirChamado');
-        }
-
-        async function salvarConclusaoChamado() {
-            const id = document.getElementById('concluir-chamado-id').value;
-            const tecnico = document.getElementById('input-tecnico-nome').value;
-            const enviarComp = document.getElementById('check-envia-comprovante').checked;
-
-            if(!tecnico) { alert("Informe o nome do técnico responsável."); return; }
-
-            try {
-                const res = await fetch(`/api/master/helpdesk/chamados/${id}/concluir`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ tecnico: tecnico, enviar_comprovante: enviarComp })
-                });
-                if(res.ok) {
-                    alert("Chamado concluído com sucesso! Comprovante automático gerado e disparado.");
-                    closeModal('modalConcluirChamado');
-                    carregarHelpdesk();
-                }
-            } catch(e) { alert("Erro ao concluir chamado."); }
-        }
-
-        function abrirModalCancelar(id) {
-            document.getElementById('cancelar-chamado-id').value = id;
-            document.getElementById('textarea-motivo-cancelamento').value = '';
-            openModal('modalCancelarChamado');
-        }
-
-        async function salvarCancelamentoChamado() {
-            const id = document.getElementById('cancelar-chamado-id').value;
-            const motivo = document.getElementById('textarea-motivo-cancelamento').value;
-
-            if(!motivo) { alert("Informe o motivo do cancelamento."); return; }
-
-            try {
-                const res = await fetch(`/api/master/helpdesk/chamados/${id}/cancelar`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ motivo: motivo })
-                });
-                if(res.ok) {
-                    alert("Chamado cancelado e registrado no histórico.");
-                    closeModal('modalCancelarChamado');
-                    carregarHelpdesk();
-                }
-            } catch(e) { alert("Erro ao cancelar chamado."); }
-        }
-
-        async function abrirHistoricoChamado(id) {
-            document.getElementById('hist-chamado-id').innerText = id;
-            const lista = document.getElementById('lista-historico-chamado');
-            lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando...</li>';
-            openModal('modalHistoricoChamado');
-
-            try {
-                const res = await fetch(`/api/master/helpdesk/chamados/${id}/historico`);
-                if(res.ok) {
-                    const historicos = await res.json();
-                    if(historicos.length === 0) {
-                        lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--text-muted);">Nenhum registro no histórico deste chamado.</li>';
-                        return;
-                    }
-                    lista.innerHTML = '';
-                    historicos.forEach(h => {
-                        lista.innerHTML += `
-                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center;">
-                                <span style="font-size: 0.8rem; font-weight: bold; color: var(--brand-primary); background: rgba(255,87,34,0.1); padding: 3px 6px; border-radius: 4px;">${h.data}</span>
-                                <span style="font-size: 0.9rem;">${h.descricao}</span>
-                            </li>
-                        `;
-                    });
-                }
-            } catch(e) {
-                lista.innerHTML = '<li style="padding: 15px; text-align: center; color: var(--danger);">Erro ao carregar histórico.</li>';
-            }
         }
     </script>
 </body>
