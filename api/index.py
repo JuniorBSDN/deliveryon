@@ -591,29 +591,68 @@ def get_dashboard(empresa_id: int = Query(1), db=Depends(get_db)):
 @app.get("/api/dashboard/fluxo")
 def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT 
-            SUBSTRING(hora FROM 1 for 2) as horario, 
-            COUNT(*) as total 
-        FROM pedidos 
-        WHERE empresa_id = %s AND hora IS NOT NULL AND hora != ''
-        GROUP BY horario 
-        ORDER BY horario ASC
-    """, (empresa_id,))
-    rows = cursor.fetchall()
-    cursor.close()
+    try:
+        # Garante compatibilidade extraindo os dois primeiros dígitos da hora de forma segura
+        cursor.execute("""
+            SELECT 
+                SUBSTRING(TRIM(hora) FROM 1 for 2) as horario, 
+                COUNT(*) as total 
+            FROM pedidos 
+            WHERE empresa_id = %s AND hora IS NOT NULL AND TRIM(hora) != ''
+            GROUP BY horario 
+            ORDER BY horario ASC
+        """, (empresa_id,))
+        rows = cursor.fetchall()
+    except Exception:
+        db.rollback()
+        rows = []
+    finally:
+        cursor.close()
     
-    totais = {row['horario']: row['total'] for row in rows}
+    totais = {str(row['horario']): int(row['total']) for row in rows}
     
     dados_grafico = []
     for h in range(17, 22):
         h_str = f"{h:02d}"
         dados_grafico.append({
             "hora": f"{h_str}h",
-            "total": totais.get(h_str, 0)
+            "total": totais.get(h_str, totais.get(str(h), 0))
         })
         
     return dados_grafico
+
+@app.get("/api/ouvidoria/estatisticas")
+def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT LOWER(TRIM(avaliacao)) as av, COUNT(*) as total 
+            FROM ouvidoria 
+            WHERE empresa_id = %s 
+            GROUP BY LOWER(TRIM(avaliacao))
+        """, (empresa_id,))
+        rows = cursor.fetchall()
+
+        stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+        for row in rows:
+            av = row['av']
+            total = int(row['total'])
+            if "ótimo" in av or "otimo" in av:
+                stats["otimo"] = total
+            elif "bom" in av:
+                stats["bom"] = total
+            elif "regular" in av:
+                stats["regular"] = total
+            elif "ruim" in av:
+                stats["ruim"] = total
+            elif "péssimo" in av or "pessimo" in av:
+                stats["pessimo"] = total
+        return stats
+    except Exception:
+        db.rollback()
+        return {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+    finally:
+        cursor.close()
 
 # ================= ROTAS DE PEDIDOS (UNIFICADAS) =================
 
@@ -1108,38 +1147,6 @@ def entregador_baixa(baixa: BaixaPedido, db=Depends(get_db)):
         cursor.close()
 
 # ================= HELPDESK E OUVIDORIA =================
-@app.get("/api/ouvidoria/estatisticas")
-def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        cursor.execute("""
-            SELECT LOWER(avaliacao) as av, COUNT(*) as total 
-            FROM ouvidoria 
-            WHERE empresa_id = %s 
-            GROUP BY LOWER(avaliacao)
-        """, (empresa_id,))
-        rows = cursor.fetchall()
-
-        stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
-        for row in rows:
-            av = row['av']
-            total = row['total']
-            if "ótimo" in av or "otimo" in av:
-                stats["otimo"] = total
-            elif "bom" in av:
-                stats["bom"] = total
-            elif "regular" in av:
-                stats["regular"] = total
-            elif "ruim" in av:
-                stats["ruim"] = total
-            elif "péssimo" in av or "pessimo" in av:
-                stats["pessimo"] = total
-        return stats
-    except Exception:
-        db.rollback()
-        return {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
-    finally:
-        cursor.close()
 
 @app.post("/api/helpdesk")
 def criar_chamado(chamado: ChamadoCreate, db=Depends(get_db)):
