@@ -1451,12 +1451,7 @@ def listar_produtos_destaques(db=Depends(get_db)):
 def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Pega o total de feedbacks
-        cursor.execute("SELECT COUNT(*) as total FROM ouvidoria WHERE empresa_id = %s", (empresa_id,))
-        resultado_total = cursor.fetchone()
-        total_feedbacks = resultado_total['total'] if resultado_total else 0
-
-        # Agrupa pela nota/avaliação para montar possíveis gráficos
+        # Busca as avaliações no banco
         cursor.execute("""
             SELECT avaliacao, COUNT(*) as quantidade 
             FROM ouvidoria 
@@ -1464,11 +1459,25 @@ def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
             GROUP BY avaliacao
         """, (empresa_id,))
         detalhes = cursor.fetchall()
-
-        return {
-            "total": total_feedbacks,
-            "detalhes": detalhes
-        }
+        
+        # Inicializa o dicionário com as chaves exatas que o JS do admin.html espera
+        stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
+        
+        # Preenche com os dados reais
+        for row in detalhes:
+            nota = str(row['avaliacao']).lower()
+            if "ótimo" in nota or "otimo" in nota: 
+                stats["otimo"] = row['quantidade']
+            elif "bom" in nota: 
+                stats["bom"] = row['quantidade']
+            elif "regular" in nota: 
+                stats["regular"] = row['quantidade']
+            elif "ruim" in nota: 
+                stats["ruim"] = row['quantidade']
+            elif "péssimo" in nota or "pessimo" in nota: 
+                stats["pessimo"] = row['quantidade']
+                
+        return stats
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
