@@ -1479,6 +1479,28 @@ def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
     finally:
         cursor.close()
 
+@app.put("/api/orders/{order_id}")
+def update_order(order_id: int, order_data: dict, empresa_id: int = Query(1), db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cliente_nome = order_data.get("cliente_nome")
+        endereco_entrega = order_data.get("endereco_entrega")
+        valor_total = order_data.get("valor_total")
+
+        cursor.execute("""
+            UPDATE pedidos 
+            SET cliente_nome = %s, endereco_entrega = %s, valor_total = %s, total = %s
+            WHERE id = %s AND empresa_id = %s
+        """, (cliente_nome, endereco_entrega, valor_total, valor_total, order_id, empresa_id))
+        
+        db.commit()
+        return {"status": "success", "message": "Pedido atualizado com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
 
 @app.post("/api/backup")
 def backup():
