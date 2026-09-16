@@ -1447,6 +1447,35 @@ def listar_produtos_destaques(db=Depends(get_db)):
     return res
 
 
+@app.get("/api/ouvidoria/estatisticas")
+def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Pega o total de feedbacks
+        cursor.execute("SELECT COUNT(*) as total FROM ouvidoria WHERE empresa_id = %s", (empresa_id,))
+        resultado_total = cursor.fetchone()
+        total_feedbacks = resultado_total['total'] if resultado_total else 0
+
+        # Agrupa pela nota/avaliação para montar possíveis gráficos
+        cursor.execute("""
+            SELECT avaliacao, COUNT(*) as quantidade 
+            FROM ouvidoria 
+            WHERE empresa_id = %s 
+            GROUP BY avaliacao
+        """, (empresa_id,))
+        detalhes = cursor.fetchall()
+
+        return {
+            "total": total_feedbacks,
+            "detalhes": detalhes
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
+
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
