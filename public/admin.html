@@ -982,6 +982,7 @@
                         </td>
                         <td style="text-align: right;">
                             <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${order.id}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
+                            <button class="btn-action" title="Editar Pedido" onclick="abrirModalEditarPedido('${encodeURIComponent(JSON.stringify(order))}')" style="margin-right: 4px; color: var(--info);"><i class="ph ph-pencil"></i></button>
                             <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
                         </td>
                     </tr>
@@ -989,6 +990,74 @@
             });
         }
 
+function abrirModalEditarPedido(orderStr) {
+    const o = JSON.parse(decodeURIComponent(orderStr));
+    // Cria o modal dinamicamente se não existir, ou preenche os campos
+    let modal = document.getElementById('modalEditarPedidoAdmin');
+    if (!modal) {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div class="modal-overlay" id="modalEditarPedidoAdmin">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3><i class="ph ph-pencil"></i> Editar Pedido #<span id="edit-ord-id-label"></span></h3>
+                        <button class="close-modal" onclick="closeModal('modalEditarPedidoAdmin')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="form-editar-pedido" onsubmit="event.preventDefault(); salvarEdicaoPedido();">
+                            <input type="hidden" id="edit-ord-id">
+                            <div class="form-group">
+                                <label>Nome do Cliente</label>
+                                <input type="text" class="form-control" id="edit-ord-cliente" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Endereço de Entrega</label>
+                                <input type="text" class="form-control" id="edit-ord-endereco" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Valor Total (R$)</label>
+                                <input type="text" class="form-control" id="edit-ord-total" required>
+                            </div>
+                            <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                                <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarPedidoAdmin')">Cancelar</button>
+                                <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(div.firstChild);
+        modal = document.getElementById('modalEditarPedidoAdmin');
+    }
+
+    document.getElementById('edit-ord-id').value = o.id;
+    document.getElementById('edit-ord-id-label').innerText = o.id;
+    document.getElementById('edit-ord-cliente').value = o.cliente || o.cliente_nome || '';
+    document.getElementById('edit-ord-endereco').value = o.endereco || o.endereco_entrega || '';
+    document.getElementById('edit-ord-total').value = o.total || o.valor_total || '';
+    
+    modal.classList.add('active');
+}
+
+async function salvarEdicaoPedido() {
+    const id = document.getElementById('edit-ord-id').value;
+    const payload = {
+        cliente_nome: document.getElementById('edit-ord-cliente').value,
+        endereco_entrega: document.getElementById('edit-ord-endereco').value,
+        valor_total: parseFloat(document.getElementById('edit-ord-total').value.replace(',', '.'))
+    };
+
+    const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
+    if (res) {
+        alert('Pedido atualizado com sucesso!');
+        closeModal('modalEditarPedidoAdmin');
+        loadOrders();
+        loadDashboardData();
+    } else {
+        alert('Erro ao atualizar o pedido.');
+    }
+}
+      
         async function updateOrderStatus(orderId, selectElement) {
             const novoStatus = selectElement.value;
             const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
