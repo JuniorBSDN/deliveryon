@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="app-title">deliveryON - Hub</title>
+    <title id="app-title">deliveryON - Vigia/PA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Ícones e Leaflet CSS para o mapa de rastreio -->
@@ -197,7 +197,7 @@
                 <p class="text-lg font-medium">Sua sacola está vazia</p>
             </div>
             <div id="cart-items" class="space-y-4 mb-6"></div>
-            
+
             <div id="checkout-form" class="hidden bg-white p-5 rounded-xl shadow-sm border space-y-3">
                 <input type="text" id="cli-nome" placeholder="Nome completo" class="w-full p-3 border rounded-lg text-sm" required>
                 <input type="tel" id="cli-tel" placeholder="WhatsApp" class="w-full p-3 border rounded-lg text-sm" required>
@@ -268,7 +268,7 @@
                 <p style="color: #777; font-size: 0.9rem; margin-bottom: 15px;">
                     Seu pedido foi entregue! Como você avalia nosso atendimento e produtos?
                 </p>
-                
+
                 <div class="form-group text-left">
                     <label>Sua Avaliação</label>
                     <select class="form-control" id="select-avaliacao-cliente" required>
@@ -298,15 +298,15 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        let destaquesGlobais = []; 
-        const API_BASE_URL = "/api"; 
+        let destaquesGlobais = [];
+        const API_BASE_URL = "/api";
 
         let pedidoAvaliadoId = null;
         let pedidoAtivoId = null;
         let mapaClienteInstancia = null;
-        let lojaAtualId = null; 
-        let carrinhoLojaId = null; 
-        let telefoneWhatsapp = ""; 
+        let lojaAtualId = null;
+        let carrinhoLojaId = null;
+        let telefoneWhatsapp = "";
         const TAXA_ENTREGA = 5.00;
         let lojasCadastradas = [];
         let menuItems = [];
@@ -346,18 +346,18 @@
         }
 
         async function carregarLojasAPI() {
-            const lojasDB = await apiRequest('/empresas'); 
+            const lojasDB = await apiRequest('/empresas');
             const container = document.getElementById('lojas-grid');
-            
+
             if (lojasDB && lojasDB.length > 0) {
                 lojasCadastradas = lojasDB.map(loja => ({
                     id: loja.id,
                     nome: loja.nome,
-                    categoria: loja.categoria || 'Geral', 
+                    categoria: loja.categoria || 'Geral',
                     img: loja.logo_url || 'https://via.placeholder.com/150?text=Sem+Foto',
                     tempo: loja.tempo_entrega || '40-50 min',
                     frete: loja.taxa_entrega ? `R$ ${parseFloat(loja.taxa_entrega).toFixed(2).replace('.', ',')}` : 'A combinar',
-                    telefone: loja.contato 
+                    telefone: loja.contato
                 }));
                 renderLojas(lojasCadastradas);
             } else {
@@ -369,24 +369,24 @@
         async function entrarNaLoja(id, nome, img) {
             lojaAtualId = id;
             let lojaSelecionada = lojasCadastradas.find(l => String(l.id) === String(id));
-            
+
             if (lojaSelecionada && lojaSelecionada.telefone) {
                 telefoneWhatsapp = String(lojaSelecionada.telefone).replace(/\D/g, '');
             }
 
             document.getElementById('current-store-name').textContent = nome;
             document.getElementById('current-store-img').src = img;
-            
+
             document.getElementById('hub-section').classList.add('hidden');
             document.getElementById('store-section').classList.remove('hidden');
-            
+
             carregarProdutosDaLoja(id);
         }
 
         function renderLojas(lojas) {
             const container = document.getElementById('lojas-grid');
             container.innerHTML = '';
-            
+
             if(lojas.length === 0) {
                 container.innerHTML = '<p class="col-span-full text-center text-gray-500 font-bold py-10">Nenhuma loja encontrada para esta categoria.</p>';
                 return;
@@ -425,9 +425,9 @@
         async function carregarProdutosDaLoja(idEmpresa) {
             const container = document.getElementById('menu-items');
             container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl" style="color: var(--brand-primary);"></i><p class="mt-2 text-gray-500">Carregando cardápio...</p></div>';
-            
+
             const produtosDB = await apiRequest(`/products?empresa_id=${idEmpresa}`);
-            
+
             if (produtosDB && produtosDB.length > 0) {
                 menuItems = produtosDB.map(p => ({
                     id: (p.codigo || p.id).toString(),
@@ -447,7 +447,7 @@
         function renderMenuItems(category = 'all') {
             const container = document.getElementById('menu-items');
             container.innerHTML = '';
-            
+
             const filtered = category === 'all' ? menuItems : menuItems.filter(i => i.category.includes(category));
 
             if(filtered.length === 0 && menuItems.length > 0) {
@@ -475,7 +475,7 @@
         }
 
         async function carregarDestaquesAPI() {
-            const destaquesDB = await apiRequest('/produtos/destaques'); 
+            const destaquesDB = await apiRequest('/produtos/destaques');
 
             if (destaquesDB && destaquesDB.length > 0) {
                 destaquesGlobais = destaquesDB.map(d => ({
@@ -495,9 +495,9 @@
         function renderDestaques(categoria) {
             const container = document.getElementById('destaques-grid');
             container.innerHTML = '';
-            
-            let filtrados = categoria === 'todos' 
-                ? destaquesGlobais 
+
+            let filtrados = categoria === 'todos'
+                ? destaquesGlobais
                 : destaquesGlobais.filter(p => p.categoria_hub && p.categoria_hub.includes(categoria));
 
             if(filtrados.length === 0) {
@@ -507,7 +507,7 @@
 
             filtrados.forEach(prod => {
                 container.innerHTML += `
-                    <div class="snap-start shrink-0 w-64 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer transition hover:-translate-y-1 hover:shadow-md" 
+                    <div class="snap-start shrink-0 w-64 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer transition hover:-translate-y-1 hover:shadow-md"
                          onclick="entrarNaLoja('${prod.empresa_id}', '${prod.empresa_nome}', '${prod.empresa_img}')">
                         <div class="h-36 bg-gray-900 relative">
                             <img src="${prod.foto}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/300'">
@@ -528,10 +528,10 @@
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.hub-category-btn').forEach(b => { b.className = "hub-category-btn px-6 py-2 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition"; });
                     btn.className = "hub-category-btn px-6 py-2 rounded-full font-bold text-white transition bg-brand";
-                    
+
                     const cat = btn.dataset.category;
                     renderDestaques(cat);
-                    
+
                     if (cat === 'todos') {
                         renderLojas(lojasCadastradas);
                         document.getElementById('titulo-destaques').innerHTML = 'Destaques de Hoje 🔥';
@@ -567,14 +567,14 @@
                 const referenciaValue = document.getElementById('cli-ref').value.trim();
                 const pagamento = document.getElementById('cli-pag').value;
                 const troco = document.getElementById('cli-troco') ? document.getElementById('cli-troco').value : '';
-                
+
                 if(!clienteNome || !clienteTel || !enderecoValue || !pagamento) {
                     alert("Por favor, preencha todos os dados de entrega e pagamento antes de enviar.");
-                    return; 
+                    return;
                 }
-            
+
                 const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
-            
+
                 let numeroDestino = telefoneWhatsapp;
                 if (!numeroDestino && typeof lojaAtualId !== 'undefined') {
                     const lojaAtual = lojasCadastradas.find(l => String(l.id) === String(lojaAtualId));
@@ -583,58 +583,64 @@
                     }
                 }
                 if (!numeroDestino) {
-                    numeroDestino = "5591983252639"; 
+                    numeroDestino = "5591983252639";
                 } else if (!numeroDestino.startsWith('55')) {
                     numeroDestino = '55' + numeroDestino;
                 }
-            
+
                 const enderecoCompleto = `${enderecoValue} (Ref: ${referenciaValue})`;
                 const valorProdutos = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 const totalPedido = valorProdutos + TAXA_ENTREGA;
-                
+
                 const itensResumo = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
                 const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 const dataAtual = new Date().toISOString().split('T')[0];
-            
+
                 try {
-                    const res = await fetch(`${API_BASE_URL}/orders`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            empresa_id: empresaIdFinal,
-                            cliente: clienteNome,
-                            cliente_nome: clienteNome,
-                            telefone: clienteTel,
-                            endereco: enderecoCompleto,
-                            pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
-                            itens: itensResumo,
-                            total: totalPedido.toFixed(2),
-                            valor_total: totalPedido.toFixed(2),
-                            status: 'Aguardando pagamento',
-                            data: dataAtual,
-                            hora: horaAtual
-                        })
-                    });
-                    if (res.ok) {
-                        const dadosPedido = await res.json();
-                        pedidoAtivoId = dadosPedido.id || dadosPedido.pedido_id;
-                        localStorage.setItem('deliveryon_pedido_ativo_id', pedidoAtivoId);
-                        document.getElementById('banner-acompanhamento').classList.remove('hidden');
-                        iniciarPollingStatusPedido();
-                    }
-                } catch (e) {
-                    console.error("Erro de conexão ao enviar pedido para o painel:", e);
-                }
-            
+            const res = await fetch(`${API_BASE_URL}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    empresa_id: empresaIdFinal,
+                    cliente: clienteNome,
+                    cliente_nome: clienteNome,
+                    telefone: clienteTel,
+                    endereco: enderecoCompleto,
+                    pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
+                    itens: itensResumo,
+                    total: totalPedido.toFixed(2),
+                    valor_total: totalPedido.toFixed(2),
+                    status: 'Aguardando pagamento',
+                    data: dataAtual,
+                    hora: horaAtual
+                })
+            });
+            if (res.ok) {
+                const dadosPedido = await res.json();
+                pedidoAtivoId = dadosPedido.id || dadosPedido.pedido_id;
+
+                // MANTENHA ESTA LINHA:
+                localStorage.setItem('deliveryon_pedido_ativo_id', pedidoAtivoId);
+
+                // 👉 ADICIONE ESTA NOVA LINHA AQUI:
+                localStorage.setItem('deliveryon_empresa_ativa', empresaIdFinal);
+
+                document.getElementById('banner-acompanhamento').classList.remove('hidden');
+                iniciarPollingStatusPedido();
+            }
+        } catch (e) {
+            console.error("Erro de conexão ao enviar pedido para o painel:", e);
+        }
+
                 let msg = `*NOVO PEDIDO!* 🛒\n\n*Cliente:* ${clienteNome}\n*Telefone:* ${clienteTel}\n*Endereço:* ${enderecoCompleto}\n*Pagamento:* ${pagamento}`;
                 if(pagamento === 'Dinheiro' && troco) {
                     msg += ` (Troco para: R$ ${troco})`;
                 }
                 msg += `\n\n*Itens:*\n${itensResumo}\n\n*Taxa de Entrega:* R$ ${TAXA_ENTREGA.toFixed(2).replace('.', ',')}\n*Total do Pedido: R$ ${totalPedido.toFixed(2).replace('.', ',')}*`;
-                
+
                 const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
                 window.open(urlWhatsApp, '_blank');
-            
+
                 cart = [];
                 document.getElementById('cli-nome').value = '';
                 document.getElementById('cli-tel').value = '';
@@ -643,7 +649,7 @@
                 document.getElementById('cli-pag').value = '';
                 if(document.getElementById('cli-troco')) document.getElementById('cli-troco').value = '';
                 if(document.getElementById('div-troco')) document.getElementById('div-troco').classList.add('hidden');
-                
+
                 updateCartUI();
                 toggleCart();
             });
@@ -655,7 +661,10 @@
 
             const intervalo = setInterval(async () => {
                 try {
-                    const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${lojaAtualId || 1}`);
+                    // 👉 NOVA BUSCA DA EMPRESA ATIVA:
+                    const empresaAtiva = localStorage.getItem('deliveryon_empresa_ativa') || lojaAtualId || 1;
+                    const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${empresaAtiva}`);
+
                     if (res.ok) {
                         const pedido = await res.json();
                         atualizarTimelineVisual(pedido.status, pedido.motoboy_nome);
@@ -671,12 +680,15 @@
             }, 5000);
         }
 
-        async function abrirModalAcompanhamento() {
+       async function abrirModalAcompanhamento() {
             if (!pedidoAtivoId) return;
             document.getElementById('modal-acompanha-id').innerText = pedidoAtivoId;
-            
+
             try {
-                const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${lojaAtualId || 1}`);
+                // 👉 NOVA BUSCA DA EMPRESA ATIVA AQUI TAMBÉM:
+                const empresaAtiva = localStorage.getItem('deliveryon_empresa_ativa') || lojaAtualId || 1;
+                const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${empresaAtiva}`);
+
                 if (res.ok) {
                     const pedido = await res.json();
                     atualizarTimelineVisual(pedido.status, pedido.motoboy_nome);
@@ -712,7 +724,7 @@
                 stepPreparando.classList.add('active');
                 stepEntrega.classList.add('active');
                 bannerTexto.innerText = "Seu pedido saiu para entrega! 🛵";
-                
+
                 if (motoboyNome) {
                     infoMotoboy.innerText = `Entregador: ${motoboyNome} está a caminho.`;
                 }
@@ -734,7 +746,7 @@
                 mapaClienteInstancia.remove();
             }
 
-            const latLoja = -0.9234; 
+            const latLoja = -0.9234;
             const lngLoja = -48.1321;
             const latCliente = -0.9270;
             const lngCliente = -48.1390;
@@ -763,7 +775,7 @@
             const avaliacao = document.getElementById('select-avaliacao-cliente').value;
             const relato = document.getElementById('textarea-relato-cliente').value;
             const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
-        
+
             const payload = {
                 empresa_id: empresaIdFinal,
                 avaliacao: avaliacao,
@@ -771,7 +783,7 @@
                 atendimento: "Geral",
                 cliente_nome: document.getElementById('cli-nome') ? document.getElementById('cli-nome').value : "Cliente"
             };
-        
+
             const res = await apiRequest('/ouvidoria', 'POST', payload);
             if (res) {
                 alert('Muito obrigado pelo feedback! Sua opinião foi registrada.');
@@ -793,9 +805,9 @@
             const item = cart.find(i => i.id === id);
             if (item) item.quantity++;
             else cart.push({ id, name, price: parseFloat(price), img, quantity: 1 });
-            
+
             updateCartUI();
-            
+
             const btnSacola = document.getElementById('cart-btn');
             btnSacola.classList.add('animate-bounce');
             setTimeout(() => btnSacola.classList.remove('animate-bounce'), 500);
@@ -810,7 +822,7 @@
                 document.getElementById('checkout-form').classList.add('hidden');
                 document.getElementById('btn-enviar-whatsapp').disabled = true;
                 document.getElementById('cart-total').textContent = "R$ 0,00";
-                carrinhoLojaId = null; 
+                carrinhoLojaId = null;
             } else {
                 document.getElementById('empty-cart-message').classList.add('hidden');
                 document.getElementById('checkout-form').classList.remove('hidden');
@@ -869,26 +881,26 @@ async function recuperarPedidoAtivo(pedidoId) {
 
         // Caso contrário, ele ainda está ativo!
         // AQUI VOCÊ CHAMA A SUA FUNÇÃO QUE ABRE O MODAL DO CLIENTE
-        // Exemplo: 
+        // Exemplo:
         // document.getElementById('status-texto').innerText = pedido.status;
         // openModal('modalAcompanhamento');
-        
+
     } catch (error) {
         console.error("Erro ao buscar pedido ativo:", error);
     }
 }
-        
+
 
 document.addEventListener("DOMContentLoaded", () => {
     // Verifica se o cliente tem um pedido em andamento salvo no navegador
     const pedidoAtivo = localStorage.getItem('deliveryon_pedido_ativo');
-    
+
     if (pedidoAtivo) {
         recuperarPedidoAtivo(pedidoAtivo);
     }
 });
-        
-        
+
+
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
