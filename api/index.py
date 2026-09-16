@@ -746,45 +746,40 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
 def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Puxa os dados puros sem tentar converter no SQL
+        # Extrai os dois primeiros caracteres da hora (ex: "16" de "16:21") e adiciona o 'h'
+        # Busca pedidos das últimas 24h para burlar diferenças de fuso horário (UTC vs Brasil)
         cursor.execute("""
-            SELECT hora 
-            FROM pedidos 
-            WHERE empresa_id = %s AND hora IS NOT NULL AND TRIM(hora) != ''
+            SELECT SUBSTRING(hora FROM 1 FOR 2) || 'h' as hora_label, COUNT(*) as total
+            FROM pedidos
+            WHERE empresa_id = %s 
+              AND hora IS NOT NULL 
+              AND hora != ''
+              AND criado_em >= NOW() - INTERVAL '24 hours'
+            GROUP BY SUBSTRING(hora FROM 1 FOR 2)
+            ORDER BY SUBSTRING(hora FROM 1 FOR 2) ASC
         """, (empresa_id,))
+        
         rows = cursor.fetchall()
+        
+        resultado = []
+        for r in rows:
+            if r['hora_label'] and r['hora_label'] != 'h':
+                resultado.append({"hora": r['hora_label'], "total": r['total']})
+        
+        # Se não encontrou dados, devolve o array padrão vazio para o Chart.js não bugar
+        if not resultado:
+            return [
+                {"hora": "17h", "total": 0}, {"hora": "18h", "total": 0}, 
+                {"hora": "19h", "total": 0}, {"hora": "20h", "total": 0}, 
+                {"hora": "21h", "total": 0}
+            ]
+
+        return resultado
     except Exception as e:
         db.rollback()
-        rows = []
+        raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
-
-    # Inicia as contagens zeradas para a janela de 17h às 21h
-    contagem_horas = {17: 0, 18: 0, 19: 0, 20: 0, 21: 0}
-
-    # O Python faz a conversão de forma blindada contra erros
-    for row in rows:
-        try:
-            hora_str = str(row['hora']).strip()
-            # Tenta extrair os 2 primeiros caracteres (ex: "18:45" -> "18" -> 18)
-            h = int(hora_str[:2])
-
-            # Se o horário do pedido estiver na nossa janela, soma 1
-            if h in contagem_horas:
-                contagem_horas[h] += 1
-        except Exception:
-            # Se a hora vier escrita errada (ex: "asdf"), ignora esse pedido sem quebrar os outros
-            continue
-
-    # Formata perfeitamente para o que o seu JavaScript espera: [{"hora": "17h", "total": 5}, ...]
-    dados_grafico = []
-    for h in range(17, 22):
-        dados_grafico.append({
-            "hora": f"{h:02d}h",
-            "total": contagem_horas[h]
-        })
-
-    return dados_grafico
 
 
 # ================= ROTAS DE PEDIDOS (UNIFICADAS) =================
