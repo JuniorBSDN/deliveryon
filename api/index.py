@@ -561,7 +561,7 @@ def gestor_cadastro(emp: EmpresaCreate, db=Depends(get_db)):
                 INSERT INTO notificacoes_master (tipo, titulo, mensagem, data_hora)
                 VALUES ('fin', 'Novo Cadastro Self-Service', %s, NOW())
             """, (
-            f"A empresa {emp.nome_fantasia} (CNPJ: {emp.cnpj}) acabou de criar uma conta gratuita na plataforma.",))
+                f"A empresa {emp.nome_fantasia} (CNPJ: {emp.cnpj}) acabou de criar uma conta gratuita na plataforma.",))
             db.commit()
         except Exception:
             pass  # Se a notificação falhar, não impede a criação da conta
@@ -578,6 +578,7 @@ def gestor_cadastro(emp: EmpresaCreate, db=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
+
 
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
@@ -758,19 +759,19 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
             GROUP BY SUBSTRING(hora FROM 1 FOR 2)
             ORDER BY SUBSTRING(hora FROM 1 FOR 2) ASC
         """, (empresa_id,))
-        
+
         rows = cursor.fetchall()
-        
+
         resultado = []
         for r in rows:
             if r['hora_label'] and r['hora_label'] != 'h':
                 resultado.append({"hora": r['hora_label'], "total": r['total']})
-        
+
         # Se não encontrou dados, devolve o array padrão vazio para o Chart.js não bugar
         if not resultado:
             return [
-                {"hora": "17h", "total": 0}, {"hora": "18h", "total": 0}, 
-                {"hora": "19h", "total": 0}, {"hora": "20h", "total": 0}, 
+                {"hora": "17h", "total": 0}, {"hora": "18h", "total": 0},
+                {"hora": "19h", "total": 0}, {"hora": "20h", "total": 0},
                 {"hora": "21h", "total": 0}
             ]
 
@@ -1123,9 +1124,11 @@ def create_colaborador(colab: ColaboradorCreate, db=Depends(get_db)):
                (empresa_id, nome, telefone, email, cpf, data_nascimento, endereco, funcao, status, observacoes, tipo_veiculo, veiculo_modelo, veiculo_cor, veiculo_placa, area_atuacao, valor_entrega, foto) 
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;""",
             (
-            colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento, colab.endereco,
-            colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
-            colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, float(colab.valor_entrega or 0.0), colab.foto))
+                colab.empresa_id, colab.nome, colab.telefone, colab.email, colab.cpf, colab.data_nascimento,
+                colab.endereco,
+                colab.funcao, colab.status, colab.observacoes, colab.tipo_veiculo, colab.veiculo_modelo,
+                colab.veiculo_cor, colab.veiculo_placa, colab.area_atuacao, float(colab.valor_entrega or 0.0),
+                colab.foto))
         db.commit()
         novo_id = cursor.fetchone()['id']
         return {"mensagem": "Colaborador salvo com sucesso", "id": novo_id}
@@ -1258,6 +1261,7 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
         raise HTTPException(status_code=400, detail=f"Erro ao cadastrar entregador: {str(e)}")
     finally:
         cursor.close()
+
 
 @app.put("/api/entregador/status")
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
@@ -1454,24 +1458,24 @@ def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
             GROUP BY avaliacao
         """, (empresa_id,))
         detalhes = cursor.fetchall()
-        
+
         # Inicializa o dicionário com as chaves exatas que o JS do admin.html espera
         stats = {"otimo": 0, "bom": 0, "regular": 0, "ruim": 0, "pessimo": 0}
-        
+
         # Preenche com os dados reais
         for row in detalhes:
             nota = str(row['avaliacao']).lower()
-            if "ótimo" in nota or "otimo" in nota: 
+            if "ótimo" in nota or "otimo" in nota:
                 stats["otimo"] = row['quantidade']
-            elif "bom" in nota: 
+            elif "bom" in nota:
                 stats["bom"] = row['quantidade']
-            elif "regular" in nota: 
+            elif "regular" in nota:
                 stats["regular"] = row['quantidade']
-            elif "ruim" in nota: 
+            elif "ruim" in nota:
                 stats["ruim"] = row['quantidade']
-            elif "péssimo" in nota or "pessimo" in nota: 
+            elif "péssimo" in nota or "pessimo" in nota:
                 stats["pessimo"] = row['quantidade']
-                
+
         return stats
     except Exception as e:
         db.rollback()
@@ -1479,22 +1483,59 @@ def get_ouvidoria_estatisticas(empresa_id: int = Query(1), db=Depends(get_db)):
     finally:
         cursor.close()
 
+
 @app.put("/api/orders/{order_id}")
 def update_order(order_id: int, order_data: dict, empresa_id: int = Query(1), db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        cliente_nome = order_data.get("cliente_nome")
-        endereco_entrega = order_data.get("endereco_entrega")
-        valor_total = order_data.get("valor_total")
+        # 1. Busca o pedido atual no banco (Garante que existe e pega os dados originais)
+        cursor.execute("SELECT * FROM pedidos WHERE id = %s AND empresa_id = %s", (order_id, empresa_id))
+        pedido_atual = cursor.fetchone()
 
+        if not pedido_atual:
+            raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+
+        # 2. TRAVA DE SEGURANÇA BLINDADA (Protege a logística)
+        status_atual = pedido_atual.get('status', '')
+        # Permite edição apenas nos estágios iniciais. Ajuste a lista se precisar.
+        if status_atual not in ["Aguardando pagamento", "Aprovado / Preparando", "Aguardando Entregador"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Edição bloqueada. O pedido já está no status: {status_atual}"
+            )
+
+        # 3. MESCLA DE DADOS (Evita apagar o que já estava lá se o frontend falhar)
+        cliente_nome = order_data.get("cliente_nome", pedido_atual.get("cliente_nome"))
+        endereco_entrega = order_data.get("endereco_entrega", pedido_atual.get("endereco_entrega"))
+
+        # Pega o valor novo ou mantém o antigo (considerando as colunas valor_total e total)
+        valor_novo = order_data.get("valor_total")
+        if valor_novo is None:
+            valor_novo = pedido_atual.get("total")
+
+        # ATENÇÃO: Se as colunas troco_para e observacoes não existirem no seu BD,
+        # remova elas do UPDATE abaixo ou crie as colunas no seu banco PostgreSQL.
+        troco_para = order_data.get("troco_para", pedido_atual.get("troco_para"))
+        observacoes = order_data.get("observacoes", pedido_atual.get("observacoes"))
+
+        # 4. Salva apenas as informações permitidas
         cursor.execute("""
             UPDATE pedidos 
-            SET cliente_nome = %s, endereco_entrega = %s, valor_total = %s, total = %s
+            SET cliente_nome = %s, 
+                endereco_entrega = %s, 
+                valor_total = %s, 
+                total = %s,
+                troco_para = %s,
+                observacoes = %s
             WHERE id = %s AND empresa_id = %s
-        """, (cliente_nome, endereco_entrega, valor_total, valor_total, order_id, empresa_id))
-        
+        """, (cliente_nome, endereco_entrega, valor_novo, valor_novo, troco_para, observacoes, order_id, empresa_id))
+
         db.commit()
-        return {"status": "success", "message": "Pedido atualizado com sucesso!"}
+        return {"status": "success", "message": "Pedido atualizado com segurança!"}
+
+    except HTTPException as he:
+        db.rollback()
+        raise he
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
