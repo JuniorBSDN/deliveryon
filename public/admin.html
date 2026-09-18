@@ -826,9 +826,9 @@
     </div>
 </div>
 
-<!-- MODAL DE EDIÇÃO DE PEDIDO ADMIN -->
+<!-- MODAL DE EDIÇÃO DE PEDIDO ADMIN (COMPLETO) -->
 <div class="modal-overlay" id="modalEditarPedidoAdmin">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 550px;">
         <div class="modal-header">
             <h3><i class="ph ph-pencil"></i> Editar Pedido #<span id="edit-ord-id-label"></span></h3>
             <button class="close-modal" onclick="closeModal('modalEditarPedidoAdmin')">&times;</button>
@@ -836,18 +836,33 @@
         <div class="modal-body">
             <form id="form-editar-pedido" onsubmit="event.preventDefault(); salvarEdicaoPedido();">
                 <input type="hidden" id="edit-ord-id">
+
                 <div class="form-group">
                     <label>Nome do Cliente</label>
                     <input type="text" class="form-control" id="edit-ord-cliente" required>
                 </div>
+
                 <div class="form-group">
                     <label>Endereço de Entrega</label>
                     <input type="text" class="form-control" id="edit-ord-endereco" required>
                 </div>
-                <div class="form-group">
-                    <label>Valor Total (R$)</label>
-                    <input type="text" class="form-control" id="edit-ord-total" required>
+
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Valor Total (R$)</label>
+                        <input type="text" class="form-control" id="edit-ord-total" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Troco Para (R$)</label>
+                        <input type="text" class="form-control" id="edit-ord-troco" placeholder="Ex: 50,00">
+                    </div>
                 </div>
+
+                <div class="form-group">
+                    <label>Alteração de Itens / Observações</label>
+                    <textarea class="form-control" id="edit-ord-obs" rows="3" placeholder="Registre alterações de itens, sabores ou remoções aqui..."></textarea>
+                </div>
+
                 <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarPedidoAdmin')">Cancelar</button>
                     <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
@@ -982,13 +997,13 @@
             }
         }
 
-        async function loadOrders() {
+       async function loadOrders() {
     const orders = await apiRequest('/orders');
     const tbody = document.getElementById('tbody-recent-orders');
     if (!tbody) return;
 
     tbody.innerHTML = '';
-    cachePedidosGlobal = {}; // Limpa o cache
+    cachePedidosGlobal = {}; // Limpa o cache sempre que recarregar
 
     if (!orders || orders.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
@@ -996,9 +1011,17 @@
     }
 
     orders.forEach(order => {
-        cachePedidosGlobal[order.id] = order; // Salva no cache seguro
+        cachePedidosGlobal[order.id] = order; // Salva o pedido intacto na memória
         const statusAtual = order.status || 'Aprovado / Preparando';
-        
+
+        // TRAVA VISUAL: O botão de editar só aparece nos estágios iniciais
+        let botaoEditarHtml = '';
+        const statusPermitidos = ['Aguardando pagamento', 'Aprovado / Preparando', 'Aguardando Entregador'];
+
+        if (statusPermitidos.includes(statusAtual)) {
+            botaoEditarHtml = `<button class="btn-action" title="Editar Pedido" onclick="abrirModalEditarPedido(${order.id})" style="margin-right: 4px; color: var(--info);"><i class="ph ph-pencil"></i></button>`;
+        }
+
         tbody.innerHTML += `
             <tr data-id="${order.id}">
                 <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
@@ -1016,7 +1039,7 @@
                 </td>
                 <td style="text-align: right;">
                     <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${order.id}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
-                    <button class="btn-action" title="Editar Pedido" onclick="abrirModalEditarPedido(${order.id})" style="margin-right: 4px; color: var(--info);"><i class="ph ph-pencil"></i></button>
+                    ${botaoEditarHtml}
                     <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
                 </td>
             </tr>
@@ -1024,10 +1047,11 @@
     });
 }
 
+
 function abrirModalEditarPedido(orderId) {
     const o = cachePedidosGlobal[orderId];
     if (!o) {
-        alert("Erro ao carregar dados do pedido.");
+        alert("Erro ao carregar os dados atualizados do pedido.");
         return;
     }
 
@@ -1036,7 +1060,9 @@ function abrirModalEditarPedido(orderId) {
     document.getElementById('edit-ord-cliente').value = o.cliente || o.cliente_nome || '';
     document.getElementById('edit-ord-endereco').value = o.endereco || o.endereco_entrega || '';
     document.getElementById('edit-ord-total').value = o.total || o.valor_total || '';
-    
+    document.getElementById('edit-ord-troco').value = o.troco_para || '';
+    document.getElementById('edit-ord-obs').value = o.observacoes || '';
+
     document.getElementById('modalEditarPedidoAdmin').classList.add('active');
 }
 
@@ -1045,17 +1071,19 @@ async function salvarEdicaoPedido() {
     const payload = {
         cliente_nome: document.getElementById('edit-ord-cliente').value,
         endereco_entrega: document.getElementById('edit-ord-endereco').value,
-        valor_total: parseFloat(document.getElementById('edit-ord-total').value.replace(',', '.'))
+        valor_total: parseFloat(document.getElementById('edit-ord-total').value.replace(',', '.')) || 0,
+        troco_para: document.getElementById('edit-ord-troco').value,
+        observacoes: document.getElementById('edit-ord-obs').value
     };
 
     const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
     if (res) {
-        alert('Pedido atualizado com sucesso!');
+        alert('Pedido alterado com sucesso!');
         closeModal('modalEditarPedidoAdmin');
         loadOrders();
         loadDashboardData();
     } else {
-        alert('Erro ao atualizar o pedido.');
+        alert('Falha ao atualizar o pedido. Verifique os dados ou o status da conexão.');
     }
 }
 
@@ -1104,11 +1132,11 @@ function abrirModalEditarPedido(orderStr) {
     document.getElementById('edit-ord-cliente').value = o.cliente || o.cliente_nome || '';
     document.getElementById('edit-ord-endereco').value = o.endereco || o.endereco_entrega || '';
     document.getElementById('edit-ord-total').value = o.total || o.valor_total || '';
-    
+
     modal.classList.add('active');
 }
 
-      
+
         async function updateOrderStatus(orderId, selectElement) {
             const novoStatus = selectElement.value;
             const response = await apiRequest(`/orders/${orderId}/status`, 'PUT', { status: novoStatus });
