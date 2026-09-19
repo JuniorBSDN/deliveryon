@@ -146,6 +146,11 @@ class EntregadorAuth(BaseModel):
 class EntregadorStatusUpdate(BaseModel):
     entregador_id: int
     status: str
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+
+class RecusarCorrida(BaseModel):
+    motoboy_id: int
 
 
 class EntregadorCadastro(BaseModel):
@@ -232,6 +237,8 @@ def atualizar_banco_de_dados(x_master_key: str = Header(None), db=Depends(get_db
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);",
         "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS atendimento VARCHAR(100) DEFAULT 'Geral';",
         "ALTER TABLE ouvidoria ADD COLUMN IF NOT EXISTS cliente_nome VARCHAR(255);",
+        "ALTER TABLE entregadores_app ADD COLUMN IF NOT EXISTS lat NUMERIC(10,8);",
+        "ALTER TABLE entregadores_app ADD COLUMN IF NOT EXISTS lng NUMERIC(10,8);",
         "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS entregador_id INTEGER;",
         "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS foto TEXT;"
     ]
@@ -902,33 +909,72 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
 def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(get_db)):
     cursor = db.cursor()
     data = data or {}
-    tipo_despacho = data.get("tipo_despacho", "autonomo")
-    empresa_id = data.get("empresa_id", 1)
+
+    # Coordenadas do Ponto de Coleta (Substitua pelas da loja se o sistema for multi-lojas)
+    # Por padrão, deixei as coordenadas base que estávamos usando no painel
+    lat_loja = -0.9234
+    lng_loja = -48.1321
 
     try:
-        if tipo_despacho == 'empresa':
-            cursor.execute(
-                "SELECT id FROM colaboradores WHERE empresa_id = %s AND LOWER(funcao) LIKE '%%motoboy%%' LIMIT 1",
-                (empresa_id,))
-            colab = cursor.fetchone()
-            if colab:
-                cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = %s WHERE id = %s",
-                               (colab['id'], order_id))
-            else:
-                cursor.execute(
-                    "UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s",
-                    (order_id,))
+        # Busca o entregador 'Disponível' mais perto usando a Fórmula de Haversine no SQL puro
+        cursor.execute("""
+            SELECT id, 
+                   ( 6371 * acos( cos( radians(%s) ) * cos( radians( lat ) ) 
+                   * cos( radians( lng ) - radians(%s) ) + sin( radians(%s) ) 
+                   * sin( radians( lat ) ) ) ) AS distancia_km
+            FROM entregadores_app
+            WHERE status = 'Disponível' AND lat IS NOT NULL AND lng IS NOT NULL
+            ORDER BY distancia_km ASC
+            LIMIT 1;
+        """, (lat_loja, lng_loja, lat_loja))
+
+        motoboy_alvo = cursor.fetchone()
+
+        if motoboy_alvo:
+            # Trava o pedido EXCLUSIVAMENTE para o motoboy mais próximo
+            cursor.execute("""
+                UPDATE pedidos 
+                SET status = 'Aguardando Entregador', entregador_id = %s 
+                WHERE id = %s
+            """, (motoboy_alvo['id'], order_id))
+            mensagem_retorno = f"Disparado para entregador mais próximo ({motoboy_alvo['distancia_km']:.2f} km)"
         else:
-            cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s",
-                           (order_id,))
+            # Se ninguém tiver GPS ativo ou disponível, joga no "Radar Aberto" (praça) para quem quiser pegar
+            cursor.execute("""
+                UPDATE pedidos 
+                SET status = 'Aguardando Entregador', entregador_id = NULL 
+                WHERE id = %s
+            """, (order_id,))
+            mensagem_retorno = "Sem GPS ativo. Disparado no radar aberto."
 
         db.commit()
-        return {"success": True, "message": "Despachado com sucesso!"}
+        return {"success": True, "message": mensagem_retorno}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
+
+
+@app.post("/api/orders/{order_id}/recusar-motoboy")
+def recusar_motoboy(order_id: int, data: RecusarCorrida, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Remove a exclusividade do pedido, devolvendo ele para a Praça
+        cursor.execute("""
+            UPDATE pedidos 
+            SET entregador_id = NULL 
+            WHERE id = %s AND entregador_id = %s AND status = 'Aguardando Entregador'
+        """, (order_id, data.motoboy_id))
+
+        db.commit()
+        return {"success": True, "message": "Corrida recusada e devolvida à praça."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+
 
 
 @app.get("/api/entregador/rotas")
@@ -1267,7 +1313,16 @@ def cadastro_entregador(ent: EntregadorCadastro, db=Depends(get_db)):
 def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        cursor.execute("UPDATE entregadores_app SET status = %s WHERE id = %s", (data.status, data.entregador_id))
+        # Se as coordenadas chegarem, salva elas também
+        if data.lat is not None and data.lng is not None:
+            cursor.execute("""
+                UPDATE entregadores_app 
+                SET status = %s, lat = %s, lng = %s 
+                WHERE id = %s
+            """, (data.status, data.lat, data.lng, data.entregador_id))
+        else:
+            cursor.execute("UPDATE entregadores_app SET status = %s WHERE id = %s",
+                           (data.status, data.entregador_id))
         db.commit()
         return {"mensagem": f"Status alterado para {data.status}"}
     except Exception as e:
