@@ -7,8 +7,6 @@
 
     <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- Leaflet CSS (Mapa Gratuito OpenStreetMap) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
         :root {
@@ -445,10 +443,8 @@
     </div>
     <style>@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }</style>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const API_BASE_URL = '/api';
-        let mapaInstancias = {};
         let timerDespacho = null;
         let corridaAtualId = null;
         let intervaloPolling = null;
@@ -513,7 +509,6 @@
                 localStorage.setItem('app_motoboy_token', data.token || 'token_ativo');
                 localStorage.setItem('app_motoboy_nome', data.nome);
                 localStorage.setItem('app_motoboy_id', data.id);
-                localStorage.setItem('app_motoboy_empresa_id', data.empresa_id || 1);
                 localStorage.setItem('app_motoboy_status', 'Disponível');
 
                 verificarAcessoEntregador();
@@ -785,48 +780,28 @@
                         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
                             <i class="ph ph-map-pin"></i> ${rota.endereco}
                         </p>
-                        <div id="mapa-${rota.id}" style="width: 100%; height: 150px; border-radius: 8px; margin-bottom: 15px; background: #eee; z-index: 1;"></div>
+
+                        <!-- OPÇÕES DE NAVEGAÇÃO -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1; border-color: #4285F4; color: #4285F4; text-decoration: none;">
+                                <i class="ph ph-google-logo"></i> Maps
+                            </a>
+                            <a href="https://waze.com/ul?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1; border-color: #33ccff; color: #33ccff; text-decoration: none;">
+                                <i class="ph ph-navigation-arrow"></i> Waze
+                            </a>
+                        </div>
+
                         <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
                             <i class="ph ph-check-circle"></i> Concluir Entrega
                         </button>
                     `;
                     container.appendChild(div);
-
-                    setTimeout(() => {
-                        const lat = rota.lat || -0.9270;
-                        const lng = rota.lng || -48.1390;
-                        inicializarMapaGps(lat, lng, rota.endereco, 'mapa-' + rota.id);
-                    }, 100);
                 });
 
             } catch (error) {
                 console.error("Erro ao carregar rotas:", error);
                 container.innerHTML = '<p style="text-align:center; color:var(--danger); padding: 20px;">Erro ao buscar entregas.</p>';
             }
-        }
-
-        function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
-            const latLoja = -0.9234;
-            const lngLoja = -48.1321;
-
-            if (mapaInstancias[elementoId]) {
-                mapaInstancias[elementoId].remove();
-            }
-
-            const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
-            mapaInstancias[elementoId] = mapa;
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(mapa);
-
-            L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
-            L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
-
-            setTimeout(() => {
-                mapa.invalidateSize();
-            }, 400);
         }
 
         function abrirModalConclusao(id, cliente, valor) {
