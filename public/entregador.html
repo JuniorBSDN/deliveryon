@@ -7,6 +7,8 @@
 
     <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Leaflet CSS (Mapa Gratuito OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
         :root {
@@ -443,8 +445,11 @@
     </div>
     <style>@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }</style>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const API_BASE_URL = '/api';
+        let trackerGps = null;
+        let mapaInstancias = {};
         let timerDespacho = null;
         let corridaAtualId = null;
         let intervaloPolling = null;
@@ -509,6 +514,7 @@
                 localStorage.setItem('app_motoboy_token', data.token || 'token_ativo');
                 localStorage.setItem('app_motoboy_nome', data.nome);
                 localStorage.setItem('app_motoboy_id', data.id);
+                localStorage.setItem('app_motoboy_empresa_id', data.empresa_id || 1);
                 localStorage.setItem('app_motoboy_status', 'Disponível');
 
                 verificarAcessoEntregador();
@@ -576,8 +582,7 @@
             window.location.reload();
         }
 
-        // ================= CONTROLES DO PAINEL =================
-        function inicializarPainelEntregador() {
+       function inicializarPainelEntregador() {
             const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
 
@@ -594,9 +599,65 @@
             carregarIdentidadeVisualEmpresa();
             carregarRotasAtivas();
             filtrarExtrato();
-            iniciarPollingDespacho();
+
+            // Verifica se está disponível para ligar os motores
+            if (statusSalvo === 'Disponível') {
+                iniciarPollingDespacho();
+                iniciarRastreadorGps(); // <--- LINHA NOVA ADICIONADA AQUI
+            }
         }
 
+       // ================= MÓDULO DE RASTREAMENTO GPS =================
+
+
+        function obterCoordenadas() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    console.warn("Geolocalização não suportada.");
+                    resolve({ lat: null, lng: null });
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({ lat: position.coords.latitude, lng: position.coords.longitude });
+                    },
+                    (error) => {
+                        console.warn("Erro ao obter GPS (motoboy precisa autorizar):", error.message);
+                        resolve({ lat: null, lng: null });
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
+        }
+
+        function iniciarRastreadorGps() {
+            if (trackerGps) clearInterval(trackerGps);
+            // A cada 30 segundos, atualiza o GPS silenciosamente no fundo para o Gestor ver
+            trackerGps = setInterval(async () => {
+                const statusAtual = localStorage.getItem('app_motoboy_status');
+                const entregadorId = localStorage.getItem('app_motoboy_id');
+
+                if (statusAtual === 'Disponível' && entregadorId) {
+                    const coords = await obterCoordenadas();
+                    if (coords.lat && coords.lng) {
+                        try {
+                            await fetch(`${API_BASE_URL}/entregador/status`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    entregador_id: parseInt(entregadorId),
+                                    status: statusAtual,
+                                    lat: coords.lat,
+                                    lng: coords.lng
+                                })
+                            });
+                        } catch (e) {}
+                    }
+                }
+            }, 30000);
+        }
+
+        // ================= CONTROLES DO PAINEL =================
         async function alterarStatusEntregador(novoStatus) {
             const entregadorId = localStorage.getItem('app_motoboy_id');
             const select = document.getElementById('ent-status-select');
@@ -610,8 +671,16 @@
 
             if (novoStatus === 'Disponível') {
                 iniciarPollingDespacho();
+                iniciarRastreadorGps(); // Inicia o rastreio contínuo
             } else {
                 pararPollingDespacho();
+                if (trackerGps) clearInterval(trackerGps); // Para o rastreio se não estiver disponível
+            }
+
+            // Captura o GPS imediatamente no momento em que ele fica "Disponível"
+            let coords = { lat: null, lng: null };
+            if (novoStatus === 'Disponível' || novoStatus === 'Em Entrega') {
+                coords = await obterCoordenadas();
             }
 
             try {
@@ -620,7 +689,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         entregador_id: parseInt(entregadorId),
-                        status: novoStatus
+                        status: novoStatus,
+                        lat: coords.lat, // Envia o GPS para o PostgreSQL
+                        lng: coords.lng  // Envia o GPS para o PostgreSQL
                     })
                 });
             } catch (error) {
@@ -697,14 +768,13 @@
             }, 1000);
         }
 
-        async function responderDespacho(aceitou) {
+       async function responderDespacho(aceitou) {
             clearInterval(timerDespacho);
             document.getElementById('modalNovaCorrida').classList.remove('active');
+            const entregadorId = localStorage.getItem('app_motoboy_id');
 
             if (aceitou) {
                 try {
-                    const entregadorId = localStorage.getItem('app_motoboy_id');
-
                     const res = await fetch(`${API_BASE_URL}/orders/${corridaAtualId}/atribuir-motoboy`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -721,7 +791,17 @@
                     alert("Erro de conexão ao aceitar a corrida.");
                 }
             } else {
-                console.log("Corrida recusada ou ignorada.");
+                // Devolve a corrida para a praça usando a nova rota do backend
+                console.log("Corrida recusada, devolvendo para a praça...");
+                try {
+                    await fetch(`${API_BASE_URL}/orders/${corridaAtualId}/recusar-motoboy`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ motoboy_id: parseInt(entregadorId) })
+                    });
+                } catch(e) {
+                    console.error("Erro ao avisar recusa ao servidor", e);
+                }
             }
         }
 
@@ -780,28 +860,48 @@
                         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
                             <i class="ph ph-map-pin"></i> ${rota.endereco}
                         </p>
-
-                        <!-- OPÇÕES DE NAVEGAÇÃO -->
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <a href="https://maps.google.com/?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1; border-color: #4285F4; color: #4285F4; text-decoration: none;">
-                                <i class="ph ph-google-logo"></i> Maps
-                            </a>
-                            <a href="https://waze.com/ul?q=${encodeURIComponent(rota.endereco)}" target="_blank" class="btn btn-outline" style="flex: 1; border-color: #33ccff; color: #33ccff; text-decoration: none;">
-                                <i class="ph ph-navigation-arrow"></i> Waze
-                            </a>
-                        </div>
-
+                        <div id="mapa-${rota.id}" style="width: 100%; height: 150px; border-radius: 8px; margin-bottom: 15px; background: #eee; z-index: 1;"></div>
                         <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
                             <i class="ph ph-check-circle"></i> Concluir Entrega
                         </button>
                     `;
                     container.appendChild(div);
+
+                    setTimeout(() => {
+                        const lat = rota.lat || -0.9270;
+                        const lng = rota.lng || -48.1390;
+                        inicializarMapaGps(lat, lng, rota.endereco, 'mapa-' + rota.id);
+                    }, 100);
                 });
 
             } catch (error) {
                 console.error("Erro ao carregar rotas:", error);
                 container.innerHTML = '<p style="text-align:center; color:var(--danger); padding: 20px;">Erro ao buscar entregas.</p>';
             }
+        }
+
+        function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
+            const latLoja = -0.9234;
+            const lngLoja = -48.1321;
+
+            if (mapaInstancias[elementoId]) {
+                mapaInstancias[elementoId].remove();
+            }
+
+            const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
+            mapaInstancias[elementoId] = mapa;
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapa);
+
+            L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
+            L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
+
+            setTimeout(() => {
+                mapa.invalidateSize();
+            }, 400);
         }
 
         function abrirModalConclusao(id, cliente, valor) {
