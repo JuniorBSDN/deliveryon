@@ -905,29 +905,28 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
         cursor.close()
 
 
-@app.post("/api/orders/{order_id}/despachar-proximos")
-def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(get_db)):
-    cursor = db.cursor()
-    data = data or {}
+from fastapi import Body # Certifique-se de que Body está importado lá no topo junto com Depends, HTTPException, etc.
 
-    # Coordenadas do Ponto de Coleta (Substitua pelas da loja se o sistema for multi-lojas)
-    # Por padrão, deixei as coordenadas base que estávamos usando no painel
+@app.post("/api/orders/{order_id}/despachar-proximos")
+def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db)):
+    cursor = db.cursor()
+    # Coordenadas da Loja base
     lat_loja = -0.9234
     lng_loja = -48.1321
 
     try:
-        # Busca o entregador 'Disponível' mais perto usando a Fórmula de Haversine no SQL puro
+        # SQL Blindado: Força a conversão para ::numeric e usa LEAST(1.0, ...) para evitar o bug do arco-cosseno
         cursor.execute("""
             SELECT id, 
-                   ( 6371 * acos( cos( radians(%s) ) * cos( radians( lat ) ) 
-                   * cos( radians( lng ) - radians(%s) ) + sin( radians(%s) ) 
-                   * sin( radians( lat ) ) ) ) AS distancia_km
+                   ( 6371 * acos( LEAST(1.0, cos( radians(%s::numeric) ) * cos( radians( lat::numeric ) ) 
+                   * cos( radians( lng::numeric ) - radians(%s::numeric) ) + sin( radians(%s::numeric) ) 
+                   * sin( radians( lat::numeric ) ) ) ) ) AS distancia_km
             FROM entregadores_app
             WHERE status = 'Disponível' AND lat IS NOT NULL AND lng IS NOT NULL
             ORDER BY distancia_km ASC
             LIMIT 1;
         """, (lat_loja, lng_loja, lat_loja))
-
+        
         motoboy_alvo = cursor.fetchone()
 
         if motoboy_alvo:
@@ -937,9 +936,9 @@ def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(ge
                 SET status = 'Aguardando Entregador', entregador_id = %s 
                 WHERE id = %s
             """, (motoboy_alvo['id'], order_id))
-            mensagem_retorno = f"Disparado para entregador mais próximo ({motoboy_alvo['distancia_km']:.2f} km)"
+            mensagem_retorno = f"Disparado para entregador ({motoboy_alvo['distancia_km']:.2f} km)"
         else:
-            # Se ninguém tiver GPS ativo ou disponível, joga no "Radar Aberto" (praça) para quem quiser pegar
+            # Se ninguém tiver GPS ativo ou disponível, joga na praça
             cursor.execute("""
                 UPDATE pedidos 
                 SET status = 'Aguardando Entregador', entregador_id = NULL 
@@ -951,7 +950,24 @@ def despachar_proximos(order_id: int, data: Optional[dict] = None, db=Depends(ge
         return {"success": True, "message": mensagem_retorno}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        # Esse print vai jogar o erro exato no log do Vercel caso aconteça de novo
+        print(f"ERRO FATAL NO GPS MATCHMAKING: {str(e)}") 
+        raise HTTPException(status_code=400, detail=f"Erro SQL: {str(e)}")
+    finally:
+        cursor.close()
+
+# Rota de segurança para forçar a criação das colunas no banco de dados
+@app.get("/api/setup-gps")
+def setup_gps_columns(db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("ALTER TABLE entregadores_app ADD COLUMN IF NOT EXISTS lat NUMERIC(10,8);")
+        cursor.execute("ALTER TABLE entregadores_app ADD COLUMN IF NOT EXISTS lng NUMERIC(10,8);")
+        db.commit()
+        return {"status": "Colunas de GPS (lat, lng) verificadas e criadas com sucesso no Vercel Postgres!"}
+    except Exception as e:
+        db.rollback()
+        return {"erro": str(e)}
     finally:
         cursor.close()
 
