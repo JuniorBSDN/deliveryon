@@ -149,6 +149,7 @@ class EntregadorStatusUpdate(BaseModel):
     lat: Optional[float] = None
     lng: Optional[float] = None
 
+
 class RecusarCorrida(BaseModel):
     motoboy_id: int
 
@@ -905,7 +906,8 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
         cursor.close()
 
 
-from fastapi import Body # Certifique-se de que Body está importado lá no topo junto com Depends, HTTPException, etc.
+from fastapi import Body  # Certifique-se de que Body está importado lá no topo junto com Depends, HTTPException, etc.
+
 
 @app.post("/api/orders/{order_id}/despachar-proximos")
 def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db)):
@@ -926,7 +928,7 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
             ORDER BY distancia_km ASC
             LIMIT 1;
         """, (lat_loja, lng_loja, lat_loja))
-        
+
         motoboy_alvo = cursor.fetchone()
 
         if motoboy_alvo:
@@ -951,10 +953,11 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
     except Exception as e:
         db.rollback()
         # Esse print vai jogar o erro exato no log do Vercel caso aconteça de novo
-        print(f"ERRO FATAL NO GPS MATCHMAKING: {str(e)}") 
+        print(f"ERRO FATAL NO GPS MATCHMAKING: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erro SQL: {str(e)}")
     finally:
         cursor.close()
+
 
 # Rota de segurança para forçar a criação das colunas no banco de dados
 @app.get("/api/setup-gps")
@@ -992,33 +995,39 @@ def recusar_motoboy(order_id: int, data: RecusarCorrida, db=Depends(get_db)):
         cursor.close()
 
 
-
 @app.get("/api/entregador/rotas")
-def get_entregador_rotas(empresa_id: Optional[str] = '1', entregador_id: Optional[str] = None, db=Depends(get_db)):
+def get_rotas_entregador(empresa_id: int = None, entregador_id: int = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
-
-        query = """
-            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
-                   p.valor_total as valor, '6,50' as taxa, p.hora, p.status, p.entregador_id,
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE p.empresa_id = %s AND p.status = 'Aguardando Entregador'
-        """
-        params = [e_id]
-
-        if entregador_id and str(entregador_id).lower() not in ("null", "undefined", ""):
-            query += " AND (p.entregador_id = %s OR p.entregador_id IS NULL)"
-            params.append(int(entregador_id))
-        else:
-            query += " AND p.entregador_id IS NULL"
-
-        cursor.execute(query + " ORDER BY p.id DESC", tuple(params))
+        # Busca tanto o que o entregador já aceitou ('Saiu para entrega')
+        # quanto o que está piscando no radar exclusivo dele ('Aguardando Entregador')
+        cursor.execute("""
+            SELECT id, cliente_nome as cliente, endereco_entrega as endereco, 
+                   valor_total as taxa, status, entregador_id
+            FROM pedidos
+            WHERE status IN ('Aguardando Entregador', 'Saiu para entrega')
+              AND (entregador_id = %s OR entregador_id IS NULL)
+        """, (entregador_id,))
         return cursor.fetchall()
-    except Exception:
-        return []
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
+@app.get("/api/entregador/rotas-praca")
+def get_rotas_praca(entregador_id: int = None, db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT id, cliente_nome as cliente, endereco_entrega as endereco, 
+                   valor_total as taxa, status, entregador_id
+            FROM pedidos
+            WHERE status = 'Aguardando Entregador'
+              AND (entregador_id = %s OR entregador_id IS NULL)
+        """, (entregador_id,))
+        return cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
 
@@ -1344,28 +1353,6 @@ def update_entregador_status(data: EntregadorStatusUpdate, db=Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        cursor.close()
-
-
-@app.get("/api/entregador/rotas-praca")
-def get_entregador_rotas_praca(entregador_id: str, db=Depends(get_db)):
-    cursor = db.cursor()
-    try:
-        query = """
-            SELECT p.id, p.cliente_nome AS cliente, p.endereco_entrega AS endereco, 
-                   p.valor_total as valor, '6,50' as taxa, p.hora, p.status, p.entregador_id,
-                   COALESCE(c.latitude, -0.9270) as lat, COALESCE(c.longitude, -48.1390) as lng
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_nome = c.nome
-            WHERE p.status = 'Aguardando Entregador' AND (p.entregador_id IS NULL OR p.entregador_id = %s)
-            ORDER BY p.id DESC
-        """
-        cursor.execute(query, (int(entregador_id),))
-        return cursor.fetchall()
-    except Exception as e:
-        print(f"Erro na rota da praça: {e}")
-        return []
     finally:
         cursor.close()
 
