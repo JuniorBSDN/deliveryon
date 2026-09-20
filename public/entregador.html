@@ -700,44 +700,53 @@
         }
 
         // ================= SISTEMA DE MATCHMAKING =================
-        function iniciarPollingDespacho() {
-            pararPollingDespacho();
-            intervaloPolling = setInterval(async () => {
-                const statusAtual = localStorage.getItem('app_motoboy_status');
-                const empresaId = localStorage.getItem('app_motoboy_empresa_id');
-                const entregadorId = localStorage.getItem('app_motoboy_id');
+       function iniciarPollingDespacho() {
+    pararPollingDespacho();
+    intervaloPolling = setInterval(async () => {
+        const statusAtual = localStorage.getItem('app_motoboy_status');
+        const empresaId = localStorage.getItem('app_motoboy_empresa_id');
+        const entregadorId = localStorage.getItem('app_motoboy_id');
 
-                if (statusAtual !== 'Disponível') return;
+        // O radar só trabalha se o motoboy estiver livre na praça
+        if (statusAtual !== 'Disponível') return;
 
-               let url = empresaId === 'global'
-                ? `${API_BASE_URL}/entregador/rotas-praca?entregador_id=${entregadorId}`
-                : `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const rotas = await response.json();
+        // Monta a Rota passando o ID para achar os Despachos Exclusivos via satélite
+        let url = empresaId === 'global'
+            ? `${API_BASE_URL}/entregador/rotas-praca?entregador_id=${entregadorId}`
+            : `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
 
-                        const corridasNaPraca = rotas.filter(r =>
-                            r.entregador_id === null ||
-                            r.entregador_id === undefined ||
-                            String(r.entregador_id) === String(entregadorId)
-                        );
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const rotas = await response.json();
 
-                        if (corridasNaPraca && corridasNaPraca.length > 0) {
-                            const maisRecente = corridasNaPraca[0];
+                // A CORREÇÃO: Filtra estritamente por pedidos aguardando aceite
+                // Garante que o radar pegue pedidos da Praça (null) ou Exclusivos (entregadorId)
+                const corridasNoRadar = rotas.filter(r =>
+                    r.status === 'Aguardando Entregador' &&
+                    (r.entregador_id === null || r.entregador_id === undefined || String(r.entregador_id) === String(entregadorId))
+                );
 
-                            if (String(maisRecente.id) !== String(ultimaCorridaNotificadaId)) {
-                                ultimaCorridaNotificadaId = String(maisRecente.id);
-                                tocarAlertaSonoro();
-                                exibirAlertaNovaCorrida(maisRecente.id, maisRecente.taxa || '6,50');
-                            }
-                        }
+                if (corridasNoRadar && corridasNoRadar.length > 0) {
+                    // Pega a corrida mais recente/urgente da fila
+                    const novaCorrida = corridasNoRadar[corridasNoRadar.length - 1];
+
+                    // Compara para garantir que não vai apitar duplicado para a mesma corrida
+                    if (String(novaCorrida.id) !== String(ultimaCorridaNotificadaId)) {
+                        ultimaCorridaNotificadaId = String(novaCorrida.id);
+                        tocarAlertaSonoro();
+                        
+                        // Levanta o Modal estilo Uber
+                        const taxaCalculada = novaCorrida.taxa || novaCorrida.valor_entrega || '6,50';
+                        exibirAlertaNovaCorrida(novaCorrida.id, taxaCalculada);
                     }
-                } catch (err) {
-                    console.error("Erro no polling de despacho:", err);
                 }
-            }, 5000);
+            }
+        } catch (err) {
+            console.error("Erro no polling de despacho:", err);
         }
+    }, 5000);
+}
 
         function pararPollingDespacho() {
             if (intervaloPolling) {
