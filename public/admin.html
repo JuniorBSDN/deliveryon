@@ -126,6 +126,41 @@
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
         }
+        /* AJUSTES MOBILE - CONFIGURAÇÕES */
+.action-bar-mobile {
+    width: 100%;
+    max-width: 100%;
+}
+
+.action-bar-mobile .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 46px;
+    box-sizing: border-box;
+    white-space: normal;
+}
+
+#sec-configuracoes {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+#sec-configuracoes .form-grid {
+    width: 100%;
+}
+
+#sec-configuracoes .card {
+    width: 100%;
+    max-width: 100%;
+}
+
+#sec-configuracoes input,
+#sec-configuracoes textarea,
+#sec-configuracoes select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
     </style>
 </head>
 <body>
@@ -640,7 +675,14 @@
                             </div>
                         </div>
                         <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+                            <button
+                                type="button"
+                                class="btn btn-success"
+                                style="width: 100%; min-height: 46px; box-sizing: border-box;"
+                                onclick="saveConfigurations()">
+                                <i class="ph ph-floppy-disk"></i>
+                                <span>Salvar Todas as Configurações</span>
+                            </button>                        
                         </div>
                     </div>
                 </div>
