@@ -125,7 +125,26 @@
             .chart-grid { grid-template-columns: 1fr; }
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
-        }
+               html,
+                body {
+                    width: 100%;
+                    max-width: 100%;
+                    overflow-x: hidden !important;
+                }
+                
+                .main-content {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-width: 0 !important;
+                }
+                
+                .content-container {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-width: 0 !important;
+                    overflow-x: hidden !important;
+                }
+                }
         /* AJUSTES MOBILE - CONFIGURAÇÕES */
 .action-bar-mobile {
     width: 100%;
@@ -161,6 +180,64 @@
     max-width: 100%;
     box-sizing: border-box;
 }
+
+        /* CORREÇÃO DEFINITIVA - CONFIGURAÇÕES NO CELULAR */
+#sec-configuracoes {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+}
+
+#sec-configuracoes .form-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .form-grid > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .form-group {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .action-bar-mobile {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+}
+
+#sec-configuracoes .action-bar-mobile .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    padding: 12px 10px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+        
     </style>
 </head>
 <body>
