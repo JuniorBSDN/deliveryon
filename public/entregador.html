@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Entregador - deliveryON</title>
 
-    <!-- NOVAS LINHAS: Leaflet Routing Machine (Traça a rota pelas ruas) -->
+  <!-- LINHA NOVA QUE FALTAVA: Folha de estilos principal do Mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Leaflet Routing Machine (Traça a rota pelas ruas) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
@@ -898,6 +901,11 @@
                 const response = await fetch(url);
                 const rotas = await response.json();
 
+                // PROTEÇÃO NOVA: Trava e mostra o erro real se o Python falhar
+                if (!response.ok) {
+                    throw new Error(rotas.detail || "Erro interno no servidor Python");
+                }
+
                 container.innerHTML = '';
 
                 if (!rotas || rotas.length === 0) {
@@ -906,7 +914,7 @@
                 }
 
                 rotas.forEach(rota => {
-                    const taxa = rota.taxa ? parseFloat(rota.taxa.replace(',', '.')).toFixed(2).replace('.', ',') : '6,50';
+                    const taxa = rota.taxa ? parseFloat(rota.taxa.toString().replace(',', '.')).toFixed(2).replace('.', ',') : '6,50';
                     const div = document.createElement('div');
                     div.className = 'card';
                     div.id = 'card-pedido-' + rota.id;
@@ -923,20 +931,19 @@
                         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
                             <i class="ph ph-map-pin"></i> ${rota.endereco}
                         </p>
-                        <!-- O mini-mapa foi removido daqui para focar no Mapa Global -->
                         <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
                             <i class="ph ph-check-circle"></i> Concluir Entrega
                         </button>
                     `;
                     container.appendChild(div);
 
-                    // Aciona a inteligência de traçar a rota nas ruas lá no Mapa Global
                     const lat = rota.lat || -0.9270;
                     const lng = rota.lng || -48.1390;
                     tracarRotaNasRuas(lat, lng);
                 });
             } catch (error) {
-                container.innerHTML = '<p style="text-align:center; color:var(--danger); padding: 20px;">Erro ao buscar entregas.</p>';
+                // EXIBE O ERRO REAL NA TELA PARA DIAGNÓSTICO
+                container.innerHTML = `<p style="text-align:center; color:var(--danger); padding: 20px;">Falha na conexão: ${error.message}</p>`;
             }
         }
         
