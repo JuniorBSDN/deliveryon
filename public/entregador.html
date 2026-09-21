@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Entregador - deliveryON</title>
 
+    <!-- Leaflet CSS (Mapa Gratuito OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- NOVAS LINHAS: Leaflet Routing Machine (Traça a rota pelas ruas) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
     <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- Leaflet CSS (Mapa Gratuito OpenStreetMap) -->
@@ -454,6 +461,7 @@
     <script>
         const API_BASE_URL = '/api';
         let mapaGlobal = null;
+        let controleRota = null;
         let markerMotoboy = null;
         let trackerGps = null;
         let mapaInstancias = {};
@@ -620,6 +628,37 @@
 
        // ================= MÓDULO DE RASTREAMENTO GPS =================
 
+
+        function tracarRotaNasRuas(latCliente, lngCliente) {
+            const latLoja = -0.9234; // Coordenada da sua Loja
+            const lngLoja = -48.1321;
+
+            // Limpa rotas antigas se existirem
+            if (controleRota) {
+                mapaGlobal.removeControl(controleRota);
+            }
+
+            // Traça a nova rota: Motoboy -> Loja -> Cliente
+            obterCoordenadas().then(coords => {
+                const motoboyLat = coords.lat || latLoja;
+                const motoboyLng = coords.lng || lngLoja;
+
+                controleRota = L.Routing.control({
+                    waypoints: [
+                        L.latLng(motoboyLat, motoboyLng), // 1. Onde o motoboy está
+                        L.latLng(latLoja, lngLoja),       // 2. Passa na Loja para pegar o lanche
+                        L.latLng(latCliente, lngCliente)  // 3. Entrega no Cliente
+                    ],
+                    routeWhileDragging: false,
+                    addWaypoints: false,
+                    show: false, // Esconde aquele painel de texto chato ("vire à direita")
+                    lineOptions: {
+                        styles: [{color: 'var(--brand-primary)', opacity: 0.8, weight: 5}]
+                    },
+                    createMarker: function() { return null; } // Esconde marcadores padrão feios
+                }).addTo(mapaGlobal);
+            });
+        }
 
         function obterCoordenadas() {
             return new Promise((resolve) => {
@@ -878,7 +917,7 @@
             }
         }
 
-        async function carregarRotasAtivas() {
+       async function carregarRotasAtivas() {
             const container = document.getElementById('ent-lista-rotas');
             if (!container) return;
             container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
@@ -887,16 +926,14 @@
             const entregadorId = localStorage.getItem('app_motoboy_id');
 
             try {
-                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}`;
-                if (entregadorId) url += `&entregador_id=${entregadorId}`;
-
+                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
                 const response = await fetch(url);
                 const rotas = await response.json();
 
                 container.innerHTML = '';
 
                 if (!rotas || rotas.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
+                    container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma entrega em andamento no momento.</p>';
                     return;
                 }
 
@@ -905,7 +942,6 @@
                     const div = document.createElement('div');
                     div.className = 'card';
                     div.id = 'card-pedido-' + rota.id;
-                    div.style.transition = 'opacity 0.3s ease';
                     div.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                             <div>
@@ -919,26 +955,22 @@
                         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
                             <i class="ph ph-map-pin"></i> ${rota.endereco}
                         </p>
-                        <div id="mapa-${rota.id}" style="width: 100%; height: 150px; border-radius: 8px; margin-bottom: 15px; background: #eee; z-index: 1;"></div>
+                        <!-- O mini-mapa foi removido daqui para focar no Mapa Global -->
                         <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
                             <i class="ph ph-check-circle"></i> Concluir Entrega
                         </button>
                     `;
                     container.appendChild(div);
 
-                    setTimeout(() => {
-                        const lat = rota.lat || -0.9270;
-                        const lng = rota.lng || -48.1390;
-                        inicializarMapaGps(lat, lng, rota.endereco, 'mapa-' + rota.id);
-                    }, 100);
+                    // Aciona a inteligência de traçar a rota nas ruas lá no Mapa Global
+                    const lat = rota.lat || -0.9270;
+                    const lng = rota.lng || -48.1390;
+                    tracarRotaNasRuas(lat, lng);
                 });
-
             } catch (error) {
-                console.error("Erro ao carregar rotas:", error);
                 container.innerHTML = '<p style="text-align:center; color:var(--danger); padding: 20px;">Erro ao buscar entregas.</p>';
             }
         }
-
         function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
             const latLoja = -0.9234;
             const lngLoja = -48.1321;
@@ -970,7 +1002,7 @@
             openModal('modalComprovante');
         }
 
-        async function executarConclusao(enviarComprovante) {
+       async function executarConclusao(enviarComprovante) {
             const id = document.getElementById('modal-pedido-id').value;
             const cliente = document.getElementById('modal-cliente-nome').value;
             const valor = document.getElementById('modal-pedido-valor').value;
@@ -998,6 +1030,16 @@
                 }
 
                 alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
+                
+                // ==========================================
+                // CÓDIGO INSERIDO AQUI: Limpa rota e volta pro radar
+                // ==========================================
+                if (controleRota) {
+                    mapaGlobal.removeControl(controleRota);
+                }
+                alterarStatusEntregador('Disponível');
+                // ==========================================
+
                 filtrarExtrato();
 
                 const card = document.getElementById('card-pedido-' + id);
@@ -1006,7 +1048,7 @@
                     setTimeout(() => {
                         card.remove();
                         if(document.getElementById('ent-lista-rotas').innerHTML.trim() === '') {
-                            document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma rota ativa no momento.</p>';
+                            document.getElementById('ent-lista-rotas').innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma entrega em andamento no momento.</p>';
                         }
                     }, 300);
                 }
@@ -1015,6 +1057,7 @@
             }
         }
 
+        
         async function filtrarExtrato() {
             const empresaId = localStorage.getItem('app_motoboy_empresa_id') || 1;
             const tbody = document.getElementById('tabela-extrato');
