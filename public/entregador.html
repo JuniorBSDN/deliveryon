@@ -589,7 +589,7 @@
             window.location.reload();
         }
 
-       function inicializarPainelEntregador() {
+      function inicializarPainelEntregador() {
             const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
 
@@ -604,13 +604,17 @@
             }
 
             carregarIdentidadeVisualEmpresa();
+            
+            // LIGA O MAPA GLOBAL NA TELA!
+            iniciarMapaGlobal();
+            
             carregarRotasAtivas();
             filtrarExtrato();
 
-            // Verifica se está disponível para ligar os motores
+            // Verifica se está disponível para ligar os motores (Radar/GPS)
             if (statusSalvo === 'Disponível') {
                 iniciarPollingDespacho();
-                iniciarRastreadorGps(); // <--- LINHA NOVA ADICIONADA AQUI
+                iniciarRastreadorGps(); 
             }
         }
 
@@ -1105,20 +1109,31 @@ async function iniciarMapaGlobal() {
             const container = document.getElementById('mapa-global');
             if (!container) return;
 
-            // Inicia em Vigia, PA por padrão
-            mapaGlobal = L.map('mapa-global').setView([-0.852, -48.143], 15);
+            // Inicia o mapa (Coordenadas padrão)
+            mapaGlobal = L.map('mapa-global').setView([-0.852, -48.143], 14);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
             }).addTo(mapaGlobal);
 
-            // Tenta puxar a localização exata do Motoboy no celular
+            // 1. DESENHA A EMPRESA (Ponto de Retirada)
+            const lojaIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background:#1a1a1a; color:white; width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:2px solid var(--brand-primary); box-shadow:0 4px 8px rgba(0,0,0,0.3);"><i class="ph-fill ph-storefront" style="font-size:20px;"></i></div>`,
+                iconSize: [35, 35],
+                iconAnchor: [17, 35]
+            });
+            // Obs: Você pode injetar coordenadas reais vindo da API no futuro. Usei as da loja de teste.
+            L.marker([-0.9234, -48.1321], {icon: lojaIcon}).addTo(mapaGlobal)
+             .bindPopup("<b>Restaurante Parceiro</b><br>Ponto de Coleta");
+
+            // 2. DESENHA O MOTOBOY (Rastreio via GPS do celular)
             const coords = await obterCoordenadas();
             if (coords.lat && coords.lng) {
-                mapaGlobal.setView([coords.lat, coords.lng], 16);
+                // Centraliza a câmera no entregador
+                mapaGlobal.setView([coords.lat, coords.lng], 15);
 
-                // Ícone bonito de motoboy
                 const motoboyIcon = L.divIcon({
                     className: 'custom-div-icon',
                     html: `<div style="background:var(--brand-primary); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 8px rgba(0,0,0,0.4);"><i class="ph-fill ph-motorcycle" style="font-size:24px;"></i></div>`,
@@ -1127,12 +1142,15 @@ async function iniciarMapaGlobal() {
                 });
 
                 markerMotoboy = L.marker([coords.lat, coords.lng], {icon: motoboyIcon}).addTo(mapaGlobal);
-                markerMotoboy.bindPopup("<b>Você está aqui!</b><br>Radar LIGADO e buscando rotas.").openPopup();
+                markerMotoboy.bindPopup("<b>Você está aqui!</b><br>Radar LIGADO buscando rotas.").openPopup();
             }
 
-            // Garante que o mapa renderize direitinho
+            // Garante que o mapa não fique com blocos cinzas
             setTimeout(() => { mapaGlobal.invalidateSize(); }, 500);
         }
+
+
+        
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
