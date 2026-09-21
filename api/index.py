@@ -996,7 +996,7 @@ def recusar_motoboy(order_id: int, data: RecusarCorrida, db=Depends(get_db)):
 
 
 @app.get("/api/entregador/rotas")
-def get_rotas_entregador(empresa_id: int = None, entregador_id: int = None, db=Depends(get_db)):
+def get_rotas_entregador(empresa_id: Optional[str] = None, entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         # Busca tanto o que o entregador já aceitou ('Saiu para entrega')
@@ -1015,7 +1015,7 @@ def get_rotas_entregador(empresa_id: int = None, entregador_id: int = None, db=D
         cursor.close()
 
 @app.get("/api/entregador/rotas-praca")
-def get_rotas_praca(entregador_id: int = None, db=Depends(get_db)):
+def get_rotas_praca(entregador_id: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         cursor.execute("""
