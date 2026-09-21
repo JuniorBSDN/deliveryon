@@ -940,30 +940,7 @@
                 container.innerHTML = '<p style="text-align:center; color:var(--danger); padding: 20px;">Erro ao buscar entregas.</p>';
             }
         }
-        function inicializarMapaGps(latCliente, lngCliente, endereco, elementoId) {
-            const latLoja = -0.9234;
-            const lngLoja = -48.1321;
-
-            if (mapaInstancias[elementoId]) {
-                mapaInstancias[elementoId].remove();
-            }
-
-            const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
-            mapaInstancias[elementoId] = mapa;
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(mapa);
-
-            L.marker([latLoja, lngLoja]).addTo(mapa).bindPopup('<b>Restaurante</b><br>Ponto de Retirada');
-            L.marker([latCliente, lngCliente]).addTo(mapa).bindPopup(`<b>Entrega:</b><br>${endereco}`).openPopup();
-
-            setTimeout(() => {
-                mapa.invalidateSize();
-            }, 400);
-        }
-
+        
         function abrirModalConclusao(id, cliente, valor) {
             document.getElementById('modal-pedido-id').value = id;
             document.getElementById('modal-cliente-nome').value = cliente;
