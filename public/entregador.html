@@ -14,8 +14,6 @@
 
     <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- Leaflet CSS (Mapa Gratuito OpenStreetMap) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
         :root {
@@ -680,33 +678,7 @@
             });
         }
 
-        function iniciarRastreadorGps() {
-            if (trackerGps) clearInterval(trackerGps);
-            // A cada 30 segundos, atualiza o GPS silenciosamente no fundo para o Gestor ver
-            trackerGps = setInterval(async () => {
-                const statusAtual = localStorage.getItem('app_motoboy_status');
-                const entregadorId = localStorage.getItem('app_motoboy_id');
-
-                if (statusAtual === 'Disponível' && entregadorId) {
-                    const coords = await obterCoordenadas();
-                    if (coords.lat && coords.lng) {
-                        try {
-                            await fetch(`${API_BASE_URL}/entregador/status`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    entregador_id: parseInt(entregadorId),
-                                    status: statusAtual,
-                                    lat: coords.lat,
-                                    lng: coords.lng
-                                })
-                            });
-                        } catch (e) {}
-                    }
-                }
-            }, 30000);
-        }
-
+        
         // ================= CONTROLES DO PAINEL =================
         async function alterarStatusEntregador(novoStatus) {
             const entregadorId = localStorage.getItem('app_motoboy_id');
