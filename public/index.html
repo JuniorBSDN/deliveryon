@@ -307,7 +307,7 @@
         let lojaAtualId = null;
         let carrinhoLojaId = null;
         let telefoneWhatsapp = "";
-        const TAXA_ENTREGA = 5.00;
+        const TAXA_ENTREGA = 0,0;
         let lojasCadastradas = [];
         let menuItems = [];
         let cart = [];
@@ -771,25 +771,37 @@
             }
         }
 
-        async function enviarAvaliacaoOuvidoria() {
+       async function enviarAvaliacaoOuvidoria() {
             const avaliacao = document.getElementById('select-avaliacao-cliente').value;
             const relato = document.getElementById('textarea-relato-cliente').value;
-            const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
+            
+            // CORREÇÃO 1: Puxando a chave correta da empresa salva no momento do pedido
+            const empresaIdFinal = parseInt(localStorage.getItem('deliveryon_empresa_ativa') || lojaAtualId || 1);
+
+            // CORREÇÃO 2: Proteção para não enviar nome vazio (já que o input é limpo após o checkout)
+            let nomeDoCliente = document.getElementById('cli-nome') ? document.getElementById('cli-nome').value.trim() : "";
+            if (!nomeDoCliente) nomeDoCliente = "Cliente App";
 
             const payload = {
                 empresa_id: empresaIdFinal,
+                pedido_id: parseInt(pedidoAvaliadoId), // CORREÇÃO 3: Vinculando a avaliação ao pedido exato
                 avaliacao: avaliacao,
                 relato: relato,
                 atendimento: "Geral",
-                cliente_nome: document.getElementById('cli-nome') ? document.getElementById('cli-nome').value : "Cliente"
+                cliente_nome: nomeDoCliente
             };
 
             const res = await apiRequest('/ouvidoria', 'POST', payload);
+            
             if (res) {
                 alert('Muito obrigado pelo feedback! Sua opinião foi registrada.');
                 document.getElementById('modalAvaliacaoCliente').classList.remove('active');
+                
+                // Limpa os campos para o próximo pedido do cliente
+                document.getElementById('textarea-relato-cliente').value = '';
+                document.getElementById('select-avaliacao-cliente').value = 'Ótimo';
             } else {
-                alert('Erro ao enviar avaliação.');
+                alert('Erro ao enviar avaliação. Tente novamente.');
             }
         }
 
