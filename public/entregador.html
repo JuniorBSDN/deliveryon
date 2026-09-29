@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Entregador - deliveryON</title>
 
-  <!-- LINHA NOVA QUE FALTAVA: Folha de estilos principal do Mapa -->
+    <!-- Folha de estilos principal do Mapa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <!-- Leaflet Routing Machine (Traça a rota pelas ruas) -->
@@ -328,11 +328,17 @@
                 <!-- NOVO MAPA GLOBAL DO APP -->
                 <div id="mapa-global" style="height: 45vh; width: 100%; border-radius: 12px; margin-bottom: 20px; border: 2px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 1;"></div>
 
-                <h3 class="mb-20" style="font-size: 1.1rem; border-bottom: 2px solid var(--brand-primary); display: inline-block; padding-bottom: 5px;">Entregas Aceitas</h3>
+                <!-- LISTA DE CORRIDAS DEVOLVIDAS PARA A PRAÇA -->
+                <h3 class="mb-20" style="font-size: 1.1rem; border-bottom: 2px solid var(--warning); display: inline-block; padding-bottom: 5px;">Corridas Disponíveis (Praça)</h3>
+                <div id="ent-lista-disponiveis" style="margin-bottom: 30px;">
+                    <!-- Cards com botões de Aceitar/Recusar injetados via JS -->
+                </div>
+
+                <h3 class="mb-20" style="font-size: 1.1rem; border-bottom: 2px solid var(--brand-primary); display: inline-block; padding-bottom: 5px;">Minhas Entregas</h3>
                 <div id="ent-lista-rotas">
                     <!-- Cards das entregas ativas injetados via JS -->
                 </div>
-            </section>
+            </section> <!-- SEÇÃO FECHADA CORRETAMENTE -->
 
             <!-- TELA: EXTRATO DO DIA -->
             <section id="sec-extrato" class="page-section hidden">
@@ -444,7 +450,7 @@
                     <h3 style="font-size: 2rem; color: var(--success); margin-top: 5px;" id="dispatch-valor">R$ 6,50</h3>
                 </div>
 
-                <div style="font-size: 3rem; font-weight: 900; color: var(--text-main); margin-bottom: 20px;" id="dispatch-timer">15</div>
+                <div style="font-size: 3rem; font-weight: 900; color: var(--text-main); margin-bottom: 20px;" id="dispatch-timer">20</div>
 
                 <div style="display: flex; gap: 10px;">
                     <button class="btn btn-outline" style="flex: 1; border-color: var(--danger); color: var(--danger);" onclick="responderDespacho(false)">Recusar</button>
@@ -720,8 +726,6 @@
             }
         }
 
-        // ================= SISTEMA DE MATCHMAKING =================
-       // ================= SISTEMA DE MATCHMAKING CORRIGIDO =================
         function iniciarPollingDespacho() {
             pararPollingDespacho();
             intervaloPolling = setInterval(async () => {
@@ -729,7 +733,6 @@
                 const empresaId = localStorage.getItem('app_motoboy_empresa_id');
                 const entregadorId = localStorage.getItem('app_motoboy_id');
 
-                // Só toca se estiver Livre na praça
                 if (statusAtual !== 'Disponível') return;
 
                 let url = empresaId === 'global'
@@ -741,28 +744,46 @@
                     if (response.ok) {
                         const rotas = await response.json();
 
-                        // A CORREÇÃO: Garante que só apite para "Aguardando Entregador" (Corridas Novas)
-                        const corridasNoRadar = rotas.filter(r =>
-                            r.status === 'Aguardando Entregador' &&
-                            (r.entregador_id === null || r.entregador_id === undefined || String(r.entregador_id) === String(entregadorId))
+                        // O SISTEMA PROCURA SE ELE FOI O ESCOLHIDO PELO BACKEND NESTE CICLO
+                        const corridaDirecionada = rotas.find(r =>
+                            r.status === 'Buscando Entregador' &&
+                            String(r.motoboy_alvo_id) === String(entregadorId)
                         );
 
-                        if (corridasNoRadar && corridasNoRadar.length > 0) {
-                            const novaCorrida = corridasNoRadar[corridasNoRadar.length - 1]; // Pega a mais recente
-
-                            if (String(novaCorrida.id) !== String(ultimaCorridaNotificadaId)) {
-                                ultimaCorridaNotificadaId = String(novaCorrida.id);
+                        if (corridaDirecionada) {
+                            if (String(corridaDirecionada.id) !== String(ultimaCorridaNotificadaId)) {
+                                ultimaCorridaNotificadaId = String(corridaDirecionada.id);
                                 tocarAlertaSonoro();
-                                
-                                const taxa = novaCorrida.taxa || novaCorrida.valor_entrega || '6,50';
-                                exibirAlertaNovaCorrida(novaCorrida.id, taxa); // ESTOURA O MODAL NA TELA!
+                                const taxa = corridaDirecionada.taxa || corridaDirecionada.valor_entrega || '6,50';
+                                exibirAlertaNovaCorrida(corridaDirecionada.id, taxa); 
                             }
+                        } else {
+                            // Se não há modal tocando, atualiza a lista de fundo silenciosamente
+                            carregarRotasAtivas(rotas); 
                         }
                     }
                 } catch (err) {
                     console.error("Erro no radar de despacho:", err);
                 }
-            }, 5000); // Roda a cada 5 segundos
+            }, 5000); 
+        }
+
+        function exibirAlertaNovaCorrida(id, taxa) {
+            corridaAtualId = id;
+            document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
+            document.getElementById('modalNovaCorrida').classList.add('active');
+
+            let tempo = 20; // 20 SEGUNDOS COMO SOLICITADO
+            document.getElementById('dispatch-timer').innerText = tempo;
+
+            timerDespacho = setInterval(() => {
+                tempo--;
+                document.getElementById('dispatch-timer').innerText = tempo;
+                if (tempo <= 0) {
+                    // O tempo acabou, recusa automaticamente e avisa o servidor para passar pro próximo
+                    responderDespacho(false);
+                }
+            }, 1000);
         }
 
         // ================= RASTREADOR GPS ATUALIZADO =================
@@ -820,23 +841,6 @@
             audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
         }
 
-        function exibirAlertaNovaCorrida(id, taxa) {
-            corridaAtualId = id;
-            document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
-            document.getElementById('modalNovaCorrida').classList.add('active');
-
-            let tempo = 15;
-            document.getElementById('dispatch-timer').innerText = tempo;
-
-            timerDespacho = setInterval(() => {
-                tempo--;
-                document.getElementById('dispatch-timer').innerText = tempo;
-                if (tempo <= 0) {
-                    responderDespacho(false);
-                }
-            }, 1000);
-        }
-
        async function responderDespacho(aceitou) {
             clearInterval(timerDespacho);
             document.getElementById('modalNovaCorrida').classList.remove('active');
@@ -888,62 +892,92 @@
             }
         }
 
-       async function carregarRotasAtivas() {
-            const container = document.getElementById('ent-lista-rotas');
-            if (!container) return;
-            container.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--brand-primary);"></i> Buscando entregas na região...</div>';
-
+       async function carregarRotasAtivas(dadosPreCarregados = null) {
+            const containerPra = document.getElementById('ent-lista-disponiveis');
+            const containerMinhas = document.getElementById('ent-lista-rotas');
+            
             const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
             const entregadorId = localStorage.getItem('app_motoboy_id');
 
-            try {
-                let url = `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
-                const response = await fetch(url);
-                const rotas = await response.json();
+            let rotas = dadosPreCarregados;
 
-                // PROTEÇÃO NOVA: Trava e mostra o erro real se o Python falhar
-                if (!response.ok) {
-                    throw new Error(rotas.detail || "Erro interno no servidor Python");
-                }
-
-                container.innerHTML = '';
-
-                if (!rotas || rotas.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma entrega em andamento no momento.</p>';
+            if (!rotas) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`);
+                    rotas = await response.json();
+                } catch (e) {
+                    if (containerMinhas) containerMinhas.innerHTML = `<p style="text-align:center; color:var(--danger);">Falha na conexão.</p>`;
                     return;
                 }
+            }
 
-                rotas.forEach(rota => {
-                    const taxa = rota.taxa ? parseFloat(rota.taxa.toString().replace(',', '.')).toFixed(2).replace('.', ',') : '6,50';
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    div.id = 'card-pedido-' + rota.id;
-                    div.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                            <div>
-                                <span class="badge badge-warning" style="margin-bottom:5px;">Pedido #${rota.id}</span>
-                                <h3 style="margin: 0; font-size: 1.1rem;">${rota.cliente}</h3>
-                            </div>
-                            <div style="text-align:right;">
-                                <span style="font-size:1.2rem; font-weight:bold; color:var(--success);">R$ ${taxa}</span>
-                            </div>
-                        </div>
-                        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
-                            <i class="ph ph-map-pin"></i> ${rota.endereco}
-                        </p>
-                        <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
-                            <i class="ph ph-check-circle"></i> Concluir Entrega
-                        </button>
-                    `;
-                    container.appendChild(div);
+            // 1. FILTRA CORRIDAS NA PRAÇA (Ninguém aceitou o modal e ficou livre pra quem quiser pegar)
+            const corridasPraça = rotas.filter(r => 
+                r.status === 'Buscando Entregador' && 
+                (!r.motoboy_alvo_id && !r.entregador_id)
+            );
 
-                    const lat = rota.lat || -0.9270;
-                    const lng = rota.lng || -48.1390;
-                    tracarRotaNasRuas(lat, lng);
-                });
-            } catch (error) {
-                // EXIBE O ERRO REAL NA TELA PARA DIAGNÓSTICO
-                container.innerHTML = `<p style="text-align:center; color:var(--danger); padding: 20px;">Falha na conexão: ${error.message}</p>`;
+            // 2. FILTRA MINHAS CORRIDAS (Já apertei aceitar e são minhas)
+            const minhasCorridas = rotas.filter(r =>
+                (r.status === 'Saiu para entrega' || r.status === 'Em rota' || r.status === 'Em Entrega') &&
+                String(r.entregador_id || r.motoboy_id) === String(entregadorId)
+            );
+
+            // ================= RENDERIZA A PRAÇA =================
+            if (containerPra) {
+                containerPra.innerHTML = '';
+                if (corridasPraça.length === 0) {
+                    containerPra.innerHTML = '<p style="text-align:center; padding: 10px; color: var(--text-muted); font-size: 0.9rem;">Nenhuma corrida sobrando no momento.</p>';
+                } else {
+                    corridasPraça.forEach(rota => {
+                        const taxa = rota.taxa ? parseFloat(rota.taxa.toString().replace(',', '.')).toFixed(2).replace('.', ',') : '6,50';
+                        containerPra.innerHTML += `
+                            <div class="card" style="border-left: 4px solid var(--warning);">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 1.1rem;">${rota.cliente}</h3>
+                                        <span style="font-size:0.85rem; color:var(--text-muted);"><i class="ph ph-map-pin"></i> ${rota.endereco}</span>
+                                    </div>
+                                    <span style="font-size:1.2rem; font-weight:bold; color:var(--success);">R$ ${taxa}</span>
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <button class="btn btn-success" style="flex: 1;" onclick="corridaAtualId = ${rota.id}; responderDespacho(true);">Aceitar Rota</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            // ================= RENDERIZA MINHAS ROTAS =================
+            if (containerMinhas) {
+                containerMinhas.innerHTML = '';
+                if (minhasCorridas.length === 0) {
+                    containerMinhas.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma entrega em andamento.</p>';
+                    if (controleRota && mapaGlobal) mapaGlobal.removeControl(controleRota);
+                } else {
+                    minhasCorridas.forEach(rota => {
+                        const taxa = rota.taxa ? parseFloat(rota.taxa.toString().replace(',', '.')).toFixed(2).replace('.', ',') : '6,50';
+                        containerMinhas.innerHTML += `
+                            <div class="card" id="card-pedido-${rota.id}" style="border-left: 4px solid var(--brand-primary);">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                    <div>
+                                        <span class="badge badge-warning" style="margin-bottom:5px;">Pedido #${rota.id}</span>
+                                        <h3 style="margin: 0; font-size: 1.1rem;">${rota.cliente}</h3>
+                                    </div>
+                                    <span style="font-size:1.2rem; font-weight:bold; color:var(--success);">R$ ${taxa}</span>
+                                </div>
+                                <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
+                                    <i class="ph ph-map-pin"></i> ${rota.endereco}
+                                </p>
+                                <button class="btn btn-primary" style="width:100%;" onclick="abrirModalConclusao(${rota.id}, '${rota.cliente.replace(/'/g, "\\'")}', 'R$ ${taxa}')">
+                                    <i class="ph ph-check-circle"></i> Concluir Entrega
+                                </button>
+                            </div>
+                        `;
+                        tracarRotaNasRuas(rota.lat || -0.9270, rota.lng || -48.1390);
+                    });
+                }
             }
         }
         
@@ -1143,7 +1177,6 @@ async function iniciarMapaGlobal() {
             // Garante que o mapa não fique com blocos cinzas
             setTimeout(() => { mapaGlobal.invalidateSize(); }, 500);
         }
-
 
         
         function toggleSidebar() {
