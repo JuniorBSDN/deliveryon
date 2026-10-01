@@ -226,7 +226,9 @@
                     <div class="filter-tabs" id="alertFilters" style="margin-bottom: 20px;">
                         <button class="filter-btn active" onclick="filtrarNotificacoesVisuais('todas', this)">Todos</button>
                         <button class="filter-btn" onclick="filtrarNotificacoesVisuais('infra', this)">Infra / DB</button>
-                        <button class="filter-btn" onclick="filtrarNotificacoesVisuais('fin', this)">Financeiro</button>
+                        <button class="filter-btn" onclick="filtrarNotificacoesVisuais('fin', this)">Inadimplência</button>
+                        <button class="filter-btn" onclick="filtrarNotificacoesVisuais('pagamento', this)">Pagamentos</button>
+                        <button class="filter-btn" onclick="filtrarNotificacoesVisuais('entregador', this)">Entregadores</button>
                         <button class="filter-btn" onclick="filtrarNotificacoesVisuais('sup', this)">Helpdesk</button>
                     </div>
 
@@ -761,7 +763,7 @@
             window.location.reload();
         }
 
-        async function carregarNotificacoesReais() {
+       async function carregarNotificacoesReais() {
             const container = document.getElementById('advancedAlertsList');
             const dataFiltro = document.getElementById('filtro-data-notificacoes').value;
             const urlQuery = dataFiltro ? `/notificacoes?data=${dataFiltro}` : '/notificacoes';
@@ -771,10 +773,12 @@
                 alertasGlobaisCache = data;
                 renderizarAlertas(alertasGlobaisCache);
             } else {
-                // Mock visual para testes offline
+                // Mock visual incluindo Entregadores e Pagamentos para testes
                 alertasGlobaisCache = [
                     { id: 1, tipo: 'infra', titulo: 'Latência no Neon DB', mensagem: 'Banco de dados apresentou pico de leitura.', data_hora: '29/09/2026 18:30' },
-                    { id: 2, tipo: 'fin', titulo: 'Inadimplência - Pizzaria do Zé', mensagem: 'Mensalidade vencida há 3 dias.', data_hora: '29/09/2026 12:00' }
+                    { id: 2, tipo: 'fin', titulo: 'Inadimplência - Pizzaria do Zé', mensagem: 'Mensalidade vencida há 3 dias.', data_hora: '29/09/2026 12:00' },
+                    { id: 3, tipo: 'entregador', titulo: 'Novo Entregador', mensagem: 'Carlos Mendes concluiu o cadastro no App.', data_hora: '01/10/2026 14:15' },
+                    { id: 4, tipo: 'pagamento', titulo: 'Pagamento Recebido', mensagem: 'Burger King pagou a fatura via PIX.', data_hora: '01/10/2026 16:40' }
                 ];
                 renderizarAlertas(alertasGlobaisCache);
             }
@@ -795,9 +799,13 @@
             }
 
             alertas.forEach(alerta => {
+                // AGORA O SISTEMA RECONHECE ENTREGADORES E PAGAMENTOS
                 let classeIcone = 'icon-info'; let iconePh = 'ph-info'; let badgeClass = 'badge-info-tag'; let badgeTexto = 'Info';
+
                 if (alerta.tipo === 'infra') { classeIcone = 'icon-danger'; iconePh = 'ph-database'; badgeClass = 'badge-critical'; badgeTexto = 'Crítico'; }
                 else if (alerta.tipo === 'fin') { classeIcone = 'icon-warning'; iconePh = 'ph-invoice'; badgeClass = 'badge-medium'; badgeTexto = 'Atenção'; }
+                else if (alerta.tipo === 'entregador') { classeIcone = 'icon-info'; iconePh = 'ph-motorcycle'; badgeClass = 'badge-info-tag'; badgeTexto = 'Cadastro'; }
+                else if (alerta.tipo === 'pagamento') { classeIcone = 'icon-success'; iconePh = 'ph-currency-circle-dollar'; badgeClass = 'badge-success'; badgeTexto = 'Receita'; }
 
                 const divAlerta = document.createElement('div');
                 divAlerta.className = `adv-list-item alert-${alerta.tipo}`;
@@ -822,6 +830,8 @@
                 container.appendChild(divAlerta);
             });
         }
+
+
 
         function filtrarNotificacoesVisuais(tipo, botaoClicado) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -955,19 +965,26 @@
         }
 
 async function carimbarPagamentoEmpresa(id, nome) {
-    if(confirm(`Confirmar o recebimento da mensalidade da empresa ${nome}?\nO status será atualizado para ATIVO no banco de dados e o acesso será liberado.`)) {
-        try {
-            // Chama a rota real do FastAPI usando o wrapper do Master
-            const res = await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST');
-            if(res) {
-                alert(`Baixa financeira de ${nome} realizada com sucesso!`);
-                carregarFinanceiro(); // Atualiza a aba Financeiro instantaneamente
+            if(confirm(`Confirmar o recebimento da mensalidade da empresa ${nome}?\nO status será atualizado para ATIVO no banco de dados e o acesso será liberado.`)) {
+                try {
+                    const res = await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST');
+                    if(res) {
+                        alert(`Baixa financeira de ${nome} realizada com sucesso!`);
+
+                        // INJETA O ALERTA INSTANTANEAMENTE NO DASHBOARD
+                        alertasGlobaisCache.unshift({
+                            id: Date.now(), tipo: 'pagamento', titulo: 'Pagamento Confirmado',
+                            mensagem: `A empresa ${nome} teve a baixa financeira realizada agora.`, data_hora: new Date().toLocaleString('pt-BR')
+                        });
+                        renderizarAlertas(alertasGlobaisCache); // Atualiza painel
+
+                        carregarFinanceiro(); // Atualiza a aba Financeiro instantaneamente
+                    }
+                } catch(e) {
+                    alert("Erro ao confirmar pagamento: " + e.message);
+                }
             }
-        } catch(e) {
-            alert("Erro ao confirmar pagamento: " + e.message);
         }
-    }
-}
 
         function gerarReciboEmpresa(id) {
             const emp = empresasGlobaisCache.find(e => e.id === id);
@@ -1119,7 +1136,7 @@ async function carimbarPagamentoEmpresa(id, nome) {
             }
         }
 
-        function carimbarPagamentoEntregador(id, nome) {
+      function carimbarPagamentoEntregador(id, nome) {
             const dataAtual = new Date();
             const mesSugerido = (dataAtual.getMonth() + 1).toString().padStart(2, '0') + '/' + dataAtual.getFullYear();
             const mesFormatado = prompt(`Confirmar pagamento da mensalidade de ${nome}\nInforme o Mês/Ano de referência (Ex: ${mesSugerido}):`, mesSugerido);
@@ -1129,6 +1146,14 @@ async function carimbarPagamentoEmpresa(id, nome) {
                 const ent = entregadoresGlobaisCache.find(e => e.id === id);
                 if(ent) { ent.mes_liberado = mesFormatado; ent.status = 'Disponível'; }
                 alert(`Mensalidade do mês ${mesFormatado} carimbada com sucesso!`);
+
+                // INJETA O ALERTA DE PAGAMENTO DO ENTREGADOR INSTANTANEAMENTE
+                alertasGlobaisCache.unshift({
+                    id: Date.now(), tipo: 'pagamento', titulo: 'Licença de Entregador',
+                    mensagem: `O entregador ${nome} pagou a licença do mês ${mesFormatado}.`, data_hora: new Date().toLocaleString('pt-BR')
+                });
+                renderizarAlertas(alertasGlobaisCache);
+
                 renderizarTabelaEntregadores(entregadoresGlobaisCache);
             }
         }
