@@ -1086,9 +1086,8 @@
 
 function ativarAgoraGestor() {
     document.getElementById('toast-trial').style.right = '-400px';
-    // No seu admin.html, a função showSection ou openTab navega pelas abas.
-    // Adapte o nome abaixo para a sua função que abre a aba financeiro:
-    showSection('financeiro');
+    const linkFinanceiro = document.querySelector("a[onclick*='financeiro-gestor']");
+    navigate('financeiro-gestor', linkFinanceiro);
 }
 
 // Chame a verificação assim que o dashboard terminar de carregar
@@ -1097,7 +1096,7 @@ function ativarAgoraGestor() {
         // =========================================================================
         // 2. AUTENTICAÇÃO E SESSÃO
         // =========================================================================
-       async function fazerLoginGestor() {
+    async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
                 const res = await fetch(`${API_BASE_URL}/gestor/auth`, {
@@ -1989,90 +1988,98 @@ function abrirModalEditarPedido(id) {
         }
 
        function verificarVencimentoSaaS() {
-    const vencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 5;
-    const qrCode = localStorage.getItem('deliveryon_pix_qr');
-    const chavePix = localStorage.getItem('deliveryon_pix_chave');
-    const hoje = new Date();
-    const diaAtual = hoje.getDate();
-
-    // Se passou do dia de vencimento
-    if (diaAtual > vencimento) {
-        const diasAtraso = diaAtual - vencimento;
-
-        if (diasAtraso <= 7) {
-            // AINDA NA CARÊNCIA: Mostra o Toast laranja
-            const toast = document.getElementById('toast-trial');
-            if (toast) {
-                document.getElementById('dias-restantes-texto').innerText = (7 - diasAtraso) + " dias";
-                setTimeout(() => { toast.style.right = '30px'; }, 1500);
-            }
-        } else {
-            // PASSOU DOS 7 DIAS: Trava o sistema
-            document.getElementById('modal-pix-qrcode').src = qrCode;
-            document.getElementById('modal-pix-chave').value = chavePix;
-            document.getElementById('modalFinanceiroSaaS').classList.add('active');
-
-            // Oculta a barra lateral para forçar o pagamento
-            document.getElementById('sidebar').style.display = 'none';
-            document.querySelector('.menu-toggle').style.display = 'none';
-        }
-    }
-}
-
-     function carregarFinanceiroGestor() {
-            const vencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 5;
+            const vencimentoDia = parseInt(localStorage.getItem('deliveryon_vencimento')) || 5;
             const qrCode = localStorage.getItem('deliveryon_pix_qr');
             const chavePix = localStorage.getItem('deliveryon_pix_chave');
 
-            const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
-            const d = new Date();
-            const mesAtualNome = meses[d.getMonth()];
+            const hoje = new Date();
+            const diaAtual = hoje.getDate();
+            const diasAtraso = diaAtual - vencimentoDia;
 
-            // Injeta o Card no estilo da imagem
-            const faturasContainer = document.getElementById('faturas-abertas-container');
-            if(faturasContainer) {
-                faturasContainer.innerHTML = `
-                    <div style="background: white; border-left: 6px solid #ffcc00; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                        <h4 style="color: #00a896; text-transform: uppercase; margin-bottom: 10px; font-size: 1.1rem; font-weight: 800;">BOLETO DE ${mesAtualNome}</h4>
-                        <span style="font-size: 0.85rem; font-weight: bold; color: #555;">Mês Vigente</span>
-                        <div style="font-size: 2.2rem; font-weight: 300; margin: 15px 0; color: #111;">
-                            <strong>R$</strong> 150,00
-                        </div>
-                        <p style="font-size: 0.85rem; font-weight: bold; color: #333; margin-bottom: 20px;">Vencimento em ${String(vencimento).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}</p>
+            if (diasAtraso > 0) {
+                if (diasAtraso <= 7) {
+                    // Toast no canto inferior direito informando os dias restantes da carência
+                    const toast = document.getElementById('toast-trial');
+                    if (toast) {
+                        const diasRestantes = 7 - diasAtraso;
+                        document.getElementById('dias-restantes-texto').innerText = diasRestantes + " dias";
+                        setTimeout(() => { toast.style.right = '30px'; }, 1500);
+                    }
+                } else {
+                    // Passou de 7 dias: Bloqueia o sistema e exibe o modal do PIX
+                    const modalPixQrcode = document.getElementById('modal-pix-qrcode');
+                    const modalPixChave = document.getElementById('modal-pix-chave');
 
-                        <button onclick="document.getElementById('modalFinanceiroSaaS').classList.add('active'); document.getElementById('modal-pix-qrcode').src='${qrCode}'; document.getElementById('modal-pix-chave').value='${chavePix}';"
-                                style="width: 100%; padding: 12px; background: #00a896; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;">
-                            Pagar com PIX
-                        </button>
-                    </div>
-                `;
-            }
+                    if (modalPixQrcode) modalPixQrcode.src = qrCode || '';
+                    if (modalPixChave) modalPixChave.value = chavePix || 'Chave PIX não cadastrada';
 
-            // Injeta o Histórico na tabela escura
-            const tbodyHist = document.getElementById('tbody-historico-faturas');
-            if(tbodyHist) {
-                tbodyHist.innerHTML = `
-                    <tr style="border-bottom: 1px solid #333;">
-                        <td style="padding: 15px; color: #aaa;">10</td>
-                        <td style="padding: 15px;">OUTUBRO</td>
-                        <td style="padding: 15px;">R$ 150,00</td>
-                        <td style="padding: 15px; text-align: center; color: #777;">-</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #333;">
-                        <td style="padding: 15px; color: #aaa;">09</td>
-                        <td style="padding: 15px;">SETEMBRO</td>
-                        <td style="padding: 15px;">R$ 150,00</td>
-                        <td style="padding: 15px; text-align: center; color: white;"><i class="ph ph-receipt" style="font-size: 1.2rem; cursor: pointer;"></i></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 15px; color: #aaa;">08</td>
-                        <td style="padding: 15px;">AGOSTO</td>
-                        <td style="padding: 15px;">R$ 150,00</td>
-                        <td style="padding: 15px; text-align: center; color: white;"><i class="ph ph-receipt" style="font-size: 1.2rem; cursor: pointer;"></i></td>
-                    </tr>
-                `;
+                    const modalBloqueio = document.getElementById('modalFinanceiroSaaS');
+                    if (modalBloqueio) modalBloqueio.classList.add('active');
+
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) sidebar.style.display = 'none';
+
+                    const menuToggle = document.querySelector('.menu-toggle');
+                    if (menuToggle) menuToggle.style.display = 'none';
+                }
             }
         }
+
+    async function carregarFinanceiroGestor() {
+    const vencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 5;
+    const qrCode = localStorage.getItem('deliveryon_pix_qr');
+    const chavePix = localStorage.getItem('deliveryon_pix_chave');
+
+    const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+    const d = new Date();
+    const mesAtualNome = meses[d.getMonth()];
+
+    // 1. Injeta o Card do Mês Vigente com R$ 40,00
+    const faturasContainer = document.getElementById('faturas-abertas-container');
+    if(faturasContainer) {
+        faturasContainer.innerHTML = `
+            <div style="background: white; border-left: 6px solid #ffcc00; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <h4 style="color: #00a896; text-transform: uppercase; margin-bottom: 10px; font-size: 1.1rem; font-weight: 800;">BOLETO DE ${mesAtualNome}</h4>
+                <span style="font-size: 0.85rem; font-weight: bold; color: #555;">Mês Vigente</span>
+                <div style="font-size: 2.2rem; font-weight: 300; margin: 15px 0; color: #111;">
+                    <strong>R$</strong> 40,00
+                </div>
+                <p style="font-size: 0.85rem; font-weight: bold; color: #333; margin-bottom: 20px;">Vencimento em ${String(vencimento).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}</p>
+
+                <button onclick="document.getElementById('modalFinanceiroSaaS').classList.add('active'); document.getElementById('modal-pix-qrcode').src='${qrCode}'; document.getElementById('modal-pix-chave').value='${chavePix}';"
+                        style="width: 100%; padding: 12px; background: #00a896; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;">
+                    Pagar com PIX
+                </button>
+            </div>
+        `;
+    }
+
+    // 2. Busca o histórico real de faturas diretamente do banco via API
+    const tbodyHist = document.getElementById('tbody-historico-faturas');
+    if(tbodyHist) {
+        tbodyHist.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777; padding: 20px;">Carregando histórico...</td></tr>`;
+
+        const historico = await apiRequest('/financeiro/historico');
+
+        if (!historico || historico.length === 0) {
+            tbodyHist.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777; padding: 20px;">Nenhum registro de fatura anterior.</td></tr>`;
+            return;
+        }
+
+        tbodyHist.innerHTML = '';
+        historico.forEach(fatura => {
+            const iconeNota = fatura.nota_fiscal ? `<i class="ph ph-receipt" style="font-size: 1.2rem; cursor: pointer;" onclick="abrirNotaFiscal('${fatura.id}')"></i>` : '-';
+            tbodyHist.innerHTML += `
+                <tr style="border-bottom: 1px solid #333;">
+                    <td style="padding: 15px; color: #aaa;">${fatura.mes_ref || '-'}</td>
+                    <td style="padding: 15px;">${fatura.descricao_mes || ''}</td>
+                    <td style="padding: 15px;">R$ ${typeof fatura.valor === 'number' ? fatura.valor.toFixed(2).replace('.', ',') : '40,00'}</td>
+                    <td style="padding: 15px; text-align: center; color: white;">${iconeNota}</td>
+                </tr>
+            `;
+        });
+    }
+}
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
