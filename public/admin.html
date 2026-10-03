@@ -131,13 +131,13 @@
                     max-width: 100%;
                     overflow-x: hidden !important;
                 }
-                
+
                 .main-content {
                     width: 100% !important;
                     max-width: 100% !important;
                     min-width: 0 !important;
                 }
-                
+
                 .content-container {
                     width: 100% !important;
                     max-width: 100% !important;
@@ -237,10 +237,24 @@
     overflow: visible !important;
     box-sizing: border-box !important;
 }
-        
+
     </style>
 </head>
 <body>
+
+<!-- TOAST DE AVISO DE VENCIMENTO / TRIAL -->
+<div id="toast-trial" style="position: fixed; bottom: 30px; right: -400px; width: 320px; background: white; border-left: 5px solid #ff9800; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; z-index: 9999; transition: right 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); font-family: 'Segoe UI', sans-serif;">
+    <h4 style="margin: 0 0 10px 0; color: #ff9800; display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+        <i class="ph-fill ph-warning-circle" style="font-size: 1.3rem;"></i> Licença Expirando
+    </h4>
+    <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: #555; line-height: 1.4;">
+        Sua licença ou período de teste encerra em <strong id="dias-restantes-texto" style="color: #d32f2f; font-size: 1rem;">--</strong> dias.
+    </p>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="ativarAgoraGestor()" style="background: #ff9800; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s;">Ativar Agora</button>
+        <button onclick="document.getElementById('toast-trial').style.right = '-400px'" style="background: #f1f1f1; color: #555; border: none; padding: 8px; border-radius: 6px; cursor: pointer; flex: 1; transition: 0.2s;">Lembrar Depois</button>
+    </div>
+</div>
 
     <!-- TELA DE LOGIN / CADASTRO INTEGRADA -->
     <div id="auth-overlay">
@@ -759,7 +773,7 @@
                                 onclick="saveConfigurations()">
                                 <i class="ph ph-floppy-disk"></i>
                                 <span>Salvar Todas as Configurações</span>
-                            </button>                        
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1036,6 +1050,39 @@
                 return null;
             }
         }
+
+// Função para acionar o modal no momento certo
+function verificarTrial() {
+    const vencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 5;
+    const hoje = new Date();
+    const diaAtual = hoje.getDate();
+
+    let diasRestantes = vencimento - diaAtual;
+
+    // Se o dia de vencimento já passou neste mês, calcula para o próximo mês
+    if (diasRestantes <= 0) {
+        const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+        diasRestantes = (ultimoDiaMes - diaAtual) + vencimento;
+    }
+
+    // Se faltarem 7 dias ou menos para vencer, exibe o alerta
+    if (diasRestantes <= 7) {
+        document.getElementById('dias-restantes-texto').innerText = diasRestantes;
+        setTimeout(() => {
+            document.getElementById('toast-trial').style.right = '30px';
+        }, 1500); // Aparece 1.5s após a página carregar
+    }
+}
+
+function ativarAgoraGestor() {
+    document.getElementById('toast-trial').style.right = '-400px';
+    // No seu admin.html, a função showSection ou openTab navega pelas abas.
+    // Adapte o nome abaixo para a sua função que abre a aba financeiro:
+    showSection('financeiro');
+}
+
+// Chame a verificação assim que o dashboard terminar de carregar
+// Exemplo: coloque verificarTrial() no final da sua função checkAuth() ou initDashboard()
 
         // =========================================================================
         // 2. AUTENTICAÇÃO E SESSÃO
