@@ -1968,6 +1968,38 @@ function abrirModalEditarPedido(id) {
             }
         }
 
+        function verificarVencimentoSaaS(dadosEmpresa) {
+    const diaVencimento = parseInt(dadosEmpresa.vencimento);
+    const hoje = new Date();
+    const diaAtual = hoje.getDate();
+
+    // Se o dia de hoje for MAIOR que o vencimento, está atrasado
+    if (diaAtual > diaVencimento) {
+        const diasAtraso = diaAtual - diaVencimento;
+        const diasRestantes = 7 - diasAtraso; // Tolerância de 7 dias
+
+        if (diasRestantes >= 0) {
+            // MOSTRA O MODAL DE AVISO (Ainda na carência)
+            document.getElementById('modal-aviso-dias').innerText = diasRestantes;
+
+            // Injeta o PIX que o Master cadastrou
+            const imgQr = document.getElementById('modal-pix-qrcode');
+            if(imgQr && dadosEmpresa.pix_qrcode) imgQr.src = dadosEmpresa.pix_qrcode;
+
+            const txtChave = document.getElementById('modal-pix-chave');
+            if(txtChave && dadosEmpresa.pix_chave) txtChave.innerText = dadosEmpresa.pix_chave;
+
+            // Abre o seu modal existente
+            document.getElementById('modalFinanceiroSaaS').classList.remove('hidden');
+            document.getElementById('modalFinanceiroSaaS').classList.add('active'); // Use a classe que abre seu modal
+        } else {
+            // Passou de 7 dias: TRAVA O SISTEMA
+            alert("Sua mensalidade está vencida há mais de 7 dias. O sistema foi bloqueado.");
+            // Aqui você oculta o dashboard e força o modal do PIX na tela
+        }
+    }
+}
+
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
