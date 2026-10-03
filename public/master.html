@@ -1416,14 +1416,18 @@ async function carimbarPagamentoEmpresa(id, nome) {
             // Só soma MRR de empresas ativas
             if (emp.status === 'ativo') mrrTotal += valorMensalidade;
 
-            const diaAtual = new Date().getDate();
+           const diaAtual = new Date().getDate();
             const diaVenc = parseInt(emp.vencimento) || 5;
             let statusBadge = '';
 
             if (emp.status !== 'ativo') {
                 statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-            } else if (diaAtual > diaVenc + 3) {
-                statusBadge = '<span class="badge badge-warning">Atrasado</span>';
+            } else if (diaAtual > diaVenc + 7) {  // Tolerância de 7 dias antes de considerar inadimplente
+                statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                qtdAtrasados++;
+            } else if (diaAtual > diaVenc) {
+                // Venceu, mas ainda está dentro dos 7 dias de tolerância (mostra aviso)
+                statusBadge = '<span class="badge badge-warning">Atrasado (Na carência)</span>';
                 qtdAtrasados++;
             } else {
                 statusBadge = '<span class="badge badge-success">Em Dia</span>';
