@@ -553,6 +553,7 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="pix-empresa-id">
+                <input type="hidden" id="pix-tipo-entidade">
 
                 <div class="form-group" style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
                     <label style="color: var(--brand-primary); margin-bottom: 0;">Mês de Referência da Cobrança:</label>
@@ -1426,33 +1427,73 @@ async function salvarBaixaFinanceira() {
             }
         }
 
-        function abrirModalConfigurarPix(id, nome) {
-            document.getElementById('pix-empresa-id').value = id;
-            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            const d = new Date();
-            document.getElementById('pix-mes-referencia-texto').innerText = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
-            document.getElementById('input-arquivo-qrcode').value = '';
-            document.getElementById('input-url-qrcode-base64').value = '';
-            document.getElementById('preview-qrcode-container').style.display = 'none';
-            document.getElementById('input-copia-cola-master').value = '';
-            openModal('modalPixMaster');
-        }
+        function abrirModalConfigurarPix(id, nome, tipo) {
+    document.getElementById('pix-empresa-id').value = id;
+    document.getElementById('pix-tipo-entidade').value = tipo; // Armazena 'empresa' ou 'entregador'
 
-        async function salvarConfiguracaoPix() {
-            const id = document.getElementById('pix-empresa-id').value;
-            const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
-            const copiaECola = document.getElementById('input-copia-cola-master').value;
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const d = new Date();
+    document.getElementById('pix-mes-referencia-texto').innerText = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
+    document.getElementById('input-arquivo-qrcode').value = '';
+    document.getElementById('input-url-qrcode-base64').value = '';
+    document.getElementById('preview-qrcode-container').style.display = 'none';
+    document.getElementById('input-copia-cola-master').value = '';
+    openModal('modalPixMaster');
+}
 
-            if(!imagemBase64) {
-                alert("Por favor, selecione a imagem do QR Code.");
-                return;
-            }
+async function salvarConfiguracaoPix() {
+    const id = document.getElementById('pix-empresa-id').value;
+    const tipo = document.getElementById('pix-tipo-entidade').value;
+    const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
+    const copiaECola = document.getElementById('input-copia-cola-master').value;
 
-            await masterApiRequest(`/empresas/${id}/pix`, 'PUT', { qrcode_imagem: imagemBase64, copia_e_cola: copiaECola });
-            alert("QR Code enviado com sucesso!");
-            closeModal('modalPixMaster');
-            carregarFinanceiro();
-        }
+    if(!imagemBase64) {
+        alert("Por favor, selecione a imagem do QR Code.");
+        return;
+    }
+
+    // Define a rota dinamicamente com base no tipo
+    const endpoint = tipo === 'empresa' ? `/empresas/${id}/pix` : `/entregadores/${id}/pix`;
+
+    await masterApiRequest(endpoint, 'PUT', { qrcode_imagem: imagemBase64, copia_e_cola: copiaECola });
+    alert("QR Code enviado com sucesso!");
+    closeModal('modalPixMaster');
+    carregarFinanceiro();
+}
+
+
+ function renderLinhaFinanceira(id, titulo, subtitulo, tipoPlano, valor, diaVenc, statusBadge, telefone, tipoEntidade) {
+    let acoes = '';
+
+    if (tipoEntidade === 'empresa') {
+        acoes = `
+            <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}', 'empresa')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+            <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEmpresa(${id})"><i class="ph ph-receipt"></i></button>
+            <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+            <button class="btn-action" title="Dar Baixa com NF" onclick="abrirModalBaixaFinanceira(${id}, '${titulo}', ${valor})" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+        `;
+    } else {
+        // Agora o entregador também tem o botão PIX, passando 'entregador'
+        acoes = `
+            <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}', 'entregador')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+            <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEntregador(${id})"><i class="ph ph-receipt"></i></button>
+            <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+            <button class="btn-action" title="Dar Baixa App" onclick="carimbarPagamentoEntregador(${id}, '${titulo}')" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+        `;
+    }
+
+    return `
+        <tr>
+            <td><strong>${titulo}</strong><br><small style="color:var(--text-muted)">${subtitulo}</small></td>
+            <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${tipoPlano}</span></td>
+            <td><strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong></td>
+            <td>Todo dia ${diaVenc}</td>
+            <td>${statusBadge}</td>
+            <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">${acoes}</td>
+        </tr>
+    `;
+}
+
 
   async function carregarFinanceiro() {
     const tbody = document.getElementById('tabela-financeiro');
