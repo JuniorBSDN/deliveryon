@@ -853,6 +853,134 @@
         }
 
 
+async function carregarFinanceiro() {
+            const tbody = document.getElementById('tabela-financeiro');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros e entregadores...</td></tr>';
+
+            try {
+                // Busca EMPRESAS e ENTREGADORES ao mesmo tempo
+                const [empresas, entregadores] = await Promise.all([
+                    masterApiRequest('/empresas'),
+                    masterApiRequest('/entregadores')
+                ]);
+
+                const listaEmpresas = empresas || [];
+                const listaEntregadores = entregadores || [];
+
+                empresasGlobaisCache = listaEmpresas;
+                entregadoresGlobaisCache = listaEntregadores;
+
+                let html = '';
+                let mrrTotal = 0;
+                let qtdEmDia = 0;
+                let qtdAtrasados = 0;
+
+                const diaAtual = new Date().getDate();
+
+                // === 1. LISTAR EMPRESAS (Valor Fixo: R$ 40,00) ===
+                listaEmpresas.forEach(emp => {
+                    const valorMensalidade = 40.00;
+                    if (emp.status === 'ativo') mrrTotal += valorMensalidade;
+
+                    const diaVenc = parseInt(emp.vencimento) || 5;
+                    let statusBadge = '';
+
+                    if (emp.status !== 'ativo') {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                    } else if (diaAtual > diaVenc + 7) {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                        qtdAtrasados++;
+                    } else if (diaAtual > diaVenc) {
+                        statusBadge = '<span class="badge badge-warning">Atrasado (Carência)</span>';
+                        qtdAtrasados++;
+                    } else {
+                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
+                        qtdEmDia++;
+                    }
+
+                    html += renderLinhaFinanceira(
+                        emp.id, emp.nome_fantasia, `CNPJ: ${emp.cnpj}`,
+                        'Painel Gestor', valorMensalidade, diaVenc, statusBadge, emp.contato, 'empresa'
+                    );
+                });
+
+                // === 2. LISTAR ENTREGADORES (Valor Fixo: R$ 20,00) ===
+                listaEntregadores.forEach(ent => {
+                    const valorMensalidade = 20.00;
+                    const isAtivo = (ent.status === 'Disponível' || ent.status === 'Online' || ent.status === 'Em Entrega');
+
+                    if (isAtivo) mrrTotal += valorMensalidade;
+
+                    const diaVenc = parseInt(ent.vencimento) || 10;
+                    let statusBadge = '';
+
+                    if (ent.status === 'Bloqueado') {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                    } else if (diaAtual > diaVenc + 7) {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                        qtdAtrasados++;
+                    } else if (diaAtual > diaVenc) {
+                        statusBadge = '<span class="badge badge-warning">Atrasado</span>';
+                        qtdAtrasados++;
+                    } else {
+                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
+                        qtdEmDia++;
+                    }
+
+                    html += renderLinhaFinanceira(
+                        ent.id, ent.nome, `Veículo: ${ent.veiculo || 'Moto'}`,
+                        'App Entregador', valorMensalidade, diaVenc, statusBadge, ent.telefone, 'entregador'
+                    );
+                });
+
+                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
+
+                // Atualiza Cards
+                document.getElementById('fin-mrr').innerText = `R$ ${mrrTotal.toFixed(2).replace('.', ',')}`;
+                document.getElementById('fin-em-dia').innerText = qtdEmDia;
+                document.getElementById('fin-atrasados').innerText = qtdAtrasados;
+
+                // Checa pagamentos pendentes para disparar o pop-up no canto da tela
+                verificarPendenciasToasts(listaEmpresas, listaEntregadores);
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger);">Erro: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Renderizador inteligente unificado com o botão Pix para ambos
+        function renderLinhaFinanceira(id, titulo, subtitulo, tipoPlano, valor, diaVenc, statusBadge, telefone, tipoEntidade) {
+            let acoes = '';
+
+            if (tipoEntidade === 'empresa') {
+                acoes = `
+                    <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}', 'empresa')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+                    <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEmpresa(${id})"><i class="ph ph-receipt"></i></button>
+                    <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+                    <button class="btn-action" title="Dar Baixa com NF" onclick="abrirModalBaixaFinanceira(${id}, '${titulo}', ${valor})" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+                `;
+            } else {
+                acoes = `
+                    <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}', 'entregador')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+                    <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEntregador(${id})"><i class="ph ph-receipt"></i></button>
+                    <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+                    <button class="btn-action" title="Dar Baixa App" onclick="carimbarPagamentoEntregador(${id}, '${titulo}')" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td><strong>${titulo}</strong><br><small style="color:var(--text-muted)">${subtitulo}</small></td>
+                    <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${tipoPlano}</span></td>
+                    <td><strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong></td>
+                    <td>Todo dia ${diaVenc}</td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">${acoes}</td>
+                </tr>
+            `;
+        }
+
+
 
         function filtrarNotificacoesVisuais(tipo, botaoClicado) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -1495,89 +1623,6 @@ async function salvarConfiguracaoPix() {
 }
 
 
-  async function carregarFinanceiro() {
-    const tbody = document.getElementById('tabela-financeiro');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros...</td></tr>';
-
-    try {
-        // Usando a sua função nativa de requisição que já lida com o Token do Master
-        const empresas = await masterApiRequest('/empresas');
-        if (!empresas) throw new Error('Falha ao buscar dados');
-
-        // Alimentamos o cache global para que o Pix e o Recibo funcionem nesta aba
-        empresasGlobaisCache = empresas;
-
-        let html = '';
-        let mrrTotal = 0;
-        let qtdEmDia = 0;
-        let qtdAtrasados = 0;
-
-        // Planos dinâmicos baseados no cadastro
-        const valoresPlanos = { 'BASIC': 150.00, 'PRO': 250.00, 'ENTERPRISE': 450.00 };
-
-        empresas.forEach(emp => {
-            const planoNome = (emp.plano || 'BASIC').toUpperCase();
-            const valorMensalidade = valoresPlanos[planoNome] || 150.00;
-
-            // Só soma MRR de empresas ativas
-            if (emp.status === 'ativo') mrrTotal += valorMensalidade;
-
-           const diaAtual = new Date().getDate();
-            const diaVenc = parseInt(emp.vencimento) || 5;
-            let statusBadge = '';
-
-            if (emp.status !== 'ativo') {
-                statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-            } else if (diaAtual > diaVenc + 7) {  // Tolerância de 7 dias antes de considerar inadimplente
-                statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                qtdAtrasados++;
-            } else if (diaAtual > diaVenc) {
-                // Venceu, mas ainda está dentro dos 7 dias de tolerância (mostra aviso)
-                statusBadge = '<span class="badge badge-warning">Atrasado (Na carência)</span>';
-                qtdAtrasados++;
-            } else {
-                statusBadge = '<span class="badge badge-success">Em Dia</span>';
-                qtdEmDia++;
-            }
-
-            html += `
-                <tr>
-                    <td>
-                        <strong>${emp.nome_fantasia}</strong><br>
-                        <small style="color:var(--text-muted)">CNPJ: ${emp.cnpj}</small>
-                    </td>
-                    <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${planoNome}</span></td>
-                    <td><strong>R$ ${valorMensalidade.toFixed(2).replace('.', ',')}</strong></td>
-                    <td>Todo dia ${diaVenc}</td>
-                    <td>${statusBadge}</td>
-                    <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                        <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${emp.id}, '${emp.nome_fantasia}')">
-                            <i class="ph ph-qr-code" style="color: #673ab7;"></i>
-                        </button>
-                        <button class="btn-action" title="Gerar Recibo Avulso" onclick="gerarReciboEmpresa(${emp.id})">
-                            <i class="ph ph-receipt"></i>
-                        </button>
-                        <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${emp.contato}', '${emp.nome_fantasia}', ${valorMensalidade})">
-                            <i class="ph ph-whatsapp-logo" style="color: #25D366;"></i>
-                        </button>
-                        <button class="btn-action" title="Dar Baixa" onclick="abrirModalBaixaFinanceira(${emp.id}, '${emp.nome_fantasia}', ${valorMensalidade})" style="color: var(--success); border-color: var(--success);">
-                            <i class="ph ph-check-circle"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">Nenhum cliente encontrado.</td></tr>';
-
-        document.getElementById('fin-mrr').innerText = `R$ ${mrrTotal.toFixed(2).replace('.', ',')}`;
-        document.getElementById('fin-em-dia').innerText = qtdEmDia;
-        document.getElementById('fin-atrasados').innerText = qtdAtrasados;
-
-    } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger);">Erro: ${error.message}</td></tr>`;
-    }
-}
 
 function enviarCobranca(telefone, empresa, valor) {
     const msg = `Olá, equipe da *${empresa}*.\n\nAqui é do financeiro da plataforma *deliveryON*.\nIdentificamos que a sua fatura mensal no valor de *R$ ${valor.toFixed(2).replace('.', ',')}* encontra-se em aberto.\n\nPor favor, realize o pagamento para evitar a suspensão do painel.`;
@@ -1647,131 +1692,6 @@ function filtrarTabela(inputId, tbodyId) {
             }, 6000);
         }
 
-        async function carregarFinanceiro() {
-            const tbody = document.getElementById('tabela-financeiro');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros e entregadores...</td></tr>';
-
-            try {
-                // Busca EMPRESAS e ENTREGADORES ao mesmo tempo
-                const [empresas, entregadores] = await Promise.all([
-                    masterApiRequest('/empresas'),
-                    masterApiRequest('/entregadores')
-                ]);
-
-                const listaEmpresas = empresas || [];
-                const listaEntregadores = entregadores || [];
-
-                empresasGlobaisCache = listaEmpresas;
-                entregadoresGlobaisCache = listaEntregadores;
-
-                let html = '';
-                let mrrTotal = 0;
-                let qtdEmDia = 0;
-                let qtdAtrasados = 0;
-
-                const diaAtual = new Date().getDate();
-
-                // === 1. LISTAR EMPRESAS (Valor Fixo: R$ 40,00) ===
-                listaEmpresas.forEach(emp => {
-                    const valorMensalidade = 40.00;
-                    if (emp.status === 'ativo') mrrTotal += valorMensalidade;
-
-                    const diaVenc = parseInt(emp.vencimento) || 5;
-                    let statusBadge = '';
-
-                    if (emp.status !== 'ativo') {
-                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                    } else if (diaAtual > diaVenc + 7) {
-                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                        qtdAtrasados++;
-                    } else if (diaAtual > diaVenc) {
-                        statusBadge = '<span class="badge badge-warning">Atrasado (Carência)</span>';
-                        qtdAtrasados++;
-                    } else {
-                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
-                        qtdEmDia++;
-                    }
-
-                    html += renderLinhaFinanceira(
-                        emp.id, emp.nome_fantasia, `CNPJ: ${emp.cnpj}`,
-                        'Painel Gestor', valorMensalidade, diaVenc, statusBadge, emp.contato, 'empresa'
-                    );
-                });
-
-                // === 2. LISTAR ENTREGADORES (Valor Fixo: R$ 20,00) ===
-                listaEntregadores.forEach(ent => {
-                    const valorMensalidade = 20.00;
-                    const isAtivo = (ent.status === 'Disponível' || ent.status === 'Online' || ent.status === 'Em Entrega');
-
-                    if (isAtivo) mrrTotal += valorMensalidade;
-
-                    const diaVenc = parseInt(ent.vencimento) || 10;
-                    let statusBadge = '';
-
-                    if (ent.status === 'Bloqueado') {
-                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                    } else if (diaAtual > diaVenc + 7) {
-                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                        qtdAtrasados++;
-                    } else if (diaAtual > diaVenc) {
-                        statusBadge = '<span class="badge badge-warning">Atrasado</span>';
-                        qtdAtrasados++;
-                    } else {
-                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
-                        qtdEmDia++;
-                    }
-
-                    html += renderLinhaFinanceira(
-                        ent.id, ent.nome, `Veículo: ${ent.veiculo || 'Moto'}`,
-                        'App Entregador', valorMensalidade, diaVenc, statusBadge, ent.telefone, 'entregador'
-                    );
-                });
-
-                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
-
-                // Atualiza Cards
-                document.getElementById('fin-mrr').innerText = `R$ ${mrrTotal.toFixed(2).replace('.', ',')}`;
-                document.getElementById('fin-em-dia').innerText = qtdEmDia;
-                document.getElementById('fin-atrasados').innerText = qtdAtrasados;
-
-                // Checa pagamentos pendentes para disparar o pop-up no canto da tela
-                verificarPendenciasToasts(listaEmpresas, listaEntregadores);
-
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger);">Erro: ${error.message}</td></tr>`;
-            }
-        }
-
-        // Renderizador inteligente para separar Ações de Clientes x Ações de Entregadores
-        function renderLinhaFinanceira(id, titulo, subtitulo, tipoPlano, valor, diaVenc, statusBadge, telefone, tipoEntidade) {
-            let acoes = '';
-
-            if (tipoEntidade === 'empresa') {
-                acoes = `
-                    <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
-                    <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEmpresa(${id})"><i class="ph ph-receipt"></i></button>
-                    <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
-                    <button class="btn-action" title="Dar Baixa com NF" onclick="abrirModalBaixaFinanceira(${id}, '${titulo}', ${valor})" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
-                `;
-            } else {
-                acoes = `
-                    <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEntregador(${id})"><i class="ph ph-receipt"></i></button>
-                    <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
-                    <button class="btn-action" title="Dar Baixa App" onclick="carimbarPagamentoEntregador(${id}, '${titulo}')" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
-                `;
-            }
-
-            return `
-                <tr>
-                    <td><strong>${titulo}</strong><br><small style="color:var(--text-muted)">${subtitulo}</small></td>
-                    <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${tipoPlano}</span></td>
-                    <td><strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong></td>
-                    <td>Todo dia ${diaVenc}</td>
-                    <td>${statusBadge}</td>
-                    <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">${acoes}</td>
-                </tr>
-            `;
-        }
 
         // Função que verifica atrasos e dispara os Toasts
         function verificarPendenciasToasts(empresas, entregadores) {
