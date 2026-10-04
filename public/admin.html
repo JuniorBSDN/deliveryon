@@ -2068,44 +2068,49 @@ async function abrirModalPixGestor() {
 
     // Abre o modal imediatamente
     modal.classList.add('active');
-    imgQr.src = "";
-    txtChave.value = "Carregando dados do PIX...";
+    imgQr.style.display = "none";
+    txtChave.value = "Carregando dados globais do PIX...";
 
     let qrCodeUrl = "";
     let chavePixTexto = "";
 
-    try {
-        // 1. Tenta buscar da API de configurações/financeiro da empresa
-        const config = await apiRequest('/configuracoes');
-        if (config) {
-            qrCodeUrl = config.pix_qrcode || config.qrcode_pix || config.qr_code || "";
-            chavePixTexto = config.pix_chave || config.chave_pix || "";
+    // 1. Busca prioritária do localStorage global que o Master salva
+    chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_gestor') || "";
+    qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor'] || "";
+
+    // 2. Se não encontrar no localStorage, tenta buscar via API
+    if (!chavePixTexto || !qrCodeUrl) {
+        try {
+            const configGlobal = await apiRequest('/configuracoes-globais/gestor');
+            if (configGlobal) {
+                if (configGlobal.pix_chave) chavePixTexto = configGlobal.pix_chave;
+                if (configGlobal.pix_qrcode) qrCodeUrl = configGlobal.pix_qrcode;
+            }
+        } catch (err) {
+            console.warn("Aviso na busca da API global:", err);
         }
-    } catch (err) {
-        console.warn("Não foi possível buscar da API, tentando localStorage...", err);
     }
 
-    // 2. Se a API não retornou, tenta pegar do localStorage (salvo no login)
-    if (!qrCodeUrl || qrCodeUrl === "null") {
-        qrCodeUrl = localStorage.getItem('deliveryon_pix_qr') || "";
-    }
-    if (!chavePixTexto || chavePixTexto === "null") {
+    // 3. Fallback para dados salvos individualmente na empresa (caso exista)
+    if (!chavePixTexto) {
         chavePixTexto = localStorage.getItem('deliveryon_pix_chave') || "";
     }
+    if (!qrCodeUrl) {
+        qrCodeUrl = localStorage.getItem('deliveryon_pix_qr') || "";
+    }
 
-    // 3. Atribui os valores aos elementos visuais com tratamento para vazios/null
+    // 4. Exibe os dados na tela do modal do Gestor
     if (qrCodeUrl && qrCodeUrl !== "null" && qrCodeUrl.trim() !== "") {
         imgQr.style.display = "block";
         imgQr.src = qrCodeUrl;
     } else {
-        // Se não houver QR code cadastrado pelo Master, esconde ou mostra um placeholder informativo
         imgQr.style.display = "none";
     }
 
     if (chavePixTexto && chavePixTexto !== "null" && chavePixTexto.trim() !== "") {
         txtChave.value = chavePixTexto;
     } else {
-        txtChave.value = "Chave PIX não configurada pelo painel Master. Entre em contato com o suporte.";
+        txtChave.value = "Chave PIX padrão do sistema não configurada. Entre em contato com o suporte.";
     }
 }
 
