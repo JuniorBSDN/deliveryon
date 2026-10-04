@@ -1988,26 +1988,28 @@ function abrirModalEditarPedido(id) {
         }
 
       function verificarVencimentoSaaS() {
-    // Pega o dia de vencimento salvo no login (ex: 1, 10, etc.) ou assume o dia 10 como padrão
+    // Pega o dia de vencimento salvo no login (ex: 1, 10, etc.)
     const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
 
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas os dias
+
     const anoAtual = hoje.getFullYear();
     const mesAtual = hoje.getMonth(); // 0 a 11
 
-    // Define a data de vencimento para o mês atual
+    // Cria a data de vencimento para o mês atual
     let dataVencimento = new Date(anoAtual, mesAtual, diaVencimento);
 
-    // Se o dia de vencimento deste mês já passou, calcula para o mês seguinte
+    // Se o dia de vencimento deste mês já passou, o vencimento passa a ser no mesmo dia do próximo mês
     if (hoje > dataVencimento) {
         dataVencimento = new Date(anoAtual, mesAtual + 1, diaVencimento);
     }
 
-    // Calcula a diferença em dias entre hoje e a data de vencimento
+    // Calcula a diferença em dias entre hoje e a data de vencimento exata
     const diferencaTempo = dataVencimento.getTime() - hoje.getTime();
     let diasRestantes = Math.ceil(diferencaTempo / (1000 * 3600 * 24));
 
-    // Garante que não fique negativo caso esteja vencido
+    // Garante que não fique negativo
     if (diasRestantes < 0) diasRestantes = 0;
 
     const toast = document.getElementById('toast-trial');
@@ -2021,32 +2023,52 @@ function abrirModalEditarPedido(id) {
             setTimeout(() => {
                 toast.style.right = '30px';
             }, 1500);
+        } else {
+            toast.style.right = '-400px'; // Mantém oculto se faltarem mais de 7 dias
         }
     }
 }
-
 
     async function carregarFinanceiroGestor() {
     const qrCode = localStorage.getItem('deliveryon_pix_qr');
     const chavePix = localStorage.getItem('deliveryon_pix_chave');
 
-    const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
-    const d = new Date();
-    const mesAtualNome = meses[d.getMonth()];
+    // Calcula os dias restantes usando a mesma lógica do toast
+    const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth();
 
-    // 1. Renderiza o card de pagamento com base no status do plano / período de teste
+    let dataVencimento = new Date(anoAtual, mesAtual, diaVencimento);
+    if (hoje > dataVencimento) {
+        dataVencimento = new Date(anoAtual, mesAtual + 1, diaVencimento);
+    }
+    const diferencaTempo = dataVencimento.getTime() - hoje.getTime();
+    let diasRestantes = Math.ceil(diferencaTempo / (1000 * 3600 * 24));
+    if (diasRestantes < 0) diasRestantes = 0;
+
+    // Define o texto dinâmico do status com base nos dias restantes
+    let statusTexto = `Status: Ativo (Vence em ${diasRestantes} dia${diasRestantes === 1 ? '' : 's'})`;
+    let corBorda = "var(--brand-primary)";
+
+    if (diasRestantes === 0) {
+        statusTexto = `Status: Vencido! Regularize para desbloquear o painel.`;
+        corBorda = "var(--danger)";
+    }
+
+    // 1. Renderiza o card de pagamento com o status dinâmico
     const faturasContainer = document.getElementById('faturas-abertas-container');
     if(faturasContainer) {
         faturasContainer.innerHTML = `
-            <div style="background: white; border-left: 6px solid var(--brand-primary); padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            <div style="background: white; border-left: 6px solid ${corBorda}; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                 <h4 style="color: var(--brand-primary); text-transform: uppercase; margin-bottom: 10px; font-size: 1.1rem; font-weight: 800;">PLANO DELIVERYON MENSAL</h4>
-                <span style="font-size: 0.85rem; font-weight: bold; color: #555;">Status: Período de Testes / Ativo (7 Dias Grátis)</span>
+                <span style="font-size: 0.85rem; font-weight: bold; color: #555;">${statusTexto}</span>
 
                 <div style="font-size: 2.2rem; font-weight: 300; margin: 15px 0; color: #111;">
                     <strong>R$</strong> 40,00 <span style="font-size: 0.9rem; color: #777;">/mês</span>
                 </div>
                 <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Utilize o botão abaixo para realizar a ativação antecipada ou regularizar sua assinatura via PIX.</p>
-
 
                 <button onclick="abrirModalPixGestor()"
                         style="width: 100%; padding: 12px; background: var(--brand-primary); color: white; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s;">
@@ -2082,7 +2104,6 @@ function abrirModalEditarPedido(id) {
         });
     }
 }
-
 async function abrirModalPixGestor() {
     const modal = document.getElementById('modalFinanceiroSaaS');
     const imgQr = document.getElementById('modal-pix-qrcode');
