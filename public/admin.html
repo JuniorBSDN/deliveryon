@@ -1988,20 +1988,42 @@ function abrirModalEditarPedido(id) {
         }
 
       function verificarVencimentoSaaS() {
-            const qrCode = localStorage.getItem('deliveryon_pix_qr');
-            const chavePix = localStorage.getItem('deliveryon_pix_chave');
+    // Pega o dia de vencimento salvo no login (ex: 1, 10, etc.) ou assume o dia 10 como padrão
+    const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
 
-            // Controla os dias restantes considerando o trial de 7 dias
-            let diasRestantes = 7;
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth(); // 0 a 11
 
-            const toast = document.getElementById('toast-trial');
-            if (toast && diasRestantes > 0) {
-                document.getElementById('dias-restantes-texto').innerText = diasRestantes + " dias";
-                setTimeout(() => {
-                    toast.style.right = '30px';
-                }, 1500);
-            }
+    // Define a data de vencimento para o mês atual
+    let dataVencimento = new Date(anoAtual, mesAtual, diaVencimento);
+
+    // Se o dia de vencimento deste mês já passou, calcula para o mês seguinte
+    if (hoje > dataVencimento) {
+        dataVencimento = new Date(anoAtual, mesAtual + 1, diaVencimento);
+    }
+
+    // Calcula a diferença em dias entre hoje e a data de vencimento
+    const diferencaTempo = dataVencimento.getTime() - hoje.getTime();
+    let diasRestantes = Math.ceil(diferencaTempo / (1000 * 3600 * 24));
+
+    // Garante que não fique negativo caso esteja vencido
+    if (diasRestantes < 0) diasRestantes = 0;
+
+    const toast = document.getElementById('toast-trial');
+    const diasTexto = document.getElementById('dias-restantes-texto');
+
+    if (toast && diasTexto) {
+        diasTexto.innerText = diasRestantes + " dias";
+
+        // Exibe o aviso se faltar 7 dias ou menos para expirar
+        if (diasRestantes <= 7) {
+            setTimeout(() => {
+                toast.style.right = '30px';
+            }, 1500);
         }
+    }
+}
 
 
     async function carregarFinanceiroGestor() {
