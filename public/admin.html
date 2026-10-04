@@ -1118,7 +1118,7 @@ function ativarAgoraGestor() {
                     localStorage.setItem('deliveryon_vencimento', dados.vencimento);
                     localStorage.setItem('deliveryon_pix_qr', dados.pix_qrcode || '');
                     localStorage.setItem('deliveryon_pix_chave', dados.pix_chave || '');
-
+                    localStorage.setItem('deliveryon_status_pagamento', dados.status_pagamento || '');
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
@@ -1992,6 +1992,11 @@ function abrirModalEditarPedido(id) {
         }
 
 function calcularStatusVencimento() {
+    const statusBanco = localStorage.getItem('deliveryon_status_pagamento');
+    if (statusBanco === 'Em Dia') {
+        return { statusEnum: "EM_DIA", diasRestantesOuCarencia: 30, diffDays: 0 };
+    }
+
     const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -1999,31 +2004,25 @@ function calcularStatusVencimento() {
     const ano = hoje.getFullYear();
     const mes = hoje.getMonth();
 
-    // Data de vencimento correspondente ao mês atual
     let dataVencimento = new Date(ano, mes, diaVencimento);
 
-    // Diferença em dias (Hoje - Vencimento)
     const diffTime = hoje.getTime() - dataVencimento.getTime();
     const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
 
     let diasRestantesOuCarencia = 0;
-    let statusEnum = "EM_DIA"; // EM_DIA, CARENCIA, VENCIDO
+    let statusEnum = "EM_DIA";
 
     if (diffDays < 0) {
-        // Ainda não venceu neste mês
         statusEnum = "EM_DIA";
         diasRestantesOuCarencia = Math.abs(diffDays);
     } else if (diffDays === 0) {
-        // Vence exatamente hoje
         statusEnum = "EM_DIA";
         diasRestantesOuCarencia = 0;
     } else {
-        // Já passou do dia de vencimento (Está em atraso / carência de até 7 dias)
-        // Considerando 7 dias de carência total antes do bloqueio
         const diasCarenciaRestantes = 7 - diffDays;
         if (diasCarenciaRestantes > 0) {
             statusEnum = "CARENCIA";
-            diasRestantesOuCarencia = diasCarenciaRestantes; // Dias restantes para bloquear
+            diasRestantesOuCarencia = diasCarenciaRestantes;
         } else {
             statusEnum = "VENCIDO";
             diasRestantesOuCarencia = 0;
