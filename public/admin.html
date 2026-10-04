@@ -2074,9 +2074,9 @@ async function abrirModalPixGestor() {
     let qrCodeUrl = "";
     let chavePixTexto = "";
 
-    // 1. Busca prioritária do localStorage global que o Master salva
+    // 1. Busca prioritária do localStorage global que o Master salva (Corrigido para parênteses)
     chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_gestor') || "";
-    qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor'] || "";
+    qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor') || "";
 
     // 2. Se não encontrar no localStorage, tenta buscar via API
     if (!chavePixTexto || !qrCodeUrl) {
