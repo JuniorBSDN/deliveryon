@@ -337,7 +337,7 @@ def carimbar_pagamento(empresa_id: int, db=Depends(get_db)):
     finally:
         cursor.close()
 
-        
+
 @app.put("/api/master/empresas/{id}/pix")
 def update_pix_master(id: int, pix: PixConfigUpdate, db=Depends(get_db)):
     cursor = db.cursor()
@@ -622,8 +622,9 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
         if not doc_limpo:
             raise HTTPException(status_code=400, detail="CNPJ ou CPF inválido.")
 
+        # ATENÇÃO AQUI: Adicionado 'status_pagamento' na busca
         cursor.execute("""
-            SELECT id, nome_fantasia, cnpj, status, vencimento, qrcode_imagem, copia_e_cola
+            SELECT id, nome_fantasia, cnpj, status, vencimento, qrcode_imagem, copia_e_cola, status_pagamento
             FROM empresas 
             WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s
         """, (doc_limpo,))
@@ -641,7 +642,8 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
             "nome_fantasia": empresa['nome_fantasia'],
             "vencimento": empresa['vencimento'] or 5,
             "pix_qrcode": empresa.get('qrcode_imagem') or "",
-            "pix_chave": empresa.get('copia_e_cola') or ""
+            "pix_chave": empresa.get('copia_e_cola') or "",
+            "status_pagamento": empresa.get('status_pagamento') or "" # <- ENVIANDO PARA O GESTOR
         }
     except HTTPException:
         raise
