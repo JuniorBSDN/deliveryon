@@ -934,8 +934,12 @@ async function carregarFinanceiro() {
                     const diaVenc = parseInt(emp.vencimento) || 5;
                     let statusBadge = '';
 
+                    // CORREÇÃO: Respeita primeiro a informação real do banco de dados
                     if (emp.status !== 'ativo') {
                         statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                    } else if (emp.status_pagamento === 'Em Dia') {
+                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
+                        qtdEmDia++;
                     } else if (diaAtual > diaVenc + 7) {
                         statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
                         qtdAtrasados++;
