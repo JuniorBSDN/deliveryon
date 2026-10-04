@@ -320,30 +320,24 @@ def delete_empresa(id: int, db=Depends(get_db), token: str = Depends(verificar_t
 def carimbar_pagamento(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     try:
-        # Verifica se a empresa existe
-        cursor.execute("SELECT id, nome_fantasia FROM empresas WHERE id = %s", (empresa_id,))
-        empresa = cursor.fetchone()
-        if not empresa:
-            raise HTTPException(status_code=404, detail="Empresa não encontrada")
-
-        # 1. Atualiza o status de pagamento da empresa
+        # Atualiza o status da empresa para 'Em Dia' na tabela empresas
         cursor.execute("UPDATE empresas SET status_pagamento = 'Em Dia' WHERE id = %s", (empresa_id,))
 
-        # 2. Registra o histórico da fatura paga (para aparecer no painel do Gestor)
+        # Registra o histórico na tabela de interações/faturas
         cursor.execute("""
             INSERT INTO historico_empresas (empresa_id, descricao, data)
             VALUES (%s, %s, NOW())
-        """, (empresa_id, f"Mensalidade Mês Atual - Pago (R$ 40,00)"))
+        """, (empresa_id, "Mensalidade do Mês - Pago e Confirmado"))
 
         db.commit()
-        return {"success": True, "message": "Pagamento carimbado e sincronizado com sucesso!"}
+        return {"success": True, "message": "Pagamento carimbado com sucesso!"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
 
-
+        
 @app.put("/api/master/empresas/{id}/pix")
 def update_pix_master(id: int, pix: PixConfigUpdate, db=Depends(get_db)):
     cursor = db.cursor()
