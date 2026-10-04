@@ -324,6 +324,52 @@
 
             <!-- TELA: FINANCEIRO -->
 <section id="sec-financeiro" class="page-section hidden">
+
+
+    <!-- CONFIGURAÇÃO GLOBAL DE PIX POR CATEGORIA -->
+    <div class="card" style="border-left: 5px solid #673ab7; margin-bottom: 25px; background: #faf8ff;">
+        <h3 style="color: #673ab7; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <i class="ph ph-sliders-horizontal"></i> Configuração Fixa Global de Pix por Categoria
+        </h3>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+            Defina aqui o QR Code e a Chave Pix padrão. Todos os Gestores (R$ 40,00) e Entregadores (R$ 20,00) herdarão automaticamente esses dados para pagamento, sem necessidade de configuração individual.
+        </p>
+
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- CATEGORIA GESTOR -->
+            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <h4 style="color: var(--brand-primary); margin-bottom: 10px;">🏢 Categoria: Painel Gestor (R$ 40,00)</h4>
+                <div class="form-group">
+                    <label>Chave Pix (Copia e Cola)</label>
+                    <textarea id="global-pix-chave-gestor" class="form-control" rows="2" placeholder="Chave Pix para Gestores..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>QR Code (Imagem)</label>
+                    <input type="file" id="global-file-gestor" class="form-control" accept="image/*" onchange="converterGlobalBase64(event, 'gestor')" style="padding: 5px;">
+                    <input type="hidden" id="global-base64-gestor">
+                    <img id="global-img-preview-gestor" src="" style="max-height: 80px; margin-top: 8px; display: none; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <button class="btn btn-primary" style="width: 100%; background: #673ab7;" onclick="salvarConfigGlobal('gestor')">Salvar Padrão Gestor</button>
+            </div>
+
+            <!-- CATEGORIA ENTREGADOR -->
+            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <h4 style="color: var(--brand-primary); margin-bottom: 10px;">🏍️ Categoria: App Entregador (R$ 20,00)</h4>
+                <div class="form-group">
+                    <label>Chave Pix (Copia e Cola)</label>
+                    <textarea id="global-pix-chave-entregador" class="form-control" rows="2" placeholder="Chave Pix para Entregadores..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>QR Code (Imagem)</label>
+                    <input type="file" id="global-file-entregador" class="form-control" accept="image/*" onchange="converterGlobalBase64(event, 'entregador')" style="padding: 5px;">
+                    <input type="hidden" id="global-base64-entregador">
+                    <img id="global-img-preview-entregador" src="" style="max-height: 80px; margin-top: 8px; display: none; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <button class="btn btn-primary" style="width: 100%; background: #673ab7;" onclick="salvarConfigGlobal('entregador')">Salvar Padrão Entregador</button>
+            </div>
+        </div>
+    </div>
+
     <div class="page-header">
         <h1 class="page-title"><i class="ph-duotone ph-currency-dollar"></i> Gestão Financeira (SaaS)</h1>
         <button class="btn btn-primary" onclick="carregarFinanceiro()"><i class="ph ph-arrows-clockwise"></i> Atualizar Dados</button>
@@ -854,6 +900,9 @@
 
 
 async function carregarFinanceiro() {
+
+            carregarConfigGlobais();
+
             const tbody = document.getElementById('tabela-financeiro');
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros e entregadores...</td></tr>';
 
@@ -1026,6 +1075,89 @@ async function carregarFinanceiro() {
                 renderizarTabelaEmpresas(empresasGlobaisCache);
             }
         }
+
+
+      // Converte imagem global para base64
+        function converterGlobalBase64(event, tipo) {
+            const arquivo = event.target.files[0];
+            if (arquivo) {
+                const leitor = new FileReader();
+                leitor.onload = function(e) {
+                    const base64 = e.target.result;
+                    document.getElementById(`global-base64-${tipo}`).value = base64;
+                    const imgPreview = document.getElementById(`global-img-preview-${tipo}`);
+                    imgPreview.src = base64;
+                    imgPreview.style.display = 'block';
+                };
+                leitor.readAsDataURL(arquivo);
+            }
+        }
+
+        // Salva a configuração padrão global por categoria no backend/localStorage
+        async function salvarConfigGlobal(tipo) {
+            const chave = document.getElementById(`global-pix-chave-${tipo}`).value;
+            const qrcode = document.getElementById(`global-base64-${tipo}`).value;
+
+            if (!chave && !qrcode) {
+                alert("Preencha a Chave Pix ou selecione a imagem do QR Code.");
+                return;
+            }
+
+            // Salva no localStorage como fallback imediato para o frontend
+            localStorage.setItem(`deliveryon_global_pix_chave_${tipo}`, chave);
+            if (qrcode) {
+                localStorage.setItem(`deliveryon_global_pix_qr_${tipo}`, qrcode);
+            }
+
+            try {
+                // Envia para o backend salvar de forma global para a categoria
+                await masterApiRequest(`/configuracoes-globais/${tipo}`, 'PUT', {
+                    pix_chave: chave,
+                    pix_qrcode: qrcode
+                });
+                alert(`Configuração padrão para [${tipo.toUpperCase()}] salva com sucesso para toda a base!`);
+            } catch (err) {
+                alert(`Salvo localmente com sucesso! (Erro de API: ${err.message})`);
+            }
+        }
+
+        // Carrega as configurações globais ao abrir a tela financeira
+        async function carregarConfigGlobais() {
+            try {
+                const config = await masterApiRequest('/configuracoes-globais');
+                if (config) {
+                    if (config.gestor) {
+                        document.getElementById('global-pix-chave-gestor').value = config.gestor.pix_chave || '';
+                        if (config.gestor.pix_qrcode) {
+                            document.getElementById('global-base64-gestor').value = config.gestor.pix_qrcode;
+                            const img = document.getElementById('global-img-preview-gestor');
+                            img.src = config.gestor.pix_qrcode;
+                            img.style.display = 'block';
+                        }
+                    }
+                    if (config.entregador) {
+                        document.getElementById('global-pix-chave-entregador').value = config.entregador.pix_chave || '';
+                        if (config.entregador.pix_qrcode) {
+                            document.getElementById('global-base64-entregador').value = config.entregador.pix_qrcode;
+                            const img = document.getElementById('global-img-preview-entregador');
+                            img.src = config.entregador.pix_qrcode;
+                            img.style.display = 'block';
+                        }
+                    }
+                }
+            } catch(e) {
+                // Fallback para localStorage
+                document.getElementById('global-pix-chave-gestor').value = localStorage.getItem('deliveryon_global_pix_chave_gestor') || '';
+                const qrGestor = localStorage.getItem('deliveryon_global_pix_qr_gestor');
+                if (qrGestor) {
+                    document.getElementById('global-base64-gestor').value = qrGestor;
+                    const img = document.getElementById('global-img-preview-gestor');
+                    img.src = qrGestor;
+                    img.style.display = 'block';
+                }
+            }
+        }
+
 
         function renderizarTabelaEmpresas(lista) {
     const tbody = document.getElementById('tabela-empresas');
