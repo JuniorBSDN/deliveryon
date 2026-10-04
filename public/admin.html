@@ -2019,12 +2019,14 @@ function abrirModalEditarPedido(id) {
             <div style="background: white; border-left: 6px solid var(--brand-primary); padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                 <h4 style="color: var(--brand-primary); text-transform: uppercase; margin-bottom: 10px; font-size: 1.1rem; font-weight: 800;">PLANO DELIVERYON MENSAL</h4>
                 <span style="font-size: 0.85rem; font-weight: bold; color: #555;">Status: Período de Testes / Ativo (7 Dias Grátis)</span>
+
                 <div style="font-size: 2.2rem; font-weight: 300; margin: 15px 0; color: #111;">
                     <strong>R$</strong> 40,00 <span style="font-size: 0.9rem; color: #777;">/mês</span>
                 </div>
                 <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Utilize o botão abaixo para realizar a ativação antecipada ou regularizar sua assinatura via PIX.</p>
 
-                <button onclick="document.getElementById('modalFinanceiroSaaS').classList.add('active'); document.getElementById('modal-pix-qrcode').src='${qrCode}'; document.getElementById('modal-pix-chave').value='${chavePix}';"
+
+                <button onclick="abrirModalPixGestor()"
                         style="width: 100%; padding: 12px; background: var(--brand-primary); color: white; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s;">
                     Ativar / Pagar com PIX
                 </button>
@@ -2058,6 +2060,55 @@ function abrirModalEditarPedido(id) {
         });
     }
 }
+
+async function abrirModalPixGestor() {
+    const modal = document.getElementById('modalFinanceiroSaaS');
+    const imgQr = document.getElementById('modal-pix-qrcode');
+    const txtChave = document.getElementById('modal-pix-chave');
+
+    // Abre o modal imediatamente
+    modal.classList.add('active');
+    imgQr.src = "";
+    txtChave.value = "Carregando dados do PIX...";
+
+    let qrCodeUrl = "";
+    let chavePixTexto = "";
+
+    try {
+        // 1. Tenta buscar da API de configurações/financeiro da empresa
+        const config = await apiRequest('/configuracoes');
+        if (config) {
+            qrCodeUrl = config.pix_qrcode || config.qrcode_pix || config.qr_code || "";
+            chavePixTexto = config.pix_chave || config.chave_pix || "";
+        }
+    } catch (err) {
+        console.warn("Não foi possível buscar da API, tentando localStorage...", err);
+    }
+
+    // 2. Se a API não retornou, tenta pegar do localStorage (salvo no login)
+    if (!qrCodeUrl || qrCodeUrl === "null") {
+        qrCodeUrl = localStorage.getItem('deliveryon_pix_qr') || "";
+    }
+    if (!chavePixTexto || chavePixTexto === "null") {
+        chavePixTexto = localStorage.getItem('deliveryon_pix_chave') || "";
+    }
+
+    // 3. Atribui os valores aos elementos visuais com tratamento para vazios/null
+    if (qrCodeUrl && qrCodeUrl !== "null" && qrCodeUrl.trim() !== "") {
+        imgQr.style.display = "block";
+        imgQr.src = qrCodeUrl;
+    } else {
+        // Se não houver QR code cadastrado pelo Master, esconde ou mostra um placeholder informativo
+        imgQr.style.display = "none";
+    }
+
+    if (chavePixTexto && chavePixTexto !== "null" && chavePixTexto.trim() !== "") {
+        txtChave.value = chavePixTexto;
+    } else {
+        txtChave.value = "Chave PIX não configurada pelo painel Master. Entre em contato com o suporte.";
+    }
+}
+
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
             if (empresaId) {
