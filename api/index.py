@@ -588,6 +588,23 @@ def gestor_cadastro(emp: EmpresaCreate, db=Depends(get_db)):
     finally:
         cursor.close()
 
+@app.get("/api/financeiro/historico")
+def get_financeiro_historico(empresa_id: int = Query(1), db=Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            SELECT id, TO_CHAR(data, 'MM/YYYY') as mes_ref, descricao as descricao_mes, 40.00 as valor, true as nota_fiscal
+            FROM historico_empresas 
+            WHERE empresa_id = %s ORDER BY data DESC
+        """, (empresa_id,))
+        res = cursor.fetchall()
+    except Exception:
+        db.rollback()
+        res = []
+    finally:
+        cursor.close()
+    return res
+
 @app.post("/api/gestor/auth")
 def gestor_login(auth: GestorAuth, db=Depends(get_db)):
     cursor = db.cursor()
@@ -597,7 +614,7 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
             raise HTTPException(status_code=400, detail="CNPJ ou CPF inválido.")
 
         cursor.execute("""
-            SELECT id, nome_fantasia, cnpj, status, vencimento 
+            SELECT id, nome_fantasia, cnpj, status, vencimento, qrcode_imagem, copia_e_cola
             FROM empresas 
             WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s
         """, (doc_limpo,))
@@ -613,7 +630,9 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
             "autorizado": True,
             "empresa_id": empresa['id'],
             "nome_fantasia": empresa['nome_fantasia'],
-            "vencimento": empresa['vencimento'] or 5
+            "vencimento": empresa['vencimento'] or 5,
+            "pix_qrcode": empresa.get('qrcode_imagem') or "",
+            "pix_chave": empresa.get('copia_e_cola') or ""
         }
     except HTTPException:
         raise
