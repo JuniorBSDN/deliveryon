@@ -324,22 +324,26 @@
         </div>
     </div>
 
-    <!-- MODAL DE BLOQUEIO FINANCEIRO -->
+    <!-- MODAL DE BLOQUEIO / FINANCEIRO -->
     <div class="modal-overlay" id="modalFinanceiroSaaS" style="z-index: 9999;">
         <div class="modal-content" style="max-width: 450px; text-align: center;">
-            <div class="modal-header" style="justify-content: center; background: #fff5f5; border-bottom: 1px solid #ffcdd2;">
-                <h3 style="color: var(--danger);"><i class="ph ph-warning-octagon"></i> Acesso Bloqueado</h3>
+            <div class="modal-header" style="justify-content: space-between; align-items: center; background: #fff5f5; border-bottom: 1px solid #ffcdd2; padding: 15px 20px;">
+                <h3 style="color: var(--danger); margin: 0; display: flex; align-items: center; gap: 8px;"><i class="ph ph-warning-octagon"></i> <span id="modal-titulo-bloqueio">Acesso Bloqueado</span></h3>
+                <button class="close-modal" onclick="closeModal('modalFinanceiroSaaS')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa;">&times;</button>
             </div>
-            <div class="modal-body">
-                <p style="font-size: 1.1rem; color: #333; margin-bottom: 15px;">Sua mensalidade venceu há mais de 7 dias.</p>
-                <p style="font-size: 0.9rem; color: #777;">Efetue o pagamento via PIX utilizando os dados abaixo para liberar o sistema automaticamente.</p>
+            <div class="modal-body" style="padding: 20px;">
+                <p id="modal-texto-aviso" style="font-size: 1.05rem; color: #333; margin-bottom: 15px; font-weight: 600;">Sua mensalidade venceu.</p>
+                <p style="font-size: 0.9rem; color: #777; margin-bottom: 15px;">Efetue o pagamento via PIX utilizando os dados abaixo para liberar ou manter o sistema ativo automaticamente.</p>
 
-                <img id="modal-pix-qrcode" src="" style="width: 200px; height: 200px; object-fit: contain; margin: 20px auto; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
+                <img id="modal-pix-qrcode" src="" style="width: 200px; height: 200px; object-fit: contain; margin: 10px auto; border: 1px solid #ccc; border-radius: 8px; padding: 10px; display: none;">
 
-                <div class="form-group" style="text-align: left;">
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
                     <label>Chave PIX (Copia e Cola):</label>
                     <textarea id="modal-pix-chave" class="form-control" rows="3" readonly style="background: #f8f9fa; cursor: pointer;" onclick="this.select(); document.execCommand('copy'); alert('Chave PIX copiada!');"></textarea>
                 </div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalFinanceiroSaaS')">Fechar</button>
             </div>
         </div>
     </div>
@@ -2122,6 +2126,22 @@ async function abrirModalPixGestor() {
     const modal = document.getElementById('modalFinanceiroSaaS');
     const imgQr = document.getElementById('modal-pix-qrcode');
     const txtChave = document.getElementById('modal-pix-chave');
+    const textoAviso = document.getElementById('modal-texto-aviso');
+    const tituloBloqueio = document.getElementById('modal-titulo-bloqueio');
+
+    // Usa a mesma função inteligente de cálculo de status/dias
+    const info = calcularStatusVencimento();
+
+    if (info.statusEnum === "CARENCIA") {
+        tituloBloqueio.innerText = "Aviso de Vencimento";
+        textoAviso.innerText = `Sua mensalidade venceu e está em período de carência. Faltam ${info.diasRestantesOuCarencia} dia(s) para o bloqueio total.`;
+    } else if (info.statusEnum === "VENCIDO") {
+        tituloBloqueio.innerText = "Acesso Bloqueado";
+        textoAviso.innerText = `Sua mensalidade venceu há mais de 7 dias e o acesso está restrito.`;
+    } else {
+        tituloBloqueio.innerText = "Regularização / Pagamento PIX";
+        textoAviso.innerText = `Sua assinatura está em dia. Vence em ${info.diasRestantesOuCarencia} dias.`;
+    }
 
     // Abre o modal imediatamente
     modal.classList.add('active');
@@ -2131,7 +2151,7 @@ async function abrirModalPixGestor() {
     let qrCodeUrl = "";
     let chavePixTexto = "";
 
-    // 1. Busca prioritária do localStorage global que o Master salva (Corrigido para parênteses)
+    // 1. Busca prioritária do localStorage global que o Master salva
     chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_gestor') || "";
     qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor') || "";
 
