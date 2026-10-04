@@ -315,19 +315,34 @@ def delete_empresa(id: int, db=Depends(get_db), token: str = Depends(verificar_t
     cursor.close()
     return {"mensagem": "Excluído com sucesso"}
 
-@app.post("/api/master/empresas/{id}/carimbar-pagamento")
-def carimbar_pagamento(id: int, db=Depends(get_db)):
+
+@app.post("/api/master/empresas/{empresa_id}/carimbar-pagamento")
+def carimbar_pagamento(empresa_id: int, db=Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("UPDATE empresas SET status = 'ativo' WHERE id = %s", (id,))
     try:
-        cursor.execute(
-            "INSERT INTO historico_empresas (empresa_id, descricao, data) VALUES (%s, 'Pagamento carimbado e autenticado', NOW())",
-            (id,))
-    except Exception:
+        # Verifica se a empresa existe
+        cursor.execute("SELECT id, nome_fantasia FROM empresas WHERE id = %s", (empresa_id,))
+        empresa = cursor.fetchone()
+        if not empresa:
+            raise HTTPException(status_code=404, detail="Empresa não encontrada")
+
+        # 1. Atualiza o status de pagamento da empresa
+        cursor.execute("UPDATE empresas SET status_pagamento = 'Em Dia' WHERE id = %s", (empresa_id,))
+
+        # 2. Registra o histórico da fatura paga (para aparecer no painel do Gestor)
+        cursor.execute("""
+            INSERT INTO historico_empresas (empresa_id, descricao, data)
+            VALUES (%s, %s, NOW())
+        """, (empresa_id, f"Mensalidade Mês Atual - Pago (R$ 40,00)"))
+
+        db.commit()
+        return {"success": True, "message": "Pagamento carimbado e sincronizado com sucesso!"}
+    except Exception as e:
         db.rollback()
-    db.commit()
-    cursor.close()
-    return {"mensagem": "Pagamento carimbado com sucesso"}
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+
 
 @app.put("/api/master/empresas/{id}/pix")
 def update_pix_master(id: int, pix: PixConfigUpdate, db=Depends(get_db)):
