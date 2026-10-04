@@ -151,6 +151,26 @@
             #area-impressao-notificacoes, #area-impressao-helpdesk, #area-impressao-entregadores { position: absolute; left: 0; top: 0; width: 100%; }
             .btn, .item-actions, .filter-tabs { display: none !important; }
         }
+        /* TOAST DE NOTIFICAÇÕES (MASTER) */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { width: 320px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-left: 5px solid var(--brand-primary); padding: 15px; display: flex; align-items: flex-start; gap: 12px; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; cursor: pointer; }
+        .toast.show { transform: translateX(0); }
+        .toast-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 3px; color: var(--text-main); }
+        .toast-message { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+        .toast-close { background: none; border: none; font-size: 1.2rem; color: #aaa; cursor: pointer; padding: 0; }
+        .toast-close:hover { color: #333; }
+
+        /* Cores Dinâmicas para o Toast */
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.warning .toast-icon { color: var(--warning); }
+        .toast.danger { border-left-color: var(--danger); }
+        .toast.danger .toast-icon { color: var(--danger); }
+        .toast.info { border-left-color: var(--info); }
+        .toast.info .toast-icon { color: var(--info); }
+        .toast.success { border-left-color: var(--success); }
+        .toast.success .toast-icon { color: var(--success); }
     </style>
 </head>
 <body>
@@ -964,27 +984,72 @@
             }
         }
 
-async function carimbarPagamentoEmpresa(id, nome) {
-            if(confirm(`Confirmar o recebimento da mensalidade da empresa ${nome}?\nO status será atualizado para ATIVO no banco de dados e o acesso será liberado.`)) {
-                try {
-                    const res = await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST');
-                    if(res) {
-                        alert(`Baixa financeira de ${nome} realizada com sucesso!`);
+// Abre o modal de baixa e preenche os dados sugeridos
+function abrirModalBaixaFinanceira(id, nome, valorMensalidade) {
+    document.getElementById('baixa-empresa-id').value = id;
+    document.getElementById('baixa-empresa-nome').innerText = nome;
 
-                        // INJETA O ALERTA INSTANTANEAMENTE NO DASHBOARD
-                        alertasGlobaisCache.unshift({
-                            id: Date.now(), tipo: 'pagamento', titulo: 'Pagamento Confirmado',
-                            mensagem: `A empresa ${nome} teve a baixa financeira realizada agora.`, data_hora: new Date().toLocaleString('pt-BR')
-                        });
-                        renderizarAlertas(alertasGlobaisCache); // Atualiza painel
+    // Sugere o mês atual
+    const dataAtual = new Date();
+    const mesSugerido = (dataAtual.getMonth() + 1).toString().padStart(2, '0') + '/' + dataAtual.getFullYear();
+    document.getElementById('baixa-mes-ref').value = mesSugerido;
 
-                        carregarFinanceiro(); // Atualiza a aba Financeiro instantaneamente
-                    }
-                } catch(e) {
-                    alert("Erro ao confirmar pagamento: " + e.message);
-                }
-            }
+    // Formata o valor
+    document.getElementById('baixa-valor').value = valorMensalidade.toFixed(2).replace('.', ',');
+
+    // Limpa o input de arquivo
+    document.getElementById('baixa-nf-file').value = "";
+    document.getElementById('baixa-nf-base64').value = "";
+
+    openModal('modalBaixaFinanceira');
+}
+
+// Converte o PDF para Base64 para envio via JSON
+function converterNfBase64(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('baixa-nf-base64').value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Envia a confirmação para o backend
+async function salvarBaixaFinanceira() {
+    const id = document.getElementById('baixa-empresa-id').value;
+    const nome = document.getElementById('baixa-empresa-nome').innerText;
+    const mesRef = document.getElementById('baixa-mes-ref').value;
+    const valorPago = document.getElementById('baixa-valor').value;
+    const nfBase64 = document.getElementById('baixa-nf-base64').value; // Pode estar vazio, se não houver NF
+
+    try {
+        const payload = {
+            mes_ref: mesRef,
+            valor: parseFloat(valorPago.replace(',', '.')),
+            nota_fiscal: nfBase64 // O backend deve salvar esta string no histórico
+        };
+
+        const res = await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST', payload);
+
+        if (res) {
+            alert(`Baixa financeira de ${nome} realizada com sucesso!`);
+
+            // Injeta alerta visual no painel
+            alertasGlobaisCache.unshift({
+                id: Date.now(), tipo: 'pagamento', titulo: 'Pagamento Confirmado',
+                mensagem: `A empresa ${nome} teve a fatura de ${mesRef} quitada.`, data_hora: new Date().toLocaleString('pt-BR')
+            });
+            renderizarAlertas(alertasGlobaisCache);
+
+            closeModal('modalBaixaFinanceira');
+            carregarFinanceiro(); // Atualiza a tabela
         }
+    } catch(e) {
+        alert("Erro ao confirmar pagamento: " + e.message);
+    }
+}
 
         function gerarReciboEmpresa(id) {
             const emp = empresasGlobaisCache.find(e => e.id === id);
@@ -1454,7 +1519,7 @@ async function carimbarPagamentoEmpresa(id, nome) {
                         <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${emp.contato}', '${emp.nome_fantasia}', ${valorMensalidade})">
                             <i class="ph ph-whatsapp-logo" style="color: #25D366;"></i>
                         </button>
-                        <button class="btn-action" title="Dar Baixa" onclick="carimbarPagamentoEmpresa(${emp.id}, '${emp.nome_fantasia}')" style="color: var(--success); border-color: var(--success);">
+                        <button class="btn-action" title="Dar Baixa" onclick="abrirModalBaixaFinanceira(${emp.id}, '${emp.nome_fantasia}', ${valorMensalidade})" style="color: var(--success); border-color: var(--success);">
                             <i class="ph ph-check-circle"></i>
                         </button>
                     </td>
@@ -1506,6 +1571,233 @@ function filtrarTabela(inputId, tbodyId) {
     }
 }
 
+
+        let toastsDeInadimplenciaExibidos = false;
+
+        // Função universal para exibir alertas visuais no canto da tela (estilo Windows)
+        function mostrarToastMaster(titulo, mensagem, tipo = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${tipo}`;
+
+            let icon = 'ph-info';
+            if (tipo === 'warning') icon = 'ph-warning';
+            if (tipo === 'danger') icon = 'ph-warning-circle';
+            if (tipo === 'success') icon = 'ph-check-circle';
+
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="ph ${icon}"></i></div>
+                <div class="toast-content">
+                    <div class="toast-title">${titulo}</div>
+                    <div class="toast-message">${mensagem}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            // Ativa a animação de entrada
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Auto-fecha após 6 segundos
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 6000);
+        }
+
+        async function carregarFinanceiro() {
+            const tbody = document.getElementById('tabela-financeiro');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros e entregadores...</td></tr>';
+
+            try {
+                // Busca EMPRESAS e ENTREGADORES ao mesmo tempo
+                const [empresas, entregadores] = await Promise.all([
+                    masterApiRequest('/empresas'),
+                    masterApiRequest('/entregadores')
+                ]);
+
+                const listaEmpresas = empresas || [];
+                const listaEntregadores = entregadores || [];
+
+                empresasGlobaisCache = listaEmpresas;
+                entregadoresGlobaisCache = listaEntregadores;
+
+                let html = '';
+                let mrrTotal = 0;
+                let qtdEmDia = 0;
+                let qtdAtrasados = 0;
+
+                const diaAtual = new Date().getDate();
+
+                // === 1. LISTAR EMPRESAS (Valor Fixo: R$ 40,00) ===
+                listaEmpresas.forEach(emp => {
+                    const valorMensalidade = 40.00;
+                    if (emp.status === 'ativo') mrrTotal += valorMensalidade;
+
+                    const diaVenc = parseInt(emp.vencimento) || 5;
+                    let statusBadge = '';
+
+                    if (emp.status !== 'ativo') {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                    } else if (diaAtual > diaVenc + 7) {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                        qtdAtrasados++;
+                    } else if (diaAtual > diaVenc) {
+                        statusBadge = '<span class="badge badge-warning">Atrasado (Carência)</span>';
+                        qtdAtrasados++;
+                    } else {
+                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
+                        qtdEmDia++;
+                    }
+
+                    html += renderLinhaFinanceira(
+                        emp.id, emp.nome_fantasia, `CNPJ: ${emp.cnpj}`,
+                        'Painel Gestor', valorMensalidade, diaVenc, statusBadge, emp.contato, 'empresa'
+                    );
+                });
+
+                // === 2. LISTAR ENTREGADORES (Valor Fixo: R$ 20,00) ===
+                listaEntregadores.forEach(ent => {
+                    const valorMensalidade = 20.00;
+                    const isAtivo = (ent.status === 'Disponível' || ent.status === 'Online' || ent.status === 'Em Entrega');
+
+                    if (isAtivo) mrrTotal += valorMensalidade;
+
+                    const diaVenc = parseInt(ent.vencimento) || 10;
+                    let statusBadge = '';
+
+                    if (ent.status === 'Bloqueado') {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                    } else if (diaAtual > diaVenc + 7) {
+                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
+                        qtdAtrasados++;
+                    } else if (diaAtual > diaVenc) {
+                        statusBadge = '<span class="badge badge-warning">Atrasado</span>';
+                        qtdAtrasados++;
+                    } else {
+                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
+                        qtdEmDia++;
+                    }
+
+                    html += renderLinhaFinanceira(
+                        ent.id, ent.nome, `Veículo: ${ent.veiculo || 'Moto'}`,
+                        'App Entregador', valorMensalidade, diaVenc, statusBadge, ent.telefone, 'entregador'
+                    );
+                });
+
+                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
+
+                // Atualiza Cards
+                document.getElementById('fin-mrr').innerText = `R$ ${mrrTotal.toFixed(2).replace('.', ',')}`;
+                document.getElementById('fin-em-dia').innerText = qtdEmDia;
+                document.getElementById('fin-atrasados').innerText = qtdAtrasados;
+
+                // Checa pagamentos pendentes para disparar o pop-up no canto da tela
+                verificarPendenciasToasts(listaEmpresas, listaEntregadores);
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger);">Erro: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Renderizador inteligente para separar Ações de Clientes x Ações de Entregadores
+        function renderLinhaFinanceira(id, titulo, subtitulo, tipoPlano, valor, diaVenc, statusBadge, telefone, tipoEntidade) {
+            let acoes = '';
+
+            if (tipoEntidade === 'empresa') {
+                acoes = `
+                    <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+                    <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEmpresa(${id})"><i class="ph ph-receipt"></i></button>
+                    <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+                    <button class="btn-action" title="Dar Baixa com NF" onclick="abrirModalBaixaFinanceira(${id}, '${titulo}', ${valor})" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+                `;
+            } else {
+                acoes = `
+                    <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEntregador(${id})"><i class="ph ph-receipt"></i></button>
+                    <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+                    <button class="btn-action" title="Dar Baixa App" onclick="carimbarPagamentoEntregador(${id}, '${titulo}')" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td><strong>${titulo}</strong><br><small style="color:var(--text-muted)">${subtitulo}</small></td>
+                    <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${tipoPlano}</span></td>
+                    <td><strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong></td>
+                    <td>Todo dia ${diaVenc}</td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">${acoes}</td>
+                </tr>
+            `;
+        }
+
+        // Função que verifica atrasos e dispara os Toasts
+        function verificarPendenciasToasts(empresas, entregadores) {
+            if (toastsDeInadimplenciaExibidos) return; // Garante que não vai ficar spamando alertas
+
+            const diaAtual = new Date().getDate();
+            let pendenciasEmpresa = 0;
+            let pendenciasEntregador = 0;
+
+            empresas.forEach(emp => { if (diaAtual > (parseInt(emp.vencimento) || 5)) pendenciasEmpresa++; });
+            entregadores.forEach(ent => { if (diaAtual > (parseInt(ent.vencimento) || 10)) pendenciasEntregador++; });
+
+            if (pendenciasEmpresa > 0) {
+                mostrarToastMaster("Faturas em Aberto", `Existem ${pendenciasEmpresa} painéis de clientes com mensalidades pendentes.`, "danger");
+            }
+            if (pendenciasEntregador > 0) {
+                // Atraso de 1.5s para os dois toasts não aparecerem totalmente colados
+                setTimeout(() => {
+                    mostrarToastMaster("Licenças Pendentes", `Existem ${pendenciasEntregador} entregadores aguardando renovação da licença do app.`, "warning");
+                }, 1500);
+            }
+
+            toastsDeInadimplenciaExibidos = true;
+        }
+
+
     </script>
+<!-- MODAL DE BAIXA FINANCEIRA COM NF -->
+<div class="modal-overlay" id="modalBaixaFinanceira">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-check-circle" style="color: var(--success);"></i> Confirmar Pagamento e Emitir NF</h3>
+            <button class="close-modal" onclick="closeModal('modalBaixaFinanceira')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="baixa-empresa-id">
+            <p style="margin-bottom: 15px; font-size: 1.1rem;">Cliente: <strong id="baixa-empresa-nome" style="color: var(--brand-primary);"></strong></p>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label>Mês de Referência</label>
+                    <input type="text" id="baixa-mes-ref" class="form-control" placeholder="Ex: 10/2026" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor Pago (R$)</label>
+                    <input type="text" id="baixa-valor" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group mt-20" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
+                <label style="display: flex; align-items: center; gap: 8px; color: #333;">
+                    <i class="ph ph-file-pdf" style="color: var(--danger); font-size: 1.2rem;"></i> Anexar Nota Fiscal (PDF)
+                </label>
+                <input type="file" id="baixa-nf-file" class="form-control" accept="application/pdf" onchange="converterNfBase64(event)" style="margin-top: 10px;">
+                <small style="color: var(--text-muted); display: block; margin-top: 5px;">Este arquivo ficará disponível no painel do cliente imediatamente.</small>
+                <input type="hidden" id="baixa-nf-base64">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalBaixaFinanceira')">Cancelar</button>
+            <button class="btn btn-success" onclick="salvarBaixaFinanceira()"><i class="ph ph-floppy-disk"></i> Confirmar Baixa e Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
+    <div id="toast-container"></div>
+
 </body>
 </html>
