@@ -140,34 +140,47 @@
     <!-- TOAST DO ENTREGADOR (Aviso de Licença) -->
     <div id="toast-trial-motoboy" style="position: fixed; bottom: 20px; right: -400px; width: calc(100% - 40px); max-width: 350px; background: white; border-left: 5px solid #2196F3; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; z-index: 9999; transition: right 0.5s ease-in-out; font-family: sans-serif;">
         <h4 style="margin: 0 0 8px 0; color: #2196F3; font-size: 1rem;"><i class="ph-fill ph-clock"></i> Licença do App</h4>
-        <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: #555;">Seu acesso expira em <strong id="dias-restantes-motoboy" style="color: #ff9800;">--</strong> dias.</p>
+        <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: #555;" id="texto-toast-motoboy">Seu acesso expira em <strong id="dias-restantes-motoboy" style="color: #ff9800;">--</strong> dias.</p>
         <div style="display: flex; gap: 8px;">
-            <button onclick="abrirFinanceiroMotoboy()" style="background: #2196F3; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; flex: 1; cursor:pointer;">Ativar</button>
+            <button onclick="abrirFinanceiroMotoboy()" style="background: #2196F3; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; flex: 1; cursor:pointer;">Detalhes</button>
             <button onclick="document.getElementById('toast-trial-motoboy').style.right = '-400px'" style="background: #eee; color: #333; border: none; padding: 8px; border-radius: 6px; flex: 1; cursor:pointer;">Depois</button>
         </div>
     </div>
 
-    <!-- MODAL FINANCEIRO DO ENTREGADOR -->
+    <!-- MODAL FINANCEIRO DO ENTREGADOR (Padrão Empresa) -->
     <div id="modalFinanceiroMotoboy" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
         <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div style="background: #2196F3; padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid #1976D2;">
-                Ativação da Licença
+            <div id="header-financeiro" style="background: #2196F3; padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid #1976D2;">
+                Licença de Uso
             </div>
-            <div style="padding: 25px; text-align: center;">
-                <p style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Mantenha seu app ativo para continuar recebendo corridas na praça.</p>
-                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;">R$ 50,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
+            
+            <div id="bloco-pagamento-pendente" style="padding: 25px; text-align: center;">
+                <p id="msg-status-financeiro" style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Renove sua licença para continuar operando no radar e recebendo corridas.</p>
+                
+                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 50,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
 
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (CNPJ):</p>
-                    <input type="text" id="pix-motoboy-copia" value="11.222.333/0001-44" readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.2rem; color: #2196F3; font-weight: bold; margin-bottom: 10px;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (Copia e Cola):</p>
+                    <input type="text" id="pix-motoboy-copia" value="Carregando..." readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.1rem; color: #2196F3; font-weight: bold; margin-bottom: 10px;">
                     <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem;"><i class="ph ph-copy"></i> Copiar Chave</button>
                 </div>
 
-                <p style="font-size: 0.85rem; color: #888; line-height: 1.4;">Após o pagamento, envie o comprovante ao Administrador para liberação automática do acesso.</p>
+                <button onclick="informarPagamentoPIX()" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 10px;"><i class="ph ph-check-circle"></i> Já fiz o Pagamento</button>
+                <p style="font-size: 0.8rem; color: #888; line-height: 1.4;">Após confirmar, o administrador liberará seu acesso.</p>
             </div>
+
+            <div id="bloco-analise-pendente" style="padding: 30px; text-align: center; display: none;">
+                <div style="width: 70px; height: 70px; background: #fff3cd; color: #856404; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 15px;">
+                    <i class="ph-fill ph-hourglass-high"></i>
+                </div>
+                <h3 style="color: #333; margin-bottom: 10px;">Pagamento em Análise</h3>
+                <p style="color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">Recebemos sua confirmação! O administrador está validando seu PIX. Seu acesso será liberado em breve.</p>
+                <button class="btn btn-outline" onclick="checarStatusFinanceiroBackend()" style="width: 100%;"><i class="ph ph-arrows-clockwise"></i> Atualizar Status</button>
+            </div>
+
             <div id="footer-financeiro" style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
-                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
-                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; flex: 1; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Sair da Conta</button>
+                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar Tela</button>
+                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; flex: 1; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="ph ph-sign-out"></i> Sair da Conta</button>
             </div>
         </div>
     </div>
@@ -516,7 +529,7 @@
             document.body.style.fontSize = currentFontSize + '%';
         }
 
-        // ================= SISTEMA DEFINITIVO DE TRAVA FINANCEIRA =================
+        // ================= SISTEMA DEFINITIVO DE TRAVA FINANCEIRA (LÓGICA EMPRESA) =================
         function copiarPixFinanceiro() {
             const input = document.getElementById('pix-motoboy-copia');
             input.select();
@@ -525,71 +538,151 @@
             alert("Chave Pix copiada!");
         }
 
-        function abrirFinanceiroMotoboy(bloqueioTotal = false) {
+        // Função principal do backend (Mockado aqui, mas estruturado para API real)
+        async function checarStatusFinanceiroBackend() {
+            const entregadorId = localStorage.getItem('app_motoboy_id');
+            if (!entregadorId) return true; // Cai no login
+
+            try {
+                // Aqui entraria o fetch real: fetch(`/api/entregador/${entregadorId}/financeiro`)
+                // Simulação da resposta do Backend
+                
+                // Variáveis de controle local (Simulando Banco de Dados)
+                let statusPagto = localStorage.getItem(`deliveryon_pagto_status_${entregadorId}`) || 'pendente'; 
+                const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
+                const chavePixAdmin = localStorage.getItem('deliveryon_global_pix_chave') || '11.222.333/0001-44';
+                const valorLicenca = '50,00';
+                
+                const hoje = new Date();
+                const diaAtual = hoje.getDate();
+                const mesAtualStr = (hoje.getMonth() + 1).toString().padStart(2, '0') + '/' + hoje.getFullYear();
+                
+                const ultimoMesPago = localStorage.getItem(`deliveryon_pagto_mes_${entregadorId}`);
+
+                // Se o status da API for 'ativo' para este mês
+                if (ultimoMesPago === mesAtualStr && statusPagto === 'ativo') {
+                    return { status: 'ativo' };
+                }
+
+                // Se o usuário clicou em pagar e está aguardando o Admin
+                if (statusPagto === 'em_analise') {
+                    return { status: 'analise' };
+                }
+
+                // Cálculo de dias para bloqueio / aviso
+                let diasRestantes = vencimentoDia - diaAtual;
+                
+                if (diasRestantes > 5) {
+                    return { status: 'ativo' }; // Tudo certo
+                } else if (diasRestantes >= 0 && diasRestantes <= 5) {
+                    return { status: 'aviso', dias: diasRestantes, chave: chavePixAdmin, valor: valorLicenca };
+                } else {
+                    const diasAtraso = Math.abs(diasRestantes);
+                    const carencia = 5; // 5 dias após o dia 10 para pagar
+                    
+                    if (diasAtraso <= carencia) {
+                        return { status: 'carencia', diasAtraso: diasAtraso, chave: chavePixAdmin, valor: valorLicenca };
+                    } else {
+                        return { status: 'bloqueado', chave: chavePixAdmin, valor: valorLicenca };
+                    }
+                }
+            } catch(e) {
+                console.error("Erro ao validar financeiro", e);
+                return { status: 'ativo' }; // Fallback preventivo
+            }
+        }
+
+        async function validarAcessoAplicativo() {
+            const result = await checarStatusFinanceiroBackend();
+            
+            // Preenche dados dinâmicos do PIX recebidos da API
+            if (result.chave) document.getElementById('pix-motoboy-copia').value = result.chave;
+            if (result.valor) document.getElementById('valor-licenca-motoboy').innerHTML = `R$ ${result.valor} <span style="font-size: 1rem; color: #888;">/mês</span>`;
+
+            const toast = document.getElementById('toast-trial-motoboy');
+            
+            if (result.status === 'ativo') {
+                toast.style.right = '-400px';
+                document.getElementById('modalFinanceiroMotoboy').style.display = 'none';
+                return true;
+            } 
+            
+            if (result.status === 'aviso') {
+                document.getElementById('dias-restantes-motoboy').innerText = result.dias;
+                document.getElementById('dias-restantes-motoboy').style.color = '#ff9800'; 
+                toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-clock"></i> Licença Vencendo';
+                setTimeout(() => { toast.style.right = '20px'; }, 2000);
+                return true;
+            } 
+            
+            if (result.status === 'carencia') {
+                toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-warning" style="color:red;"></i> Licença Atrasada';
+                document.getElementById('texto-toast-motoboy').innerHTML = `Sua licença venceu há <strong style="color: red;">${result.diasAtraso}</strong> dia(s). Pague para evitar o bloqueio.`;
+                setTimeout(() => { toast.style.right = '20px'; }, 2000);
+                return true;
+            } 
+            
+            if (result.status === 'analise') {
+                abrirFinanceiroMotoboy('analise');
+                return false; // Bloqueia execução do app
+            }
+            
+            if (result.status === 'bloqueado') {
+                abrirFinanceiroMotoboy('bloqueado');
+                return false; // Bloqueia execução do app
+            }
+        }
+
+        function abrirFinanceiroMotoboy(modo = 'aviso') {
             document.getElementById('toast-trial-motoboy').style.right = '-400px';
             const modal = document.getElementById('modalFinanceiroMotoboy');
+            const blocoPagto = document.getElementById('bloco-pagamento-pendente');
+            const blocoAnalise = document.getElementById('bloco-analise-pendente');
             
-            if (bloqueioTotal) {
+            if (modo === 'bloqueado') {
+                // TRAVA TUDO, tira botão fechar
+                document.getElementById('header-financeiro').style.backgroundColor = 'var(--danger)';
+                document.getElementById('header-financeiro').innerText = 'Acesso Bloqueado';
                 document.getElementById('btn-fechar-financeiro').style.display = 'none';
                 document.getElementById('btn-sair-financeiro').style.display = 'block';
+                blocoPagto.style.display = 'block';
+                blocoAnalise.style.display = 'none';
+            } else if (modo === 'analise') {
+                // TELA DE AGUARDANDO APROVAÇÃO
+                document.getElementById('header-financeiro').style.backgroundColor = '#ffc107';
+                document.getElementById('header-financeiro').style.color = '#333';
+                document.getElementById('header-financeiro').innerText = 'Aprovação Pendente';
+                document.getElementById('btn-fechar-financeiro').style.display = 'none';
+                document.getElementById('btn-sair-financeiro').style.display = 'block';
+                blocoPagto.style.display = 'none';
+                blocoAnalise.style.display = 'block';
             } else {
+                // MODO AVISO (Entregador clicou em 'Detalhes' no Toast)
+                document.getElementById('header-financeiro').style.backgroundColor = '#2196F3';
+                document.getElementById('header-financeiro').innerText = 'Licença de Uso';
                 document.getElementById('btn-fechar-financeiro').style.display = 'block';
                 document.getElementById('btn-sair-financeiro').style.display = 'none';
+                blocoPagto.style.display = 'block';
+                blocoAnalise.style.display = 'none';
             }
             
             modal.style.display = 'flex';
         }
 
-        function verificarLicencaFinanceira() {
+        function informarPagamentoPIX() {
+            // Em produção, isso faria um POST /api/entregador/financeiro/confirmar
             const entregadorId = localStorage.getItem('app_motoboy_id');
-            if (!entregadorId) return true; // Se não estiver logado, deixa passar para cair no form de login
-
-            const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10; 
             const hoje = new Date();
-            const diaAtual = hoje.getDate();
             const mesAtualStr = (hoje.getMonth() + 1).toString().padStart(2, '0') + '/' + hoje.getFullYear();
-
-            // 1. Verifica se já consta como pago o mês atual
-            const statusPagtoSalvo = localStorage.getItem(`deliveryon_pagto_entregador_${entregadorId}`);
-            if (statusPagtoSalvo === mesAtualStr) {
-                document.getElementById('modalFinanceiroMotoboy').style.display = 'none';
-                document.getElementById('toast-trial-motoboy').style.right = '-400px';
-                return true; 
-            }
-
-            // 2. Lógica de Bloqueio e Carência
-            const diasRestantes = vencimentoDia - diaAtual;
-
-            if (diasRestantes > 5) {
-                // Muito tempo restante, segue o jogo sem incomodar
-                return true;
-            } else if (diasRestantes >= 0 && diasRestantes <= 5) {
-                // Aviso prévio (faltam 5 dias ou menos)
-                const toast = document.getElementById('toast-trial-motoboy');
-                document.getElementById('dias-restantes-motoboy').innerText = diasRestantes;
-                document.getElementById('dias-restantes-motoboy').style.color = '#ff9800'; 
-                toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-clock"></i> Licença Vencendo';
-                setTimeout(() => { toast.style.right = '20px'; }, 2000);
-                return true;
-            } else {
-                // Venceu! O número agora é negativo.
-                const diasAtraso = Math.abs(diasRestantes);
-                const carencia = 5; // 5 dias de carência para pagar após o vencimento
-
-                if (diasAtraso <= carencia) {
-                    // Está atrasado, mas dentro da tolerância
-                    const toast = document.getElementById('toast-trial-motoboy');
-                    toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-warning" style="color:red;"></i> Licença Atrasada';
-                    toast.querySelector('p').innerHTML = `Sua licença venceu há <strong style="color: red;">${diasAtraso}</strong> dia(s). Pague para evitar o bloqueio.`;
-                    setTimeout(() => { toast.style.right = '20px'; }, 2000);
-                    return true;
-                } else {
-                    // Acabou a carência, BLOQUEIO TOTAL
-                    abrirFinanceiroMotoboy(true); // Argumento 'true' trava a tela tirando o botão 'Fechar'
-                    return false;
-                }
-            }
+            
+            // Registra localmente que ele pagou e está aguardando (Simulando API)
+            localStorage.setItem(`deliveryon_pagto_status_${entregadorId}`, 'em_analise');
+            localStorage.setItem(`deliveryon_pagto_mes_${entregadorId}`, mesAtualStr);
+            
+            abrirFinanceiroMotoboy('analise');
+            alert("Aviso de pagamento enviado! Aguarde o administrador aprovar seu acesso.");
         }
+
 
         // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
         function toggleAuthForms() {
@@ -709,10 +802,10 @@
             window.location.reload();
         }
 
-        function inicializarPainelEntregador() {
+        async function inicializarPainelEntregador() {
             // A PRIMEIRA COISA É CHECAR A LICENÇA: Se bloquear, não liga o resto do código
-            const liberado = verificarLicencaFinanceira();
-            if (!liberado) return;
+            const liberado = await validarAcessoAplicativo();
+            if (!liberado) return; // Trava a inicialização do app
 
             const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
@@ -1258,7 +1351,6 @@
             sidebar.classList.toggle('open');
             overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
             
-            // Corrige o bug dos blocos cinzas no mapa redimensionado
             if (mapaGlobal) {
                 setTimeout(() => { mapaGlobal.invalidateSize(); }, 300);
             }
