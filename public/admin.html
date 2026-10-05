@@ -1991,47 +1991,64 @@ function abrirModalEditarPedido(id) {
             }
         }
 
+// ATUALIZAÇÃO DEFINITIVA DA FUNÇÃO DE STATUS
 function calcularStatusVencimento() {
-    // TRAVA DE SEGURANÇA: Respeita o status oficial do banco de dados primeiro
-    const statusBanco = localStorage.getItem('deliveryon_status_pagamento');
-    if (statusBanco === 'Em Dia') {
-        return { statusEnum: "EM_DIA", diasRestantesOuCarencia: 30, diffDays: 0 };
-    }
-
-    // Se não estiver pago no banco, realiza o cálculo matemático tradicional
     const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
+
+    // Agora o banco não devolve apenas "Em Dia", ele devolve o mês/ano de referência pago (Ex: "10/2026")
+    const statusBanco = localStorage.getItem('deliveryon_status_pagamento') || '';
+
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    const ano = hoje.getFullYear();
-    const mes = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1; // getMonth() é de 0 a 11, então somamos 1
 
-    let dataVencimento = new Date(ano, mes, diaVencimento);
+    // Ex: "10/2026"
+    const mesReferenciaAtual = `${String(mesAtual).padStart(2, '0')}/${anoAtual}`;
 
-    const diffTime = hoje.getTime() - dataVencimento.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+    let dataVencimentoAtual = new Date(anoAtual, mesAtual - 1, diaVencimento);
+    const diffTimeAtual = dataVencimentoAtual.getTime() - hoje.getTime();
+    const diffDaysAtual = Math.round(diffTimeAtual / (1000 * 3600 * 24));
 
     let diasRestantesOuCarencia = 0;
     let statusEnum = "EM_DIA";
 
-    if (diffDays < 0) {
+    // REGRA 1: O cliente PAGOU O MÊS ATUAL? (Ex: Se estamos em Outubro/2026, ele tem o carimbo 10/2026?)
+    if (statusBanco === mesReferenciaAtual) {
+        // Se já pagou o mês atual, a próxima fatura só vence no mês que vem.
+        let dataVencimentoProximo = new Date(anoAtual, mesAtual, diaVencimento);
+        const diffTimeProximo = dataVencimentoProximo.getTime() - hoje.getTime();
+        diasRestantesOuCarencia = Math.round(diffTimeProximo / (1000 * 3600 * 24));
+
+        return { statusEnum: "EM_DIA", diasRestantesOuCarencia, diffDays: diffDaysAtual };
+    }
+
+    // REGRA 2: Se AINDA NÃO PAGOU O MÊS ATUAL
+    if (diffDaysAtual > 0) {
+        // Ainda vai vencer neste mês (Ex: Hoje é 5, vence dia 10 -> Faltam 5 dias)
         statusEnum = "EM_DIA";
-        diasRestantesOuCarencia = Math.abs(diffDays);
-    } else if (diffDays === 0) {
+        diasRestantesOuCarencia = diffDaysAtual;
+    } else if (diffDaysAtual === 0) {
+        // Vence exatamente hoje
         statusEnum = "EM_DIA";
         diasRestantesOuCarencia = 0;
     } else {
-        const diasCarenciaRestantes = 7 - diffDays;
-        if (diasCarenciaRestantes > 0) {
+        // Já passou do vencimento neste mês (Ex: Hoje é 12, venceu dia 10)
+        const diasAtrasados = Math.abs(diffDaysAtual);
+        const carenciaMaxima = 7;
+        const carenciaRestante = carenciaMaxima - diasAtrasados;
+
+        if (carenciaRestante > 0) {
             statusEnum = "CARENCIA";
-            diasRestantesOuCarencia = diasCarenciaRestantes;
+            diasRestantesOuCarencia = carenciaRestante;
         } else {
             statusEnum = "VENCIDO";
             diasRestantesOuCarencia = 0;
         }
     }
 
-    return { statusEnum, diasRestantesOuCarencia, diffDays };
+    return { statusEnum, diasRestantesOuCarencia, diffDays: diffDaysAtual };
 }
 
 function verificarVencimentoSaaS() {
