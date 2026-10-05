@@ -241,6 +241,41 @@
         </div>
     </div>
 
+    <!-- ================= MODAL BLOQUEIO / CARÊNCIA FINANCEIRA DO ENTREGADOR ================= -->
+    <div class="modal-overlay" id="modalBloqueioEntregador" style="z-index: 99999; background: rgba(0,0,0,0.85);">
+        <div class="modal-content" style="max-width: 450px; text-align: center; border-radius: 12px; border-top: 6px solid var(--danger);">
+            <div class="modal-body" style="padding: 30px;">
+                <div style="width: 70px; height: 70px; background: #ffebee; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 15px;">
+                    <i class="ph-fill ph-lock-key"></i>
+                </div>
+                <h2 id="titulo-bloqueio-ent" style="font-size: 1.4rem; margin-bottom: 10px; color: var(--danger);">Licença Vencida</h2>
+                <p id="msg-bloqueio-ent" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                    Sua taxa de licenciamento mensal (R$ 20,00) está pendente. Regularize o pagamento via PIX para liberar o acesso ao aplicativo.
+                </p>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                    <div id="container-qrcode-pix-ent" style="margin-bottom: 12px; display: none;">
+                        <img id="img-qrcode-pix-ent" src="" alt="QR Code PIX" style="max-width: 150px; max-height: 150px; border-radius: 6px; border: 1px solid #ccc; padding: 4px; background: white;">
+                    </div>
+                    <label style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 5px;">Chave PIX (Copia e Cola):</label>
+                    <textarea id="texto-copia-cola-ent" class="form-control" rows="2" readonly style="font-size: 0.85rem; background: white; resize: none;"></textarea>
+                    <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="copiarChavePixEntregador()">
+                        <i class="ph ph-copy"></i> Copiar Chave PIX
+                    </button>
+                </div>
+
+                <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="verificarPagamentoEntregador()">
+                    <i class="ph ph-arrows-clockwise"></i> Já fiz o Pix / Verificar Pagamento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BANNER DE AVISO PRÉVIO OU CARÊNCIA (TOPO) -->
+    <div id="banner-carencia-ent" style="display: none; background: #fff8e1; border-bottom: 1px solid #ffe0b2; color: #8d6e63; padding: 10px 20px; font-size: 0.9rem; text-align: center; font-weight: 600; z-index: 998; position: relative;">
+        ⚠️ <span id="texto-aviso-carencia-ent">Sua licença vence em breve.</span>
+    </div>
+
     <!-- MODAL DE TERMOS E CONDIÇÕES -->
     <div class="modal-overlay" id="modalTermos" style="z-index: 10000;">
         <div class="modal-content">
@@ -338,7 +373,7 @@
                 <div id="ent-lista-rotas">
                     <!-- Cards das entregas ativas injetados via JS -->
                 </div>
-            </section> <!-- SEÇÃO FECHADA CORRETAMENTE -->
+            </section>
 
             <!-- TELA: EXTRATO DO DIA -->
             <section id="sec-extrato" class="page-section hidden">
@@ -468,7 +503,6 @@
         let controleRota = null;
         let markerMotoboy = null;
         let trackerGps = null;
-        let mapaInstancias = {};
         let timerDespacho = null;
         let corridaAtualId = null;
         let intervaloPolling = null;
@@ -516,7 +550,7 @@
                 tipo_veiculo: document.getElementById('cad-t-veiculo').value,
                 veiculo_modelo: document.getElementById('cad-modelo').value,
                 veiculo_placa: document.getElementById('cad-placa').value,
-                tipo_vinculo: 'autonomo' // NOVA FLAG
+                tipo_vinculo: 'autonomo'
             };
 
             try {
@@ -578,6 +612,71 @@
             }
         }
 
+        // ================= SISTEMA DE TRAVA FINANCEIRA DO ENTREGADOR =================
+        async function checarStatusFinanceiroEntregador() {
+            const entregadorId = localStorage.getItem('app_motoboy_id');
+            if (!entregadorId) return true;
+
+            const diaVencimento = 10; 
+            const diaAtual = new Date().getDate();
+            const mesAtualStr = (new Date().getMonth() + 1).toString().padStart(2, '0') + '/' + new Date().getFullYear();
+
+            const statusPagtoSalvo = localStorage.getItem(`deliveryon_entregador_pagto_${entregadorId}`);
+            
+            if (statusPagtoSalvo === mesAtualStr) {
+                document.getElementById('modalBloqueioEntregador').classList.remove('active');
+                document.getElementById('banner-carencia-ent').style.display = 'none';
+                return true;
+            }
+
+            // 1. Aviso Prévio (7 dias antes do vencimento)
+            if (diaAtual >= (diaVencimento - 7) && diaAtual < diaVencimento) {
+                const diasRestantes = diaVencimento - diaAtual;
+                document.getElementById('texto-aviso-carencia-ent').innerText = `Sua taxa de licença do app (R$ 20,00) vence em ${diasRestantes} dias (Dia ${diaVencimento}).`;
+                document.getElementById('banner-carencia-ent').style.display = 'block';
+            } 
+            // 2. Período de Carência (7 dias de tolerância após o vencimento)
+            else if (diaAtual > diaVencimento && diaAtual <= (diaVencimento + 7)) {
+                const diasParaBloquear = (diaVencimento + 7) - diaAtual;
+                document.getElementById('texto-aviso-carencia-ent').innerText = `⚠️ Licença atrasada! Faltam ${diasParaBloquear} dias para o bloqueio do acesso. Regularize via PIX.`;
+                document.getElementById('banner-carencia-ent').style.display = 'block';
+            } 
+            // 3. Bloqueio Total
+            else if (diaAtual > (diaVencimento + 7)) {
+                bloquearAcessoEntregador("Sua licença expirou e o prazo de carência de 7 dias encerrou. O acesso está temporariamente bloqueado.");
+                return false;
+            }
+
+            return true;
+        }
+
+        function bloquearAcessoEntregador(motivo) {
+            const modal = document.getElementById('modalBloqueioEntregador');
+            document.getElementById('msg-bloqueio-ent').innerText = motivo;
+            
+            const chaveGlobal = localStorage.getItem('deliveryon_global_pix_chave_entregador') || '00020126580014br.gov.bcb.pix... (Chave Pix deliveryON Entregador)';
+            const qrGlobal = localStorage.getItem('deliveryon_global_pix_qr_entregador');
+
+            document.getElementById('texto-copia-cola-ent').value = chaveGlobal;
+            if (qrGlobal) {
+                document.getElementById('img-qrcode-pix-ent').src = qrGlobal;
+                document.getElementById('container-qrcode-pix-ent').style.display = 'block';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function copiarChavePixEntregador() {
+            const textarea = document.getElementById('texto-copia-cola-ent');
+            textarea.select();
+            document.execCommand('copy');
+            alert("Chave Pix copiada com sucesso!");
+        }
+
+        function verificarPagamentoEntregador() {
+            alert("Solicitação de verificação enviada ao suporte Master. O acesso será liberado assim que o pagamento for confirmado.");
+        }
+
         function verificarAcessoEntregador() {
             const token = localStorage.getItem('app_motoboy_token');
             const modalLogin = document.getElementById('modalLoginEntregador');
@@ -586,7 +685,11 @@
                 modalLogin.classList.add('active');
             } else {
                 modalLogin.classList.remove('active');
-                inicializarPainelEntregador();
+                checarStatusFinanceiroEntregador().then(liberado => {
+                    if (liberado) {
+                        inicializarPainelEntregador();
+                    }
+                });
             }
         }
 
@@ -600,7 +703,7 @@
             window.location.reload();
         }
 
-      function inicializarPainelEntregador() {
+        function inicializarPainelEntregador() {
             const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
 
@@ -615,50 +718,42 @@
             }
 
             carregarIdentidadeVisualEmpresa();
-            
-            // LIGA O MAPA GLOBAL NA TELA!
             iniciarMapaGlobal();
-            
             carregarRotasAtivas();
             filtrarExtrato();
 
-            // Verifica se está disponível para ligar os motores (Radar/GPS)
             if (statusSalvo === 'Disponível') {
                 iniciarPollingDespacho();
                 iniciarRastreadorGps(); 
             }
         }
 
-       // ================= MÓDULO DE RASTREAMENTO GPS =================
-
-
+        // ================= MÓDULO DE RASTREAMENTO GPS E ROTAS =================
         function tracarRotaNasRuas(latCliente, lngCliente) {
-            const latLoja = -0.9234; // Coordenada da sua Loja
+            const latLoja = -0.9234; 
             const lngLoja = -48.1321;
 
-            // Limpa rotas antigas se existirem
             if (controleRota) {
                 mapaGlobal.removeControl(controleRota);
             }
 
-            // Traça a nova rota: Motoboy -> Loja -> Cliente
             obterCoordenadas().then(coords => {
                 const motoboyLat = coords.lat || latLoja;
                 const motoboyLng = coords.lng || lngLoja;
 
                 controleRota = L.Routing.control({
                     waypoints: [
-                        L.latLng(motoboyLat, motoboyLng), // 1. Onde o motoboy está
-                        L.latLng(latLoja, lngLoja),       // 2. Passa na Loja para pegar o lanche
-                        L.latLng(latCliente, lngCliente)  // 3. Entrega no Cliente
+                        L.latLng(motoboyLat, motoboyLng), 
+                        L.latLng(latLoja, lngLoja),        
+                        L.latLng(latCliente, lngCliente)  
                     ],
                     routeWhileDragging: false,
                     addWaypoints: false,
-                    show: false, // Esconde aquele painel de texto chato ("vire à direita")
+                    show: false, 
                     lineOptions: {
                         styles: [{color: 'var(--brand-primary)', opacity: 0.8, weight: 5}]
                     },
-                    createMarker: function() { return null; } // Esconde marcadores padrão feios
+                    createMarker: function() { return null; }
                 }).addTo(mapaGlobal);
             });
         }
@@ -675,7 +770,7 @@
                         resolve({ lat: position.coords.latitude, lng: position.coords.longitude });
                     },
                     (error) => {
-                        console.warn("Erro ao obter GPS (motoboy precisa autorizar):", error.message);
+                        console.warn("Erro ao obter GPS:", error.message);
                         resolve({ lat: null, lng: null });
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -683,8 +778,6 @@
             });
         }
 
-        
-        // ================= CONTROLES DO PAINEL =================
         async function alterarStatusEntregador(novoStatus) {
             const entregadorId = localStorage.getItem('app_motoboy_id');
             const select = document.getElementById('ent-status-select');
@@ -698,13 +791,12 @@
 
             if (novoStatus === 'Disponível') {
                 iniciarPollingDespacho();
-                iniciarRastreadorGps(); // Inicia o rastreio contínuo
+                iniciarRastreadorGps(); 
             } else {
                 pararPollingDespacho();
-                if (trackerGps) clearInterval(trackerGps); // Para o rastreio se não estiver disponível
+                if (trackerGps) clearInterval(trackerGps); 
             }
 
-            // Captura o GPS imediatamente no momento em que ele fica "Disponível"
             let coords = { lat: null, lng: null };
             if (novoStatus === 'Disponível' || novoStatus === 'Em Entrega') {
                 coords = await obterCoordenadas();
@@ -717,8 +809,8 @@
                     body: JSON.stringify({
                         entregador_id: parseInt(entregadorId),
                         status: novoStatus,
-                        lat: coords.lat, // Envia o GPS para o PostgreSQL
-                        lng: coords.lng  // Envia o GPS para o PostgreSQL
+                        lat: coords.lat, 
+                        lng: coords.lng  
                     })
                 });
             } catch (error) {
@@ -743,8 +835,6 @@
                     const response = await fetch(url);
                     if (response.ok) {
                         const rotas = await response.json();
-
-                        // O SISTEMA PROCURA SE ELE FOI O ESCOLHIDO PELO BACKEND NESTE CICLO
                         const corridaDirecionada = rotas.find(r =>
                             r.status === 'Buscando Entregador' &&
                             String(r.motoboy_alvo_id) === String(entregadorId)
@@ -758,12 +848,11 @@
                                 exibirAlertaNovaCorrida(corridaDirecionada.id, taxa); 
                             }
                         } else {
-                            // Se não há modal tocando, atualiza a lista de fundo silenciosamente
                             carregarRotasAtivas(rotas); 
                         }
                     }
                 } catch (err) {
-                    console.error("Erro no radar de despacho:", err);
+                    console.error("Erro no polling de despacho:", err);
                 }
             }, 5000); 
         }
@@ -773,20 +862,18 @@
             document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
             document.getElementById('modalNovaCorrida').classList.add('active');
 
-            let tempo = 20; // 20 SEGUNDOS COMO SOLICITADO
+            let tempo = 20; 
             document.getElementById('dispatch-timer').innerText = tempo;
 
             timerDespacho = setInterval(() => {
                 tempo--;
                 document.getElementById('dispatch-timer').innerText = tempo;
                 if (tempo <= 0) {
-                    // O tempo acabou, recusa automaticamente e avisa o servidor para passar pro próximo
                     responderDespacho(false);
                 }
             }, 1000);
         }
 
-        // ================= RASTREADOR GPS ATUALIZADO =================
         function iniciarRastreadorGps() {
             if (trackerGps) clearInterval(trackerGps);
             
@@ -797,8 +884,6 @@
                 if ((statusAtual === 'Disponível' || statusAtual === 'Em Entrega') && entregadorId) {
                     const coords = await obterCoordenadas();
                     if (coords.lat && coords.lng) {
-                        
-                        // Atualiza o pino do motoboy andando no mapa global da tela dele
                         if (markerMotoboy) {
                             markerMotoboy.setLatLng([coords.lat, coords.lng]);
                         } else if (mapaGlobal) {
@@ -811,7 +896,6 @@
                             markerMotoboy = L.marker([coords.lat, coords.lng], {icon: motoboyIcon}).addTo(mapaGlobal);
                         }
 
-                        // Envia para o Gestor ver ele movendo no Painel!
                         try {
                             await fetch(`${API_BASE_URL}/entregador/status`, {
                                 method: 'PUT',
@@ -826,7 +910,7 @@
                         } catch (e) {}
                     }
                 }
-            }, 20000); // Roda a cada 20 segundos
+            }, 20000); 
         }
 
         function pararPollingDespacho() {
@@ -838,10 +922,10 @@
 
         function tocarAlertaSonoro() {
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
+            audio.play().catch(e => console.log("Áudio aguardando interação do usuário."));
         }
 
-       async function responderDespacho(aceitou) {
+        async function responderDespacho(aceitou) {
             clearInterval(timerDespacho);
             document.getElementById('modalNovaCorrida').classList.remove('active');
             const entregadorId = localStorage.getItem('app_motoboy_id');
@@ -864,8 +948,6 @@
                     alert("Erro de conexão ao aceitar a corrida.");
                 }
             } else {
-                // Devolve a corrida para a praça usando a nova rota do backend
-                console.log("Corrida recusada, devolvendo para a praça...");
                 try {
                     await fetch(`${API_BASE_URL}/orders/${corridaAtualId}/recusar-motoboy`, {
                         method: 'POST',
@@ -873,7 +955,7 @@
                         body: JSON.stringify({ motoboy_id: parseInt(entregadorId) })
                     });
                 } catch(e) {
-                    console.error("Erro ao avisar recusa ao servidor", e);
+                    console.error("Erro ao recusar corrida", e);
                 }
             }
         }
@@ -892,7 +974,7 @@
             }
         }
 
-       async function carregarRotasAtivas(dadosPreCarregados = null) {
+        async function carregarRotasAtivas(dadosPreCarregados = null) {
             const containerPra = document.getElementById('ent-lista-disponiveis');
             const containerMinhas = document.getElementById('ent-lista-rotas');
             
@@ -911,19 +993,16 @@
                 }
             }
 
-            // 1. FILTRA CORRIDAS NA PRAÇA (Ninguém aceitou o modal e ficou livre pra quem quiser pegar)
             const corridasPraça = rotas.filter(r => 
                 r.status === 'Buscando Entregador' && 
                 (!r.motoboy_alvo_id && !r.entregador_id)
             );
 
-            // 2. FILTRA MINHAS CORRIDAS (Já apertei aceitar e são minhas)
             const minhasCorridas = rotas.filter(r =>
                 (r.status === 'Saiu para entrega' || r.status === 'Em rota' || r.status === 'Em Entrega') &&
                 String(r.entregador_id || r.motoboy_id) === String(entregadorId)
             );
 
-            // ================= RENDERIZA A PRAÇA =================
             if (containerPra) {
                 containerPra.innerHTML = '';
                 if (corridasPraça.length === 0) {
@@ -949,7 +1028,6 @@
                 }
             }
 
-            // ================= RENDERIZA MINHAS ROTAS =================
             if (containerMinhas) {
                 containerMinhas.innerHTML = '';
                 if (minhasCorridas.length === 0) {
@@ -988,7 +1066,7 @@
             openModal('modalComprovante');
         }
 
-       async function executarConclusao(enviarComprovante) {
+        async function executarConclusao(enviarComprovante) {
             const id = document.getElementById('modal-pedido-id').value;
             const cliente = document.getElementById('modal-cliente-nome').value;
             const valor = document.getElementById('modal-pedido-valor').value;
@@ -1017,15 +1095,10 @@
 
                 alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
                 
-                // ==========================================
-                // CÓDIGO INSERIDO AQUI: Limpa rota e volta pro radar
-                // ==========================================
                 if (controleRota) {
                     mapaGlobal.removeControl(controleRota);
                 }
                 alterarStatusEntregador('Disponível');
-                // ==========================================
-
                 filtrarExtrato();
 
                 const card = document.getElementById('card-pedido-' + id);
@@ -1042,7 +1115,6 @@
                 alert("Erro ao concluir entrega: " + error.message);
             }
         }
-
         
         async function filtrarExtrato() {
             const empresaId = localStorage.getItem('app_motoboy_empresa_id') || 1;
@@ -1105,10 +1177,6 @@
                     }
                 });
 
-                if (qtdVisiveis === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
-                }
-
                 document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
                 document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
 
@@ -1132,13 +1200,12 @@
             }
         }
 
-async function iniciarMapaGlobal() {
+        async function iniciarMapaGlobal() {
             if (mapaGlobal) return;
 
             const container = document.getElementById('mapa-global');
             if (!container) return;
 
-            // Inicia o mapa (Coordenadas padrão)
             mapaGlobal = L.map('mapa-global').setView([-0.852, -48.143], 14);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1146,21 +1213,17 @@ async function iniciarMapaGlobal() {
                 attribution: '© OpenStreetMap'
             }).addTo(mapaGlobal);
 
-            // 1. DESENHA A EMPRESA (Ponto de Retirada)
             const lojaIcon = L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div style="background:#1a1a1a; color:white; width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:2px solid var(--brand-primary); box-shadow:0 4px 8px rgba(0,0,0,0.3);"><i class="ph-fill ph-storefront" style="font-size:20px;"></i></div>`,
                 iconSize: [35, 35],
                 iconAnchor: [17, 35]
             });
-            // Obs: Você pode injetar coordenadas reais vindo da API no futuro. Usei as da loja de teste.
             L.marker([-0.9234, -48.1321], {icon: lojaIcon}).addTo(mapaGlobal)
              .bindPopup("<b>Restaurante Parceiro</b><br>Ponto de Coleta");
 
-            // 2. DESENHA O MOTOBOY (Rastreio via GPS do celular)
             const coords = await obterCoordenadas();
             if (coords.lat && coords.lng) {
-                // Centraliza a câmera no entregador
                 mapaGlobal.setView([coords.lat, coords.lng], 15);
 
                 const motoboyIcon = L.divIcon({
@@ -1174,16 +1237,15 @@ async function iniciarMapaGlobal() {
                 markerMotoboy.bindPopup("<b>Você está aqui!</b><br>Radar LIGADO buscando rotas.").openPopup();
             }
 
-            // Garante que o mapa não fique com blocos cinzas
             setTimeout(() => { mapaGlobal.invalidateSize(); }, 500);
         }
 
-        
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
             sidebar.classList.toggle('open');
             overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            if (mapaGlobal) setTimeout(() => mapaGlobal.invalidateSize(), 300);
         }
 
         document.getElementById('mobile-overlay').addEventListener('click', () => {
