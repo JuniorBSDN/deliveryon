@@ -137,6 +137,41 @@
 </head>
 <body>
 
+    <!-- TOAST DO ENTREGADOR (Aviso de Licença) -->
+    <div id="toast-trial-motoboy" style="position: fixed; bottom: 20px; right: -400px; width: calc(100% - 40px); max-width: 350px; background: white; border-left: 5px solid #2196F3; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; z-index: 9999; transition: right 0.5s ease-in-out; font-family: sans-serif;">
+        <h4 style="margin: 0 0 8px 0; color: #2196F3; font-size: 1rem;"><i class="ph-fill ph-clock"></i> Licença do App</h4>
+        <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: #555;">Seu acesso expira em <strong id="dias-restantes-motoboy" style="color: #ff9800;">--</strong> dias.</p>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="abrirFinanceiroMotoboy()" style="background: #2196F3; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; flex: 1; cursor:pointer;">Ativar</button>
+            <button onclick="document.getElementById('toast-trial-motoboy').style.right = '-400px'" style="background: #eee; color: #333; border: none; padding: 8px; border-radius: 6px; flex: 1; cursor:pointer;">Depois</button>
+        </div>
+    </div>
+
+    <!-- MODAL FINANCEIRO DO ENTREGADOR -->
+    <div id="modalFinanceiroMotoboy" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
+        <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="background: #2196F3; padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid #1976D2;">
+                Ativação da Licença
+            </div>
+            <div style="padding: 25px; text-align: center;">
+                <p style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Mantenha seu app ativo para continuar recebendo corridas na praça.</p>
+                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;">R$ 50,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (CNPJ):</p>
+                    <input type="text" id="pix-motoboy-copia" value="11.222.333/0001-44" readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.2rem; color: #2196F3; font-weight: bold; margin-bottom: 10px;">
+                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem;"><i class="ph ph-copy"></i> Copiar Chave</button>
+                </div>
+
+                <p style="font-size: 0.85rem; color: #888; line-height: 1.4;">Após o pagamento, envie o comprovante ao Administrador para liberação automática do acesso.</p>
+            </div>
+            <div id="footer-financeiro" style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
+                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
+                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; flex: 1; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Sair da Conta</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Ferramentas de Acessibilidade -->
     <div class="accessibility-tools no-print" style="position: fixed; top: 50%; right: 0; transform: translateY(-50%); z-index: 9999; background: white; border: 1px solid #ccc; border-right: none; border-radius: 8px 0 0 8px; box-shadow: -2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
         <button onclick="changeFontSize(1)" style="padding: 10px 15px; border: none; border-bottom: 1px solid #eee; background: transparent; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: #333;" title="Aumentar Fonte">A+</button>
@@ -239,41 +274,6 @@
 
             </div>
         </div>
-    </div>
-
-    <!-- ================= MODAL BLOQUEIO / CARÊNCIA FINANCEIRA DO ENTREGADOR ================= -->
-    <div class="modal-overlay" id="modalBloqueioEntregador" style="z-index: 99999; background: rgba(0,0,0,0.85);">
-        <div class="modal-content" style="max-width: 450px; text-align: center; border-radius: 12px; border-top: 6px solid var(--danger);">
-            <div class="modal-body" style="padding: 30px;">
-                <div style="width: 70px; height: 70px; background: #ffebee; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 15px;">
-                    <i class="ph-fill ph-lock-key"></i>
-                </div>
-                <h2 id="titulo-bloqueio-ent" style="font-size: 1.4rem; margin-bottom: 10px; color: var(--danger);">Licença Vencida</h2>
-                <p id="msg-bloqueio-ent" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
-                    Sua taxa de licenciamento mensal (R$ 20,00) está pendente. Regularize o pagamento via PIX para liberar o acesso ao aplicativo.
-                </p>
-
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                    <div id="container-qrcode-pix-ent" style="margin-bottom: 12px; display: none;">
-                        <img id="img-qrcode-pix-ent" src="" alt="QR Code PIX" style="max-width: 150px; max-height: 150px; border-radius: 6px; border: 1px solid #ccc; padding: 4px; background: white;">
-                    </div>
-                    <label style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 5px;">Chave PIX (Copia e Cola):</label>
-                    <textarea id="texto-copia-cola-ent" class="form-control" rows="2" readonly style="font-size: 0.85rem; background: white; resize: none;"></textarea>
-                    <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="copiarChavePixEntregador()">
-                        <i class="ph ph-copy"></i> Copiar Chave PIX
-                    </button>
-                </div>
-
-                <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="verificarPagamentoEntregador()">
-                    <i class="ph ph-arrows-clockwise"></i> Já fiz o Pix / Verificar Pagamento
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- BANNER DE AVISO PRÉVIO OU CARÊNCIA (TOPO) -->
-    <div id="banner-carencia-ent" style="display: none; background: #fff8e1; border-bottom: 1px solid #ffe0b2; color: #8d6e63; padding: 10px 20px; font-size: 0.9rem; text-align: center; font-weight: 600; z-index: 998; position: relative;">
-        ⚠️ <span id="texto-aviso-carencia-ent">Sua licença vence em breve.</span>
     </div>
 
     <!-- MODAL DE TERMOS E CONDIÇÕES -->
@@ -516,6 +516,81 @@
             document.body.style.fontSize = currentFontSize + '%';
         }
 
+        // ================= SISTEMA DEFINITIVO DE TRAVA FINANCEIRA =================
+        function copiarPixFinanceiro() {
+            const input = document.getElementById('pix-motoboy-copia');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value);
+            alert("Chave Pix copiada!");
+        }
+
+        function abrirFinanceiroMotoboy(bloqueioTotal = false) {
+            document.getElementById('toast-trial-motoboy').style.right = '-400px';
+            const modal = document.getElementById('modalFinanceiroMotoboy');
+            
+            if (bloqueioTotal) {
+                document.getElementById('btn-fechar-financeiro').style.display = 'none';
+                document.getElementById('btn-sair-financeiro').style.display = 'block';
+            } else {
+                document.getElementById('btn-fechar-financeiro').style.display = 'block';
+                document.getElementById('btn-sair-financeiro').style.display = 'none';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function verificarLicencaFinanceira() {
+            const entregadorId = localStorage.getItem('app_motoboy_id');
+            if (!entregadorId) return true; // Se não estiver logado, deixa passar para cair no form de login
+
+            const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10; 
+            const hoje = new Date();
+            const diaAtual = hoje.getDate();
+            const mesAtualStr = (hoje.getMonth() + 1).toString().padStart(2, '0') + '/' + hoje.getFullYear();
+
+            // 1. Verifica se já consta como pago o mês atual
+            const statusPagtoSalvo = localStorage.getItem(`deliveryon_pagto_entregador_${entregadorId}`);
+            if (statusPagtoSalvo === mesAtualStr) {
+                document.getElementById('modalFinanceiroMotoboy').style.display = 'none';
+                document.getElementById('toast-trial-motoboy').style.right = '-400px';
+                return true; 
+            }
+
+            // 2. Lógica de Bloqueio e Carência
+            const diasRestantes = vencimentoDia - diaAtual;
+
+            if (diasRestantes > 5) {
+                // Muito tempo restante, segue o jogo sem incomodar
+                return true;
+            } else if (diasRestantes >= 0 && diasRestantes <= 5) {
+                // Aviso prévio (faltam 5 dias ou menos)
+                const toast = document.getElementById('toast-trial-motoboy');
+                document.getElementById('dias-restantes-motoboy').innerText = diasRestantes;
+                document.getElementById('dias-restantes-motoboy').style.color = '#ff9800'; 
+                toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-clock"></i> Licença Vencendo';
+                setTimeout(() => { toast.style.right = '20px'; }, 2000);
+                return true;
+            } else {
+                // Venceu! O número agora é negativo.
+                const diasAtraso = Math.abs(diasRestantes);
+                const carencia = 5; // 5 dias de carência para pagar após o vencimento
+
+                if (diasAtraso <= carencia) {
+                    // Está atrasado, mas dentro da tolerância
+                    const toast = document.getElementById('toast-trial-motoboy');
+                    toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-warning" style="color:red;"></i> Licença Atrasada';
+                    toast.querySelector('p').innerHTML = `Sua licença venceu há <strong style="color: red;">${diasAtraso}</strong> dia(s). Pague para evitar o bloqueio.`;
+                    setTimeout(() => { toast.style.right = '20px'; }, 2000);
+                    return true;
+                } else {
+                    // Acabou a carência, BLOQUEIO TOTAL
+                    abrirFinanceiroMotoboy(true); // Argumento 'true' trava a tela tirando o botão 'Fechar'
+                    return false;
+                }
+            }
+        }
+
         // ================= CONTROLE DE AUTENTICAÇÃO E CADASTRO =================
         function toggleAuthForms() {
             const formLogin = document.getElementById('ent-form-login');
@@ -612,71 +687,6 @@
             }
         }
 
-        // ================= SISTEMA DE TRAVA FINANCEIRA DO ENTREGADOR =================
-        async function checarStatusFinanceiroEntregador() {
-            const entregadorId = localStorage.getItem('app_motoboy_id');
-            if (!entregadorId) return true;
-
-            const diaVencimento = 10; 
-            const diaAtual = new Date().getDate();
-            const mesAtualStr = (new Date().getMonth() + 1).toString().padStart(2, '0') + '/' + new Date().getFullYear();
-
-            const statusPagtoSalvo = localStorage.getItem(`deliveryon_entregador_pagto_${entregadorId}`);
-            
-            if (statusPagtoSalvo === mesAtualStr) {
-                document.getElementById('modalBloqueioEntregador').classList.remove('active');
-                document.getElementById('banner-carencia-ent').style.display = 'none';
-                return true;
-            }
-
-            // 1. Aviso Prévio (7 dias antes do vencimento)
-            if (diaAtual >= (diaVencimento - 7) && diaAtual < diaVencimento) {
-                const diasRestantes = diaVencimento - diaAtual;
-                document.getElementById('texto-aviso-carencia-ent').innerText = `Sua taxa de licença do app (R$ 20,00) vence em ${diasRestantes} dias (Dia ${diaVencimento}).`;
-                document.getElementById('banner-carencia-ent').style.display = 'block';
-            } 
-            // 2. Período de Carência (7 dias de tolerância após o vencimento)
-            else if (diaAtual > diaVencimento && diaAtual <= (diaVencimento + 7)) {
-                const diasParaBloquear = (diaVencimento + 7) - diaAtual;
-                document.getElementById('texto-aviso-carencia-ent').innerText = `⚠️ Licença atrasada! Faltam ${diasParaBloquear} dias para o bloqueio do acesso. Regularize via PIX.`;
-                document.getElementById('banner-carencia-ent').style.display = 'block';
-            } 
-            // 3. Bloqueio Total
-            else if (diaAtual > (diaVencimento + 7)) {
-                bloquearAcessoEntregador("Sua licença expirou e o prazo de carência de 7 dias encerrou. O acesso está temporariamente bloqueado.");
-                return false;
-            }
-
-            return true;
-        }
-
-        function bloquearAcessoEntregador(motivo) {
-            const modal = document.getElementById('modalBloqueioEntregador');
-            document.getElementById('msg-bloqueio-ent').innerText = motivo;
-            
-            const chaveGlobal = localStorage.getItem('deliveryon_global_pix_chave_entregador') || '00020126580014br.gov.bcb.pix... (Chave Pix deliveryON Entregador)';
-            const qrGlobal = localStorage.getItem('deliveryon_global_pix_qr_entregador');
-
-            document.getElementById('texto-copia-cola-ent').value = chaveGlobal;
-            if (qrGlobal) {
-                document.getElementById('img-qrcode-pix-ent').src = qrGlobal;
-                document.getElementById('container-qrcode-pix-ent').style.display = 'block';
-            }
-
-            modal.classList.add('active');
-        }
-
-        function copiarChavePixEntregador() {
-            const textarea = document.getElementById('texto-copia-cola-ent');
-            textarea.select();
-            document.execCommand('copy');
-            alert("Chave Pix copiada com sucesso!");
-        }
-
-        function verificarPagamentoEntregador() {
-            alert("Solicitação de verificação enviada ao suporte Master. O acesso será liberado assim que o pagamento for confirmado.");
-        }
-
         function verificarAcessoEntregador() {
             const token = localStorage.getItem('app_motoboy_token');
             const modalLogin = document.getElementById('modalLoginEntregador');
@@ -685,11 +695,7 @@
                 modalLogin.classList.add('active');
             } else {
                 modalLogin.classList.remove('active');
-                checarStatusFinanceiroEntregador().then(liberado => {
-                    if (liberado) {
-                        inicializarPainelEntregador();
-                    }
-                });
+                inicializarPainelEntregador();
             }
         }
 
@@ -704,6 +710,10 @@
         }
 
         function inicializarPainelEntregador() {
+            // A PRIMEIRA COISA É CHECAR A LICENÇA: Se bloquear, não liga o resto do código
+            const liberado = verificarLicencaFinanceira();
+            if (!liberado) return;
+
             const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
 
@@ -724,11 +734,11 @@
 
             if (statusSalvo === 'Disponível') {
                 iniciarPollingDespacho();
-                iniciarRastreadorGps(); 
+                iniciarRastreadorGps();
             }
         }
 
-        // ================= MÓDULO DE RASTREAMENTO GPS E ROTAS =================
+        // ================= MÓDULO DE RASTREAMENTO GPS E MAPA =================
         function tracarRotaNasRuas(latCliente, lngCliente) {
             const latLoja = -0.9234; 
             const lngLoja = -48.1321;
@@ -744,7 +754,7 @@
                 controleRota = L.Routing.control({
                     waypoints: [
                         L.latLng(motoboyLat, motoboyLng), 
-                        L.latLng(latLoja, lngLoja),        
+                        L.latLng(latLoja, lngLoja),       
                         L.latLng(latCliente, lngCliente)  
                     ],
                     routeWhileDragging: false,
@@ -753,7 +763,7 @@
                     lineOptions: {
                         styles: [{color: 'var(--brand-primary)', opacity: 0.8, weight: 5}]
                     },
-                    createMarker: function() { return null; }
+                    createMarker: function() { return null; } 
                 }).addTo(mapaGlobal);
             });
         }
@@ -778,6 +788,46 @@
             });
         }
 
+        async function iniciarMapaGlobal() {
+            if (mapaGlobal) return;
+
+            const container = document.getElementById('mapa-global');
+            if (!container) return;
+
+            mapaGlobal = L.map('mapa-global').setView([-0.852, -48.143], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapaGlobal);
+
+            const lojaIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background:#1a1a1a; color:white; width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:2px solid var(--brand-primary); box-shadow:0 4px 8px rgba(0,0,0,0.3);"><i class="ph-fill ph-storefront" style="font-size:20px;"></i></div>`,
+                iconSize: [35, 35],
+                iconAnchor: [17, 35]
+            });
+            L.marker([-0.9234, -48.1321], {icon: lojaIcon}).addTo(mapaGlobal).bindPopup("<b>Restaurante Parceiro</b><br>Ponto de Coleta");
+
+            const coords = await obterCoordenadas();
+            if (coords.lat && coords.lng) {
+                mapaGlobal.setView([coords.lat, coords.lng], 15);
+
+                const motoboyIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background:var(--brand-primary); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 8px rgba(0,0,0,0.4);"><i class="ph-fill ph-motorcycle" style="font-size:24px;"></i></div>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+
+                markerMotoboy = L.marker([coords.lat, coords.lng], {icon: motoboyIcon}).addTo(mapaGlobal);
+                markerMotoboy.bindPopup("<b>Você está aqui!</b><br>Radar LIGADO buscando rotas.").openPopup();
+            }
+
+            setTimeout(() => { mapaGlobal.invalidateSize(); }, 500);
+        }
+
+        // ================= CONTROLES DO PAINEL =================
         async function alterarStatusEntregador(novoStatus) {
             const entregadorId = localStorage.getItem('app_motoboy_id');
             const select = document.getElementById('ent-status-select');
@@ -830,11 +880,12 @@
                 let url = empresaId === 'global'
                     ? `${API_BASE_URL}/entregador/rotas-praca?entregador_id=${entregadorId}`
                     : `${API_BASE_URL}/entregador/rotas?empresa_id=${empresaId}&entregador_id=${entregadorId}`;
-                
+
                 try {
                     const response = await fetch(url);
                     if (response.ok) {
                         const rotas = await response.json();
+
                         const corridaDirecionada = rotas.find(r =>
                             r.status === 'Buscando Entregador' &&
                             String(r.motoboy_alvo_id) === String(entregadorId)
@@ -845,16 +896,14 @@
                                 ultimaCorridaNotificadaId = String(corridaDirecionada.id);
                                 tocarAlertaSonoro();
                                 const taxa = corridaDirecionada.taxa || corridaDirecionada.valor_entrega || '6,50';
-                                exibirAlertaNovaCorrida(corridaDirecionada.id, taxa); 
+                                exibirAlertaNovaCorrida(corridaDirecionada.id, taxa);
                             }
                         } else {
-                            carregarRotasAtivas(rotas); 
+                            carregarRotasAtivas(rotas);
                         }
                     }
-                } catch (err) {
-                    console.error("Erro no polling de despacho:", err);
-                }
-            }, 5000); 
+                } catch (err) {}
+            }, 5000);
         }
 
         function exibirAlertaNovaCorrida(id, taxa) {
@@ -876,7 +925,7 @@
 
         function iniciarRastreadorGps() {
             if (trackerGps) clearInterval(trackerGps);
-            
+
             trackerGps = setInterval(async () => {
                 const statusAtual = localStorage.getItem('app_motoboy_status');
                 const entregadorId = localStorage.getItem('app_motoboy_id');
@@ -884,6 +933,7 @@
                 if ((statusAtual === 'Disponível' || statusAtual === 'Em Entrega') && entregadorId) {
                     const coords = await obterCoordenadas();
                     if (coords.lat && coords.lng) {
+
                         if (markerMotoboy) {
                             markerMotoboy.setLatLng([coords.lat, coords.lng]);
                         } else if (mapaGlobal) {
@@ -922,7 +972,7 @@
 
         function tocarAlertaSonoro() {
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            audio.play().catch(e => console.log("Áudio aguardando interação do usuário."));
+            audio.play().catch(e => console.log("Aguardando interação do usuário."));
         }
 
         async function responderDespacho(aceitou) {
@@ -954,9 +1004,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ motoboy_id: parseInt(entregadorId) })
                     });
-                } catch(e) {
-                    console.error("Erro ao recusar corrida", e);
-                }
+                } catch(e) {}
             }
         }
 
@@ -969,15 +1017,13 @@
                     if (config.cor_primaria) document.documentElement.style.setProperty('--brand-primary', config.cor_primaria);
                     if (config.cor_secundaria) document.documentElement.style.setProperty('--brand-secondary', config.cor_secundaria);
                 }
-            } catch (error) {
-                console.error("Erro ao carregar identidade visual:", error);
-            }
+            } catch (error) {}
         }
 
         async function carregarRotasAtivas(dadosPreCarregados = null) {
             const containerPra = document.getElementById('ent-lista-disponiveis');
             const containerMinhas = document.getElementById('ent-lista-rotas');
-            
+
             const empresaId = localStorage.getItem('app_motoboy_empresa_id') || '1';
             const entregadorId = localStorage.getItem('app_motoboy_id');
 
@@ -993,8 +1039,8 @@
                 }
             }
 
-            const corridasPraça = rotas.filter(r => 
-                r.status === 'Buscando Entregador' && 
+            const corridasPraça = rotas.filter(r =>
+                r.status === 'Buscando Entregador' &&
                 (!r.motoboy_alvo_id && !r.entregador_id)
             );
 
@@ -1058,7 +1104,7 @@
                 }
             }
         }
-        
+
         function abrirModalConclusao(id, cliente, valor) {
             document.getElementById('modal-pedido-id').value = id;
             document.getElementById('modal-cliente-nome').value = cliente;
@@ -1094,11 +1140,12 @@
                 }
 
                 alert(`✅ Baixa do Pedido #${id} registrada com sucesso!`);
-                
+
                 if (controleRota) {
                     mapaGlobal.removeControl(controleRota);
                 }
                 alterarStatusEntregador('Disponível');
+
                 filtrarExtrato();
 
                 const card = document.getElementById('card-pedido-' + id);
@@ -1115,7 +1162,8 @@
                 alert("Erro ao concluir entrega: " + error.message);
             }
         }
-        
+
+
         async function filtrarExtrato() {
             const empresaId = localStorage.getItem('app_motoboy_empresa_id') || 1;
             const tbody = document.getElementById('tabela-extrato');
@@ -1177,6 +1225,10 @@
                     }
                 });
 
+                if (qtdVisiveis === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhuma entrega encontrada para este filtro.</td></tr>';
+                }
+
                 document.getElementById('total-qtd').innerText = `${qtdVisiveis} Entregas`;
                 document.getElementById('total-valor').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
 
@@ -1200,52 +1252,16 @@
             }
         }
 
-        async function iniciarMapaGlobal() {
-            if (mapaGlobal) return;
-
-            const container = document.getElementById('mapa-global');
-            if (!container) return;
-
-            mapaGlobal = L.map('mapa-global').setView([-0.852, -48.143], 14);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(mapaGlobal);
-
-            const lojaIcon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background:#1a1a1a; color:white; width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:2px solid var(--brand-primary); box-shadow:0 4px 8px rgba(0,0,0,0.3);"><i class="ph-fill ph-storefront" style="font-size:20px;"></i></div>`,
-                iconSize: [35, 35],
-                iconAnchor: [17, 35]
-            });
-            L.marker([-0.9234, -48.1321], {icon: lojaIcon}).addTo(mapaGlobal)
-             .bindPopup("<b>Restaurante Parceiro</b><br>Ponto de Coleta");
-
-            const coords = await obterCoordenadas();
-            if (coords.lat && coords.lng) {
-                mapaGlobal.setView([coords.lat, coords.lng], 15);
-
-                const motoboyIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background:var(--brand-primary); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 8px rgba(0,0,0,0.4);"><i class="ph-fill ph-motorcycle" style="font-size:24px;"></i></div>`,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
-                });
-
-                markerMotoboy = L.marker([coords.lat, coords.lng], {icon: motoboyIcon}).addTo(mapaGlobal);
-                markerMotoboy.bindPopup("<b>Você está aqui!</b><br>Radar LIGADO buscando rotas.").openPopup();
-            }
-
-            setTimeout(() => { mapaGlobal.invalidateSize(); }, 500);
-        }
-
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
             sidebar.classList.toggle('open');
             overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
-            if (mapaGlobal) setTimeout(() => mapaGlobal.invalidateSize(), 300);
+            
+            // Corrige o bug dos blocos cinzas no mapa redimensionado
+            if (mapaGlobal) {
+                setTimeout(() => { mapaGlobal.invalidateSize(); }, 300);
+            }
         }
 
         document.getElementById('mobile-overlay').addEventListener('click', () => {
