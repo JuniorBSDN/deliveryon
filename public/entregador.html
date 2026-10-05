@@ -147,26 +147,36 @@
         </div>
     </div>
 
-    <!-- MODAL FINANCEIRO DO ENTREGADOR (R$ 20,00) -->
+    <!-- MODAL FINANCEIRO DO ENTREGADOR (IDÊNTICO AO MASTER) -->
     <div id="modalFinanceiroMotoboy" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
-        <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div id="header-financeiro" style="background: var(--brand-primary); padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid var(--brand-secondary);">
+        <div style="background: white; width: 100%; max-width: 440px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            
+            <!-- HEADER LARANJA PADRÃO MASTER -->
+            <div id="header-financeiro" style="background: #ff5722; padding: 18px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem;">
                 Ativação de Mensalidade PIX
             </div>
             
             <div id="bloco-pagamento-pendente" style="padding: 25px; text-align: center;">
-                <p id="msg-status-financeiro" style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Utilize a chave PIX abaixo para realizar a ativação antecipada ou regularizar sua assinatura.</p>
+                <p style="color: #666; margin-bottom: 15px; font-size:0.9rem; line-height: 1.4;">Utilize a chave PIX abaixo para realizar a ativação antecipada ou regularizar sua assinatura.</p>
                 
-                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 20,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
+                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem; font-weight: 800;">R$ 20,00 <span style="font-size: 1rem; color: #888; font-weight: normal;">/mês</span></h2>
 
+                <!-- BOX DO QR CODE E CHAVE -->
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (Copia e Cola):</p>
-                    <input type="text" id="pix-motoboy-copia" value="Carregando..." readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.1rem; color: var(--brand-primary); font-weight: bold; margin-bottom: 10px;">
-                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem;"><i class="ph ph-copy"></i> Copiar Chave PIX</button>
+                    <!-- Espaço Dinâmico para o QR Code gerado pelo Master -->
+                    <div id="qrcode-container" style="margin-bottom: 12px; display: flex; justify-content: center;">
+                        <div id="qrcode-img-box" style="width: 130px; height: 130px; background: #fff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+                            <i class="ph ph-qr-code" style="font-size: 64px; color: #888;"></i>
+                        </div>
+                    </div>
+
+                    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 0.85rem; color: #666;">Chave PIX (Copia e Cola):</p>
+                    <input type="text" id="pix-motoboy-copia" value="11.222.333/0001-44" readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1rem; color: #ff5722; font-weight: bold; margin-bottom: 10px;">
+                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem; border-color: #ccc;"><i class="ph ph-copy"></i> Copiar Chave PIX</button>
                 </div>
 
-                <button onclick="informarPagamentoPIX()" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 10px;"><i class="ph ph-check-circle"></i> Já fiz o Pagamento</button>
-                <p style="font-size: 0.8rem; color: #888; line-height: 1.4;">Após confirmar, o administrador validará e liberará seu acesso.</p>
+                <button onclick="informarPagamentoPIX()" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; margin-bottom: 10px; background: #28a745; border: none; color: white; border-radius: 6px; cursor: pointer;"><i class="ph ph-check-circle"></i> Já fiz o Pagamento</button>
+                <p style="font-size: 0.78rem; color: #888; line-height: 1.4;">Após confirmar, o administrador validará e liberará seu acesso.</p>
             </div>
 
             <div id="bloco-analise-pendente" style="padding: 30px; text-align: center; display: none;">
@@ -178,9 +188,9 @@
                 <button class="btn btn-outline" onclick="checarStatusFinanceiroBackend().then(()=>window.location.reload())" style="width: 100%;"><i class="ph ph-arrows-clockwise"></i> Atualizar Status</button>
             </div>
 
-            <div id="footer-financeiro" style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
-                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
-                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; flex: 1; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="ph ph-sign-out"></i> Sair da Conta</button>
+            <div style="padding: 15px 20px; border-top: 1px solid #eee; background: #fafafa;">
+                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="width: 100%; background: #e0e0e0; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
+                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; width: 100%; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="ph ph-sign-out"></i> Sair da Conta</button>
             </div>
         </div>
     </div>
@@ -303,7 +313,7 @@
                 <br>
                 <p><strong>3. Repasses e Taxas:</strong> Os valores de repasse exibidos no aplicativo são de responsabilidade do estabelecimento contratante, não da plataforma deliveryON.</p>
                 <br>
-                <p><strong>4. Localização:</strong> O aplicativo utiliza sua localização para otimizar rotas e enviar novas solicitações de entrega (Matchmaking) de maneira eficiente.</p>
+                <p><strong>4. Localização:</strong> O aplicativo utilizes sua localização para otimizar rotas e enviar novas solicitações de entrega (Matchmaking) de maneira eficiente.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalTermos')">Fechar</button>
@@ -454,13 +464,13 @@
                 </div>
             </section>
 
-            <!-- TELA: FINANCEIRO E MENSALIDADES (EXATAMENTE COMO NA FOTO DO CLIENTE/EMPRESA) -->
+            <!-- TELA: FINANCEIRO E MENSALIDADES -->
             <section id="sec-financeiro" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-currency-circle-dollar"></i> Financeiro e Mensalidades</h1>
                 </div>
 
-                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO (IGUAL À FOTO) -->
+                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO -->
                 <div class="card" style="border-left: 6px solid var(--brand-primary); padding: 30px;">
                     <h3 style="color: var(--brand-primary); font-size: 1.2rem; text-transform: uppercase; font-weight: 800; margin-bottom: 5px;">PLANO DELIVERYON MENSAL</h3>
                     <p id="fin-sub-status" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">Status: Carregando...</p>
@@ -477,7 +487,7 @@
                     </button>
                 </div>
 
-                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS (EXATAMENTE COMO NA FOTO) -->
+                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS -->
                 <div class="card" style="padding: 0; overflow: hidden; margin-top: 30px;">
                     <div class="table-responsive">
                         <table>
@@ -596,7 +606,6 @@
                 let statusPagto = localStorage.getItem(`deliveryon_pagto_status_${entregadorId}`) || 'pendente'; 
                 const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
                 const chavePixAdmin = localStorage.getItem('deliveryon_global_pix_chave') || '11.222.333/0001-44';
-                const valorLicenca = '20,00';
                 
                 const hoje = new Date();
                 const diaAtual = hoje.getDate();
@@ -610,17 +619,17 @@
                 let diasRestantes = vencimentoDia - diaAtual;
                 
                 if (diasRestantes > 5) {
-                    return { status: 'ativo' }; 
+                    return { status: 'ativo', chave: chavePixAdmin }; 
                 } else if (diasRestantes >= 0 && diasRestantes <= 5) {
-                    return { status: 'aviso', dias: diasRestantes, chave: chavePixAdmin, valor: valorLicenca };
+                    return { status: 'aviso', dias: diasRestantes, chave: chavePixAdmin };
                 } else {
                     const diasAtraso = Math.abs(diasRestantes);
                     const carencia = 5; 
                     
                     if (diasAtraso <= carencia) {
-                        return { status: 'carencia', diasAtraso: diasAtraso, chave: chavePixAdmin, valor: valorLicenca };
+                        return { status: 'carencia', diasAtraso: diasAtraso, chave: chavePixAdmin };
                     } else {
-                        return { status: 'bloqueado', chave: chavePixAdmin, valor: valorLicenca };
+                        return { status: 'bloqueado', chave: chavePixAdmin };
                     }
                 }
             } catch(e) {
@@ -632,6 +641,10 @@
             const result = await checarStatusFinanceiroBackend();
             const subStatus = document.getElementById('fin-sub-status');
             
+            if (result.chave) {
+                document.getElementById('pix-motoboy-copia').value = result.chave;
+            }
+
             if (result.status === 'ativo') {
                 subStatus.innerText = 'Status: Ativo';
                 subStatus.style.color = 'var(--success)';
@@ -654,7 +667,6 @@
             const result = await checarStatusFinanceiroBackend();
             
             if (result.chave) document.getElementById('pix-motoboy-copia').value = result.chave;
-            if (result.valor) document.getElementById('valor-licenca-motoboy').innerHTML = `R$ ${result.valor} <span style="font-size: 1rem; color: #888;">/mês</span>`;
 
             const toast = document.getElementById('toast-trial-motoboy');
             
@@ -712,7 +724,8 @@
                 blocoPagto.style.display = 'none';
                 blocoAnalise.style.display = 'block';
             } else {
-                document.getElementById('header-financeiro').style.backgroundColor = 'var(--brand-primary)';
+                document.getElementById('header-financeiro').style.backgroundColor = '#ff5722';
+                document.getElementById('header-financeiro').style.color = 'white';
                 document.getElementById('header-financeiro').innerText = 'Ativação de Mensalidade PIX';
                 document.getElementById('btn-fechar-financeiro').style.display = 'block';
                 document.getElementById('btn-sair-financeiro').style.display = 'none';
