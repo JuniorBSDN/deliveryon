@@ -150,23 +150,23 @@
     <!-- MODAL FINANCEIRO DO ENTREGADOR (R$ 20,00) -->
     <div id="modalFinanceiroMotoboy" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
         <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div id="header-financeiro" style="background: #2196F3; padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid #1976D2;">
-                Licença de Uso
+            <div id="header-financeiro" style="background: var(--brand-primary); padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid var(--brand-secondary);">
+                Ativação de Mensalidade PIX
             </div>
             
             <div id="bloco-pagamento-pendente" style="padding: 25px; text-align: center;">
-                <p id="msg-status-financeiro" style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Renove sua licença para continuar operando no radar e recebendo corridas.</p>
+                <p id="msg-status-financeiro" style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Utilize a chave PIX abaixo para realizar a ativação antecipada ou regularizar sua assinatura.</p>
                 
                 <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 20,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
 
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
                     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (Copia e Cola):</p>
-                    <input type="text" id="pix-motoboy-copia" value="Carregando..." readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.1rem; color: #2196F3; font-weight: bold; margin-bottom: 10px;">
-                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem;"><i class="ph ph-copy"></i> Copiar Chave</button>
+                    <input type="text" id="pix-motoboy-copia" value="Carregando..." readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.1rem; color: var(--brand-primary); font-weight: bold; margin-bottom: 10px;">
+                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem;"><i class="ph ph-copy"></i> Copiar Chave PIX</button>
                 </div>
 
                 <button onclick="informarPagamentoPIX()" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 10px;"><i class="ph ph-check-circle"></i> Já fiz o Pagamento</button>
-                <p style="font-size: 0.8rem; color: #888; line-height: 1.4;">Após confirmar, o administrador liberará seu acesso.</p>
+                <p style="font-size: 0.8rem; color: #888; line-height: 1.4;">Após confirmar, o administrador validará e liberará seu acesso.</p>
             </div>
 
             <div id="bloco-analise-pendente" style="padding: 30px; text-align: center; display: none;">
@@ -179,7 +179,7 @@
             </div>
 
             <div id="footer-financeiro" style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
-                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar Tela</button>
+                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
                 <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; flex: 1; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="ph ph-sign-out"></i> Sair da Conta</button>
             </div>
         </div>
@@ -328,7 +328,7 @@
                 <span class="nav-icon"><i class="ph ph-wallet"></i></span> Extrato do Dia
             </a></li>
             <li><a class="nav-link" onclick="navigate('financeiro', this)">
-                <span class="nav-icon"><i class="ph ph-currency-circle-dollar"></i></span> Financeiro (Licença)
+                <span class="nav-icon"><i class="ph ph-currency-circle-dollar"></i></span> Financeiro e Mensalidades
             </a></li>
         </ul>
         <div class="nav-footer">
@@ -454,33 +454,49 @@
                 </div>
             </section>
 
-            <!-- TELA: FINANCEIRO DA LICENÇA (R$ 20,00) -->
+            <!-- TELA: FINANCEIRO E MENSALIDADES (EXATAMENTE COMO NA FOTO DO CLIENTE/EMPRESA) -->
             <section id="sec-financeiro" class="page-section hidden">
                 <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-currency-circle-dollar"></i> Minha Licença</h1>
-                    <button class="btn btn-primary" onclick="abrirFinanceiroMotoboy()"><i class="ph ph-receipt"></i> Ver Detalhes / Pagar</button>
+                    <h1 class="page-title"><i class="ph-duotone ph-currency-circle-dollar"></i> Financeiro e Mensalidades</h1>
                 </div>
 
-                <div class="card">
-                    <h3 class="mb-20" style="font-size: 1.1rem; border-bottom: 2px solid var(--brand-primary); display: inline-block; padding-bottom: 5px;">Status da Assinatura</h3>
-                    
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; flex: 1; border: 1px solid var(--border-color); text-align: center;">
-                            <i id="fin-status-icon" class="ph-fill ph-spinner ph-spin" style="font-size: 3.5rem; color: #888; margin-bottom: 10px;"></i>
-                            <h3 id="fin-status-title" style="color: var(--text-main); margin-bottom: 5px; font-size: 1.3rem;">Carregando...</h3>
-                            <p id="fin-status-desc" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.4;">Verificando informações com o servidor.</p>
-                        </div>
-                        
-                        <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; flex: 1; border: 1px solid var(--border-color); text-align: center;">
-                            <i class="ph-fill ph-calendar-blank" style="font-size: 3.5rem; color: var(--brand-primary); margin-bottom: 10px;"></i>
-                            <h3 style="color: var(--text-main); margin-bottom: 5px; font-size: 1.3rem;">Dia de Vencimento</h3>
-                            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.4;">Todo dia <strong id="painel-vencimento">--</strong> do mês.</p>
-                        </div>
+                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO (IGUAL À FOTO) -->
+                <div class="card" style="border-left: 6px solid var(--brand-primary); padding: 30px;">
+                    <h3 style="color: var(--brand-primary); font-size: 1.2rem; text-transform: uppercase; font-weight: 800; margin-bottom: 5px;">PLANO DELIVERYON MENSAL</h3>
+                    <p id="fin-sub-status" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">Status: Carregando...</p>
+
+                    <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 15px;">
+                        <h1 style="font-size: 2.8rem; font-weight: 800; color: var(--text-main);">R$ 20,00</h1>
+                        <span style="font-size: 1rem; color: var(--text-muted);">/mês</span>
                     </div>
 
-                    <div class="mt-20" style="background: #e8f5e9; padding: 18px; border-radius: 8px; border-left: 4px solid var(--success);">
-                        <p style="margin: 0; color: #2e7d32; font-size: 1.05rem;"><strong>Valor da Licença Mensal:</strong> R$ 20,00</p>
-                        <p style="margin: 5px 0 0 0; color: #4caf50; font-size: 0.85rem;">Mantenha o pagamento em dia para não ter o acesso bloqueado ao final do período de carência.</p>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 25px;">Utilize o botão abaixo para realizar a ativação antecipada ou regularizar sua assinatura via PIX.</p>
+
+                    <button class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.05rem; font-weight: bold; background: var(--brand-primary); border-radius: 6px;" onclick="abrirFinanceiroMotoboy()">
+                        Ativar / Pagar com PIX
+                    </button>
+                </div>
+
+                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS (EXATAMENTE COMO NA FOTO) -->
+                <div class="card" style="padding: 0; overflow: hidden; margin-top: 30px;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">#</th>
+                                    <th style="width: 30%;">MÊS</th>
+                                    <th style="width: 30%;">VALOR PAGO</th>
+                                    <th style="width: 30%;">NOTA FISCAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 30px; background: #1a1a1a; color: white; font-size: 0.9rem;">
+                                        Nenhum registro de pagamento anterior encontrado.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -580,7 +596,7 @@
                 let statusPagto = localStorage.getItem(`deliveryon_pagto_status_${entregadorId}`) || 'pendente'; 
                 const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
                 const chavePixAdmin = localStorage.getItem('deliveryon_global_pix_chave') || '11.222.333/0001-44';
-                const valorLicenca = '20,00'; // Alinhado com o padrão de R$ 20,00 do entregador
+                const valorLicenca = '20,00';
                 
                 const hoje = new Date();
                 const diaAtual = hoje.getDate();
@@ -614,38 +630,23 @@
 
         async function atualizarTelaFinanceiro() {
             const result = await checarStatusFinanceiroBackend();
-            const iconeStatus = document.getElementById('fin-status-icon');
-            const tituloStatus = document.getElementById('fin-status-title');
-            const descStatus = document.getElementById('fin-status-desc');
+            const subStatus = document.getElementById('fin-sub-status');
             
-            const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
-            document.getElementById('painel-vencimento').innerText = vencimentoDia;
-
             if (result.status === 'ativo') {
-                iconeStatus.className = 'ph-fill ph-check-circle';
-                iconeStatus.style.color = 'var(--success)';
-                tituloStatus.innerText = 'Licença Ativa';
-                descStatus.innerText = 'Tudo certo! Você está apto a receber corridas pelo radar.';
+                subStatus.innerText = 'Status: Ativo';
+                subStatus.style.color = 'var(--success)';
             } else if (result.status === 'aviso') {
-                iconeStatus.className = 'ph-fill ph-clock';
-                iconeStatus.style.color = '#ff9800';
-                tituloStatus.innerText = 'Vencimento Próximo';
-                descStatus.innerText = `Sua licença vence em ${result.dias} dias. Prepare o pagamento para evitar suspensões.`;
+                subStatus.innerText = `Status: Ativo (Vence em ${result.dias} dias)`;
+                subStatus.style.color = '#ff9800';
             } else if (result.status === 'carencia') {
-                iconeStatus.className = 'ph-fill ph-warning';
-                iconeStatus.style.color = 'var(--danger)';
-                tituloStatus.innerText = 'Licença Atrasada';
-                descStatus.innerText = `Você está no período de carência (${result.diasAtraso} dia(s) de atraso). Efetue o pagamento o quanto antes.`;
+                subStatus.innerText = `Status: Atrasado há ${result.diasAtraso} dia(s) (Em carência)`;
+                subStatus.style.color = 'var(--danger)';
             } else if (result.status === 'analise') {
-                iconeStatus.className = 'ph-fill ph-hourglass-high';
-                iconeStatus.style.color = '#ffc107';
-                tituloStatus.innerText = 'Pagamento em Análise';
-                descStatus.innerText = 'O administrador está validando seu pagamento. Aguarde a liberação do acesso.';
+                subStatus.innerText = 'Status: Pagamento em Análise pelo Administrador';
+                subStatus.style.color = '#ffc107';
             } else {
-                iconeStatus.className = 'ph-fill ph-lock-key';
-                iconeStatus.style.color = 'var(--danger)';
-                tituloStatus.innerText = 'Acesso Bloqueado';
-                descStatus.innerText = 'Sua licença expirou e o prazo de carência terminou. O acesso ao radar está suspenso.';
+                subStatus.innerText = 'Status: Bloqueado (Licença vencida)';
+                subStatus.style.color = 'var(--danger)';
             }
         }
 
@@ -711,8 +712,8 @@
                 blocoPagto.style.display = 'none';
                 blocoAnalise.style.display = 'block';
             } else {
-                document.getElementById('header-financeiro').style.backgroundColor = '#2196F3';
-                document.getElementById('header-financeiro').innerText = 'Licença de Uso';
+                document.getElementById('header-financeiro').style.backgroundColor = 'var(--brand-primary)';
+                document.getElementById('header-financeiro').innerText = 'Ativação de Mensalidade PIX';
                 document.getElementById('btn-fechar-financeiro').style.display = 'block';
                 document.getElementById('btn-sair-financeiro').style.display = 'none';
                 blocoPagto.style.display = 'block';
