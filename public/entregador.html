@@ -147,36 +147,26 @@
         </div>
     </div>
 
-    <!-- MODAL FINANCEIRO DO ENTREGADOR (IDÊNTICO AO MASTER) -->
+    <!-- MODAL FINANCEIRO DO ENTREGADOR (R$ 20,00) -->
     <div id="modalFinanceiroMotoboy" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
-        <div style="background: white; width: 100%; max-width: 440px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            
-            <!-- HEADER LARANJA PADRÃO MASTER -->
-            <div id="header-financeiro" style="background: #ff5722; padding: 18px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem;">
+        <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div id="header-financeiro" style="background: var(--brand-primary); padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid var(--brand-secondary);">
                 Ativação de Mensalidade PIX
             </div>
-            
+
             <div id="bloco-pagamento-pendente" style="padding: 25px; text-align: center;">
-                <p style="color: #666; margin-bottom: 15px; font-size:0.9rem; line-height: 1.4;">Utilize a chave PIX abaixo para realizar a ativação antecipada ou regularizar sua assinatura.</p>
-                
-                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem; font-weight: 800;">R$ 20,00 <span style="font-size: 1rem; color: #888; font-weight: normal;">/mês</span></h2>
+                <p id="msg-status-financeiro" style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Utilize a chave PIX abaixo para realizar a ativação antecipada ou regularizar sua assinatura.</p>
 
-                <!-- BOX DO QR CODE E CHAVE -->
+                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 20,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
+
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
-                    <!-- Espaço Dinâmico para o QR Code gerado pelo Master -->
-                    <div id="qrcode-container" style="margin-bottom: 12px; display: flex; justify-content: center;">
-                        <div id="qrcode-img-box" style="width: 130px; height: 130px; background: #fff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
-                            <i class="ph ph-qr-code" style="font-size: 64px; color: #888;"></i>
-                        </div>
-                    </div>
-
-                    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 0.85rem; color: #666;">Chave PIX (Copia e Cola):</p>
-                    <input type="text" id="pix-motoboy-copia" value="11.222.333/0001-44" readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1rem; color: #ff5722; font-weight: bold; margin-bottom: 10px;">
-                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem; border-color: #ccc;"><i class="ph ph-copy"></i> Copiar Chave PIX</button>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (Copia e Cola):</p>
+                    <input type="text" id="pix-motoboy-copia" value="Carregando..." readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.1rem; color: var(--brand-primary); font-weight: bold; margin-bottom: 10px;">
+                    <button onclick="copiarPixFinanceiro()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 0.85rem;"><i class="ph ph-copy"></i> Copiar Chave PIX</button>
                 </div>
 
-                <button onclick="informarPagamentoPIX()" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; margin-bottom: 10px; background: #28a745; border: none; color: white; border-radius: 6px; cursor: pointer;"><i class="ph ph-check-circle"></i> Já fiz o Pagamento</button>
-                <p style="font-size: 0.78rem; color: #888; line-height: 1.4;">Após confirmar, o administrador validará e liberará seu acesso.</p>
+                <button onclick="informarPagamentoPIX()" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 10px;"><i class="ph ph-check-circle"></i> Já fiz o Pagamento</button>
+                <p style="font-size: 0.8rem; color: #888; line-height: 1.4;">Após confirmar, o administrador validará e liberará seu acesso.</p>
             </div>
 
             <div id="bloco-analise-pendente" style="padding: 30px; text-align: center; display: none;">
@@ -188,9 +178,9 @@
                 <button class="btn btn-outline" onclick="checarStatusFinanceiroBackend().then(()=>window.location.reload())" style="width: 100%;"><i class="ph ph-arrows-clockwise"></i> Atualizar Status</button>
             </div>
 
-            <div style="padding: 15px 20px; border-top: 1px solid #eee; background: #fafafa;">
-                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="width: 100%; background: #e0e0e0; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
-                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; width: 100%; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="ph ph-sign-out"></i> Sair da Conta</button>
+            <div id="footer-financeiro" style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
+                <button id="btn-fechar-financeiro" onclick="document.getElementById('modalFinanceiroMotoboy').style.display = 'none'" style="flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Fechar</button>
+                <button id="btn-sair-financeiro" onclick="fazerLogoutEntregador()" style="display: none; flex: 1; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="ph ph-sign-out"></i> Sair da Conta</button>
             </div>
         </div>
     </div>
@@ -313,7 +303,7 @@
                 <br>
                 <p><strong>3. Repasses e Taxas:</strong> Os valores de repasse exibidos no aplicativo são de responsabilidade do estabelecimento contratante, não da plataforma deliveryON.</p>
                 <br>
-                <p><strong>4. Localização:</strong> O aplicativo utilizes sua localização para otimizar rotas e enviar novas solicitações de entrega (Matchmaking) de maneira eficiente.</p>
+                <p><strong>4. Localização:</strong> O aplicativo utiliza sua localização para otimizar rotas e enviar novas solicitações de entrega (Matchmaking) de maneira eficiente.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modalTermos')">Fechar</button>
@@ -464,13 +454,13 @@
                 </div>
             </section>
 
-            <!-- TELA: FINANCEIRO E MENSALIDADES -->
+            <!-- TELA: FINANCEIRO E MENSALIDADES (EXATAMENTE COMO NA FOTO DO CLIENTE/EMPRESA) -->
             <section id="sec-financeiro" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-currency-circle-dollar"></i> Financeiro e Mensalidades</h1>
                 </div>
 
-                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO -->
+                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO (IGUAL À FOTO) -->
                 <div class="card" style="border-left: 6px solid var(--brand-primary); padding: 30px;">
                     <h3 style="color: var(--brand-primary); font-size: 1.2rem; text-transform: uppercase; font-weight: 800; margin-bottom: 5px;">PLANO DELIVERYON MENSAL</h3>
                     <p id="fin-sub-status" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">Status: Carregando...</p>
@@ -487,7 +477,7 @@
                     </button>
                 </div>
 
-                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS -->
+                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS (EXATAMENTE COMO NA FOTO) -->
                 <div class="card" style="padding: 0; overflow: hidden; margin-top: 30px;">
                     <div class="table-responsive">
                         <table>
@@ -567,10 +557,12 @@
             </div>
         </div>
     </div>
+
     <style>@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }</style>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
+
+ <script>
         const API_BASE_URL = '/api';
         let mapaGlobal = null;
         let controleRota = null;
@@ -589,7 +581,9 @@
             document.body.style.fontSize = currentFontSize + '%';
         }
 
-        // ================= SISTEMA DEFINITIVO DE TRAVA FINANCEIRA (R$ 20,00) =================
+        // =========================================================================
+        // 1. SISTEMA DEFINITIVO DE TRAVA FINANCEIRA DO ENTREGADOR (Espelhado do Master)
+        // =========================================================================
         function copiarPixFinanceiro() {
             const input = document.getElementById('pix-motoboy-copia');
             input.select();
@@ -598,124 +592,142 @@
             alert("Chave Pix copiada!");
         }
 
-        async function checarStatusFinanceiroBackend() {
+        function calcularStatusVencimentoMotoboy() {
             const entregadorId = localStorage.getItem('app_motoboy_id');
-            if (!entregadorId) return { status: 'ativo' };
+            const diaVencimento = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
+            const statusBanco = localStorage.getItem('app_motoboy_status_pagamento') || '';
 
-            try {
-                let statusPagto = localStorage.getItem(`deliveryon_pagto_status_${entregadorId}`) || 'pendente'; 
-                const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
-                const chavePixAdmin = localStorage.getItem('deliveryon_global_pix_chave') || '11.222.333/0001-44';
-                
-                const hoje = new Date();
-                const diaAtual = hoje.getDate();
-                const mesAtualStr = (hoje.getMonth() + 1).toString().padStart(2, '0') + '/' + hoje.getFullYear();
-                
-                const ultimoMesPago = localStorage.getItem(`deliveryon_pagto_mes_${entregadorId}`);
-
-                if (ultimoMesPago === mesAtualStr && statusPagto === 'ativo') return { status: 'ativo' };
-                if (statusPagto === 'em_analise') return { status: 'analise' };
-
-                let diasRestantes = vencimentoDia - diaAtual;
-                
-                if (diasRestantes > 5) {
-                    return { status: 'ativo', chave: chavePixAdmin }; 
-                } else if (diasRestantes >= 0 && diasRestantes <= 5) {
-                    return { status: 'aviso', dias: diasRestantes, chave: chavePixAdmin };
-                } else {
-                    const diasAtraso = Math.abs(diasRestantes);
-                    const carencia = 5; 
-                    
-                    if (diasAtraso <= carencia) {
-                        return { status: 'carencia', diasAtraso: diasAtraso, chave: chavePixAdmin };
-                    } else {
-                        return { status: 'bloqueado', chave: chavePixAdmin };
-                    }
-                }
-            } catch(e) {
-                return { status: 'ativo' };
+            const statusAnaliseLocal = localStorage.getItem(`deliveryon_pagto_status_${entregadorId}`);
+            if(statusAnaliseLocal === 'em_analise') {
+                return { statusEnum: "ANALISE", diasRestantesOuCarencia: 0, diffDays: 0 };
             }
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            const anoAtual = hoje.getFullYear();
+            const mesAtual = hoje.getMonth() + 1;
+            const mesReferenciaAtual = `${String(mesAtual).padStart(2, '0')}/${anoAtual}`;
+
+            let dataVencimentoAtual = new Date(anoAtual, mesAtual - 1, diaVencimento);
+            const diffTimeAtual = dataVencimentoAtual.getTime() - hoje.getTime();
+            const diffDaysAtual = Math.round(diffTimeAtual / (1000 * 3600 * 24));
+
+            let diasRestantesOuCarencia = 0;
+            let statusEnum = "EM_DIA";
+
+            if (statusBanco === mesReferenciaAtual) {
+                let dataVencimentoProximo = new Date(anoAtual, mesAtual, diaVencimento);
+                const diffTimeProximo = dataVencimentoProximo.getTime() - hoje.getTime();
+                diasRestantesOuCarencia = Math.round(diffTimeProximo / (1000 * 3600 * 24));
+                return { statusEnum: "EM_DIA", diasRestantesOuCarencia, diffDays: diffDaysAtual };
+            }
+
+            if (diffDaysAtual > 0) {
+                statusEnum = "EM_DIA";
+                diasRestantesOuCarencia = diffDaysAtual;
+            } else if (diffDaysAtual === 0) {
+                statusEnum = "EM_DIA";
+                diasRestantesOuCarencia = 0;
+            } else {
+                const diasAtrasados = Math.abs(diffDaysAtual);
+                const carenciaMaxima = 7;
+                const carenciaRestante = carenciaMaxima - diasAtrasados;
+
+                if (carenciaRestante > 0) {
+                    statusEnum = "CARENCIA";
+                    diasRestantesOuCarencia = carenciaRestante;
+                } else {
+                    statusEnum = "VENCIDO";
+                    diasRestantesOuCarencia = 0;
+                }
+            }
+
+            return { statusEnum, diasRestantesOuCarencia, diffDays: diffDaysAtual };
         }
 
         async function atualizarTelaFinanceiro() {
-            const result = await checarStatusFinanceiroBackend();
+            const info = calcularStatusVencimentoMotoboy();
             const subStatus = document.getElementById('fin-sub-status');
-            
-            if (result.chave) {
-                document.getElementById('pix-motoboy-copia').value = result.chave;
-            }
+            if(!subStatus) return;
 
-            if (result.status === 'ativo') {
-                subStatus.innerText = 'Status: Ativo';
-                subStatus.style.color = 'var(--success)';
-            } else if (result.status === 'aviso') {
-                subStatus.innerText = `Status: Ativo (Vence em ${result.dias} dias)`;
+            if (info.statusEnum === "CARENCIA") {
+                subStatus.innerText = `Status: Atrasado (Carência) - Faltam ${info.diasRestantesOuCarencia} dias para bloqueio`;
                 subStatus.style.color = '#ff9800';
-            } else if (result.status === 'carencia') {
-                subStatus.innerText = `Status: Atrasado há ${result.diasAtraso} dia(s) (Em carência)`;
+            } else if (info.statusEnum === "VENCIDO") {
+                subStatus.innerText = `Status: Vencido! Acesso bloqueado. Regularize via PIX.`;
                 subStatus.style.color = 'var(--danger)';
-            } else if (result.status === 'analise') {
+            } else if (info.statusEnum === "ANALISE") {
                 subStatus.innerText = 'Status: Pagamento em Análise pelo Administrador';
                 subStatus.style.color = '#ffc107';
             } else {
-                subStatus.innerText = 'Status: Bloqueado (Licença vencida)';
-                subStatus.style.color = 'var(--danger)';
+                subStatus.innerText = `Status: Ativo (Vence em ${info.diasRestantesOuCarencia} dias)`;
+                subStatus.style.color = 'var(--success)';
             }
         }
 
         async function validarAcessoAplicativo() {
-            const result = await checarStatusFinanceiroBackend();
-            
-            if (result.chave) document.getElementById('pix-motoboy-copia').value = result.chave;
-
+            const info = calcularStatusVencimentoMotoboy();
             const toast = document.getElementById('toast-trial-motoboy');
-            
-            if (result.status === 'ativo') {
-                toast.style.right = '-400px';
+
+            if (info.statusEnum === "EM_DIA") {
+                if (info.diasRestantesOuCarencia <= 7) {
+                    document.getElementById('dias-restantes-motoboy').innerText = info.diasRestantesOuCarencia;
+                    document.getElementById('dias-restantes-motoboy').style.color = '#ff9800';
+                    toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-clock"></i> Licença Vencendo';
+                    setTimeout(() => { toast.style.right = '20px'; }, 2000);
+                } else {
+                    toast.style.right = '-400px';
+                }
                 document.getElementById('modalFinanceiroMotoboy').style.display = 'none';
                 return true;
-            } 
-            
-            if (result.status === 'aviso') {
-                document.getElementById('dias-restantes-motoboy').innerText = result.dias;
-                document.getElementById('dias-restantes-motoboy').style.color = '#ff9800'; 
-                toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-clock"></i> Licença Vencendo';
-                setTimeout(() => { toast.style.right = '20px'; }, 2000);
-                return true;
-            } 
-            
-            if (result.status === 'carencia') {
+            }
+
+            if (info.statusEnum === "CARENCIA") {
                 toast.querySelector('h4').innerHTML = '<i class="ph-fill ph-warning" style="color:red;"></i> Licença Atrasada';
-                document.getElementById('texto-toast-motoboy').innerHTML = `Sua licença venceu há <strong style="color: red;">${result.diasAtraso}</strong> dia(s). Pague para evitar o bloqueio.`;
+                document.getElementById('texto-toast-motoboy').innerHTML = `Sua licença venceu. Bloqueio total em <strong style="color: red;">${info.diasRestantesOuCarencia}</strong> dia(s).`;
                 setTimeout(() => { toast.style.right = '20px'; }, 2000);
                 return true;
-            } 
-            
-            if (result.status === 'analise') {
+            }
+
+            if (info.statusEnum === "ANALISE") {
                 abrirFinanceiroMotoboy('analise');
-                return false; 
+                return false;
             }
-            
-            if (result.status === 'bloqueado') {
+
+            if (info.statusEnum === "VENCIDO") {
+                if (localStorage.getItem('app_motoboy_status') !== 'Bloqueado') {
+                    alterarStatusEntregador('Indisponível');
+                    localStorage.setItem('app_motoboy_status', 'Bloqueado');
+                }
                 abrirFinanceiroMotoboy('bloqueado');
-                return false; 
+                return false;
             }
+            return true;
         }
 
-        function abrirFinanceiroMotoboy(modo = 'aviso') {
+        async function abrirFinanceiroMotoboy(modo = null) {
             document.getElementById('toast-trial-motoboy').style.right = '-400px';
             const modal = document.getElementById('modalFinanceiroMotoboy');
             const blocoPagto = document.getElementById('bloco-pagamento-pendente');
             const blocoAnalise = document.getElementById('bloco-analise-pendente');
-            
-            if (modo === 'bloqueado') {
+
+            const info = calcularStatusVencimentoMotoboy();
+            let modoAtual = modo;
+            if(!modoAtual) {
+                if(info.statusEnum === "VENCIDO") modoAtual = 'bloqueado';
+                else if(info.statusEnum === "ANALISE") modoAtual = 'analise';
+                else modoAtual = 'aviso';
+            }
+
+            if (modoAtual === 'bloqueado') {
                 document.getElementById('header-financeiro').style.backgroundColor = 'var(--danger)';
                 document.getElementById('header-financeiro').innerText = 'Acesso Bloqueado';
                 document.getElementById('btn-fechar-financeiro').style.display = 'none';
                 document.getElementById('btn-sair-financeiro').style.display = 'block';
                 blocoPagto.style.display = 'block';
                 blocoAnalise.style.display = 'none';
-            } else if (modo === 'analise') {
+            } else if (modoAtual === 'analise') {
                 document.getElementById('header-financeiro').style.backgroundColor = '#ffc107';
                 document.getElementById('header-financeiro').style.color = '#333';
                 document.getElementById('header-financeiro').innerText = 'Aprovação Pendente';
@@ -732,7 +744,30 @@
                 blocoPagto.style.display = 'block';
                 blocoAnalise.style.display = 'none';
             }
-            
+
+            const inputCopiaCola = document.getElementById('pix-motoboy-copia');
+            const imgQrcode = document.getElementById('qrcode-img-box');
+
+            inputCopiaCola.value = "Buscando dados globais...";
+            let chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_entregador') || "";
+            let qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_entregador') || "";
+
+            if (chavePixTexto && chavePixTexto.trim() !== "") {
+                inputCopiaCola.value = chavePixTexto;
+                document.querySelector('#bloco-pagamento-pendente .btn-success').disabled = false;
+            } else {
+                inputCopiaCola.value = "Chave PIX não configurada pelo Master.";
+                document.querySelector('#bloco-pagamento-pendente .btn-success').disabled = true;
+            }
+
+            if (imgQrcode) {
+                if (qrCodeUrl && qrCodeUrl.trim() !== "") {
+                    imgQrcode.innerHTML = `<img src="${qrCodeUrl}" style="width:100%; height:100%; object-fit:contain; border-radius:6px;">`;
+                } else {
+                    imgQrcode.innerHTML = `<i class="ph ph-qr-code" style="font-size: 64px; color: #888;"></i>`;
+                }
+            }
+
             modal.style.display = 'flex';
         }
 
@@ -740,11 +775,11 @@
             const entregadorId = localStorage.getItem('app_motoboy_id');
             const hoje = new Date();
             const mesAtualStr = (hoje.getMonth() + 1).toString().padStart(2, '0') + '/' + hoje.getFullYear();
-            
+
             localStorage.setItem(`deliveryon_pagto_status_${entregadorId}`, 'em_analise');
             localStorage.setItem(`deliveryon_pagto_mes_${entregadorId}`, mesAtualStr);
-            
-            atualizarTelaFinanceiro(); 
+
+            atualizarTelaFinanceiro();
             abrirFinanceiroMotoboy('analise');
             alert("Aviso de pagamento enviado! Aguarde o administrador aprovar seu acesso.");
         }
@@ -802,6 +837,7 @@
                 localStorage.setItem('app_motoboy_nome', data.nome);
                 localStorage.setItem('app_motoboy_id', data.id);
                 localStorage.setItem('app_motoboy_status', 'Disponível');
+                localStorage.setItem('app_motoboy_vencimento', 10);
 
                 verificarAcessoEntregador();
             } catch (error) {
@@ -836,6 +872,11 @@
                 localStorage.setItem('app_motoboy_id', data.id || 1);
                 localStorage.setItem('app_motoboy_empresa_id', data.empresa_id || 1);
                 localStorage.setItem('app_motoboy_status', data.status || 'Disponível');
+                localStorage.setItem('app_motoboy_vencimento', data.vencimento || 10);
+
+                if (data.status_pagamento) {
+                    localStorage.setItem('app_motoboy_status_pagamento', data.status_pagamento);
+                }
 
                 verificarAcessoEntregador();
             } catch (error) {
@@ -870,8 +911,7 @@
 
         async function inicializarPainelEntregador() {
             const liberado = await validarAcessoAplicativo();
-            
-            atualizarTelaFinanceiro(); 
+            atualizarTelaFinanceiro();
 
             if (!liberado) return;
 
@@ -901,7 +941,7 @@
 
         // ================= MÓDULO DE RASTREAMENTO GPS E MAPA =================
         function tracarRotaNasRuas(latCliente, lngCliente) {
-            const latLoja = -0.9234; 
+            const latLoja = -0.9234;
             const lngLoja = -48.1321;
 
             if (controleRota) {
@@ -912,19 +952,23 @@
                 const motoboyLat = coords.lat || latLoja;
                 const motoboyLng = coords.lng || lngLoja;
 
+                // Usa as coordenadas reais repassadas pelo cliente
+                const destinoLat = latCliente ? parseFloat(latCliente) : -0.9270;
+                const destinoLng = lngCliente ? parseFloat(lngCliente) : -48.1390;
+
                 controleRota = L.Routing.control({
                     waypoints: [
-                        L.latLng(motoboyLat, motoboyLng), 
-                        L.latLng(latLoja, lngLoja),       
-                        L.latLng(latCliente, lngCliente)  
+                        L.latLng(motoboyLat, motoboyLng),
+                        L.latLng(latLoja, lngLoja),
+                        L.latLng(destinoLat, destinoLng)
                     ],
                     routeWhileDragging: false,
                     addWaypoints: false,
-                    show: false, 
+                    show: false,
                     lineOptions: {
                         styles: [{color: 'var(--brand-primary)', opacity: 0.8, weight: 5}]
                     },
-                    createMarker: function() { return null; } 
+                    createMarker: function() { return null; }
                 }).addTo(mapaGlobal);
             });
         }
@@ -993,6 +1037,13 @@
             const entregadorId = localStorage.getItem('app_motoboy_id');
             const select = document.getElementById('ent-status-select');
 
+            const infoFinanceiro = calcularStatusVencimentoMotoboy();
+            if (infoFinanceiro.statusEnum === "VENCIDO" && novoStatus !== 'Indisponível') {
+                alert("Seu acesso está bloqueado por falta de pagamento. Regularize sua situação.");
+                select.value = 'Indisponível';
+                return;
+            }
+
             if(novoStatus === 'Disponível') select.className = 'badge badge-success';
             else if(novoStatus === 'Pausado') select.className = 'badge badge-warning';
             else if(novoStatus === 'Em Entrega') select.className = 'badge badge-info';
@@ -1002,10 +1053,10 @@
 
             if (novoStatus === 'Disponível') {
                 iniciarPollingDespacho();
-                iniciarRastreadorGps(); 
+                iniciarRastreadorGps();
             } else {
                 pararPollingDespacho();
-                if (trackerGps) clearInterval(trackerGps); 
+                if (trackerGps) clearInterval(trackerGps);
             }
 
             let coords = { lat: null, lng: null };
@@ -1020,8 +1071,8 @@
                     body: JSON.stringify({
                         entregador_id: parseInt(entregadorId),
                         status: novoStatus,
-                        lat: coords.lat, 
-                        lng: coords.lng  
+                        lat: coords.lat,
+                        lng: coords.lng
                     })
                 });
             } catch (error) {
@@ -1048,8 +1099,8 @@
                         const rotas = await response.json();
 
                         const corridaDirecionada = rotas.find(r =>
-                            r.status === 'Buscando Entregador' &&
-                            String(r.motoboy_alvo_id) === String(entregadorId)
+                            r.status === 'Aguardando Entregador' &&
+                            String(r.entregador_id) === String(entregadorId)
                         );
 
                         if (corridaDirecionada) {
@@ -1072,7 +1123,7 @@
             document.getElementById('dispatch-valor').innerText = `R$ ${taxa}`;
             document.getElementById('modalNovaCorrida').classList.add('active');
 
-            let tempo = 20; 
+            let tempo = 20;
             document.getElementById('dispatch-timer').innerText = tempo;
 
             timerDespacho = setInterval(() => {
@@ -1090,6 +1141,8 @@
             trackerGps = setInterval(async () => {
                 const statusAtual = localStorage.getItem('app_motoboy_status');
                 const entregadorId = localStorage.getItem('app_motoboy_id');
+
+                if (calcularStatusVencimentoMotoboy().statusEnum === "VENCIDO") return;
 
                 if ((statusAtual === 'Disponível' || statusAtual === 'Em Entrega') && entregadorId) {
                     const coords = await obterCoordenadas();
@@ -1121,7 +1174,7 @@
                         } catch (e) {}
                     }
                 }
-            }, 20000); 
+            }, 20000);
         }
 
         function pararPollingDespacho() {
@@ -1153,7 +1206,7 @@
                         alterarStatusEntregador('Em Entrega');
                         carregarRotasAtivas();
                     } else {
-                        alert("Erro: A corrida já pode ter sido aceita por outro motoboy.");
+                        alert("Erro: A corrida já pode ter sido aceita por outro motoboy ou cancelada.");
                     }
                 } catch(e) {
                     alert("Erro de conexão ao aceitar a corrida.");
@@ -1201,8 +1254,8 @@
             }
 
             const corridasPraça = rotas.filter(r =>
-                r.status === 'Buscando Entregador' &&
-                (!r.motoboy_alvo_id && !r.entregador_id)
+                r.status === 'Aguardando Entregador' &&
+                (!r.entregador_id)
             );
 
             const minhasCorridas = rotas.filter(r =>
@@ -1260,7 +1313,8 @@
                                 </button>
                             </div>
                         `;
-                        tracarRotaNasRuas(rota.lat || -0.9270, rota.lng || -48.1390);
+                        // PASSA AS COORDENADAS REAIS DA API PARA O MAPA TRAÇAR A ROTA
+                        tracarRotaNasRuas(rota.lat, rota.lng);
                     });
                 }
             }
@@ -1324,7 +1378,6 @@
             }
         }
 
-
         async function filtrarExtrato() {
             const empresaId = localStorage.getItem('app_motoboy_empresa_id') || 1;
             const tbody = document.getElementById('tabela-extrato');
@@ -1371,7 +1424,7 @@
 
                     if (match) {
                         qtdVisiveis++;
-                        const taxaAtual = parseFloat(item.taxa || 6.50);
+                        const taxaAtual = parseFloat(item.taxa ? String(item.taxa).replace(',', '.') : 6.50);
                         valorTotal += taxaAtual;
 
                         const dataFormatada = diaL ? `${diaL}/${mesL}/${anoL}` : dataItem;
@@ -1418,7 +1471,7 @@
             const overlay = document.getElementById('mobile-overlay');
             sidebar.classList.toggle('open');
             overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
-            
+
             if (mapaGlobal) {
                 setTimeout(() => { mapaGlobal.invalidateSize(); }, 300);
             }
