@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Entregador - deliveryON</title>
 
+    <!-- Folha de estilos principal do Mapa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+    <!-- Leaflet Routing Machine (Traça a rota pelas ruas) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
+    <!-- Biblioteca de Ícones Modernos (Phosphor Icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
@@ -134,6 +137,7 @@
 </head>
 <body>
 
+    <!-- TOAST DO ENTREGADOR (Aviso de Licença) -->
     <div id="toast-trial-motoboy" style="position: fixed; bottom: 20px; right: -400px; width: calc(100% - 40px); max-width: 350px; background: white; border-left: 5px solid #2196F3; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; z-index: 9999; transition: right 0.5s ease-in-out; font-family: sans-serif;">
         <h4 style="margin: 0 0 8px 0; color: #2196F3; font-size: 1rem;"><i class="ph-fill ph-clock"></i> Licença do App</h4>
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: #555;" id="texto-toast-motoboy">Seu acesso expira em <strong id="dias-restantes-motoboy" style="color: #ff9800;">--</strong> dias.</p>
@@ -143,6 +147,7 @@
         </div>
     </div>
 
+    <!-- MODAL FINANCEIRO DO ENTREGADOR (R$ 20,00) -->
     <div id="modalFinanceiroMotoboy" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
         <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <div id="header-financeiro" style="background: #2196F3; padding: 15px; color: white; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid #1976D2;">
@@ -152,7 +157,7 @@
             <div id="bloco-pagamento-pendente" style="padding: 25px; text-align: center;">
                 <p id="msg-status-financeiro" style="color: #555; margin-bottom: 15px; font-size:0.95rem;">Renove sua licença para continuar operando no radar e recebendo corridas.</p>
                 
-                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 50,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
+                <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 20,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
 
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
                     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (Copia e Cola):</p>
@@ -180,13 +185,16 @@
         </div>
     </div>
 
+    <!-- Ferramentas de Acessibilidade -->
     <div class="accessibility-tools no-print" style="position: fixed; top: 50%; right: 0; transform: translateY(-50%); z-index: 9999; background: white; border: 1px solid #ccc; border-right: none; border-radius: 8px 0 0 8px; box-shadow: -2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
         <button onclick="changeFontSize(1)" style="padding: 10px 15px; border: none; border-bottom: 1px solid #eee; background: transparent; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: #333;" title="Aumentar Fonte">A+</button>
         <button onclick="changeFontSize(-1)" style="padding: 10px 15px; border: none; background: transparent; cursor: pointer; font-weight: bold; font-size: 1rem; color: #333;" title="Diminuir Fonte">A-</button>
     </div>
 
+    <!-- OVERLAY SIDEBAR MOBILE -->
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none;"></div>
 
+    <!-- ================= MODAL DE LOGIN / CADASTRO DO ENTREGADOR ================= -->
     <div class="modal-overlay" id="modalLoginEntregador" style="z-index: 9999; display: flex;">
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header" style="justify-content: center; border-bottom: none; padding-top: 30px;">
@@ -197,6 +205,7 @@
             </div>
             <div class="modal-body">
 
+                <!-- FORMULÁRIO DE LOGIN -->
                 <form id="ent-form-login" onsubmit="realizarLoginEntregador(event)">
                     <div class="form-group">
                         <label>Telefone Cadastrado</label>
@@ -214,6 +223,7 @@
                     </div>
                 </form>
 
+                <!-- FORMULÁRIO DE CADASTRO -->
                 <form id="ent-form-cadastro" onsubmit="realizarCadastroEntregador(event)" style="display: none;">
                     <div class="form-group">
                         <label>Nome Completo</label>
@@ -279,6 +289,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE TERMOS E CONDIÇÕES -->
     <div class="modal-overlay" id="modalTermos" style="z-index: 10000;">
         <div class="modal-content">
             <div class="modal-header">
@@ -301,6 +312,7 @@
         </div>
     </div>
 
+    <!-- BARRA LATERAL (MENU) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header" style="height: 100px;">
             <div class="logo-wrapper">
@@ -326,6 +338,7 @@
         </div>
     </aside>
 
+    <!-- ÁREA PRINCIPAL -->
     <main class="main-content">
         <header class="topbar">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
@@ -337,13 +350,15 @@
         </header>
 
         <div class="content-container">
-           <section id="sec-rotas" class="page-section">
+           <!-- TELA: ROTAS ATIVAS / RADAR MAPA GLOBAL -->
+            <section id="sec-rotas" class="page-section">
 
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-radar"></i> Radar Logístico</h1>
                     <button class="btn btn-secondary" onclick="carregarRotasAtivas()"><i class="ph ph-arrows-clockwise"></i> Atualizar Tela</button>
                 </div>
 
+                <!-- CARD DE STATUS DO ENTREGADOR -->
                 <div class="card" style="background: linear-gradient(135deg, #1a1a1a, #333); color: white; border: none; margin-bottom: 15px;">
                     <div class="flex justify-between align-center" style="flex-wrap: wrap; gap: 10px;">
                         <div>
@@ -361,17 +376,22 @@
                     </div>
                 </div>
 
+                <!-- NOVO MAPA GLOBAL DO APP -->
                 <div id="mapa-global" style="height: 45vh; width: 100%; border-radius: 12px; margin-bottom: 20px; border: 2px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 1;"></div>
 
+                <!-- LISTA DE CORRIDAS DEVOLVIDAS PARA A PRAÇA -->
                 <h3 class="mb-20" style="font-size: 1.1rem; border-bottom: 2px solid var(--warning); display: inline-block; padding-bottom: 5px;">Corridas Disponíveis (Praça)</h3>
                 <div id="ent-lista-disponiveis" style="margin-bottom: 30px;">
-                    </div>
+                    <!-- Cards com botões de Aceitar/Recusar injetados via JS -->
+                </div>
 
                 <h3 class="mb-20" style="font-size: 1.1rem; border-bottom: 2px solid var(--brand-primary); display: inline-block; padding-bottom: 5px;">Minhas Entregas</h3>
                 <div id="ent-lista-rotas">
-                    </div>
+                    <!-- Cards das entregas ativas injetados via JS -->
+                </div>
             </section>
 
+            <!-- TELA: EXTRATO DO DIA -->
             <section id="sec-extrato" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-wallet"></i> Extrato de Repasses</h1>
@@ -426,13 +446,15 @@
                                     <tr><th>Pedido / Cliente</th><th>Data / Horário</th><th>Taxa</th></tr>
                                 </thead>
                                 <tbody id="tabela-extrato">
-                                    </tbody>
+                                    <!-- Preenchido dinamicamente via API -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </section>
 
+            <!-- TELA: FINANCEIRO DA LICENÇA (R$ 20,00) -->
             <section id="sec-financeiro" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-currency-circle-dollar"></i> Minha Licença</h1>
@@ -457,7 +479,7 @@
                     </div>
 
                     <div class="mt-20" style="background: #e8f5e9; padding: 18px; border-radius: 8px; border-left: 4px solid var(--success);">
-                        <p style="margin: 0; color: #2e7d32; font-size: 1.05rem;"><strong>Valor da Licença Mensal:</strong> R$ 50,00</p>
+                        <p style="margin: 0; color: #2e7d32; font-size: 1.05rem;"><strong>Valor da Licença Mensal:</strong> R$ 20,00</p>
                         <p style="margin: 5px 0 0 0; color: #4caf50; font-size: 0.85rem;">Mantenha o pagamento em dia para não ter o acesso bloqueado ao final do período de carência.</p>
                     </div>
                 </div>
@@ -469,6 +491,7 @@
         </footer>
     </main>
 
+    <!-- MODAL DE COMPROVANTE -->
     <div class="modal-overlay" id="modalComprovante">
         <div class="modal-content">
             <div class="modal-header">
@@ -494,6 +517,7 @@
         </div>
     </div>
 
+    <!-- MODAL NOVA CORRIDA (UBER STYLE) -->
     <div class="modal-overlay" id="modalNovaCorrida" style="z-index: 3000;">
         <div class="modal-content" style="max-width: 350px; text-align: center; border-radius: 12px; border-top: 5px solid var(--brand-primary);">
             <div class="modal-body" style="padding: 30px 20px;">
@@ -539,7 +563,7 @@
             document.body.style.fontSize = currentFontSize + '%';
         }
 
-        // ================= SISTEMA DEFINITIVO DE TRAVA FINANCEIRA =================
+        // ================= SISTEMA DEFINITIVO DE TRAVA FINANCEIRA (R$ 20,00) =================
         function copiarPixFinanceiro() {
             const input = document.getElementById('pix-motoboy-copia');
             input.select();
@@ -556,7 +580,7 @@
                 let statusPagto = localStorage.getItem(`deliveryon_pagto_status_${entregadorId}`) || 'pendente'; 
                 const vencimentoDia = parseInt(localStorage.getItem('app_motoboy_vencimento')) || 10;
                 const chavePixAdmin = localStorage.getItem('deliveryon_global_pix_chave') || '11.222.333/0001-44';
-                const valorLicenca = '50,00';
+                const valorLicenca = '20,00'; // Alinhado com o padrão de R$ 20,00 do entregador
                 
                 const hoje = new Date();
                 const diaAtual = hoje.getDate();
@@ -588,7 +612,6 @@
             }
         }
 
-        // Atualiza dinamicamente a Aba Financeiro
         async function atualizarTelaFinanceiro() {
             const result = await checarStatusFinanceiroBackend();
             const iconeStatus = document.getElementById('fin-status-icon');
@@ -832,13 +855,11 @@
         }
 
         async function inicializarPainelEntregador() {
-            // A PRIMEIRA COISA É CHECAR A LICENÇA: Se bloquear, não liga o resto do código
             const liberado = await validarAcessoAplicativo();
             
-            // Popula a Aba Financeiro que fica no painel central, mesmo se o app for bloqueado!
             atualizarTelaFinanceiro(); 
 
-            if (!liberado) return; // Trava a inicialização do app
+            if (!liberado) return;
 
             const nome = localStorage.getItem('app_motoboy_nome') || 'Entregador';
             document.getElementById('ent-nome-logado').textContent = nome;
