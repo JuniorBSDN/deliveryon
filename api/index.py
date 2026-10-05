@@ -622,7 +622,7 @@ def gestor_login(auth: GestorAuth, db=Depends(get_db)):
         if not doc_limpo:
             raise HTTPException(status_code=400, detail="CNPJ ou CPF inválido.")
 
-        # ATENÇÃO AQUI: Adicionado 'status_pagamento' na busca
+        # ATENÇÃO: 'status_pagamento' adicionado no final do SELECT
         cursor.execute("""
             SELECT id, nome_fantasia, cnpj, status, vencimento, qrcode_imagem, copia_e_cola, status_pagamento
             FROM empresas 
@@ -1419,3 +1419,4 @@ def listar_produtos_destaques(db=Depends(get_db)):
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
+    
