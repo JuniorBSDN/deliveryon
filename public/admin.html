@@ -1992,11 +1992,13 @@ function abrirModalEditarPedido(id) {
         }
 
 function calcularStatusVencimento() {
+    // TRAVA DE SEGURANÇA: Respeita o status oficial do banco de dados primeiro
     const statusBanco = localStorage.getItem('deliveryon_status_pagamento');
     if (statusBanco === 'Em Dia') {
         return { statusEnum: "EM_DIA", diasRestantesOuCarencia: 30, diffDays: 0 };
     }
 
+    // Se não estiver pago no banco, realiza o cálculo matemático tradicional
     const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
