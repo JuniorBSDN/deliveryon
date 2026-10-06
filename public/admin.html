@@ -1204,6 +1204,7 @@ function ativarAgoraGestor() {
         const nomeCliente = order.cliente || order.cliente_nome || 'Cliente Anônimo';
         const enderecoCliente = order.endereco || order.endereco_entrega || 'Endereço não informado';
         const totalPedido = order.total || order.valor_total || '0,00';
+
         const statusAtual = order.status || 'Aguardando pagamento';
 
         let botaoEditarHtml = '';
