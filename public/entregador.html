@@ -159,6 +159,15 @@
 
                 <h2 style="color: #333; margin-bottom: 15px; font-size: 2.2rem;" id="valor-licenca-motoboy">R$ 20,00 <span style="font-size: 1rem; color: #888;">/mês</span></h2>
 
+                <!-- QR CODE GLOBAL ABSTRAÍDO -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #ccc; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">QR Code Pix:</p>
+                    <img id="modal-pix-qrcode-motoboy" src="" style="width: 160px; height: 160px; object-fit: contain; margin: 0 auto 10px auto; border: 1px solid #ddd; border-radius: 6px; padding: 5px; display: none; background: #fff;" />
+                    <div id="qrcode-fallback-box" style="width: 160px; height: 160px; margin: 0 auto 10px auto; background: #fff; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; border-radius: 6px;">
+                        <i class="ph ph-qr-code" style="font-size: 64px; color: #888;"></i>
+                    </div>
+                </div>
+
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #ccc;">
                     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 0.9rem; color: #666;">Chave PIX (Copia e Cola):</p>
                     <input type="text" id="pix-motoboy-copia" value="Carregando..." readonly style="width: 100%; text-align: center; border:none; background: transparent; font-family: monospace; font-size: 1.1rem; color: var(--brand-primary); font-weight: bold; margin-bottom: 10px;">
@@ -454,13 +463,13 @@
                 </div>
             </section>
 
-            <!-- TELA: FINANCEIRO E MENSALIDADES (EXATAMENTE COMO NA FOTO DO CLIENTE/EMPRESA) -->
+            <!-- TELA: FINANCEIRO E MENSALIDADES -->
             <section id="sec-financeiro" class="page-section hidden">
                 <div class="page-header">
                     <h1 class="page-title"><i class="ph-duotone ph-currency-circle-dollar"></i> Financeiro e Mensalidades</h1>
                 </div>
 
-                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO (IGUAL À FOTO) -->
+                <!-- CARD PRINCIPAL DE STATUS E PAGAMENTO -->
                 <div class="card" style="border-left: 6px solid var(--brand-primary); padding: 30px;">
                     <h3 style="color: var(--brand-primary); font-size: 1.2rem; text-transform: uppercase; font-weight: 800; margin-bottom: 5px;">PLANO DELIVERYON MENSAL</h3>
                     <p id="fin-sub-status" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">Status: Carregando...</p>
@@ -477,7 +486,7 @@
                     </button>
                 </div>
 
-                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS (EXATAMENTE COMO NA FOTO) -->
+                <!-- TABELA DE HISTÓRICO DE PAGAMENTOS -->
                 <div class="card" style="padding: 0; overflow: hidden; margin-top: 30px;">
                     <div class="table-responsive">
                         <table>
@@ -582,7 +591,7 @@
         }
 
         // =========================================================================
-        // 1. SISTEMA DEFINITIVO DE TRAVA FINANCEIRA DO ENTREGADOR (Espelhado do Master)
+        // 1. SISTEMA DEFINITIVO DE TRAVA FINANCEIRA DO ENTREGADOR
         // =========================================================================
         function copiarPixFinanceiro() {
             const input = document.getElementById('pix-motoboy-copia');
@@ -706,6 +715,9 @@
             return true;
         }
 
+        // =========================================================================
+        // 2. FUNÇÃO ABSTRAÍDA DE BUSCA E EXIBIÇÃO DO PIX GLOBAL (IGUAL AO ADMIN)
+        // =========================================================================
         async function abrirFinanceiroMotoboy(modo = null) {
             document.getElementById('toast-trial-motoboy').style.right = '-400px';
             const modal = document.getElementById('modalFinanceiroMotoboy');
@@ -746,26 +758,50 @@
             }
 
             const inputCopiaCola = document.getElementById('pix-motoboy-copia');
-            const imgQrcode = document.getElementById('qrcode-img-box');
+            const imgQr = document.getElementById('modal-pix-qrcode-motoboy');
+            const fallbackBox = document.getElementById('qrcode-fallback-box');
 
-            inputCopiaCola.value = "Buscando dados globais...";
-            let chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_entregador') || "";
-            let qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_entregador') || "";
+            inputCopiaCola.value = "Buscando dados globais do PIX...";
+            imgQr.style.display = "none";
+            fallbackBox.style.display = "flex";
 
-            if (chavePixTexto && chavePixTexto.trim() !== "") {
-                inputCopiaCola.value = chavePixTexto;
-                document.querySelector('#bloco-pagamento-pendente .btn-success').disabled = false;
-            } else {
-                inputCopiaCola.value = "Chave PIX não configurada pelo Master.";
-                document.querySelector('#bloco-pagamento-pendente .btn-success').disabled = true;
+            let chavePixTexto = "";
+            let qrCodeUrl = "";
+
+            // 1. Busca prioritária do armazenamento local (abstração global)
+            chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_entregador') || localStorage.getItem('deliveryon_global_pix_chave_gestor') || "";
+            qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_entregador') || localStorage.getItem('deliveryon_global_pix_qr_gestor') || "";
+
+            // 2. Se não encontrar localmente, busca de forma assíncrona na API
+            if (!chavePixTexto || !qrCodeUrl) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/configuracoes-globais/gestor`);
+                    if (response.ok) {
+                        const configGlobal = await response.json();
+                        if (configGlobal) {
+                            if (configGlobal.pix_chave) chavePixTexto = configGlobal.pix_chave;
+                            if (configGlobal.pix_qrcode) qrCodeUrl = configGlobal.pix_qrcode;
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Aviso na busca da API global de pagamento:", err);
+                }
             }
 
-            if (imgQrcode) {
-                if (qrCodeUrl && qrCodeUrl.trim() !== "") {
-                    imgQrcode.innerHTML = `<img src="${qrCodeUrl}" style="width:100%; height:100%; object-fit:contain; border-radius:6px;">`;
-                } else {
-                    imgQrcode.innerHTML = `<i class="ph ph-qr-code" style="font-size: 64px; color: #888;"></i>`;
-                }
+            // 3. Preenche os campos do modal com total segurança
+            if (chavePixTexto && chavePixTexto !== "null" && chavePixTexto.trim() !== "") {
+                inputCopiaCola.value = chavePixTexto;
+            } else {
+                inputCopiaCola.value = "Chave PIX global não configurada pelo Master.";
+            }
+
+            if (qrCodeUrl && qrCodeUrl !== "null" && qrCodeUrl.trim() !== "") {
+                imgQr.src = qrCodeUrl;
+                imgQr.style.display = "block";
+                fallbackBox.style.display = "none";
+            } else {
+                imgQr.style.display = "none";
+                fallbackBox.style.display = "flex";
             }
 
             modal.style.display = 'flex';
@@ -952,7 +988,6 @@
                 const motoboyLat = coords.lat || latLoja;
                 const motoboyLng = coords.lng || lngLoja;
 
-                // Usa as coordenadas reais repassadas pelo cliente
                 const destinoLat = latCliente ? parseFloat(latCliente) : -0.9270;
                 const destinoLng = lngCliente ? parseFloat(lngCliente) : -48.1390;
 
@@ -1313,7 +1348,6 @@
                                 </button>
                             </div>
                         `;
-                        // PASSA AS COORDENADAS REAIS DA API PARA O MAPA TRAÇAR A ROTA
                         tracarRotaNasRuas(rota.lat, rota.lng);
                     });
                 }
