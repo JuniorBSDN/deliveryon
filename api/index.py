@@ -963,7 +963,24 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
 
     try:
         # =========================================================
-        # NOVO: BUSCA DINÂMICA DA LOCALIZAÇÃO DA LOJA (MULTI-TENANT)
+        # 1. AUTO-CURA DO BANCO (Impede o Crash Silencioso)
+        # =========================================================
+        try:
+            # Cria as colunas de GPS na hora se elas ainda não existirem
+            cursor.execute("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);")
+            cursor.execute("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);")
+            db.commit()
+        except Exception:
+            db.rollback()
+
+        try:
+            cursor.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS motoboys_recusados TEXT DEFAULT '';")
+            db.commit()
+        except Exception:
+            db.rollback()
+
+        # =========================================================
+        # 2. BUSCA DINÂMICA DA LOCALIZAÇÃO DA LOJA
         # =========================================================
         cursor.execute("""
             SELECT e.latitude, e.longitude 
@@ -973,25 +990,20 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
         """, (order_id,))
         loja = cursor.fetchone()
 
-        # Usa as coordenadas da loja. Se a loja ainda não configurou o GPS, usa um fallback de segurança para não quebrar o app
+        # Usa as coordenadas da loja. Fallback de segurança caso a loja não tenha GPS salvo
         lat_loja = float(loja['latitude']) if loja and loja.get('latitude') is not None else -0.9234
         lng_loja = float(loja['longitude']) if loja and loja.get('longitude') is not None else -48.1321
 
-        # Garante que a coluna de histórico de recusas existe
-        try:
-            cursor.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS motoboys_recusados TEXT DEFAULT ''")
-            db.commit()
-        except:
-            db.rollback()
-
-        # Verifica quem já recusou esta corrida para não mandar de novo
+        # =========================================================
+        # 3. VERIFICAÇÃO DE RECUSAS E MATCHMAKING
+        # =========================================================
         cursor.execute("SELECT motoboys_recusados FROM pedidos WHERE id = %s", (order_id,))
         row = cursor.fetchone()
-        recusados_str = row['motoboys_recusados'] if row and row['motoboys_recusados'] else ""
+        recusados_str = row['motoboys_recusados'] if row and row.get('motoboys_recusados') else ""
 
         lista_recusados = [int(x) for x in recusados_str.split(',') if x.strip().isdigit()]
         if not lista_recusados:
-            lista_recusados = [-1]  # ID falso só para o SQL não quebrar
+            lista_recusados = [-1]  # ID falso para o PostgreSQL não quebrar a sintaxe
 
         lista_recusados_tuple = tuple(lista_recusados)
 
@@ -1015,7 +1027,7 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
         if motoboy_alvo:
             cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = %s WHERE id = %s",
                            (motoboy_alvo['id'], order_id))
-            mensagem_retorno = f"Notificação enviada ao entregador mais próximo da loja ({motoboy_alvo['distancia_km']:.2f} km)"
+            mensagem_retorno = f"Notificação enviada ao entregador mais próximo ({motoboy_alvo['distancia_km']:.2f} km)"
         else:
             cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s",
                            (order_id,))
