@@ -1182,13 +1182,13 @@ function ativarAgoraGestor() {
             }
         }
 
-       async function loadOrders() {
+      async function loadOrders() {
     const orders = await apiRequest('/orders');
     const tbody = document.getElementById('tbody-recent-orders');
     if (!tbody) return;
 
     tbody.innerHTML = '';
-    cachePedidosGlobal = {}; // Limpa o cache sempre que recarregar
+    cachePedidosGlobal = {}; // Limpa o cache
 
     if (!orders || orders.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
@@ -1196,24 +1196,30 @@ function ativarAgoraGestor() {
     }
 
     orders.forEach(order => {
-        cachePedidosGlobal[order.id] = order; // Salva o pedido intacto na memória
-        const statusAtual = order.status || 'Aprovado / Preparando';
+        cachePedidosGlobal[order.id] = order;
 
-        // TRAVA VISUAL: O botão de editar só aparece nos estágios iniciais
+        // Normalização de campos para evitar que o pedido suma por divergência de nomes
+        const orderId = order.id || order.pedido_id || '---';
+        const horaPedido = order.hora || 'Agora';
+        const nomeCliente = order.cliente || order.cliente_nome || 'Cliente Anônimo';
+        const enderecoCliente = order.endereco || order.endereco_entrega || 'Endereço não informado';
+        const totalPedido = order.total || order.valor_total || '0,00';
+        const statusAtual = order.status || 'Aguardando pagamento';
+
         let botaoEditarHtml = '';
         const statusPermitidos = ['Aguardando pagamento', 'Aprovado / Preparando', 'Aguardando Entregador'];
 
         if (statusPermitidos.includes(statusAtual)) {
-            botaoEditarHtml = `<button class="btn-action" title="Editar Pedido" onclick="abrirModalEditarPedido('${order.id}')" style="margin-right: 4px; color: var(--info);"><i class="ph ph-pencil"></i></button>`;
+            botaoEditarHtml = `<button class="btn-action" title="Editar Pedido" onclick="abrirModalEditarPedido('${orderId}')" style="margin-right: 4px; color: var(--info);"><i class="ph ph-pencil"></i></button>`;
         }
 
         tbody.innerHTML += `
-            <tr data-id="${order.id}">
-                <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                <td>${order.cliente || order.cliente_nome || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || order.endereco_entrega || ''}</span></td>
-                <td>R$ ${order.total || order.valor_total || '0,00'}</td>
+            <tr data-id="${orderId}">
+                <td><strong>#${orderId}</strong><br><span style="font-size: 0.8rem; color: #999;">${horaPedido}</span></td>
+                <td>${nomeCliente}<br><span style="font-size: 0.8rem; color: #999;">${enderecoCliente}</span></td>
+                <td>R$ ${totalPedido}</td>
                 <td>
-                    <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
+                    <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${orderId}', this)">
                         <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
                         <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
                         <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
@@ -1223,16 +1229,14 @@ function ativarAgoraGestor() {
                     </select>
                 </td>
                 <td style="text-align: right;">
-                    <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${order.id}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
+                    <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${orderId}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
                     ${botaoEditarHtml}
-                    <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
+                    <button class="btn-action" title="Visualizar" onclick="viewOrder('${orderId}')"><i class="ph ph-eye"></i></button>
                 </td>
             </tr>
         `;
     });
 }
-
-
 async function salvarEdicaoPedido() {
     const id = document.getElementById('edit-ord-id').value;
     const payload = {
