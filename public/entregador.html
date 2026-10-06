@@ -1283,12 +1283,17 @@
                     alert("Erro de conexão ao aceitar a corrida.");
                 }
             } else {
+                // SE ELE RECUSAR OU O TEMPO ACABAR:
                 try {
                     await fetch(`${API_BASE_URL}/orders/${corridaAtualId}/recusar-motoboy`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ motoboy_id: parseInt(entregadorId) })
                     });
+
+                    // CORREÇÃO: Destrava a notificação e atualiza a Praça Pública instantaneamente!
+                    ultimaCorridaNotificadaId = null;
+                    carregarRotasAtivas();
                 } catch(e) {}
             }
         }
