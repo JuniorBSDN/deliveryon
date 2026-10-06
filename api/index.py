@@ -768,23 +768,18 @@ def get_dashboard_fluxo(empresa_id: int = Query(1), db=Depends(get_db)):
 
 
 # ================= ROTAS DE PEDIDOS =================
+
+
+# ================= ROTAS DE PEDIDOS =================
 @app.get("/api/pedidos")
 @app.get("/api/orders")
 def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
     cur = db.cursor()
     try:
         e_id = int(empresa_id) if empresa_id and str(empresa_id).lower() not in ("null", "undefined", "") else 1
-        cur.execute("""
-            SELECT 
-                id, empresa_id, hora, 
-                cliente_nome AS cliente, 
-                endereco_entrega AS endereco, 
-                valor_total AS total, 
-                pagamento, status, entregador_id
-            FROM pedidos 
-            WHERE empresa_id = %s 
-            ORDER BY id DESC LIMIT 50
-        """, (e_id,))
+
+        # SELECT * evita que o backend quebre caso o nome da coluna mude no banco
+        cur.execute("SELECT * FROM pedidos WHERE empresa_id = %s ORDER BY id DESC LIMIT 50", (e_id,))
         rows = cur.fetchall()
 
         orders = []
@@ -793,14 +788,16 @@ def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
             orders.append({
                 "id": row['id'],
                 "empresa_id": row.get('empresa_id', 1),
-                "hora": str(row['hora']) if row['hora'] else "",
-                "cliente": row.get('cliente') or row.get('cliente_nome') or "",
-                "cliente_nome": row.get('cliente') or row.get('cliente_nome') or "",
-                "endereco": row['endereco'],
+                "hora": str(row.get('hora') or ""),
+                "cliente": row.get('cliente_nome') or row.get('cliente') or "Anônimo",
+                "cliente_nome": row.get('cliente_nome') or row.get('cliente') or "Anônimo",
+                "telefone": row.get('telefone') or "",
+                "endereco": row.get('endereco_entrega') or row.get('endereco') or "Não informado",
                 "pagamento": row.get('pagamento') or "",
+                "itens": row.get('itens') or "",
                 "total": f"{float(val):.2f}".replace('.', ','),
-                "valor_total": val,
-                "status": row['status'],
+                "valor_total": float(val),
+                "status": row.get('status') or "Pendente",
                 "entregador_id": row.get('entregador_id')
             })
         return orders
@@ -810,22 +807,42 @@ def get_orders(empresa_id: Optional[str] = Query('1'), db=Depends(get_db)):
     finally:
         cur.close()
 
+
 @app.post("/api/orders")
 def create_order(order: OrderCreate, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         emp_id = order.empresa_id if order.empresa_id else 1
-        cursor.execute("""
-            INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, valor_total, itens, status, hora, data) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Aprovado / Preparando', %s, %s) RETURNING id;
-        """, (
-            emp_id, order.cliente, order.telefone, order.endereco, order.pagamento,
-            float(order.total) if order.total else 0.00,
-            order.itens,
-            order.status,
-            order.hora or datetime.now().strftime("%H:%M"),
-            order.data or date.today().isoformat()
-        ))
+
+        # Tenta inserir considerando o padrão raiz (cliente, endereco, total)
+        try:
+            cursor.execute("""
+                INSERT INTO pedidos (empresa_id, cliente, telefone, endereco, pagamento, total, valor_total, itens, status, hora, data) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
+            """, (
+                emp_id, order.cliente, order.telefone, order.endereco, order.pagamento,
+                float(order.total) if order.total else 0.00,
+                float(order.total) if order.total else 0.00,
+                order.itens,
+                order.status or 'Aguardando pagamento',
+                order.hora or datetime.now().strftime("%H:%M"),
+                order.data or date.today().isoformat()
+            ))
+        except psycopg2.errors.UndefinedColumn:
+            db.rollback()
+            # Se der erro, usa a arquitetura nova (cliente_nome, endereco_entrega)
+            cursor.execute("""
+                INSERT INTO pedidos (empresa_id, cliente_nome, telefone, endereco_entrega, pagamento, valor_total, itens, status, hora, data) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
+            """, (
+                emp_id, order.cliente, order.telefone, order.endereco, order.pagamento,
+                float(order.total) if order.total else 0.00,
+                order.itens,
+                order.status or 'Aguardando pagamento',
+                order.hora or datetime.now().strftime("%H:%M"),
+                order.data or date.today().isoformat()
+            ))
+
         db.commit()
         return {"success": True, "id": cursor.fetchone()['id']}
     except Exception as e:
@@ -834,13 +851,13 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
     finally:
         cursor.close()
 
+
 @app.get("/api/orders/{order_id}")
 def get_order_by_id(order_id: int, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         cursor.execute("""
-            SELECT p.id, p.status, p.valor_total as total, p.endereco_entrega as endereco, 
-                   p.entregador_id as motoboy_id, e.nome as motoboy_nome
+            SELECT p.*, e.nome as motoboy_nome
             FROM pedidos p 
             LEFT JOIN entregadores_app e ON p.entregador_id = e.id
             WHERE p.id = %s
@@ -850,20 +867,23 @@ def get_order_by_id(order_id: int, db=Depends(get_db)):
         if not order:
             raise HTTPException(status_code=404, detail="Pedido não encontrado")
 
-        total_val = order.get('total')
-        total_str = f"{float(total_val):.2f}".replace('.', ',') if total_val is not None else "0,00"
+        total_val = order.get('valor_total') or order.get('total') or 0.00
 
         return {
             "id": order['id'],
-            "status": order['status'] or "Pendente",
-            "total": total_str,
-            "endereco": order.get('endereco') or "",
+            "status": order.get('status') or "Pendente",
+            "total": f"{float(total_val):.2f}".replace('.', ','),
+            "endereco": order.get('endereco_entrega') or order.get('endereco') or "",
+            "cliente": order.get('cliente_nome') or order.get('cliente') or "",
+            "telefone": order.get('telefone') or "",
+            "itens": order.get('itens') or "",
             "motoboy_nome": order.get('motoboy_nome') or "Não atribuído"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
+
 
 @app.put("/api/orders/{order_id}")
 def update_order(order_id: int, order_data: dict, empresa_id: int = Query(1), db=Depends(get_db)):
@@ -875,32 +895,34 @@ def update_order(order_id: int, order_data: dict, empresa_id: int = Query(1), db
         if not pedido_atual:
             raise HTTPException(status_code=404, detail="Pedido não encontrado.")
 
-        status_atual = pedido_atual.get('status', '')
-        if status_atual not in ["Aguardando pagamento", "Aprovado / Preparando", "Aguardando Entregador"]:
-            raise HTTPException(status_code=400, detail=f"Edição bloqueada. O pedido já está no status: {status_atual}")
-
-        cliente_nome = order_data.get("cliente_nome", pedido_atual.get("cliente_nome"))
-        endereco_entrega = order_data.get("endereco_entrega", pedido_atual.get("endereco_entrega"))
-        valor_novo = order_data.get("valor_total", pedido_atual.get("total"))
-        troco_para = order_data.get("troco_para", pedido_atual.get("troco_para"))
+        cliente_nome = order_data.get("cliente_nome", pedido_atual.get("cliente_nome") or pedido_atual.get("cliente"))
+        endereco_entrega = order_data.get("endereco_entrega",
+                                          pedido_atual.get("endereco_entrega") or pedido_atual.get("endereco"))
+        valor_novo = order_data.get("valor_total", pedido_atual.get("valor_total") or pedido_atual.get("total"))
         observacoes = order_data.get("observacoes", pedido_atual.get("observacoes"))
 
-        cursor.execute("""
-            UPDATE pedidos 
-            SET cliente_nome = %s, endereco_entrega = %s, valor_total = %s, total = %s, troco_para = %s, observacoes = %s
-            WHERE id = %s AND empresa_id = %s
-        """, (cliente_nome, endereco_entrega, valor_novo, valor_novo, troco_para, observacoes, order_id, empresa_id))
+        try:
+            cursor.execute("""
+                UPDATE pedidos 
+                SET cliente = %s, endereco = %s, total = %s, valor_total = %s
+                WHERE id = %s AND empresa_id = %s
+            """, (cliente_nome, endereco_entrega, valor_novo, valor_novo, order_id, empresa_id))
+        except psycopg2.errors.UndefinedColumn:
+            db.rollback()
+            cursor.execute("""
+                UPDATE pedidos 
+                SET cliente_nome = %s, endereco_entrega = %s, valor_total = %s
+                WHERE id = %s AND empresa_id = %s
+            """, (cliente_nome, endereco_entrega, valor_novo, order_id, empresa_id))
 
         db.commit()
         return {"status": "success", "message": "Pedido atualizado com segurança!"}
-    except HTTPException as he:
-        db.rollback()
-        raise he
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
+
 
 @app.put("/api/orders/{order_id}/status")
 def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
@@ -1419,4 +1441,3 @@ def listar_produtos_destaques(db=Depends(get_db)):
 @app.post("/api/backup")
 def backup():
     return {"mensagem": "Backup efetuado com sucesso no servidor."}
-    
