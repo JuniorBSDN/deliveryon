@@ -1097,7 +1097,7 @@ async function carregarFinanceiro() {
             }
         }
 
-        // Salva a configuração padrão global por categoria no backend/localStorage
+ // Salva a configuração padrão global por categoria no banco de dados via FastAPI
         async function salvarConfigGlobal(tipo) {
             const chave = document.getElementById(`global-pix-chave-${tipo}`).value;
             const qrcode = document.getElementById(`global-base64-${tipo}`).value;
@@ -1107,29 +1107,28 @@ async function carregarFinanceiro() {
                 return;
             }
 
-            // Salva no localStorage como fallback imediato para o frontend
-            localStorage.setItem(`deliveryon_global_pix_chave_${tipo}`, chave);
-            if (qrcode) {
-                localStorage.setItem(`deliveryon_global_pix_qr_${tipo}`, qrcode);
-            }
-
             try {
-                // Envia para o backend salvar de forma global para a categoria
-                await masterApiRequest(`/configuracoes-globais/${tipo}`, 'PUT', {
+                // Envia para o backend salvar na tabela de configurações globais do Neon DB
+                const response = await masterApiRequest(`/configuracoes-globais/${tipo}`, 'PUT', {
                     pix_chave: chave,
                     pix_qrcode: qrcode
                 });
-                alert(`Configuração padrão para [${tipo.toUpperCase()}] salva com sucesso para toda a base!`);
+
+                if (response !== null) {
+                    alert(`Configuração padrão para [${tipo.toUpperCase()}] salva com sucesso no banco de dados!`);
+                    carregarConfigGlobais(); // Recarrega para garantir persistência visual
+                }
             } catch (err) {
-                alert(`Salvo localmente com sucesso! (Erro de API: ${err.message})`);
+                alert(`Erro ao salvar no banco de dados: ${err.message}`);
             }
         }
 
-        // Carrega as configurações globais ao abrir a tela financeira
+        // Carrega as configurações globais do banco de dados ao abrir a tela financeira
         async function carregarConfigGlobais() {
             try {
                 const config = await masterApiRequest('/configuracoes-globais');
                 if (config) {
+                    // Configuração Gestor
                     if (config.gestor) {
                         document.getElementById('global-pix-chave-gestor').value = config.gestor.pix_chave || '';
                         if (config.gestor.pix_qrcode) {
@@ -1139,6 +1138,7 @@ async function carregarFinanceiro() {
                             img.style.display = 'block';
                         }
                     }
+                    // Configuração Entregador
                     if (config.entregador) {
                         document.getElementById('global-pix-chave-entregador').value = config.entregador.pix_chave || '';
                         if (config.entregador.pix_qrcode) {
@@ -1150,15 +1150,7 @@ async function carregarFinanceiro() {
                     }
                 }
             } catch(e) {
-                // Fallback para localStorage
-                document.getElementById('global-pix-chave-gestor').value = localStorage.getItem('deliveryon_global_pix_chave_gestor') || '';
-                const qrGestor = localStorage.getItem('deliveryon_global_pix_qr_gestor');
-                if (qrGestor) {
-                    document.getElementById('global-base64-gestor').value = qrGestor;
-                    const img = document.getElementById('global-img-preview-gestor');
-                    img.src = qrGestor;
-                    img.style.display = 'block';
-                }
+                console.error("Erro ao carregar configurações globais do banco:", e);
             }
         }
 
