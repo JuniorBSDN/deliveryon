@@ -8,6 +8,10 @@ from psycopg2.extras import RealDictConnection, RealDictCursor
 from datetime import datetime, date
 from psycopg2 import pool
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import urllib.request
+import urllib.parse
+import json
+
 
 security = HTTPBearer()
 
@@ -24,8 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = os.getenv("ON_DATA_URL", "postgresql://user:password@host/dbname")
-MASTER_SECRET = os.getenv("SENHA_MASTER", "master123")
+DATABASE_URL = os.getenv("ON_DATA_URL")
+MASTER_SECRET = os.getenv("SENHA_MASTER")
 
 db_pool = pool.ThreadedConnectionPool(
     minconn=2,
@@ -560,21 +564,23 @@ def gestor_cadastro(emp: EmpresaCreate, db=Depends(get_db)):
         if not cnpj_limpo:
             raise HTTPException(status_code=400, detail="CNPJ inválido.")
 
-        cursor.execute("""
-            SELECT id FROM empresas 
-            WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s
-        """, (cnpj_limpo,))
-
+        cursor.execute("SELECT id FROM empresas WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = %s", (cnpj_limpo,))
         if cursor.fetchone():
-            raise HTTPException(status_code=400, detail="Este CNPJ já possui um cadastro na plataforma. Faça o login.")
+            raise HTTPException(status_code=400, detail="Este CNPJ já possui um cadastro.")
 
+        # ==========================================
+        # MÁGICA ACONTECENDO AQUI: Transforma o texto em GPS
+        # ==========================================
+        lat_loja, lng_loja = converter_endereco_em_coordenadas(emp.endereco)
+
+        # Atualize a query para salvar a latitude e longitude da loja
         cursor.execute("""
-            INSERT INTO empresas (razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, endereco, plano, vencimento, limite_usuarios, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'ativo') RETURNING id;
+            INSERT INTO empresas (razao_social, nome_fantasia, cnpj, responsavel, contato, email_admin, endereco, plano, vencimento, limite_usuarios, status, latitude, longitude)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'ativo', %s, %s) RETURNING id;
         """, (
             emp.razao_social, emp.nome_fantasia, emp.cnpj, emp.responsavel,
             emp.contato, emp.email_admin, emp.endereco,
-            'basic', 10, 5
+            'basic', 10, 5, lat_loja, lng_loja
         ))
         db.commit()
         novo_id = cursor.fetchone()['id']
@@ -814,6 +820,8 @@ def create_order(order: OrderCreate, db=Depends(get_db)):
     try:
         emp_id = order.empresa_id if order.empresa_id else 1
 
+        lat_cliente, lng_cliente = converter_endereco_em_coordenadas(order.endereco)
+
         # Tenta inserir considerando o padrão raiz (cliente, endereco, total)
         try:
             cursor.execute("""
@@ -929,41 +937,89 @@ def update_order_status(order_id: int, data: dict, db=Depends(get_db)):
     novo_status = data.get("status")
     cur = db.cursor()
     try:
-        cur.execute("UPDATE pedidos SET status = %s WHERE id = %s", (novo_status, order_id))
-        db.commit()
-        return {"success": True, "message": "Status atualizado com sucesso!"}
+        # Se o admin despachar, ativa o matchmaking inteligente em cascata
+        if novo_status == "Aguardando Entregador":
+            try:
+                cur.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS motoboys_recusados TEXT DEFAULT ''")
+                cur.execute("UPDATE pedidos SET motoboys_recusados = '' WHERE id = %s", (order_id,))
+                db.commit()
+            except:
+                db.rollback()
+            return despachar_proximos(order_id, db=db)
+        else:
+            cur.execute("UPDATE pedidos SET status = %s WHERE id = %s", (novo_status, order_id))
+            db.commit()
+            return {"success": True, "message": "Status atualizado com sucesso!"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cur.close()
 
+
 @app.post("/api/orders/{order_id}/despachar-proximos")
 def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db)):
     cursor = db.cursor()
-    lat_loja = -0.9234
-    lng_loja = -48.1321
 
     try:
+        # =========================================================
+        # NOVO: BUSCA DINÂMICA DA LOCALIZAÇÃO DA LOJA (MULTI-TENANT)
+        # =========================================================
+        cursor.execute("""
+            SELECT e.latitude, e.longitude 
+            FROM pedidos p
+            JOIN empresas e ON p.empresa_id = e.id
+            WHERE p.id = %s
+        """, (order_id,))
+        loja = cursor.fetchone()
+
+        # Usa as coordenadas da loja. Se a loja ainda não configurou o GPS, usa um fallback de segurança para não quebrar o app
+        lat_loja = float(loja['latitude']) if loja and loja.get('latitude') is not None else -0.9234
+        lng_loja = float(loja['longitude']) if loja and loja.get('longitude') is not None else -48.1321
+
+        # Garante que a coluna de histórico de recusas existe
+        try:
+            cursor.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS motoboys_recusados TEXT DEFAULT ''")
+            db.commit()
+        except:
+            db.rollback()
+
+        # Verifica quem já recusou esta corrida para não mandar de novo
+        cursor.execute("SELECT motoboys_recusados FROM pedidos WHERE id = %s", (order_id,))
+        row = cursor.fetchone()
+        recusados_str = row['motoboys_recusados'] if row and row['motoboys_recusados'] else ""
+
+        lista_recusados = [int(x) for x in recusados_str.split(',') if x.strip().isdigit()]
+        if not lista_recusados:
+            lista_recusados = [-1]  # ID falso só para o SQL não quebrar
+
+        lista_recusados_tuple = tuple(lista_recusados)
+
+        # Busca o motoboy MAIS PRÓXIMO DA LOJA ESPECÍFICA que esteja Disponível e que AINDA NÃO RECUSOU
         cursor.execute("""
             SELECT id, 
                    ( 6371 * acos( LEAST(1.0, cos( radians(%s::numeric) ) * cos( radians( lat::numeric ) ) 
                    * cos( radians( lng::numeric ) - radians(%s::numeric) ) + sin( radians(%s::numeric) ) 
                    * sin( radians( lat::numeric ) ) ) ) ) AS distancia_km
             FROM entregadores_app
-            WHERE status = 'Disponível' AND lat IS NOT NULL AND lng IS NOT NULL
+            WHERE status = 'Disponível' 
+              AND lat IS NOT NULL 
+              AND lng IS NOT NULL
+              AND id NOT IN %s
             ORDER BY distancia_km ASC
             LIMIT 1;
-        """, (lat_loja, lng_loja, lat_loja))
+        """, (lat_loja, lng_loja, lat_loja, lista_recusados_tuple))
 
         motoboy_alvo = cursor.fetchone()
 
         if motoboy_alvo:
-            cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = %s WHERE id = %s", (motoboy_alvo['id'], order_id))
-            mensagem_retorno = f"Disparado para entregador ({motoboy_alvo['distancia_km']:.2f} km)"
+            cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = %s WHERE id = %s",
+                           (motoboy_alvo['id'], order_id))
+            mensagem_retorno = f"Notificação enviada ao entregador mais próximo da loja ({motoboy_alvo['distancia_km']:.2f} km)"
         else:
-            cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s", (order_id,))
-            mensagem_retorno = "Sem GPS ativo. Disparado no radar aberto."
+            cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s",
+                           (order_id,))
+            mensagem_retorno = "Sem motoboys próximos à loja. Pedido jogado na praça pública."
 
         db.commit()
         return {"success": True, "message": mensagem_retorno}
@@ -974,17 +1030,28 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
     finally:
         cursor.close()
 
+
 @app.post("/api/orders/{order_id}/recusar-motoboy")
 def recusar_motoboy(order_id: int, data: RecusarCorrida, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Quando o motoboy recusa ou o tempo esgota, adicionamos ele na "lista negra" dessa corrida
+        cursor.execute("SELECT motoboys_recusados FROM pedidos WHERE id = %s", (order_id,))
+        row = cursor.fetchone()
+        recusados = row['motoboys_recusados'] if row and row['motoboys_recusados'] else ""
+
+        novo_recusados = f"{recusados},{data.motoboy_id}" if recusados else str(data.motoboy_id)
+
         cursor.execute("""
             UPDATE pedidos 
-            SET entregador_id = NULL 
+            SET entregador_id = NULL, motoboys_recusados = %s
             WHERE id = %s AND entregador_id = %s AND status = 'Aguardando Entregador'
-        """, (order_id, data.motoboy_id))
+        """, (novo_recusados, order_id, data.motoboy_id))
         db.commit()
-        return {"success": True, "message": "Corrida recusada e devolvida à praça."}
+
+        # CHAMA A FUNÇÃO DE NOVO AUTOMATICAMENTE PARA PASSAR A BOLA PARA O SEGUNDO MAIS PRÓXIMO!
+        return despachar_proximos(order_id, db=db)
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -1436,6 +1503,34 @@ def listar_produtos_destaques(db=Depends(get_db)):
         cursor.close()
     return res
 
+
+def converter_endereco_em_coordenadas(endereco: str):
+    """
+    Pega um endereço em texto e retorna (latitude, longitude) usando a API gratuita do OpenStreetMap.
+    """
+    if not endereco:
+        return None, None
+
+    try:
+        # Adicionamos "Vigia, Pará, Brasil" para forçar o mapa a buscar na sua região
+        # e não confundir com ruas de mesmo nome em outros estados.
+        endereco_completo = f"{endereco}, Vigia, Pará, Brasil"
+
+        url = "https://nominatim.openstreetmap.org/search?q=" + urllib.parse.quote(
+            endereco_completo) + "&format=json&limit=1"
+
+        # O Nominatim exige um User-Agent para não bloquear o acesso
+        req = urllib.request.Request(url, headers={'User-Agent': 'DeliveryON_SaaS/1.0'})
+
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            if data and len(data) > 0:
+                return float(data[0]['lat']), float(data[0]['lon'])
+    except Exception as e:
+        print(f"Erro ao geocodificar o endereço '{endereco}':", e)
+
+    # Retorna as coordenadas do centro de Vigia como fallback (segurança) caso o endereço não seja encontrado
+    return -0.9234, -48.1321
 
 # ================= BACKUP =================
 @app.post("/api/backup")
