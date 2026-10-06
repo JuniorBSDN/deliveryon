@@ -614,6 +614,37 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
+            // ==========================================
+            // 1. REGRA DO TRIAL GRÁTIS (7 DIAS)
+            // Se o motoboy NUNCA teve pagamento carimbado, ativa a contagem de 7 dias
+            // ==========================================
+            if (!statusBanco || statusBanco === 'null' || statusBanco.trim() === '') {
+                let trialStr = localStorage.getItem(`app_motoboy_trial_${entregadorId}`);
+                if (!trialStr) {
+                    trialStr = hoje.toISOString();
+                    localStorage.setItem(`app_motoboy_trial_${entregadorId}`, trialStr);
+                }
+
+                const dataInicioTrial = new Date(trialStr);
+                dataInicioTrial.setHours(0,0,0,0);
+
+                const dataFimTrial = new Date(dataInicioTrial);
+                dataFimTrial.setDate(dataFimTrial.getDate() + 7); // 7 dias exatos
+
+                const diffTrial = Math.round((dataFimTrial.getTime() - hoje.getTime()) / (1000 * 3600 * 24));
+
+                if (diffTrial > 0) {
+                    return { statusEnum: "EM_DIA", diasRestantesOuCarencia: diffTrial, diffDays: diffTrial };
+                } else if (diffTrial === 0) {
+                    return { statusEnum: "EM_DIA", diasRestantesOuCarencia: 0, diffDays: 0 };
+                } else {
+                    return { statusEnum: "VENCIDO", diasRestantesOuCarencia: 0, diffDays: diffTrial };
+                }
+            }
+
+            // ==========================================
+            // 2. REGRA DO ASSINANTE ATIVO (Já possui carimbo)
+            // ==========================================
             const anoAtual = hoje.getFullYear();
             const mesAtual = hoje.getMonth() + 1;
             const mesReferenciaAtual = `${String(mesAtual).padStart(2, '0')}/${anoAtual}`;
@@ -625,7 +656,7 @@
             let diasRestantesOuCarencia = 0;
             let statusEnum = "EM_DIA";
 
-            if (statusBanco === mesReferenciaAtual) {
+            if (statusBanco === mesReferenciaAtual || statusBanco === 'Em Dia') {
                 let dataVencimentoProximo = new Date(anoAtual, mesAtual, diaVencimento);
                 const diffTimeProximo = dataVencimentoProximo.getTime() - hoje.getTime();
                 diasRestantesOuCarencia = Math.round(diffTimeProximo / (1000 * 3600 * 24));
@@ -874,6 +905,7 @@
                 localStorage.setItem('app_motoboy_id', data.id);
                 localStorage.setItem('app_motoboy_status', 'Disponível');
                 localStorage.setItem('app_motoboy_vencimento', 10);
+                localStorage.setItem(`app_motoboy_trial_${data.id}`, new Date().toISOString());
 
                 verificarAcessoEntregador();
             } catch (error) {
