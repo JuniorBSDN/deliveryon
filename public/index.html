@@ -639,8 +639,10 @@
                             lng: coords.lng,
                             pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
                             itens: itensResumo,
-                            total: totalPedido.toFixed(2),
-                            valor_total: totalPedido.toFixed(2),
+
+                            total: parseFloat(totalPedido.toFixed(2)),
+                            valor_total: parseFloat(totalPedido.toFixed(2)),
+
                             status: 'Aguardando pagamento',
                             data: dataAtual,
                             hora: horaAtual
