@@ -1001,9 +1001,9 @@
             carregarRotasAtivas();
             filtrarExtrato();
 
-            if (statusSalvo === 'Disponível') {
-                iniciarPollingDespacho();
-                iniciarRastreadorGps();
+            // Correção: Força o envio imediato da localização para o backend ao invés de apenas iniciar o tracker
+            if (statusSalvo === 'Disponível' || statusSalvo === 'Em Entrega') {
+                alterarStatusEntregador(statusSalvo);
             }
         }
 
@@ -1042,20 +1042,24 @@
 
         function obterCoordenadas() {
             return new Promise((resolve) => {
+                // FALLBACK PADRÃO (Centro de Vigia) - Garante que o Matchmaking nunca quebre
+                const fallbackCoords = { lat: -0.9234, lng: -48.1321 };
+
                 if (!navigator.geolocation) {
-                    console.warn("Geolocalização não suportada.");
-                    resolve({ lat: null, lng: null });
+                    console.warn("Geolocalização não suportada no navegador.");
+                    resolve(fallbackCoords);
                     return;
                 }
+
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         resolve({ lat: position.coords.latitude, lng: position.coords.longitude });
                     },
                     (error) => {
-                        console.warn("Erro ao obter GPS:", error.message);
-                        resolve({ lat: null, lng: null });
+                        console.warn("Erro ao obter GPS, ativando fallback automático:", error.message);
+                        resolve(fallbackCoords);
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
             });
         }
