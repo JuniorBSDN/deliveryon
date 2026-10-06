@@ -963,17 +963,11 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
 
     try:
         # =========================================================
-        # 1. AUTO-CURA DO BANCO (Impede o Crash Silencioso)
+        # 1. AUTO-CURA DO BANCO
         # =========================================================
         try:
-            # Cria as colunas de GPS na hora se elas ainda não existirem
             cursor.execute("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,8);")
             cursor.execute("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,8);")
-            db.commit()
-        except Exception:
-            db.rollback()
-
-        try:
             cursor.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS motoboys_recusados TEXT DEFAULT '';")
             db.commit()
         except Exception:
@@ -990,7 +984,6 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
         """, (order_id,))
         loja = cursor.fetchone()
 
-        # Usa as coordenadas da loja. Fallback de segurança caso a loja não tenha GPS salvo
         lat_loja = float(loja['latitude']) if loja and loja.get('latitude') is not None else -0.9234
         lng_loja = float(loja['longitude']) if loja and loja.get('longitude') is not None else -48.1321
 
@@ -1003,12 +996,13 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
 
         lista_recusados = [int(x) for x in recusados_str.split(',') if x.strip().isdigit()]
         if not lista_recusados:
-            lista_recusados = [-1]  # ID falso para o PostgreSQL não quebrar a sintaxe
+            lista_recusados = [-1]
 
-        lista_recusados_tuple = tuple(lista_recusados)
+        # CORREÇÃO CRÍTICA: Converte a lista em string para blindar o psycopg2 contra erros de tupla no NOT IN
+        recusados_sql = ",".join(map(str, lista_recusados))
 
-        # Busca o motoboy MAIS PRÓXIMO DA LOJA ESPECÍFICA que esteja Disponível e que AINDA NÃO RECUSOU
-        cursor.execute("""
+        # Busca o motoboy MAIS PRÓXIMO DA LOJA ESPECÍFICA que AINDA NÃO RECUSOU
+        cursor.execute(f"""
             SELECT id, 
                    ( 6371 * acos( LEAST(1.0, cos( radians(%s::numeric) ) * cos( radians( lat::numeric ) ) 
                    * cos( radians( lng::numeric ) - radians(%s::numeric) ) + sin( radians(%s::numeric) ) 
@@ -1017,10 +1011,10 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
             WHERE status = 'Disponível' 
               AND lat IS NOT NULL 
               AND lng IS NOT NULL
-              AND id NOT IN %s
+              AND id NOT IN ({recusados_sql})
             ORDER BY distancia_km ASC
             LIMIT 1;
-        """, (lat_loja, lng_loja, lat_loja, lista_recusados_tuple))
+        """, (lat_loja, lng_loja, lat_loja))
 
         motoboy_alvo = cursor.fetchone()
 
@@ -1029,6 +1023,7 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
                            (motoboy_alvo['id'], order_id))
             mensagem_retorno = f"Notificação enviada ao entregador mais próximo ({motoboy_alvo['distancia_km']:.2f} km)"
         else:
+            # Não sobrou mais ninguém perto? O pedido vai pra PRAÇA PÚBLICA e aparece na lista!
             cursor.execute("UPDATE pedidos SET status = 'Aguardando Entregador', entregador_id = NULL WHERE id = %s",
                            (order_id,))
             mensagem_retorno = "Sem motoboys próximos à loja. Pedido jogado na praça pública."
@@ -1037,11 +1032,9 @@ def despachar_proximos(order_id: int, data: dict = Body({}), db=Depends(get_db))
         return {"success": True, "message": mensagem_retorno}
     except Exception as e:
         db.rollback()
-        print(f"ERRO FATAL NO GPS MATCHMAKING: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erro SQL: {str(e)}")
     finally:
         cursor.close()
-
 
 @app.post("/api/orders/{order_id}/recusar-motoboy")
 def recusar_motoboy(order_id: int, data: RecusarCorrida, db=Depends(get_db)):
