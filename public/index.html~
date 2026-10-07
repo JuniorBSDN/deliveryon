@@ -307,7 +307,7 @@
         let lojaAtualId = null;
         let carrinhoLojaId = null;
         let telefoneWhatsapp = "";
-        const TAXA_ENTREGA = 5.00;
+        const TAXA_ENTREGA = 0.0;
         let lojasCadastradas = [];
         let menuItems = [];
         let cart = [];
@@ -329,6 +329,23 @@
             if (currentFontSize < 80) currentFontSize = 80;
             if (currentFontSize > 150) currentFontSize = 150;
             document.body.style.fontSize = currentFontSize + '%';
+        }
+
+        // =========================================================
+        // NOVO: Função para obter as coordenadas do cliente (GPS)
+        // =========================================================
+        function obterCoordenadasCliente() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve({ lat: null, lng: null });
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    (err) => resolve({ lat: null, lng: null }),
+                    { enableHighAccuracy: true, timeout: 6000 }
+                );
+            });
         }
 
         function init() {
@@ -560,6 +577,9 @@
                 document.getElementById('div-troco').classList.toggle('hidden', e.target.value !== 'Dinheiro');
             });
 
+            // =========================================================
+            // GATILHO DE CHECKOUT COM CAPTURA DE COORDENADAS PARA O MOTOBOY
+            // =========================================================
             document.getElementById('btn-enviar-whatsapp').addEventListener('click', async () => {
                 const clienteNome = document.getElementById('cli-nome').value.trim();
                 const clienteTel = document.getElementById('cli-tel').value.trim();
@@ -573,7 +593,15 @@
                     return;
                 }
 
-                const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
+                // Efeito visual no botão enquanto captura o GPS
+                const btnOriginalHTML = document.getElementById('btn-enviar-whatsapp').innerHTML;
+                document.getElementById('btn-enviar-whatsapp').innerHTML = '<i class="fas fa-spinner fa-spin text-2xl mr-2"></i> Confirmando localização...';
+                document.getElementById('btn-enviar-whatsapp').disabled = true;
+
+                // Captura as coordenadas para a rota do entregador
+                const coords = await obterCoordenadasCliente();
+
+                const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_ativa') || 1);
 
                 let numeroDestino = telefoneWhatsapp;
                 if (!numeroDestino && typeof lojaAtualId !== 'undefined') {
@@ -583,7 +611,7 @@
                     }
                 }
                 if (!numeroDestino) {
-                    numeroDestino = "5591983252639";
+                    numeroDestino = "5591983252639"; // Fallback de emergência
                 } else if (!numeroDestino.startsWith('55')) {
                     numeroDestino = '55' + numeroDestino;
                 }
@@ -597,40 +625,49 @@
                 const dataAtual = new Date().toISOString().split('T')[0];
 
                 try {
-            const res = await fetch(`${API_BASE_URL}/orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    empresa_id: empresaIdFinal,
-                    cliente: clienteNome,
-                    cliente_nome: clienteNome,
-                    telefone: clienteTel,
-                    endereco: enderecoCompleto,
-                    pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
-                    itens: itensResumo,
-                    total: totalPedido.toFixed(2),
-                    valor_total: totalPedido.toFixed(2),
-                    status: 'Aguardando pagamento',
-                    data: dataAtual,
-                    hora: horaAtual
-                })
-            });
-            if (res.ok) {
-                const dadosPedido = await res.json();
-                pedidoAtivoId = dadosPedido.id || dadosPedido.pedido_id;
+                    const res = await fetch(`${API_BASE_URL}/orders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            empresa_id: empresaIdFinal,
+                            cliente: clienteNome,
+                            cliente_nome: clienteNome,
+                            telefone: clienteTel,
+                            endereco: enderecoCompleto,
+                            // ANEXANDO AS COORDENADAS EXATAS AQUI
+                            lat: coords.lat,
+                            lng: coords.lng,
+                            pagamento: pagamento + (troco ? ` (Troco para R$ ${troco})` : ''),
+                            itens: itensResumo,
 
-                // MANTENHA ESTA LINHA:
-                localStorage.setItem('deliveryon_pedido_ativo_id', pedidoAtivoId);
+                            total: parseFloat(totalPedido.toFixed(2)),
+                            valor_total: parseFloat(totalPedido.toFixed(2)),
 
-                // 👉 ADICIONE ESTA NOVA LINHA AQUI:
-                localStorage.setItem('deliveryon_empresa_ativa', empresaIdFinal);
+                            status: 'Aguardando pagamento',
+                            data: dataAtual,
+                            hora: horaAtual
+                        })
+                    });
 
-                document.getElementById('banner-acompanhamento').classList.remove('hidden');
-                iniciarPollingStatusPedido();
-            }
-        } catch (e) {
-            console.error("Erro de conexão ao enviar pedido para o painel:", e);
-        }
+                    if (res.ok) {
+                        const dadosPedido = await res.json();
+                        pedidoAtivoId = dadosPedido.id || dadosPedido.pedido_id;
+
+                        localStorage.setItem('deliveryon_pedido_ativo_id', pedidoAtivoId);
+                        localStorage.setItem('deliveryon_empresa_ativa', empresaIdFinal);
+
+                        // Salva as coords do cliente localmente para o mapa dele próprio ficar preciso
+                        if(coords.lat) {
+                            localStorage.setItem('deliveryon_cliente_lat', coords.lat);
+                            localStorage.setItem('deliveryon_cliente_lng', coords.lng);
+                        }
+
+                        document.getElementById('banner-acompanhamento').classList.remove('hidden');
+                        iniciarPollingStatusPedido();
+                    }
+                } catch (e) {
+                    console.error("Erro de conexão ao enviar pedido para o painel:", e);
+                }
 
                 let msg = `*NOVO PEDIDO!* 🛒\n\n*Cliente:* ${clienteNome}\n*Telefone:* ${clienteTel}\n*Endereço:* ${enderecoCompleto}\n*Pagamento:* ${pagamento}`;
                 if(pagamento === 'Dinheiro' && troco) {
@@ -641,6 +678,7 @@
                 const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
                 window.open(urlWhatsApp, '_blank');
 
+                // Limpar campos
                 cart = [];
                 document.getElementById('cli-nome').value = '';
                 document.getElementById('cli-tel').value = '';
@@ -649,6 +687,9 @@
                 document.getElementById('cli-pag').value = '';
                 if(document.getElementById('cli-troco')) document.getElementById('cli-troco').value = '';
                 if(document.getElementById('div-troco')) document.getElementById('div-troco').classList.add('hidden');
+
+                document.getElementById('btn-enviar-whatsapp').innerHTML = btnOriginalHTML;
+                document.getElementById('btn-enviar-whatsapp').disabled = false;
 
                 updateCartUI();
                 toggleCart();
@@ -661,7 +702,6 @@
 
             const intervalo = setInterval(async () => {
                 try {
-                    // 👉 NOVA BUSCA DA EMPRESA ATIVA:
                     const empresaAtiva = localStorage.getItem('deliveryon_empresa_ativa') || lojaAtualId || 1;
                     const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${empresaAtiva}`);
 
@@ -680,12 +720,11 @@
             }, 5000);
         }
 
-       async function abrirModalAcompanhamento() {
+        async function abrirModalAcompanhamento() {
             if (!pedidoAtivoId) return;
             document.getElementById('modal-acompanha-id').innerText = pedidoAtivoId;
 
             try {
-                // 👉 NOVA BUSCA DA EMPRESA ATIVA AQUI TAMBÉM:
                 const empresaAtiva = localStorage.getItem('deliveryon_empresa_ativa') || lojaAtualId || 1;
                 const res = await fetch(`${API_BASE_URL}/orders/${pedidoAtivoId}?empresa_id=${empresaAtiva}`);
 
@@ -748,8 +787,10 @@
 
             const latLoja = -0.9234;
             const lngLoja = -48.1321;
-            const latCliente = -0.9270;
-            const lngCliente = -48.1390;
+
+            // LER AS COORDENADAS REAIS SALVAS NO MOMENTO DO PEDIDO
+            const latCliente = parseFloat(localStorage.getItem('deliveryon_cliente_lat')) || -0.9270;
+            const lngCliente = parseFloat(localStorage.getItem('deliveryon_cliente_lng')) || -48.1390;
 
             const mapa = L.map(elementoId).setView([latCliente, lngCliente], 14);
             mapaClienteInstancia = mapa;
@@ -774,22 +815,31 @@
         async function enviarAvaliacaoOuvidoria() {
             const avaliacao = document.getElementById('select-avaliacao-cliente').value;
             const relato = document.getElementById('textarea-relato-cliente').value;
-            const empresaIdFinal = parseInt(lojaAtualId || localStorage.getItem('deliveryon_empresa_id') || 1);
+
+            const empresaIdFinal = parseInt(localStorage.getItem('deliveryon_empresa_ativa') || lojaAtualId || 1);
+
+            let nomeDoCliente = document.getElementById('cli-nome') ? document.getElementById('cli-nome').value.trim() : "";
+            if (!nomeDoCliente) nomeDoCliente = "Cliente App";
 
             const payload = {
                 empresa_id: empresaIdFinal,
+                pedido_id: String(pedidoAvaliadoId),
                 avaliacao: avaliacao,
                 relato: relato,
                 atendimento: "Geral",
-                cliente_nome: document.getElementById('cli-nome') ? document.getElementById('cli-nome').value : "Cliente"
+                cliente_nome: nomeDoCliente
             };
 
             const res = await apiRequest('/ouvidoria', 'POST', payload);
+
             if (res) {
                 alert('Muito obrigado pelo feedback! Sua opinião foi registrada.');
                 document.getElementById('modalAvaliacaoCliente').classList.remove('active');
+
+                document.getElementById('textarea-relato-cliente').value = '';
+                document.getElementById('select-avaliacao-cliente').value = 'Ótimo';
             } else {
-                alert('Erro ao enviar avaliação.');
+                alert('Erro ao enviar avaliação. Tente novamente.');
             }
         }
 
@@ -866,40 +916,28 @@
         function closeImageModal() { document.getElementById('image-modal').classList.add('hidden'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
-async function recuperarPedidoAtivo(pedidoId) {
-    try {
-        const res = await fetch(`${API_BASE_URL}/orders/${pedidoId}`);
-        if (!res.ok) return;
+        async function recuperarPedidoAtivo(pedidoId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/orders/${pedidoId}`);
+                if (!res.ok) return;
 
-        const pedido = await res.json();
+                const pedido = await res.json();
 
-        // Se o pedido já foi finalizado, limpamos a memória do celular
-        if (pedido.status === 'Entregue' || pedido.status === 'Cancelado') {
-            localStorage.removeItem('deliveryon_pedido_ativo');
-            return;
+                if (pedido.status === 'Entregue' || pedido.status === 'Cancelado') {
+                    localStorage.removeItem('deliveryon_pedido_ativo_id');
+                    return;
+                }
+            } catch (error) {
+                console.error("Erro ao buscar pedido ativo:", error);
+            }
         }
 
-        // Caso contrário, ele ainda está ativo!
-        // AQUI VOCÊ CHAMA A SUA FUNÇÃO QUE ABRE O MODAL DO CLIENTE
-        // Exemplo:
-        // document.getElementById('status-texto').innerText = pedido.status;
-        // openModal('modalAcompanhamento');
-
-    } catch (error) {
-        console.error("Erro ao buscar pedido ativo:", error);
-    }
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    // Verifica se o cliente tem um pedido em andamento salvo no navegador
-    const pedidoAtivo = localStorage.getItem('deliveryon_pedido_ativo');
-
-    if (pedidoAtivo) {
-        recuperarPedidoAtivo(pedidoAtivo);
-    }
-});
-
+        document.addEventListener("DOMContentLoaded", () => {
+            const pedidoAtivo = localStorage.getItem('deliveryon_pedido_ativo_id');
+            if (pedidoAtivo) {
+                recuperarPedidoAtivo(pedidoAtivo);
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', init);
     </script>
