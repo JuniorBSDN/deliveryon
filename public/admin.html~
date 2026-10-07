@@ -125,10 +125,136 @@
             .chart-grid { grid-template-columns: 1fr; }
             .action-bar-mobile { flex-direction: column !important; align-items: stretch !important; width: 100%; }
             .action-bar-mobile > * { width: 100% !important; margin-bottom: 10px; max-width: 100% !important; }
-        }
+               html,
+                body {
+                    width: 100%;
+                    max-width: 100%;
+                    overflow-x: hidden !important;
+                }
+
+                .main-content {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-width: 0 !important;
+                }
+
+                .content-container {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-width: 0 !important;
+                    overflow-x: hidden !important;
+                }
+                }
+        /* AJUSTES MOBILE - CONFIGURAÇÕES */
+.action-bar-mobile {
+    width: 100%;
+    max-width: 100%;
+}
+
+.action-bar-mobile .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 46px;
+    box-sizing: border-box;
+    white-space: normal;
+}
+
+#sec-configuracoes {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+#sec-configuracoes .form-grid {
+    width: 100%;
+}
+
+#sec-configuracoes .card {
+    width: 100%;
+    max-width: 100%;
+}
+
+#sec-configuracoes input,
+#sec-configuracoes textarea,
+#sec-configuracoes select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+        /* CORREÇÃO DEFINITIVA - CONFIGURAÇÕES NO CELULAR */
+#sec-configuracoes {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+}
+
+#sec-configuracoes .form-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .form-grid > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .form-group {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#sec-configuracoes .action-bar-mobile {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+}
+
+#sec-configuracoes .action-bar-mobile .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    padding: 12px 10px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
     </style>
 </head>
 <body>
+
+<!-- TOAST DE AVISO DE VENCIMENTO / TRIAL -->
+<div id="toast-trial" style="position: fixed; bottom: 30px; right: -400px; width: 320px; background: white; border-left: 5px solid #ff9800; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; z-index: 9999; transition: right 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); font-family: 'Segoe UI', sans-serif;">
+    <h4 style="margin: 0 0 10px 0; color: #ff9800; display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+        <i class="ph-fill ph-warning-circle" style="font-size: 1.3rem;"></i> Licença Expirando
+    </h4>
+    <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: #555; line-height: 1.4;">
+        Sua licença ou período de teste encerra em <strong id="dias-restantes-texto" style="color: #d32f2f; font-size: 1rem;">--</strong> dias.
+    </p>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="ativarAgoraGestor()" style="background: #ff9800; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s;">Ativar Agora</button>
+        <button onclick="document.getElementById('toast-trial').style.right = '-400px'" style="background: #f1f1f1; color: #555; border: none; padding: 8px; border-radius: 6px; cursor: pointer; flex: 1; transition: 0.2s;">Lembrar Depois</button>
+    </div>
+</div>
 
     <!-- TELA DE LOGIN / CADASTRO INTEGRADA -->
     <div id="auth-overlay">
@@ -198,20 +324,26 @@
         </div>
     </div>
 
-    <!-- MODAL TERMOS DE USO GESTOR -->
-    <div class="modal-overlay" id="modalTermosGestor" style="z-index: 10000;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="ph ph-file-text" style="color: var(--brand-primary);"></i> Termos de Uso e Licenciamento</h3>
-                <button class="close-modal" onclick="document.getElementById('modalTermosGestor').classList.remove('active');">&times;</button>
+    <!-- MODAL DE BLOQUEIO / FINANCEIRO -->
+    <div class="modal-overlay" id="modalFinanceiroSaaS" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: space-between; align-items: center; background: #fff5f5; border-bottom: 1px solid #ffcdd2; padding: 15px 20px;">
+                <h3 style="color: var(--danger); margin: 0; display: flex; align-items: center; gap: 8px;"><i class="ph ph-warning-octagon"></i> <span id="modal-titulo-bloqueio">Acesso Bloqueado</span></h3>
+                <button class="close-modal" onclick="closeModal('modalFinanceiroSaaS')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa;">&times;</button>
             </div>
-            <div class="modal-body" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">
-                <p><strong>1. Da Licença de Uso:</strong> Ao se cadastrar, o contratante recebe uma licença de uso temporária (plano Basic/Free) do software deliveryON, sujeita às limitações do plano.</p><br>
-                <p><strong>2. LGPD e Proteção de Dados:</strong> O deliveryON atua como operador de dados. O contratante (restaurante) é o controlador dos dados de seus clientes finais e concorda em capturá-los em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p><br>
-                <p><strong>3. Responsabilidade Financeira:</strong> A plataforma não intervém no repasse de pagamentos aos entregadores, sendo isso responsabilidade exclusiva do restaurante contratante.</p>
+            <div class="modal-body" style="padding: 20px;">
+                <p id="modal-texto-aviso" style="font-size: 1.05rem; color: #333; margin-bottom: 15px; font-weight: 600;">Sua mensalidade venceu.</p>
+                <p style="font-size: 0.9rem; color: #777; margin-bottom: 15px;">Efetue o pagamento via PIX utilizando os dados abaixo para liberar ou manter o sistema ativo automaticamente.</p>
+
+                <img id="modal-pix-qrcode" src="" style="width: 200px; height: 200px; object-fit: contain; margin: 10px auto; border: 1px solid #ccc; border-radius: 8px; padding: 10px; display: none;">
+
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                    <label>Chave PIX (Copia e Cola):</label>
+                    <textarea id="modal-pix-chave" class="form-control" rows="3" readonly style="background: #f8f9fa; cursor: pointer;" onclick="this.select(); document.execCommand('copy'); alert('Chave PIX copiada!');"></textarea>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="document.getElementById('cad-gestor-termos').checked = true; document.getElementById('modalTermosGestor').classList.remove('active');"><i class="ph ph-check"></i> Li e Aceito</button>
+            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalFinanceiroSaaS')">Fechar</button>
             </div>
         </div>
     </div>
@@ -232,6 +364,7 @@
             <li><a class="nav-link" onclick="navigate('relatorios', this)"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span> Relatórios</a></li>
             <li><a class="nav-link" onclick="navigate('ouvidoria', this)"><span class="nav-icon"><i class="ph ph-megaphone"></i></span> Ouvidoria</a></li>
             <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk</a></li>
+            <li><a class="nav-link" onclick="navigate('financeiro-gestor', this)"><span class="nav-icon"><i class="ph ph-currency-dollar"></i></span> Financeiro</a></li>
             <li><a class="nav-link" onclick="navigate('configuracoes', this)"><span class="nav-icon"><i class="ph ph-gear"></i></span> Configurações</a></li>
         </ul>
         <div class="nav-footer">
@@ -602,6 +735,35 @@
                 </div>
             </section>
 
+            <!-- FINANCEIRO DO GESTOR (MENSALIDADES) -->
+            <section id="sec-financeiro-gestor" class="page-section hidden">
+                <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-invoice"></i> Financeiro e Mensalidades</h1></div>
+
+                <!-- Cards de Faturas em Aberto -->
+                <div class="form-grid" id="faturas-abertas-container" style="margin-bottom: 30px;">
+                    <!-- O Javascript vai injetar o Card aqui, no estilo da sua imagem -->
+                </div>
+
+                <!-- Tabela de Histórico (Estilo Escuro) -->
+                <div class="card" style="padding: 0; border: none; background: #1a1a1a; overflow: hidden;">
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse; color: #fff;">
+                            <thead style="background: #111; color: #ccc;">
+                                <tr>
+                                    <th style="padding: 15px; border-bottom: 1px solid #333;">#</th>
+                                    <th style="padding: 15px; border-bottom: 1px solid #333;">MÊS</th>
+                                    <th style="padding: 15px; border-bottom: 1px solid #333;">VALOR PAGO</th>
+                                    <th style="padding: 15px; border-bottom: 1px solid #333; text-align: center;">NOTA FISCAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-historico-faturas">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
            <!-- CONFIGURAÇÕES -->
             <section id="sec-configuracoes" class="page-section hidden">
                 <div class="page-header"><h1 class="page-title"><i class="ph-duotone ph-gear"></i> Configurações do Sistema</h1></div>
@@ -640,7 +802,14 @@
                             </div>
                         </div>
                         <div class="flex action-bar-mobile" style="justify-content: flex-end;">
-                            <button class="btn btn-success" style="width: 100%;" onclick="saveConfigurations()"><i class="ph ph-floppy-disk"></i> Salvar Todas as Configurações</button>
+                            <button
+                                type="button"
+                                class="btn btn-success"
+                                style="width: 100%; min-height: 46px; box-sizing: border-box;"
+                                onclick="saveConfigurations()">
+                                <i class="ph ph-floppy-disk"></i>
+                                <span>Salvar Todas as Configurações</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -804,35 +973,81 @@
     </div>
 
 
-    <!-- MODAL DE ESCOLHA DE TIPO DE ENTREGADOR -->
+ <!-- MODAL DE DESPACHO INTELIGENTE (GPS) -->
 <div class="modal-overlay" id="modalEscolhaEntregador">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
         <div class="modal-header">
-            <h3><i class="ph ph-motorcycle"></i> Despachar Pedido</h3>
+            <h3><i class="ph ph-rocket-launch" style="color: var(--brand-primary);"></i> Despacho Inteligente</h3>
             <button class="close-modal" onclick="closeModal('modalEscolhaEntregador')">&times;</button>
         </div>
         <div class="modal-body">
-            <p style="margin-bottom: 20px; color: var(--text-muted);">Como você deseja despachar este pedido?</p>
+            <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                O Motor Logístico buscará automaticamente o entregador <strong>mais próximo</strong> via satélite (GPS).
+                <br><br>Se ninguém estiver na área, o pedido será lançado no <strong>Radar Aberto</strong> para a praça.
+            </p>
             <input type="hidden" id="despacho-pedido-id">
+
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="btn btn-primary" style="padding: 12px;" onclick="despacharParaTipo('empresa')">
-                    <i class="ph ph-buildings"></i> Entregador da Empresa (Fixo)
-                </button>
-                <button class="btn btn-success" style="padding: 12px;" onclick="despacharParaTipo('autonomo')">
-                    <i class="ph ph-users-three"></i> Enviar para Praça (Autônomo / Geral)
+                <button class="btn btn-primary" id="btn-disparar-motor" style="padding: 14px; font-size: 1.05rem;" onclick="acionarDespachoInteligente()">
+                    <i class="ph ph-radar"></i> Localizar e Disparar Pedido
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- MODAL DE EDIÇÃO DE PEDIDO ADMIN (COMPLETO) -->
+<div class="modal-overlay" id="modalEditarPedidoAdmin">
+    <div class="modal-content" style="max-width: 550px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-pencil"></i> Editar Pedido #<span id="edit-ord-id-label"></span></h3>
+            <button class="close-modal" onclick="closeModal('modalEditarPedidoAdmin')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-editar-pedido" onsubmit="event.preventDefault(); salvarEdicaoPedido();">
+                <input type="hidden" id="edit-ord-id">
 
+                <div class="form-group">
+                    <label>Nome do Cliente</label>
+                    <input type="text" class="form-control" id="edit-ord-cliente" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Endereço de Entrega</label>
+                    <input type="text" class="form-control" id="edit-ord-endereco" required>
+                </div>
+
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Valor Total (R$)</label>
+                        <input type="text" class="form-control" id="edit-ord-total" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Troco Para (R$)</label>
+                        <input type="text" class="form-control" id="edit-ord-troco" placeholder="Ex: 50,00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Alteração de Itens / Observações</label>
+                    <textarea class="form-control" id="edit-ord-obs" rows="3" placeholder="Registre alterações de itens, sabores ou remoções aqui..."></textarea>
+                </div>
+
+                <div class="modal-footer" style="padding: 0; border: none; margin-top: 15px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarPedidoAdmin')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
   <script>
         const API_BASE_URL = "/api";
         let currentActiveId = null;
         let chartFluxoInstance = null;
         let chartOuvidoriaInstance = null;
+        let cachePedidosGlobal = {};
 
         // =========================================================================
         // 1. FUNÇÃO DE API BLINDADA (SEGURANÇA MULTI-TENANT)
@@ -872,10 +1087,20 @@
             }
         }
 
+
+function ativarAgoraGestor() {
+    document.getElementById('toast-trial').style.right = '-400px';
+    const linkFinanceiro = document.querySelector("a[onclick*='financeiro-gestor']");
+    navigate('financeiro-gestor', linkFinanceiro);
+}
+
+// Chame a verificação assim que o dashboard terminar de carregar
+// Exemplo: coloque verificarTrial() no final da sua função checkAuth() ou initDashboard()
+
         // =========================================================================
         // 2. AUTENTICAÇÃO E SESSÃO
         // =========================================================================
-        async function fazerLoginGestor() {
+    async function fazerLoginGestor() {
             const cnpjInput = document.getElementById('input-login-cnpj').value;
             try {
                 const res = await fetch(`${API_BASE_URL}/gestor/auth`, {
@@ -889,13 +1114,18 @@
                     localStorage.setItem('deliveryon_empresa_id', dados.empresa_id);
                     localStorage.setItem('deliveryon_empresa_nome', dados.nome_fantasia);
 
+                    // SALVA OS DADOS FINANCEIROS
+                    localStorage.setItem('deliveryon_vencimento', dados.vencimento);
+                    localStorage.setItem('deliveryon_pix_qr', dados.pix_qrcode || '');
+                    localStorage.setItem('deliveryon_pix_chave', dados.pix_chave || '');
+                    localStorage.setItem('deliveryon_status_pagamento', dados.status_pagamento || '');
                     document.getElementById('auth-overlay').style.display = 'none';
                     inicializarPainel();
                 } else {
-                    alert("CNPJ não encontrado ou empresa inativa na base de dados.");
+                    alert("CNPJ não encontrado ou empresa inativa.");
                 }
             } catch (err) {
-                alert("Erro ao conectar com o servidor da API.");
+                alert("Erro ao conectar com o servidor.");
             }
         }
 
@@ -952,42 +1182,107 @@
             }
         }
 
-        async function loadOrders() {
-            const orders = await apiRequest('/orders');
-            const tbody = document.getElementById('tbody-recent-orders');
-            if (!tbody) return;
+      async function loadOrders() {
+    const orders = await apiRequest('/orders');
+    const tbody = document.getElementById('tbody-recent-orders');
+    if (!tbody) return;
 
-            tbody.innerHTML = '';
-            if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
-                return;
-            }
+    tbody.innerHTML = '';
+    cachePedidosGlobal = {}; // Limpa o cache
 
-            orders.forEach(order => {
-                const statusAtual = order.status || 'Aprovado / Preparando';
-                tbody.innerHTML += `
-                    <tr data-id="${order.id}">
-                        <td><strong>#${order.id}</strong><br><span style="font-size: 0.8rem; color: #999;">${order.hora || ''}</span></td>
-                        <td>${order.cliente || order.cliente_nome || 'Cliente'}<br><span style="font-size: 0.8rem; color: #999;">${order.endereco || order.endereco_entrega || ''}</span></td>
-                        <td>R$ ${order.total || order.valor_total || '0,00'}</td>
-                        <td>
-                            <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${order.id}', this)">
-                                <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
-                                <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
-                                <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
-                                <option value="Saiu para entrega" ${statusAtual === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
-                                <option value="Entregue" ${statusAtual === 'Entregue' ? 'selected' : ''}>Entregue</option>
-                                <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
-                            </select>
-                        </td>
-                        <td style="text-align: right;">
-                            <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${order.id}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
-                            <button class="btn-action" title="Visualizar" onclick="viewOrder('${order.id}')"><i class="ph ph-eye"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum pedido encontrado.</td></tr>`;
+        return;
+    }
+
+    orders.forEach(order => {
+        cachePedidosGlobal[order.id] = order;
+
+        // Normalização de campos para evitar que o pedido suma por divergência de nomes
+        const orderId = order.id || order.pedido_id || '---';
+        const horaPedido = order.hora || 'Agora';
+        const nomeCliente = order.cliente || order.cliente_nome || 'Cliente Anônimo';
+        const enderecoCliente = order.endereco || order.endereco_entrega || 'Endereço não informado';
+        const totalPedido = order.total || order.valor_total || '0,00';
+
+        const statusAtual = order.status || 'Aguardando pagamento';
+
+        let botaoEditarHtml = '';
+        const statusPermitidos = ['Aguardando pagamento', 'Aprovado / Preparando', 'Aguardando Entregador'];
+
+        if (statusPermitidos.includes(statusAtual)) {
+            botaoEditarHtml = `<button class="btn-action" title="Editar Pedido" onclick="abrirModalEditarPedido('${orderId}')" style="margin-right: 4px; color: var(--info);"><i class="ph ph-pencil"></i></button>`;
         }
+
+        tbody.innerHTML += `
+            <tr data-id="${orderId}">
+                <td><strong>#${orderId}</strong><br><span style="font-size: 0.8rem; color: #999;">${horaPedido}</span></td>
+                <td>${nomeCliente}<br><span style="font-size: 0.8rem; color: #999;">${enderecoCliente}</span></td>
+                <td>R$ ${totalPedido}</td>
+                <td>
+                    <select class="form-control" style="padding: 5px; font-weight: bold; font-size: 0.85rem;" onchange="updateOrderStatus('${orderId}', this)">
+                        <option value="Aguardando pagamento" ${statusAtual === 'Aguardando pagamento' ? 'selected' : ''}>Aguardando pagamento</option>
+                        <option value="Aprovado / Preparando" ${statusAtual === 'Aprovado / Preparando' ? 'selected' : ''}>Aprovado / Preparando</option>
+                        <option value="Aguardando Entregador" ${statusAtual === 'Aguardando Entregador' ? 'selected' : ''}>Aguardando Entregador</option>
+                        <option value="Saiu para entrega" ${statusAtual === 'Saiu para entrega' ? 'selected' : ''}>Saiu para entrega</option>
+                        <option value="Entregue" ${statusAtual === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                        <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                    </select>
+                </td>
+                <td style="text-align: right;">
+                    <button class="btn-action" title="Despachar Pedido" onclick="abrirModalDespacho('${orderId}')" style="margin-right: 4px; color: var(--brand-primary);"><i class="ph ph-motorcycle"></i></button>
+                    ${botaoEditarHtml}
+                    <button class="btn-action" title="Visualizar" onclick="viewOrder('${orderId}')"><i class="ph ph-eye"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+async function salvarEdicaoPedido() {
+    const id = document.getElementById('edit-ord-id').value;
+    const payload = {
+        cliente_nome: document.getElementById('edit-ord-cliente').value,
+        endereco_entrega: document.getElementById('edit-ord-endereco').value,
+        valor_total: parseFloat(document.getElementById('edit-ord-total').value.replace(',', '.')) || 0,
+        troco_para: document.getElementById('edit-ord-troco').value,
+        observacoes: document.getElementById('edit-ord-obs').value
+    };
+
+    const res = await apiRequest(`/orders/${id}`, 'PUT', payload);
+    if (res) {
+        alert('Pedido alterado com sucesso!');
+        closeModal('modalEditarPedidoAdmin');
+        loadOrders();
+        loadDashboardData();
+    } else {
+        alert('Falha ao atualizar o pedido. Verifique os dados ou o status da conexão.');
+    }
+}
+
+function abrirModalEditarPedido(id) {
+    // Busca o pedido completo direto da memória (cache) usando o ID
+    const o = cachePedidosGlobal[id];
+
+    if (!o) {
+        alert("Erro: Dados do pedido não encontrados na memória.");
+        return;
+    }
+
+    const modal = document.getElementById('modalEditarPedidoAdmin');
+
+    // Preenche os dados nos campos fixos do HTML
+    document.getElementById('edit-ord-id').value = o.id;
+    document.getElementById('edit-ord-id-label').innerText = o.id;
+    document.getElementById('edit-ord-cliente').value = o.cliente || o.cliente_nome || '';
+    document.getElementById('edit-ord-endereco').value = o.endereco || o.endereco_entrega || '';
+    document.getElementById('edit-ord-total').value = o.total || o.valor_total || '';
+
+    // Preenche os novos campos caso existam no objeto
+    document.getElementById('edit-ord-troco').value = o.troco_para || '';
+    document.getElementById('edit-ord-obs').value = o.observacoes || '';
+
+    modal.classList.add('active');
+}
 
         async function updateOrderStatus(orderId, selectElement) {
             const novoStatus = selectElement.value;
@@ -1520,6 +1815,10 @@
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
             }
+
+            if (sectionId === 'financeiro-gestor') {
+                carregarFinanceiroGestor();
+            }
         }
 
         function toggleSidebar() {
@@ -1540,6 +1839,7 @@
 
         // Função de Inicialização Consolidada
         function inicializarPainel() {
+            verificarVencimentoSaaS();
             loadDashboardData();
             loadProducts();
             loadClients();
@@ -1608,19 +1908,36 @@
             document.getElementById('modalEscolhaEntregador').classList.add('active');
         }
 
-        async function despacharParaTipo(tipo) {
+       // Aciona o Motor de Matchmaking no backend (Python + PostgreSQL)
+        async function acionarDespachoInteligente() {
             const orderId = document.getElementById('despacho-pedido-id').value;
-            closeModal('modalEscolhaEntregador');
+            const btn = document.getElementById('btn-disparar-motor');
+            const textoOriginal = btn.innerHTML;
 
-            let novoStatus = tipo === 'autonomo' ? 'Aguardando Entregador' : 'Saiu para entrega';
-            let payload = { status: novoStatus, tipo_despacho: tipo };
+            // Efeito visual de carregamento enquanto o backend calcula as distâncias
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Mapeando raio de entrega...';
+            btn.disabled = true;
+            btn.style.opacity = '0.8';
 
-            const res = await apiRequest(`/orders/${orderId}/despachar-proximos`, 'POST', payload);
-            if (res) {
-                alert(`Pedido #${orderId} despachado com sucesso via ${tipo === 'empresa' ? 'Frota Própria' : 'Autônomo'}!`);
-                loadOrders();
-            } else {
-                alert("Erro ao despachar o pedido.");
+            try {
+                // Chama a nova rota inteligente que você criou no Python
+                const res = await apiRequest(`/orders/${orderId}/despachar-proximos`, 'POST', {});
+
+                if (res && res.success) {
+                    // O backend vai nos dizer se achou alguém perto ou se jogou no Radar
+                    alert(`🟢 Operação Concluída: ${res.message}`);
+                    closeModal('modalEscolhaEntregador');
+                    loadOrders(); // Atualiza a tabela na hora
+                    loadDashboardData(); // Atualiza os contadores
+                } else {
+                    alert("Erro ao despachar o pedido. Verifique o console.");
+                }
+            } catch (error) {
+                alert("Erro de comunicação com o motor logístico.");
+            } finally {
+                btn.innerHTML = textoOriginal;
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
         }
 
@@ -1678,6 +1995,224 @@
                 btn.disabled = false;
             }
         }
+
+// ATUALIZAÇÃO DEFINITIVA DA FUNÇÃO DE STATUS
+function calcularStatusVencimento() {
+    const diaVencimento = parseInt(localStorage.getItem('deliveryon_vencimento')) || 10;
+
+    // Agora o banco não devolve apenas "Em Dia", ele devolve o mês/ano de referência pago (Ex: "10/2026")
+    const statusBanco = localStorage.getItem('deliveryon_status_pagamento') || '';
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1; // getMonth() é de 0 a 11, então somamos 1
+
+    // Ex: "10/2026"
+    const mesReferenciaAtual = `${String(mesAtual).padStart(2, '0')}/${anoAtual}`;
+
+    let dataVencimentoAtual = new Date(anoAtual, mesAtual - 1, diaVencimento);
+    const diffTimeAtual = dataVencimentoAtual.getTime() - hoje.getTime();
+    const diffDaysAtual = Math.round(diffTimeAtual / (1000 * 3600 * 24));
+
+    let diasRestantesOuCarencia = 0;
+    let statusEnum = "EM_DIA";
+
+    // REGRA 1: O cliente PAGOU O MÊS ATUAL? (Ex: Se estamos em Outubro/2026, ele tem o carimbo 10/2026?)
+    if (statusBanco === mesReferenciaAtual) {
+        // Se já pagou o mês atual, a próxima fatura só vence no mês que vem.
+        let dataVencimentoProximo = new Date(anoAtual, mesAtual, diaVencimento);
+        const diffTimeProximo = dataVencimentoProximo.getTime() - hoje.getTime();
+        diasRestantesOuCarencia = Math.round(diffTimeProximo / (1000 * 3600 * 24));
+
+        return { statusEnum: "EM_DIA", diasRestantesOuCarencia, diffDays: diffDaysAtual };
+    }
+
+    // REGRA 2: Se AINDA NÃO PAGOU O MÊS ATUAL
+    if (diffDaysAtual > 0) {
+        // Ainda vai vencer neste mês (Ex: Hoje é 5, vence dia 10 -> Faltam 5 dias)
+        statusEnum = "EM_DIA";
+        diasRestantesOuCarencia = diffDaysAtual;
+    } else if (diffDaysAtual === 0) {
+        // Vence exatamente hoje
+        statusEnum = "EM_DIA";
+        diasRestantesOuCarencia = 0;
+    } else {
+        // Já passou do vencimento neste mês (Ex: Hoje é 12, venceu dia 10)
+        const diasAtrasados = Math.abs(diffDaysAtual);
+        const carenciaMaxima = 7;
+        const carenciaRestante = carenciaMaxima - diasAtrasados;
+
+        if (carenciaRestante > 0) {
+            statusEnum = "CARENCIA";
+            diasRestantesOuCarencia = carenciaRestante;
+        } else {
+            statusEnum = "VENCIDO";
+            diasRestantesOuCarencia = 0;
+        }
+    }
+
+    return { statusEnum, diasRestantesOuCarencia, diffDays: diffDaysAtual };
+}
+
+function verificarVencimentoSaaS() {
+    const info = calcularStatusVencimento();
+    const toast = document.getElementById('toast-trial');
+    const diasTexto = document.getElementById('dias-restantes-texto');
+
+    if (toast && diasTexto) {
+        if (info.statusEnum === "CARENCIA") {
+            diasTexto.innerText = info.diasRestantesOuCarencia + " dias para bloquear";
+            setTimeout(() => {
+                toast.style.right = '30px';
+            }, 1500);
+        } else if (info.statusEnum === "VENCIDO") {
+            diasTexto.innerText = "0 dias (Bloqueado)";
+            setTimeout(() => {
+                toast.style.right = '30px';
+            }, 1500);
+        } else if (info.statusEnum === "EM_DIA" && info.diasRestantesOuCarencia <= 7) {
+            diasTexto.innerText = info.diasRestantesOuCarencia + " dias";
+            setTimeout(() => {
+                toast.style.right = '30px';
+            }, 1500);
+        } else {
+            toast.style.right = '-400px';
+        }
+    }
+}
+
+async function carregarFinanceiroGestor() {
+    const info = calcularStatusVencimento();
+    let statusTexto = "";
+    let corBorda = "var(--brand-primary)";
+
+    if (info.statusEnum === "CARENCIA") {
+        statusTexto = `Status: Atrasado (Carência) - Faltam ${info.diasRestantesOuCarencia} dias para bloquear`;
+        corBorda = "var(--warning)";
+    } else if (info.statusEnum === "VENCIDO") {
+        statusTexto = `Status: Vencido! Acesso bloqueado. Regularize via PIX.`;
+        corBorda = "var(--danger)";
+    } else {
+        statusTexto = `Status: Ativo (Vence em ${info.diasRestantesOuCarencia} dias)`;
+        corBorda = "var(--brand-primary)";
+    }
+
+    const faturasContainer = document.getElementById('faturas-abertas-container');
+    if(faturasContainer) {
+        faturasContainer.innerHTML = `
+            <div style="background: white; border-left: 6px solid ${corBorda}; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <h4 style="color: var(--brand-primary); text-transform: uppercase; margin-bottom: 10px; font-size: 1.1rem; font-weight: 800;">PLANO DELIVERYON MENSAL</h4>
+                <span style="font-size: 0.85rem; font-weight: bold; color: #555;">${statusTexto}</span>
+
+                <div style="font-size: 2.2rem; font-weight: 300; margin: 15px 0; color: #111;">
+                    <strong>R$</strong> 40,00 <span style="font-size: 0.9rem; color: #777;">/mês</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Utilize o botão abaixo para realizar a ativação antecipada ou regularizar sua assinatura via PIX.</p>
+
+                <button onclick="abrirModalPixGestor()"
+                        style="width: 100%; padding: 12px; background: var(--brand-primary); color: white; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                    Ativar / Pagar com PIX
+                </button>
+            </div>
+        `;
+    }
+
+    const tbodyHist = document.getElementById('tbody-historico-faturas');
+    if(tbodyHist) {
+        tbodyHist.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777; padding: 20px;">Carregando histórico...</td></tr>`;
+
+        const historico = await apiRequest('/financeiro/historico');
+
+        if (!historico || historico.length === 0) {
+            tbodyHist.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #aaa; padding: 20px;">Nenhum registro de pagamento anterior encontrado.</td></tr>`;
+            return;
+        }
+
+        tbodyHist.innerHTML = '';
+        historico.forEach(fatura => {
+            const iconeNota = fatura.nota_fiscal ? `<i class="ph ph-receipt" style="font-size: 1.2rem; cursor: pointer; color: #4CAF50;" title="Baixar Nota Fiscal"></i>` : '-';
+            tbodyHist.innerHTML += `
+                <tr style="border-bottom: 1px solid #333;">
+                    <td style="padding: 15px; color: #aaa;">${fatura.id || '-'}</td>
+                    <td style="padding: 15px; color: #fff;">${fatura.descricao_mes || fatura.mes_ref || ''}</td>
+                    <td style="padding: 15px; color: #fff;">R$ ${typeof fatura.valor === 'number' ? fatura.valor.toFixed(2).replace('.', ',') : '40,00'}</td>
+                    <td style="padding: 15px; text-align: center;">${iconeNota}</td>
+                </tr>
+            `;
+        });
+    }
+}
+
+async function abrirModalPixGestor() {
+    const modal = document.getElementById('modalFinanceiroSaaS');
+    const imgQr = document.getElementById('modal-pix-qrcode');
+    const txtChave = document.getElementById('modal-pix-chave');
+    const textoAviso = document.getElementById('modal-texto-aviso');
+    const tituloBloqueio = document.getElementById('modal-titulo-bloqueio');
+
+    // Usa a mesma função inteligente de cálculo de status/dias
+    const info = calcularStatusVencimento();
+
+    if (info.statusEnum === "CARENCIA") {
+        tituloBloqueio.innerText = "Aviso de Vencimento";
+        textoAviso.innerText = `Sua mensalidade venceu e está em período de carência. Faltam ${info.diasRestantesOuCarencia} dia(s) para o bloqueio total.`;
+    } else if (info.statusEnum === "VENCIDO") {
+        tituloBloqueio.innerText = "Acesso Bloqueado";
+        textoAviso.innerText = `Sua mensalidade venceu há mais de 7 dias e o acesso está restrito.`;
+    } else {
+        tituloBloqueio.innerText = "Regularização / Pagamento PIX";
+        textoAviso.innerText = `Sua assinatura está em dia. Vence em ${info.diasRestantesOuCarencia} dias.`;
+    }
+
+    // Abre o modal imediatamente
+    modal.classList.add('active');
+    imgQr.style.display = "none";
+    txtChave.value = "Carregando dados globais do PIX...";
+
+    let qrCodeUrl = "";
+    let chavePixTexto = "";
+
+    // 1. Busca prioritária do localStorage global que o Master salva
+    chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_gestor') || "";
+    qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor') || "";
+
+    // 2. Se não encontrar no localStorage, tenta buscar via API
+    if (!chavePixTexto || !qrCodeUrl) {
+        try {
+            const configGlobal = await apiRequest('/configuracoes-globais/gestor');
+            if (configGlobal) {
+                if (configGlobal.pix_chave) chavePixTexto = configGlobal.pix_chave;
+                if (configGlobal.pix_qrcode) qrCodeUrl = configGlobal.pix_qrcode;
+            }
+        } catch (err) {
+            console.warn("Aviso na busca da API global:", err);
+        }
+    }
+
+    // 3. Fallback para dados salvos individualmente na empresa (caso exista)
+    if (!chavePixTexto) {
+        chavePixTexto = localStorage.getItem('deliveryon_pix_chave') || "";
+    }
+    if (!qrCodeUrl) {
+        qrCodeUrl = localStorage.getItem('deliveryon_pix_qr') || "";
+    }
+
+    // 4. Exibe os dados na tela do modal do Gestor
+    if (qrCodeUrl && qrCodeUrl !== "null" && qrCodeUrl.trim() !== "") {
+        imgQr.style.display = "block";
+        imgQr.src = qrCodeUrl;
+    } else {
+        imgQr.style.display = "none";
+    }
+
+    if (chavePixTexto && chavePixTexto !== "null" && chavePixTexto.trim() !== "") {
+        txtChave.value = chavePixTexto;
+    } else {
+        txtChave.value = "Chave PIX padrão do sistema não configurada. Entre em contato com o suporte.";
+    }
+}
 
         window.onload = function() {
             const empresaId = localStorage.getItem('deliveryon_empresa_id');
