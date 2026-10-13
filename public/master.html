@@ -739,6 +739,14 @@
 
     <!-- JAVASCRIPT MASTER INTEGRADO -->
     <script>
+
+        function sanitizeHTML(str) {
+    if (typeof str !== 'string') return str;
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+               
         let alertasGlobaisCache = [];
         let empresasGlobaisCache = [];
         let entregadoresGlobaisCache = [];
@@ -781,41 +789,39 @@
             }
         }
 
-        async function autenticarMaster() {
-            const tokenExistente = localStorage.getItem('deliveryon_master_token');
-            if (tokenExistente) {
-                liberarPainel();
-                return;
-            }
-
-            const senha = prompt("🔒 Área Restrita.\nInsira a Chave de Segurança Master:");
-            if (!senha) {
-                window.location.href = "index.html";
-                return;
-            }
-
+       
+        async function autenticarMaster(email, senha) {
             try {
-                const response = await fetch('/api/master/auth', {
+                // Exemplo de integração com seu backend real
+                const response = await fetch('URL_DA_SUA_API/auth/master', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ senha: senha })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, senha })
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('deliveryon_master_token', data.token);
-                    liberarPainel();
-                } else {
-                    alert("Acesso negado. Senha incorreta.");
-                    window.location.reload();
+        
+                if (!response.ok) {
+                    throw new Error('Credenciais inválidas ou erro no servidor');
                 }
+        
+                const data = await response.json();
+                
+                // Salva o token real
+                localStorage.setItem('deliveryon_master_token', data.token);
+                
+                // Fecha a tela/modal de login e inicia o sistema
+                document.getElementById('modalLoginMaster').style.display = 'none';
+                carregarDashboard();
+                mostrarToast('Sucesso', 'Login efetuado com sucesso', 'success');
+        
             } catch (error) {
-                // Modo protótipo/fallback se a API não estiver rodando localmente
-                localStorage.setItem('deliveryon_master_token', 'token_mock_valido');
-                liberarPainel();
+                // O Catch NÃO gera mais token falso para forçar a entrada
+                console.error("Falha na autenticação:", error);
+                mostrarToast('Erro', 'Usuário ou senha incorretos.', 'error');
             }
         }
-
+        
         function liberarPainel() {
             document.body.style.display = "flex";
             carregarMetricas();
@@ -1214,43 +1220,42 @@ async function carregarFinanceiro() {
             }
         }
 
+function renderizarTabelaEmpresas(listaEmpresas) {
+    const tbody = document.getElementById('tabelaEmpresasBody');
+    tbody.innerHTML = ''; // Limpa a tabela atual
 
-        function renderizarTabelaEmpresas(lista) {
-    const tbody = document.getElementById('tabela-empresas');
-    tbody.innerHTML = '';
-
-    lista.forEach(emp => {
-        const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
-        const statusTexto = emp.status === 'ativo' ? 'Ativo' : 'Inativo';
-        const empString = JSON.stringify(emp).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-
-        tbody.innerHTML += `
-            <tr>
-                <td><strong>${emp.nome_fantasia}</strong><br><small style="color:var(--text-muted);">${emp.razao_social || ''}</small></td>
-                <td>${emp.cnpj}</td>
-                <td><div style="font-weight: 600;">Dia ${emp.vencimento || 5}</div></td>
-                <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
-                <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                    <button class="btn-action" title="Gerar Contrato" onclick="abrirContratoEmpresa(${emp.id})"><i class="ph ph-scroll"></i></button>
-                    <button class="btn-action" title="Editar Cliente" onclick="abrirEditar(JSON.parse('${empString}'))"><i class="ph ph-pencil-simple"></i></button>
-                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                </td>
-            </tr>
+    listaEmpresas.forEach(empresa => {
+        const tr = document.createElement('tr');
+        
+        // Uso do sanitizeHTML para evitar injeção de scripts no painel
+        tr.innerHTML = `
+            <td>${sanitizeHTML(empresa.id)}</td>
+            <td><strong>${sanitizeHTML(empresa.nome)}</strong></td>
+            <td>${sanitizeHTML(empresa.documento)}</td>
+            <td>
+                <span class="badge ${empresa.status === 'Ativo' ? 'badge-success' : 'badge-danger'}">
+                    ${sanitizeHTML(empresa.status)}
+                </span>
+            </td>
+            <td>
+                <button onclick="abrirDetalhesEmpresa('${empresa.id}')" class="btn btn-sm btn-primary">Detalhes</button>
+            </td>
         `;
+        tbody.appendChild(tr);
     });
 }
 
-        function filtrarEmpresas() {
-            let filtro = document.getElementById('busca-empresas').value.toLowerCase();
-            let linhas = document.getElementById('tabela-empresas').getElementsByTagName('tr');
-            for (let i = 0; i < linhas.length; i++) {
-                let td = linhas[i].getElementsByTagName('td');
-                if (td.length > 0) {
-                    let textoLinha = td[0].textContent + " " + td[1].textContent;
-                    linhas[i].style.display = textoLinha.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
-                }
-            }
-        }
+function filtrarEmpresas() {
+    const termo = document.getElementById('inputBuscaEmpresa').value.toLowerCase();
+    
+    // Filtra o array na memória (empresasGlobaisCache) em vez de iterar sobre o HTML
+    const listaFiltrada = empresasGlobaisCache.filter(emp => 
+        emp.nome.toLowerCase().includes(termo) || 
+        (emp.documento && emp.documento.includes(termo))
+    );
+
+    renderizarTabelaEmpresas(listaFiltrada);
+}
 
         async function cadastrarEmpresa(e) {
             e.preventDefault();
