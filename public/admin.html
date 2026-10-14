@@ -1130,9 +1130,12 @@ function ativarAgoraGestor() {
         }
 
         function logoutGestor() {
-            localStorage.removeItem('deliveryon_empresa_id');
-            localStorage.removeItem('deliveryon_empresa_nome');
-            location.reload();
+            localStorage.removeItem('empresa_logada_cnpj');
+            localStorage.removeItem('empresa_logada_id');
+            localStorage.removeItem('empresa_logada_vencimento');
+
+
+            window.location.reload();
         }
 
         // =========================================================================
@@ -2061,22 +2064,26 @@ function verificarVencimentoSaaS() {
     const toast = document.getElementById('toast-trial');
     const diasTexto = document.getElementById('dias-restantes-texto');
 
-    // 1. SE ESTIVER VENCIDO: TRAVA O SISTEMA IMEDIATAMENTE
+// 1. SE ESTIVER VENCIDO: TRAVA O SISTEMA IMEDIATAMENTE
     if (info.statusEnum === "VENCIDO") {
-        abrirModalPixGestor(); // Força a abertura do modal PIX
+        // Força a abertura do modal injetando a classe CSS diretamente
+        const modalBloqueio = document.getElementById('modalFinanceiroSaaS');
+        if (modalBloqueio) {
+            modalBloqueio.classList.add('active');
+        }
 
-        // Remove APENAS os botões de fechar para o cliente não conseguir fugir da tela para o sistema
+        // Remove os botões de fechar para o cliente não conseguir fugir
         const btnFecharTop = document.querySelector('#modalFinanceiroSaaS .close-modal');
         const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .btn-fechar-cobranca');
 
         if(btnFecharTop) btnFecharTop.style.display = 'none';
         if(btnFecharBottom) btnFecharBottom.style.display = 'none';
 
-        // Atualiza o toast só por garantia visual
+        // Atualiza o toast
         if (diasTexto) diasTexto.innerText = "0 dias (Bloqueado)";
         if (toast) toast.style.right = '30px';
 
-        return; // Interrompe a execução para não rodar o resto
+        return; // Interrompe a execução aqui
     }
 
     // 2. SE NÃO ESTIVER VENCIDO: GARANTE QUE OS BOTÕES DE FECHAR EXISTAM
