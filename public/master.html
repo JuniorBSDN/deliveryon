@@ -1440,53 +1440,79 @@ async function salvarBaixaFinanceira() {
         }
 
         function renderizarTabelaEntregadores(lista) {
-            const tbody = document.getElementById('tabela-entregadores');
-            tbody.innerHTML = '';
+    const tbody = document.getElementById('tabela-entregadores');
+    tbody.innerHTML = '';
 
-            let online = 0, emRota = 0, bloqueados = 0;
+    let online = 0, emRota = 0, bloqueados = 0;
 
-            if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum entregador cadastrado.</td></tr>';
-                document.getElementById('ind-ent-total').innerText = 0;
-                document.getElementById('ind-ent-online').innerText = 0;
-                document.getElementById('ind-ent-rota').innerText = 0;
-                document.getElementById('ind-ent-bloqueados').innerText = 0;
-                return;
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum entregador cadastrado.</td></tr>';
+        document.getElementById('ind-ent-total').innerText = 0;
+        document.getElementById('ind-ent-online').innerText = 0;
+        document.getElementById('ind-ent-rota').innerText = 0;
+        document.getElementById('ind-ent-bloqueados').innerText = 0;
+        return;
+    }
+
+    lista.forEach(ent => {
+        // Puxa o cálculo financeiro inteligente
+        const calculo = calcularStatusFinanceiroMaster(ent.vencimento || 10, ent.mes_liberado);
+
+        let statusOriginal = ent.status || 'Disponível';
+        let badgeClass = 'badge-success';
+        let statusTexto = statusOriginal;
+
+        // Lógica de sobreposição: Bloqueio Financeiro e Manual
+        if (statusOriginal === 'Bloqueado') {
+            badgeClass = 'badge-danger';
+            statusTexto = 'Bloqueado (Manual)';
+            bloqueados++;
+        } else if (calculo.statusEnum === 'VENCIDO') {
+            badgeClass = 'badge-danger';
+            statusTexto = 'Bloqueado (Finan.)';
+            bloqueados++; // Conta como bloqueado nos indicadores do topo
+        } else if (calculo.statusEnum === 'CARENCIA') {
+            badgeClass = 'badge-warning';
+            statusTexto = 'Atrasado';
+            // Conta no status logístico normal, pois a carência ainda permite rodar
+            if (statusOriginal === 'Disponível' || statusOriginal === 'Online') online++;
+            if (statusOriginal === 'Em Entrega' || statusOriginal === 'Em Rota') emRota++;
+        } else {
+            // Em Dia: usa o status logístico normal
+            if (statusOriginal === 'Disponível' || statusOriginal === 'Online') {
+                badgeClass = 'badge-success';
+                online++;
+            } else if (statusOriginal === 'Em Entrega' || statusOriginal === 'Em Rota') {
+                badgeClass = 'badge-info';
+                emRota++;
+            } else {
+                badgeClass = 'badge-info';
             }
-
-            lista.forEach(ent => {
-                const status = ent.status || 'Disponível';
-                if (status === 'Disponível' || status === 'Online') online++;
-                if (status === 'Em Entrega' || status === 'Em Rota') emRota++;
-                if (status === 'Bloqueado') bloqueados++;
-
-                const badgeClass = status === 'Disponível' || status === 'Online' ? 'badge-success' : (status === 'Bloqueado' ? 'badge-danger' : 'badge-info');
-                const entString = JSON.stringify(ent).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-
-                const diaVenc = ent.vencimento || 10;
-                const ultPagto = ent.mes_liberado || 'Pendente';
-                const corPagto = ultPagto === 'Pendente' ? 'color: var(--danger); font-weight: bold;' : 'color: var(--text-muted);';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">${ent.veiculo || 'Moto'} (${ent.veiculo_placa || 'Sem Placa'})</small></td>
-                        <td>${ent.telefone || '--'}</td>
-                        <td><div style="font-weight: 600;">Dia ${ent.vencimento || 10}</div></td>
-                        <td><span class="badge ${badgeClass}">${status}</span></td>
-                        <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Termo de Licenciamento" onclick="abrirContratoEntregador(${ent.id})"><i class="ph ph-scroll"></i></button>
-                            <button class="btn-action" title="Editar Entregador" onclick="abrirEditarEntregador(JSON.parse('${entString}'))"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Excluir" onclick="deletarEntregador(${ent.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('ind-ent-total').innerText = lista.length;
-            document.getElementById('ind-ent-online').innerText = online;
-            document.getElementById('ind-ent-rota').innerText = emRota;
-            document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
         }
+
+        const entString = JSON.stringify(ent).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">${ent.veiculo || 'Moto'} (${ent.veiculo_placa || 'Sem Placa'})</small></td>
+                <td>${ent.telefone || '--'}</td>
+                <td><div style="font-weight: 600;">Dia ${ent.vencimento || 10}</div></td>
+                <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
+                <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                    <button class="btn-action" title="Termo de Licenciamento" onclick="abrirContratoEntregador(${ent.id})"><i class="ph ph-scroll"></i></button>
+                    <button class="btn-action" title="Editar Entregador" onclick="abrirEditarEntregador(JSON.parse('${entString}'))"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="btn-action" title="Excluir" onclick="deletarEntregador(${ent.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+
+    // Atualiza os indicadores (cards do topo) com a contagem real considerando os inadimplentes
+    document.getElementById('ind-ent-total').innerText = lista.length;
+    document.getElementById('ind-ent-online').innerText = online;
+    document.getElementById('ind-ent-rota').innerText = emRota;
+    document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
+}
 
         function filtrarEntregadores() {
             let filtro = document.getElementById('filtro-busca-entregador').value.toLowerCase();
