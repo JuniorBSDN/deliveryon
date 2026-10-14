@@ -324,29 +324,42 @@
         </div>
     </div>
 
-    <!-- MODAL DE BLOQUEIO / FINANCEIRO -->
-    <div class="modal-overlay" id="modalFinanceiroSaaS" style="z-index: 9999;">
-        <div class="modal-content" style="max-width: 450px; text-align: center;">
-            <div class="modal-header" style="justify-content: space-between; align-items: center; background: #fff5f5; border-bottom: 1px solid #ffcdd2; padding: 15px 20px;">
-                <h3 style="color: var(--danger); margin: 0; display: flex; align-items: center; gap: 8px;"><i class="ph ph-warning-octagon"></i> <span id="modal-titulo-bloqueio">Acesso Bloqueado</span></h3>
-                <button class="close-modal" onclick="closeModal('modalFinanceiroSaaS')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa;">&times;</button>
+<!-- MODAL DE BLOQUEIO / COBRANÇA FINANCEIRA -->
+<div class="modal-overlay" id="modalFinanceiroSaaS">
+    <div class="modal-content" style="max-width: 450px; text-align: center;">
+
+        <div class="modal-header" style="justify-content: center; background: #fff5f5; border-bottom: 1px solid #ffe3e3;">
+            <h3 style="color: var(--danger);"><i class="ph ph-warning-circle"></i> <span id="modal-titulo-bloqueio">Acesso Bloqueado</span></h3>
+        </div>
+
+        <!-- CORPO DO MODAL -->
+        <div class="modal-body" style="padding: 25px;">
+            <p id="modal-texto-aviso" style="margin-bottom: 15px; font-size: 1.05rem; color: #444;">Sua mensalidade venceu há mais de 7 dias e o acesso está restrito.</p>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-muted);">Efetue o pagamento via PIX utilizando os dados abaixo para liberar ou manter o sistema ativo automaticamente.</p>
+
+            <!-- IMAGEM DO QR CODE -->
+            <div style="background: white; padding: 15px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                <img id="modal-pix-qrcode" src="" alt="QR Code PIX" style="width: 200px; height: 200px; object-fit: contain; display: none;">
             </div>
-            <div class="modal-body" style="padding: 20px;">
-                <p id="modal-texto-aviso" style="font-size: 1.05rem; color: #333; margin-bottom: 15px; font-weight: 600;">Sua mensalidade venceu.</p>
-                <p style="font-size: 0.9rem; color: #777; margin-bottom: 15px;">Efetue o pagamento via PIX utilizando os dados abaixo para liberar ou manter o sistema ativo automaticamente.</p>
 
-                <img id="modal-pix-qrcode" src="" style="width: 200px; height: 200px; object-fit: contain; margin: 10px auto; border: 1px solid #ccc; border-radius: 8px; padding: 10px; display: none;">
-
-                <div class="form-group" style="text-align: left; margin-top: 15px;">
-                    <label>Chave PIX (Copia e Cola):</label>
-                    <textarea id="modal-pix-chave" class="form-control" rows="3" readonly style="background: #f8f9fa; cursor: pointer;" onclick="this.select(); document.execCommand('copy'); alert('Chave PIX copiada!');"></textarea>
+            <!-- CHAVE PIX (COPIA E COLA) -->
+            <div class="form-group" style="text-align: left;">
+                <label style="font-size: 0.85rem; color: var(--text-muted);">Chave PIX (Copia e Cola):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="modal-pix-chave" class="form-control" readonly style="background: #f8f9fa; font-size: 0.85rem; padding: 10px;">
+                    <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('modal-pix-chave').value); alert('Chave PIX copiada!');"><i class="ph ph-copy"></i> Copiar</button>
                 </div>
             </div>
-            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
-                <button type="button" class="btn btn-outline" onclick="closeModal('modalFinanceiroSaaS')">Fechar</button>
-            </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <button type="button" class="btn btn-danger" onclick="logoutGestor()" style="background: transparent; color: var(--danger); border: 1px solid var(--danger);">
+                <i class="ph ph-sign-out"></i> Voltar ao Login
+            </button>
+            <button type="button" class="btn btn-outline btn-fechar-cobranca close-modal" onclick="closeModal('modalFinanceiroSaaS')" style="display: none;">Fechar</button>
         </div>
     </div>
+</div>
 
     <!-- BARRA LATERAL -->
     <aside class="sidebar" id="sidebar">
@@ -1132,7 +1145,13 @@ function ativarAgoraGestor() {
         function logoutGestor() {
             localStorage.removeItem('deliveryon_empresa_id');
             localStorage.removeItem('deliveryon_empresa_nome');
-            location.reload();
+            localStorage.removeItem('deliveryon_vencimento');
+            localStorage.removeItem('deliveryon_pix_qr');
+            localStorage.removeItem('deliveryon_pix_chave');
+            localStorage.removeItem('deliveryon_status_pagamento');
+            localStorage.removeItem('deliveryon_global_pix_chave_gestor');
+            localStorage.removeItem('deliveryon_global_pix_qr_gestor');
+            window.location.reload();
         }
 
         // =========================================================================
@@ -2061,27 +2080,101 @@ function verificarVencimentoSaaS() {
     const toast = document.getElementById('toast-trial');
     const diasTexto = document.getElementById('dias-restantes-texto');
 
+    // SE ESTIVER VENCIDO: ABRE O MODAL DO PIX AUTOMATICAMENTE
+    if (info.statusEnum === "VENCIDO") {
+        abrirModalPixGestor();
+
+        // Oculta os botões de fechar para forçar a regularização
+        const btnFecharTop = document.querySelector('#modalFinanceiroSaaS .close-modal');
+        const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .btn-outline');
+        if(btnFecharTop) btnFecharTop.style.display = 'none';
+        if(btnFecharBottom) btnFecharBottom.style.display = 'none';
+
+        if (diasTexto) diasTexto.innerText = "0 dias (Bloqueado)";
+        if (toast) toast.style.right = '30px';
+        return;
+    }
+
+    // Se não estiver vencido, garante que os botões de fechar aparecem normalmente
+    const btnFecharTop = document.querySelector('#modalFinanceiroSaaS .close-modal');
+    const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .btn-outline');
+    if(btnFecharTop) btnFecharTop.style.display = 'block';
+    if(btnFecharBottom) btnFecharBottom.style.display = 'block';
+
     if (toast && diasTexto) {
         if (info.statusEnum === "CARENCIA") {
             diasTexto.innerText = info.diasRestantesOuCarencia + " dias para bloquear";
-            setTimeout(() => {
-                toast.style.right = '30px';
-            }, 1500);
-        } else if (info.statusEnum === "VENCIDO") {
-            diasTexto.innerText = "0 dias (Bloqueado)";
-            setTimeout(() => {
-                toast.style.right = '30px';
-            }, 1500);
+            setTimeout(() => { toast.style.right = '30px'; }, 1500);
         } else if (info.statusEnum === "EM_DIA" && info.diasRestantesOuCarencia <= 7) {
             diasTexto.innerText = info.diasRestantesOuCarencia + " dias";
-            setTimeout(() => {
-                toast.style.right = '30px';
-            }, 1500);
+            setTimeout(() => { toast.style.right = '30px'; }, 1500);
         } else {
             toast.style.right = '-400px';
         }
     }
 }
+
+async function abrirModalPixGestor() {
+    const modal = document.getElementById('modalFinanceiroSaaS');
+    const imgQr = document.getElementById('modal-pix-qrcode');
+    const txtChave = document.getElementById('modal-pix-chave');
+    const textoAviso = document.getElementById('modal-texto-aviso');
+    const tituloBloqueio = document.getElementById('modal-titulo-bloqueio');
+
+    const info = calcularStatusVencimento();
+
+    if (info.statusEnum === "CARENCIA") {
+        if(tituloBloqueio) tituloBloqueio.innerText = "Aviso de Vencimento";
+        if(textoAviso) textoAviso.innerText = `Sua mensalidade venceu e está em período de carência. Faltam ${info.diasRestantesOuCarencia} dia(s) para o bloqueio total.`;
+    } else if (info.statusEnum === "VENCIDO") {
+        if(tituloBloqueio) tituloBloqueio.innerText = "Acesso Bloqueado";
+        if(textoAviso) textoAviso.innerText = `Sua mensalidade venceu há mais de 7 dias e o acesso está restrito.`;
+    } else {
+        if(tituloBloqueio) tituloBloqueio.innerText = "Regularização / Pagamento PIX";
+        if(textoAviso) textoAviso.innerText = `Sua assinatura está em dia. Vence em ${info.diasRestantesOuCarencia} dias.`;
+    }
+
+    modal.classList.add('active');
+    if(imgQr) imgQr.style.display = "none";
+    if(txtChave) txtChave.value = "Carregando dados do PIX...";
+
+    let qrCodeUrl = "";
+    let chavePixTexto = "";
+
+    // 1. Busca prioritária do localStorage global ou individual
+    chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_gestor') || localStorage.getItem('deliveryon_pix_chave') || "";
+    qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor') || localStorage.getItem('deliveryon_pix_qr') || "";
+
+    // 2. Se não encontrar, tenta buscar via API do gestor
+    if (!chavePixTexto || !qrCodeUrl) {
+        try {
+            const configGlobal = await apiRequest('/configuracoes-globais/gestor');
+            if (configGlobal) {
+                if (configGlobal.pix_chave) chavePixTexto = configGlobal.pix_chave;
+                if (configGlobal.pix_qrcode) qrCodeUrl = configGlobal.pix_qrcode;
+            }
+        } catch (err) {
+            console.warn("Aviso na busca da API global:", err);
+        }
+    }
+
+    // 3. Aplicação visual dos dados no modal
+    if (qrCodeUrl && qrCodeUrl !== "null" && qrCodeUrl.trim() !== "") {
+        if(imgQr) {
+            imgQr.src = qrCodeUrl;
+            imgQr.style.display = "block";
+        }
+    } else {
+        if(imgQr) imgQr.style.display = "none";
+    }
+
+    if (chavePixTexto && chavePixTexto !== "null" && chavePixTexto.trim() !== "") {
+        if(txtChave) txtChave.value = chavePixTexto;
+    } else {
+        if(txtChave) txtChave.value = "Chave PIX não configurada. Entre em contato com o suporte.";
+    }
+}
+
 
 async function carregarFinanceiroGestor() {
     const info = calcularStatusVencimento();
@@ -2142,75 +2235,6 @@ async function carregarFinanceiroGestor() {
                 </tr>
             `;
         });
-    }
-}
-
-async function abrirModalPixGestor() {
-    const modal = document.getElementById('modalFinanceiroSaaS');
-    const imgQr = document.getElementById('modal-pix-qrcode');
-    const txtChave = document.getElementById('modal-pix-chave');
-    const textoAviso = document.getElementById('modal-texto-aviso');
-    const tituloBloqueio = document.getElementById('modal-titulo-bloqueio');
-
-    // Usa a mesma função inteligente de cálculo de status/dias
-    const info = calcularStatusVencimento();
-
-    if (info.statusEnum === "CARENCIA") {
-        tituloBloqueio.innerText = "Aviso de Vencimento";
-        textoAviso.innerText = `Sua mensalidade venceu e está em período de carência. Faltam ${info.diasRestantesOuCarencia} dia(s) para o bloqueio total.`;
-    } else if (info.statusEnum === "VENCIDO") {
-        tituloBloqueio.innerText = "Acesso Bloqueado";
-        textoAviso.innerText = `Sua mensalidade venceu há mais de 7 dias e o acesso está restrito.`;
-    } else {
-        tituloBloqueio.innerText = "Regularização / Pagamento PIX";
-        textoAviso.innerText = `Sua assinatura está em dia. Vence em ${info.diasRestantesOuCarencia} dias.`;
-    }
-
-    // Abre o modal imediatamente
-    modal.classList.add('active');
-    imgQr.style.display = "none";
-    txtChave.value = "Carregando dados globais do PIX...";
-
-    let qrCodeUrl = "";
-    let chavePixTexto = "";
-
-    // 1. Busca prioritária do localStorage global que o Master salva
-    chavePixTexto = localStorage.getItem('deliveryon_global_pix_chave_gestor') || "";
-    qrCodeUrl = localStorage.getItem('deliveryon_global_pix_qr_gestor') || "";
-
-    // 2. Se não encontrar no localStorage, tenta buscar via API
-    if (!chavePixTexto || !qrCodeUrl) {
-        try {
-            const configGlobal = await apiRequest('/configuracoes-globais/gestor');
-            if (configGlobal) {
-                if (configGlobal.pix_chave) chavePixTexto = configGlobal.pix_chave;
-                if (configGlobal.pix_qrcode) qrCodeUrl = configGlobal.pix_qrcode;
-            }
-        } catch (err) {
-            console.warn("Aviso na busca da API global:", err);
-        }
-    }
-
-    // 3. Fallback para dados salvos individualmente na empresa (caso exista)
-    if (!chavePixTexto) {
-        chavePixTexto = localStorage.getItem('deliveryon_pix_chave') || "";
-    }
-    if (!qrCodeUrl) {
-        qrCodeUrl = localStorage.getItem('deliveryon_pix_qr') || "";
-    }
-
-    // 4. Exibe os dados na tela do modal do Gestor
-    if (qrCodeUrl && qrCodeUrl !== "null" && qrCodeUrl.trim() !== "") {
-        imgQr.style.display = "block";
-        imgQr.src = qrCodeUrl;
-    } else {
-        imgQr.style.display = "none";
-    }
-
-    if (chavePixTexto && chavePixTexto !== "null" && chavePixTexto.trim() !== "") {
-        txtChave.value = chavePixTexto;
-    } else {
-        txtChave.value = "Chave PIX padrão do sistema não configurada. Entre em contato com o suporte.";
     }
 }
 
