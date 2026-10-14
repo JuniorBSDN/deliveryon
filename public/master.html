@@ -1206,8 +1206,24 @@ async function carregarFinanceiro() {
     tbody.innerHTML = '';
 
     lista.forEach(emp => {
-        const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
-        const statusTexto = emp.status === 'ativo' ? 'Ativo' : 'Inativo';
+        // Puxa o cálculo financeiro inteligente
+        const calculo = calcularStatusFinanceiroMaster(emp.vencimento || 5, emp.mes_liberado);
+
+        let badgeClass = 'badge-success';
+        let statusTexto = 'Ativo';
+
+        // Lógica: Se estiver inativo manual, mostra Inativo. Senão, mostra o status financeiro.
+        if (emp.status !== 'ativo') {
+            badgeClass = 'badge-danger';
+            statusTexto = 'Inativo (Manual)';
+        } else if (calculo.statusEnum === 'VENCIDO') {
+            badgeClass = 'badge-danger';
+            statusTexto = 'Bloqueado (Finan.)';
+        } else if (calculo.statusEnum === 'CARENCIA') {
+            badgeClass = 'badge-warning';
+            statusTexto = 'Atrasado';
+        }
+
         const empString = JSON.stringify(emp).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
         tbody.innerHTML += `
