@@ -2065,9 +2065,9 @@ function verificarVencimentoSaaS() {
     if (info.statusEnum === "VENCIDO") {
         abrirModalPixGestor(); // Força a abertura do modal PIX
 
-        // Remove os botões de fechar para o cliente não conseguir fugir da tela
+        // Remove APENAS os botões de fechar para o cliente não conseguir fugir da tela para o sistema
         const btnFecharTop = document.querySelector('#modalFinanceiroSaaS .close-modal');
-        const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .modal-footer .btn-outline');
+        const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .btn-fechar-cobranca');
 
         if(btnFecharTop) btnFecharTop.style.display = 'none';
         if(btnFecharBottom) btnFecharBottom.style.display = 'none';
@@ -2079,9 +2079,9 @@ function verificarVencimentoSaaS() {
         return; // Interrompe a execução para não rodar o resto
     }
 
-    // 2. SE NÃO ESTIVER VENCIDO: GARANTE QUE OS BOTÕES DE FECHAR EXISTAM (Caso ele abra manualmente)
+    // 2. SE NÃO ESTIVER VENCIDO: GARANTE QUE OS BOTÕES DE FECHAR EXISTAM
     const btnFecharTop = document.querySelector('#modalFinanceiroSaaS .close-modal');
-    const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .modal-footer .btn-outline');
+    const btnFecharBottom = document.querySelector('#modalFinanceiroSaaS .btn-fechar-cobranca');
     if(btnFecharTop) btnFecharTop.style.display = 'block';
     if(btnFecharBottom) btnFecharBottom.style.display = 'block';
 
