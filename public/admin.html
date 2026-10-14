@@ -324,7 +324,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE BLOQUEIO / COBRANÇA FINANCEIRA -->
+<!-- MODAL DE BLOQUEIO / COBRANÇA FINANCEIRA -->
 <div class="modal-overlay" id="modalFinanceiroSaaS">
     <div class="modal-content" style="max-width: 450px; text-align: center;">
 
@@ -339,15 +339,15 @@
 
             <!-- IMAGEM DO QR CODE -->
             <div style="background: white; padding: 15px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                <img id="pix-qrcode-img" src="" alt="QR Code PIX" style="width: 200px; height: 200px; object-fit: contain; display: none;">
+                <img id="modal-pix-qrcode" src="" alt="QR Code PIX" style="width: 200px; height: 200px; object-fit: contain; display: none;">
             </div>
 
             <!-- CHAVE PIX (COPIA E COLA) -->
             <div class="form-group" style="text-align: left;">
                 <label style="font-size: 0.85rem; color: var(--text-muted);">Chave PIX (Copia e Cola):</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="pix-copia-cola" class="form-control" readonly style="background: #f8f9fa; font-size: 0.85rem; padding: 10px;">
-                    <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('pix-copia-cola').value); alert('Chave PIX copiada!');"><i class="ph ph-copy"></i> Copiar</button>
+                    <input type="text" id="modal-pix-chave" class="form-control" readonly style="background: #f8f9fa; font-size: 0.85rem; padding: 10px;">
+                    <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('modal-pix-chave').value); alert('Chave PIX copiada!');"><i class="ph ph-copy"></i> Copiar</button>
                 </div>
             </div>
         </div>
@@ -2122,16 +2122,13 @@ function verificarVencimentoSaaS() {
 
 async function abrirModalPixGestor() {
     const modal = document.getElementById('modalFinanceiroSaaS');
-
-    // CORREÇÃO DOS IDs: Agora estão iguais ao seu HTML
-    const imgQr = document.getElementById('pix-qrcode-img');
-    const txtChave = document.getElementById('pix-copia-cola');
+    const imgQr = document.getElementById('modal-pix-qrcode');
+    const txtChave = document.getElementById('modal-pix-chave');
     const textoAviso = document.getElementById('modal-texto-aviso');
     const tituloBloqueio = document.getElementById('modal-titulo-bloqueio');
 
     const info = calcularStatusVencimento();
 
-    // Define os textos de acordo com o status
     if (info.statusEnum === "CARENCIA") {
         if (tituloBloqueio) tituloBloqueio.innerText = "Aviso de Vencimento";
         if (textoAviso) textoAviso.innerText = `Sua mensalidade venceu e está em período de carência. Faltam ${info.diasRestantesOuCarencia} dia(s) para o bloqueio total.`;
