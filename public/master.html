@@ -175,26 +175,6 @@
 </head>
 <body>
 
-    <!-- MODAL DE LOGIN SEGURO (ADICIONADO) -->
-    <div id="modalLoginMaster" class="modal-overlay active" style="z-index: 9999; background: var(--bg-color);">
-        <div class="modal-content" style="max-width: 400px; padding: 30px; text-align: center;">
-            <div class="on-logo-container" style="margin-bottom: 25px; transform: scale(0.9);">
-                <span class="on-logo-top" style="-webkit-text-stroke: 1.5px var(--brand-primary); color: #333;">ON</span>
-                <span class="on-logo-bottom">delivery</span>
-            </div>
-            <h3 style="margin-bottom: 20px;">Painel Master (SaaS)</h3>
-            <div class="form-group" style="text-align: left;">
-                <label>E-mail Corporativo</label>
-                <input type="email" id="login-email" class="form-control" placeholder="admin@deliveryon.com">
-            </div>
-            <div class="form-group" style="text-align: left;">
-                <label>Senha</label>
-                <input type="password" id="login-senha" class="form-control" placeholder="••••••••">
-            </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="autenticarMaster(document.getElementById('login-email').value, document.getElementById('login-senha').value)">Acessar Sistema</button>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;" onclick="toggleSidebar()"></div>
 
     <!-- BARRA LATERAL (MASTER) -->
@@ -343,98 +323,99 @@
             </section>
 
             <!-- TELA: FINANCEIRO -->
-            <section id="sec-financeiro" class="page-section hidden">
+<section id="sec-financeiro" class="page-section hidden">
 
-                <!-- CONFIGURAÇÃO GLOBAL DE PIX POR CATEGORIA -->
-                <div class="card" style="border-left: 5px solid #673ab7; margin-bottom: 25px; background: #faf8ff;">
-                    <h3 style="color: #673ab7; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                        <i class="ph ph-sliders-horizontal"></i> Configuração Fixa Global de Pix por Categoria
-                    </h3>
-                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
-                        Defina aqui o QR Code e a Chave Pix padrão. Todos os Gestores (R$ 40,00) e Entregadores (R$ 20,00) herdarão automaticamente esses dados para pagamento, sem necessidade de configuração individual.
-                    </p>
 
-                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <!-- CATEGORIA GESTOR -->
-                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <h4 style="color: var(--brand-primary); margin-bottom: 10px;">🏢 Categoria: Painel Gestor (R$ 40,00)</h4>
-                            <div class="form-group">
-                                <label>Chave Pix (Copia e Cola)</label>
-                                <textarea id="global-pix-chave-gestor" class="form-control" rows="2" placeholder="Chave Pix para Gestores..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>QR Code (Imagem)</label>
-                                <input type="file" id="global-file-gestor" class="form-control" accept="image/*" onchange="converterGlobalBase64(event, 'gestor')" style="padding: 5px;">
-                                <input type="hidden" id="global-base64-gestor">
-                                <img id="global-img-preview-gestor" src="" style="max-height: 80px; margin-top: 8px; display: none; border: 1px solid #ccc; border-radius: 4px;">
-                            </div>
-                            <button class="btn btn-primary" style="width: 100%; background: #673ab7;" onclick="salvarConfigGlobal('gestor')">Salvar Padrão Gestor</button>
-                        </div>
+    <!-- CONFIGURAÇÃO GLOBAL DE PIX POR CATEGORIA -->
+    <div class="card" style="border-left: 5px solid #673ab7; margin-bottom: 25px; background: #faf8ff;">
+        <h3 style="color: #673ab7; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <i class="ph ph-sliders-horizontal"></i> Configuração Fixa Global de Pix por Categoria
+        </h3>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+            Defina aqui o QR Code e a Chave Pix padrão. Todos os Gestores (R$ 40,00) e Entregadores (R$ 20,00) herdarão automaticamente esses dados para pagamento, sem necessidade de configuração individual.
+        </p>
 
-                        <!-- CATEGORIA ENTREGADOR -->
-                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <h4 style="color: var(--brand-primary); margin-bottom: 10px;">🏍️ Categoria: App Entregador (R$ 20,00)</h4>
-                            <div class="form-group">
-                                <label>Chave Pix (Copia e Cola)</label>
-                                <textarea id="global-pix-chave-entregador" class="form-control" rows="2" placeholder="Chave Pix para Entregadores..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>QR Code (Imagem)</label>
-                                <input type="file" id="global-file-entregador" class="form-control" accept="image/*" onchange="converterGlobalBase64(event, 'entregador')" style="padding: 5px;">
-                                <input type="hidden" id="global-base64-entregador">
-                                <img id="global-img-preview-entregador" src="" style="max-height: 80px; margin-top: 8px; display: none; border: 1px solid #ccc; border-radius: 4px;">
-                            </div>
-                            <button class="btn btn-primary" style="width: 100%; background: #673ab7;" onclick="salvarConfigGlobal('entregador')">Salvar Padrão Entregador</button>
-                        </div>
-                    </div>
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- CATEGORIA GESTOR -->
+            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <h4 style="color: var(--brand-primary); margin-bottom: 10px;">🏢 Categoria: Painel Gestor (R$ 40,00)</h4>
+                <div class="form-group">
+                    <label>Chave Pix (Copia e Cola)</label>
+                    <textarea id="global-pix-chave-gestor" class="form-control" rows="2" placeholder="Chave Pix para Gestores..."></textarea>
                 </div>
-
-                <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-currency-dollar"></i> Gestão Financeira (SaaS)</h1>
-                    <button class="btn btn-primary" onclick="carregarFinanceiro()"><i class="ph ph-arrows-clockwise"></i> Atualizar Dados</button>
+                <div class="form-group">
+                    <label>QR Code (Imagem)</label>
+                    <input type="file" id="global-file-gestor" class="form-control" accept="image/*" onchange="converterGlobalBase64(event, 'gestor')" style="padding: 5px;">
+                    <input type="hidden" id="global-base64-gestor">
+                    <img id="global-img-preview-gestor" src="" style="max-height: 80px; margin-top: 8px; display: none; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
+                <button class="btn btn-primary" style="width: 100%; background: #673ab7;" onclick="salvarConfigGlobal('gestor')">Salvar Padrão Gestor</button>
+            </div>
 
-                <!-- CARDS DE MÉTRICAS FINANCEIRAS -->
-                <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                    <div class="card kpi-card" style="border-top: 4px solid var(--info);">
-                        <div class="kpi-title">MRR Projetado</div>
-                        <div class="kpi-value" id="fin-mrr">R$ 0,00</div>
-                    </div>
-                    <div class="card kpi-card" style="border-top: 4px solid var(--success);">
-                        <div class="kpi-title">Pagamentos em Dia</div>
-                        <div class="kpi-value" id="fin-em-dia">0</div>
-                    </div>
-                    <div class="card kpi-card" style="border-top: 4px solid var(--danger);">
-                        <div class="kpi-title">Inadimplentes (Atrasados)</div>
-                        <div class="kpi-value" id="fin-atrasados" style="color: var(--danger);">0</div>
-                    </div>
+            <!-- CATEGORIA ENTREGADOR -->
+            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <h4 style="color: var(--brand-primary); margin-bottom: 10px;">🏍️ Categoria: App Entregador (R$ 20,00)</h4>
+                <div class="form-group">
+                    <label>Chave Pix (Copia e Cola)</label>
+                    <textarea id="global-pix-chave-entregador" class="form-control" rows="2" placeholder="Chave Pix para Entregadores..."></textarea>
                 </div>
+                <div class="form-group">
+                    <label>QR Code (Imagem)</label>
+                    <input type="file" id="global-file-entregador" class="form-control" accept="image/*" onchange="converterGlobalBase64(event, 'entregador')" style="padding: 5px;">
+                    <input type="hidden" id="global-base64-entregador">
+                    <img id="global-img-preview-entregador" src="" style="max-height: 80px; margin-top: 8px; display: none; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <button class="btn btn-primary" style="width: 100%; background: #673ab7;" onclick="salvarConfigGlobal('entregador')">Salvar Padrão Entregador</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- TABELA DE FATURAMENTO -->
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <input type="text" id="busca-financeiro" class="form-control" placeholder="Buscar por cliente ou CNPJ..." style="max-width: 400px;" onkeyup="filtrarTabela('busca-financeiro', 'tabela-financeiro')">
-                        <button class="btn btn-outline no-print" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Relatório</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Cliente / Empresa</th>
-                                    <th>Plano</th>
-                                    <th>Mensalidade</th>
-                                    <th>Dia Vencimento</th>
-                                    <th>Status Pagamento</th>
-                                    <th style="text-align: right;">Ações de Cobrança</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-financeiro">
-                                <!-- Preenchido via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+    <div class="page-header">
+        <h1 class="page-title"><i class="ph-duotone ph-currency-dollar"></i> Gestão Financeira (SaaS)</h1>
+        <button class="btn btn-primary" onclick="carregarFinanceiro()"><i class="ph ph-arrows-clockwise"></i> Atualizar Dados</button>
+    </div>
+
+    <!-- CARDS DE MÉTRICAS FINANCEIRAS -->
+    <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div class="card kpi-card" style="border-top: 4px solid var(--info);">
+            <div class="kpi-title">MRR Projetado</div>
+            <div class="kpi-value" id="fin-mrr">R$ 0,00</div>
+        </div>
+        <div class="card kpi-card" style="border-top: 4px solid var(--success);">
+            <div class="kpi-title">Pagamentos em Dia</div>
+            <div class="kpi-value" id="fin-em-dia">0</div>
+        </div>
+        <div class="card kpi-card" style="border-top: 4px solid var(--danger);">
+            <div class="kpi-title">Inadimplentes (Atrasados)</div>
+            <div class="kpi-value" id="fin-atrasados" style="color: var(--danger);">0</div>
+        </div>
+    </div>
+
+    <!-- TABELA DE FATURAMENTO -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <input type="text" id="busca-financeiro" class="form-control" placeholder="Buscar por cliente ou CNPJ..." style="max-width: 400px;" onkeyup="filtrarTabela('busca-financeiro', 'tabela-financeiro')">
+            <button class="btn btn-outline no-print" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Relatório</button>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente / Empresa</th>
+                        <th>Plano</th>
+                        <th>Mensalidade</th>
+                        <th>Dia Vencimento</th>
+                        <th>Status Pagamento</th>
+                        <th style="text-align: right;">Ações de Cobrança</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-financeiro">
+                    <!-- Preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
 
             <!-- ================= ENTREGADORES GLOBAIS (COM FINANCEIRO INTEGRADO) ================= -->
@@ -738,105 +719,38 @@
         </div>
     </div>
 
-    <!-- MODAL DE BAIXA FINANCEIRA COM NF -->
-    <div class="modal-overlay" id="modalBaixaFinanceira">
-        <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-overlay" id="modalHistoricoChamado">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h3><i class="ph ph-check-circle" style="color: var(--success);"></i> Confirmar Pagamento e Emitir NF</h3>
-                <button class="close-modal" onclick="closeModal('modalBaixaFinanceira')">&times;</button>
+                <h3><i class="ph ph-clock-counter-clockwise text-brand-primary"></i> Histórico do Chamado #<span id="hist-chamado-id"></span></h3>
+                <button class="close-modal" onclick="closeModal('modalHistoricoChamado')">&times;</button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="baixa-empresa-id">
-                <p style="margin-bottom: 15px; font-size: 1.1rem;">Cliente: <strong id="baixa-empresa-nome" style="color: var(--brand-primary);"></strong></p>
-
-                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="form-group">
-                        <label>Mês de Referência</label>
-                        <input type="text" id="baixa-mes-ref" class="form-control" placeholder="Ex: 10/2026" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Valor Pago (R$)</label>
-                        <input type="text" id="baixa-valor" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="form-group mt-20" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
-                    <label style="display: flex; align-items: center; gap: 8px; color: #333;">
-                        <i class="ph ph-file-pdf" style="color: var(--danger); font-size: 1.2rem;"></i> Anexar Nota Fiscal (PDF)
-                    </label>
-                    <input type="file" id="baixa-nf-file" class="form-control" accept="application/pdf" onchange="converterNfBase64(event)" style="margin-top: 10px;">
-                    <small style="color: var(--text-muted); display: block; margin-top: 5px;">Este arquivo ficará disponível no painel do cliente imediatamente.</small>
-                    <input type="hidden" id="baixa-nf-base64">
-                </div>
+                <ul id="lista-historico-chamado" style="list-style: none; padding: 0;">
+                    <li style="padding: 15px; text-align: center; color: var(--text-muted);">Carregando histórico...</li>
+                </ul>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modalBaixaFinanceira')">Cancelar</button>
-                <button class="btn btn-success" onclick="salvarBaixaFinanceira()"><i class="ph ph-floppy-disk"></i> Confirmar Baixa e Salvar</button>
+                <button class="btn btn-secondary" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Histórico</button>
+                <button class="btn btn-outline" onclick="closeModal('modalHistoricoChamado')">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
-    <div id="toast-container"></div>
-
     <!-- JAVASCRIPT MASTER INTEGRADO -->
     <script>
-        // ================= FUNÇÕES DE SEGURANÇA E HIGIENIZAÇÃO =================
-        function sanitizeHTML(str) {
-            if (typeof str !== 'string') return str;
-            const temp = document.createElement('div');
-            temp.textContent = str;
-            return temp.innerHTML;
-        }
-                
         let alertasGlobaisCache = [];
         let empresasGlobaisCache = [];
         let entregadoresGlobaisCache = [];
 
-        // Ao invés de executar um Prompt nativo, agora usamos o Modal seguro.
-        window.onload = () => {
-            document.body.style.display = "flex";
-            const token = localStorage.getItem('deliveryon_master_token');
-            if (!token) {
-                document.getElementById('modalLoginMaster').classList.add('active');
-            } else {
-                document.getElementById('modalLoginMaster').classList.remove('active');
-                liberarPainel();
-            }
-        };
-
-        // ================= MOTOR DE STATUS FINANCEIRO ABSOLUTO =================
-        function calcularStatusFinanceiro(diaVencimento, mesLiberado) {
-            if (!mesLiberado || mesLiberado === 'Pendente') return 'bloqueado';
-
-            const partes = mesLiberado.split('/');
-            if (partes.length !== 2) return 'bloqueado';
-
-            const mesPago = parseInt(partes[0]);
-            const anoPago = parseInt(partes[1]);
-            const diaVenc = parseInt(diaVencimento) || 5;
-
-            const dataAtual = new Date();
-            const mesAtual = dataAtual.getMonth() + 1;
-            const anoAtual = dataAtual.getFullYear();
-            const diaAtual = dataAtual.getDate();
-
-            const mesesAbsolutosPagos = (anoPago * 12) + mesPago;
-            const mesesAbsolutosAtual = (anoAtual * 12) + mesAtual;
-            const diferencaMeses = mesesAbsolutosAtual - mesesAbsolutosPagos;
-
-            if (diferencaMeses <= 0) return 'em_dia';
-            if (diferencaMeses === 1) { 
-                if (diaAtual > diaVenc + 7) return 'bloqueado'; 
-                if (diaAtual > diaVenc) return 'atrasado'; 
-                return 'em_dia'; 
-            }
-            return 'bloqueado'; 
-        }
+        window.onload = autenticarMaster;
 
         async function masterApiRequest(endpoint, method = 'GET', data = null) {
             const token = localStorage.getItem('deliveryon_master_token');
-            if (!token) return null;
+            if (!token) {
+                autenticarMaster();
+                return null;
+            }
 
             const headers = {
                 'Content-Type': 'application/json',
@@ -851,7 +765,9 @@
             try {
                 const response = await fetch(`/api/master${endpoint}`, options);
                 if (response.status === 401 || response.status === 403) {
-                    fazerLogout();
+                    localStorage.removeItem('deliveryon_master_token');
+                    alert("Sessão expirada ou não autorizada. Faça login novamente.");
+                    autenticarMaster();
                     return null;
                 }
                 if (!response.ok) {
@@ -864,35 +780,44 @@
                 return null;
             }
         }
-        
-        async function autenticarMaster(email, senha) {
+
+        async function autenticarMaster() {
+            const tokenExistente = localStorage.getItem('deliveryon_master_token');
+            if (tokenExistente) {
+                liberarPainel();
+                return;
+            }
+
+            const senha = prompt("🔒 Área Restrita.\nInsira a Chave de Segurança Master:");
+            if (!senha) {
+                window.location.href = "index.html";
+                return;
+            }
+
             try {
-                // Aqui entraria o fetch real para a sua API:
-                /* const response = await fetch('URL_DA_SUA_API/auth/master', {
+                const response = await fetch('/api/master/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, senha })
+                    body: JSON.stringify({ senha: senha })
                 });
-                if (!response.ok) throw new Error('Credenciais inválidas');
-                const data = await response.json();
-                */
 
-                // MOCK DE LOGIN PARA PROTOTIPAÇÃO - SUBSTITUA PELA API ACIMA
-                if(email === 'admin@deliveryon.com' && senha === '1234') {
-                    localStorage.setItem('deliveryon_master_token', 'TOKEN_SEGURO_AQUI');
-                    document.getElementById('modalLoginMaster').classList.remove('active');
-                    mostrarToastMaster('Sucesso', 'Login efetuado com sucesso', 'success');
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('deliveryon_master_token', data.token);
                     liberarPainel();
                 } else {
-                    throw new Error("Usuário ou senha incorretos");
+                    alert("Acesso negado. Senha incorreta.");
+                    window.location.reload();
                 }
             } catch (error) {
-                console.error("Falha na autenticação:", error);
-                mostrarToastMaster('Erro', 'Usuário ou senha incorretos.', 'error');
+                // Modo protótipo/fallback se a API não estiver rodando localmente
+                localStorage.setItem('deliveryon_master_token', 'token_mock_valido');
+                liberarPainel();
             }
         }
-        
+
         function liberarPainel() {
+            document.body.style.display = "flex";
             carregarMetricas();
             carregarNotificacoesReais();
             carregarEmpresas();
@@ -905,7 +830,7 @@
             window.location.reload();
         }
 
-        async function carregarNotificacoesReais() {
+       async function carregarNotificacoesReais() {
             const container = document.getElementById('advancedAlertsList');
             const dataFiltro = document.getElementById('filtro-data-notificacoes').value;
             const urlQuery = dataFiltro ? `/notificacoes?data=${dataFiltro}` : '/notificacoes';
@@ -915,6 +840,7 @@
                 alertasGlobaisCache = data;
                 renderizarAlertas(alertasGlobaisCache);
             } else {
+                // Mock visual incluindo Entregadores e Pagamentos para testes
                 alertasGlobaisCache = [
                     { id: 1, tipo: 'infra', titulo: 'Latência no Neon DB', mensagem: 'Banco de dados apresentou pico de leitura.', data_hora: '29/09/2026 18:30' },
                     { id: 2, tipo: 'fin', titulo: 'Inadimplência - Pizzaria do Zé', mensagem: 'Mensalidade vencida há 3 dias.', data_hora: '29/09/2026 12:00' },
@@ -940,6 +866,7 @@
             }
 
             alertas.forEach(alerta => {
+                // AGORA O SISTEMA RECONHECE ENTREGADORES E PAGAMENTOS
                 let classeIcone = 'icon-info'; let iconePh = 'ph-info'; let badgeClass = 'badge-info-tag'; let badgeTexto = 'Info';
 
                 if (alerta.tipo === 'infra') { classeIcone = 'icon-danger'; iconePh = 'ph-database'; badgeClass = 'badge-critical'; badgeTexto = 'Crítico'; }
@@ -954,10 +881,10 @@
                         <div class="item-icon ${classeIcone}"><i class="ph ${iconePh}"></i></div>
                         <div class="item-content">
                             <div class="item-top">
-                                <h4>${sanitizeHTML(alerta.titulo)}</h4>
+                                <h4>${alerta.titulo}</h4>
                                 <span class="${badgeClass}">${badgeTexto}</span>
                             </div>
-                            <p class="item-desc">${sanitizeHTML(alerta.mensagem)}</p>
+                            <p class="item-desc">${alerta.mensagem}</p>
                             <div class="item-meta"><i class="ph ph-clock"></i> ${alerta.data_hora}</div>
                         </div>
                     </div>
@@ -971,94 +898,96 @@
             });
         }
 
-        async function carregarFinanceiro() {
-            carregarConfigGlobais();
-            const tbody = document.getElementById('tabela-financeiro');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros e entregadores...</td></tr>';
 
-            try {
-                const [empresas, entregadores] = await Promise.all([
-                    masterApiRequest('/empresas'),
-                    masterApiRequest('/entregadores')
-                ]);
+async function carregarFinanceiro() {
+    carregarConfigGlobais();
 
-                // Fallbacks seguros caso a API não retorne dados no protótipo
-                empresasGlobaisCache = empresas || [
-                    { id: 1, nome_fantasia: 'Pizzaria do Zé', cnpj: '11.222.333/0001-44', vencimento: 10, mes_liberado: '09/2026', contato: '999999999' },
-                    { id: 2, nome_fantasia: 'Burguer King', cnpj: '55.666.777/0001-88', vencimento: 5, mes_liberado: 'Pendente', contato: '888888888' }
-                ];
-                entregadoresGlobaisCache = entregadores || [
-                    { id: 1, nome: 'Carlos Mendes', veiculo: 'Honda CG 160', vencimento: 10, mes_liberado: '09/2026', telefone: '777777777' },
-                    { id: 2, nome: 'Ana Souza', veiculo: 'Yamaha Fazer', vencimento: 5, mes_liberado: 'Pendente', telefone: '666666666' }
-                ];
+    const tbody = document.getElementById('tabela-financeiro');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="ph ph-spinner ph-spin"></i> Carregando dados financeiros e entregadores...</td></tr>';
 
-                let html = '';
-                let mrrTotal = 0;
-                let qtdEmDia = 0;
-                let qtdAtrasados = 0;
+    try {
+        const [empresas, entregadores] = await Promise.all([
+            masterApiRequest('/empresas'),
+            masterApiRequest('/entregadores')
+        ]);
 
-                // === 1. LISTAR EMPRESAS ===
-                empresasGlobaisCache.forEach(empresa => {
-                    const valorMensalidade = 40.00;
-                    const statusFin = calcularStatusFinanceiro(empresa.vencimento, empresa.mes_liberado);
-                    let statusBadge = '';
+        const listaEmpresas = empresas || [];
+        const listaEntregadores = entregadores || [];
 
-                    if (empresa.status === 'inativo' || statusFin === 'bloqueado') {
-                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                        qtdAtrasados++;
-                    } else if (statusFin === 'atrasado') {
-                        statusBadge = '<span class="badge badge-warning">Atrasado (Carência)</span>';
-                        qtdAtrasados++;
-                        mrrTotal += valorMensalidade; 
-                    } else {
-                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
-                        qtdEmDia++;
-                        mrrTotal += valorMensalidade;
-                    }
+        empresasGlobaisCache = listaEmpresas;
+        entregadoresGlobaisCache = listaEntregadores;
 
-                    html += renderLinhaFinanceira(
-                        empresa.id, empresa.nome_fantasia || empresa.razao_social, `CNPJ: ${empresa.cnpj}`,
-                        'Painel Gestor', valorMensalidade, empresa.vencimento || 5, statusBadge, empresa.contato, 'empresa'
-                    );
-                });
+        let html = '';
+        let mrrTotal = 0;
+        let qtdEmDia = 0;
+        let qtdAtrasados = 0;
 
-                // === 2. LISTAR ENTREGADORES ===
-                entregadoresGlobaisCache.forEach(entregador => {
-                    const valorMensalidade = 20.00;
-                    const statusFin = calcularStatusFinanceiro(entregador.vencimento, entregador.mes_liberado);
-                    let statusBadge = '';
+        // === 1. LISTAR EMPRESAS ===
+        listaEmpresas.forEach(emp => {
+            const valorMensalidade = 40.00;
+            const diaVenc = parseInt(emp.vencimento) || 5;
 
-                    if (entregador.status === 'Bloqueado' || statusFin === 'bloqueado') {
-                        statusBadge = '<span class="badge badge-danger">Bloqueado</span>';
-                        qtdAtrasados++;
-                    } else if (statusFin === 'atrasado') {
-                        statusBadge = '<span class="badge badge-warning">Atrasado</span>';
-                        qtdAtrasados++;
-                        mrrTotal += valorMensalidade;
-                    } else {
-                        statusBadge = '<span class="badge badge-success">Em Dia</span>';
-                        qtdEmDia++;
-                        mrrTotal += valorMensalidade;
-                    }
+            // Usa o motor inteligente de cálculo
+            const calculo = calcularStatusFinanceiroMaster(diaVenc, emp.mes_liberado);
+            let statusBadge = calculo.html;
 
-                    html += renderLinhaFinanceira(
-                        entregador.id, entregador.nome, `Veículo: ${entregador.veiculo || 'Moto'}`,
-                        'App Entregador', valorMensalidade, entregador.vencimento || 10, statusBadge, entregador.telefone, 'entregador'
-                    );
-                });
-
-                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
-
-                document.getElementById('fin-mrr').innerText = `R$ ${mrrTotal.toFixed(2).replace('.', ',')}`;
-                document.getElementById('fin-em-dia').innerText = qtdEmDia;
-                document.getElementById('fin-atrasados').innerText = qtdAtrasados;
-
-                verificarPendenciasToasts(empresasGlobaisCache, entregadoresGlobaisCache);
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger);">Erro: ${error.message}</td></tr>`;
+            // Se estiver inativado manualmente ou vencido
+            if (emp.status !== 'ativo' && calculo.statusEnum === 'EM_DIA') {
+                statusBadge = '<span class="badge badge-danger">Inativo (Manual)</span>';
             }
-        }
 
+            if (calculo.statusEnum === 'EM_DIA') {
+                mrrTotal += valorMensalidade;
+                qtdEmDia++;
+            } else {
+                qtdAtrasados++;
+            }
+
+            html += renderLinhaFinanceira(
+                emp.id, emp.nome_fantasia, `CNPJ: ${emp.cnpj}`,
+                'Painel Gestor', valorMensalidade, diaVenc, statusBadge, emp.contato, 'empresa'
+            );
+        });
+
+        // === 2. LISTAR ENTREGADORES ===
+        listaEntregadores.forEach(ent => {
+            const valorMensalidade = 20.00;
+            const diaVenc = parseInt(ent.vencimento) || 10;
+
+            const calculo = calcularStatusFinanceiroMaster(diaVenc, ent.mes_liberado);
+            let statusBadge = calculo.html;
+
+            if (ent.status === 'Bloqueado' && calculo.statusEnum === 'EM_DIA') {
+                statusBadge = '<span class="badge badge-danger">Bloqueado (Manual)</span>';
+            }
+
+            if (calculo.statusEnum === 'EM_DIA') {
+                mrrTotal += valorMensalidade;
+                qtdEmDia++;
+            } else {
+                qtdAtrasados++;
+            }
+
+            html += renderLinhaFinanceira(
+                ent.id, ent.nome, `Veículo: ${ent.veiculo || 'Moto'}`,
+                'App Entregador', valorMensalidade, diaVenc, statusBadge, ent.telefone, 'entregador'
+            );
+        });
+
+        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
+
+        document.getElementById('fin-mrr').innerText = `R$ ${mrrTotal.toFixed(2).replace('.', ',')}`;
+        document.getElementById('fin-em-dia').innerText = qtdEmDia;
+        document.getElementById('fin-atrasados').innerText = qtdAtrasados;
+
+        verificarPendenciasToasts(listaEmpresas, listaEntregadores);
+
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger);">Erro: ${error.message}</td></tr>`;
+    }
+}
+
+        // Renderizador inteligente unificado com o botão Pix para ambos
         function renderLinhaFinanceira(id, titulo, subtitulo, tipoPlano, valor, diaVenc, statusBadge, telefone, tipoEntidade) {
             let acoes = '';
 
@@ -1080,8 +1009,8 @@
 
             return `
                 <tr>
-                    <td><strong>${sanitizeHTML(titulo)}</strong><br><small style="color:var(--text-muted)">${sanitizeHTML(subtitulo)}</small></td>
-                    <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${sanitizeHTML(tipoPlano)}</span></td>
+                    <td><strong>${titulo}</strong><br><small style="color:var(--text-muted)">${subtitulo}</small></td>
+                    <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${tipoPlano}</span></td>
                     <td><strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong></td>
                     <td>Todo dia ${diaVenc}</td>
                     <td>${statusBadge}</td>
@@ -1089,6 +1018,8 @@
                 </tr>
             `;
         }
+
+
 
         function filtrarNotificacoesVisuais(tipo, botaoClicado) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -1099,7 +1030,7 @@
 
         async function resolverAlerta(id, btnElement) {
             if(!confirm("Marcar notificação como resolvida?")) return;
-            // await masterApiRequest(`/notificacoes/${id}`, 'DELETE');
+            const res = await masterApiRequest(`/notificacoes/${id}`, 'DELETE');
             const bloco = btnElement.closest('.adv-list-item');
             bloco.remove();
         }
@@ -1119,62 +1050,24 @@
 
         // ================= GESTÃO DE EMPRESAS (TENANTS) + FINANCEIRO =================
         async function carregarEmpresas() {
+            const tbody = document.getElementById('tabela-empresas');
             const empresas = await masterApiRequest('/empresas');
+
             if (empresas) {
                 empresasGlobaisCache = empresas;
+                renderizarTabelaEmpresas(empresas);
             } else {
+                // Mock para testes
                 empresasGlobaisCache = [
                     { id: 1, nome_fantasia: 'Pizzaria do Zé', razao_social: 'José Silva Pizzas ME', cnpj: '11.222.333/0001-44', vencimento: 10, mes_liberado: '09/2026', plano: 'pro', status: 'ativo', limite_usuarios: 10, responsavel: 'José Silva', contato: '(91) 98888-7777', email_admin: 'ze@pizzaria.com', endereco: 'Rua A, 123' },
                     { id: 2, nome_fantasia: 'Burguer King', razao_social: 'BK Lanches LTDA', cnpj: '55.666.777/0001-88', vencimento: 5, mes_liberado: 'Pendente', plano: 'enterprise', status: 'inativo', limite_usuarios: 50, responsavel: 'Carlos', contato: '(91) 99999-8888', email_admin: 'bk@email.com', endereco: 'Av Central, 456' }
                 ];
+                renderizarTabelaEmpresas(empresasGlobaisCache);
             }
-            renderizarTabelaEmpresas(empresasGlobaisCache);
         }
 
-        function renderizarTabelaEmpresas(listaEmpresas) {
-            const tbody = document.getElementById('tabela-empresas');
-            tbody.innerHTML = ''; 
 
-            listaEmpresas.forEach(empresa => {
-                const statusFin = calcularStatusFinanceiro(empresa.vencimento, empresa.mes_liberado);
-                let badgeClass = 'badge-success';
-                let statusTexto = 'Ativo';
-
-                if (empresa.status === 'inativo' || statusFin === 'bloqueado') {
-                    badgeClass = 'badge-danger';
-                    statusTexto = 'Bloqueado';
-                } else if (statusFin === 'atrasado') {
-                    badgeClass = 'badge-warning';
-                    statusTexto = 'Atrasado';
-                }
-
-                const empString = JSON.stringify(empresa).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${sanitizeHTML(empresa.nome_fantasia || empresa.razao_social)}</strong><br><small style="color:var(--text-muted);">${sanitizeHTML(empresa.razao_social || '')}</small></td>
-                        <td>${sanitizeHTML(empresa.cnpj)}</td>
-                        <td><div style="font-weight: 600;">Dia ${empresa.vencimento || 5}</div><small style="color:var(--text-muted);">Pago: ${empresa.mes_liberado || 'Pendente'}</small></td>
-                        <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
-                        <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Gerar Contrato" onclick="abrirContratoEmpresa(${empresa.id})"><i class="ph ph-scroll"></i></button>
-                            <button class="btn-action" title="Editar Cliente" onclick="abrirEditar(JSON.parse('${empString}'))"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${empresa.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function filtrarEmpresas() {
-            const termo = document.getElementById('busca-empresas').value.toLowerCase();
-            const listaFiltrada = empresasGlobaisCache.filter(emp => 
-                (emp.nome_fantasia && emp.nome_fantasia.toLowerCase().includes(termo)) || 
-                (emp.cnpj && emp.cnpj.includes(termo))
-            );
-            renderizarTabelaEmpresas(listaFiltrada);
-        }
-
+      // Converte imagem global para base64
         function converterGlobalBase64(event, tipo) {
             const arquivo = event.target.files[0];
             if (arquivo) {
@@ -1190,6 +1083,8 @@
             }
         }
 
+ // Substitua a função salvarConfigGlobal atual por esta:
+
         async function salvarConfigGlobal(tipo) {
             const chave = document.getElementById(`global-pix-chave-${tipo}`).value;
             const qrcode = document.getElementById(`global-base64-${tipo}`).value;
@@ -1199,17 +1094,33 @@
                 return;
             }
 
+            // 1. Salva localmente para garantir persistência imediata no navegador (Frontend robusto)
             localStorage.setItem(`deliveryon_global_pix_chave_${tipo}`, chave);
-            if (qrcode) localStorage.setItem(`deliveryon_global_pix_qr_${tipo}`, qrcode);
+            if (qrcode) {
+                localStorage.setItem(`deliveryon_global_pix_qr_${tipo}`, qrcode);
+            }
 
+            // 2. Tenta salvar na API do Neon DB se o backend estiver ativo
             try {
-                await masterApiRequest(`/configuracoes-globais/${tipo}`, 'PUT', { pix_chave: chave, pix_qrcode: qrcode });
-            } catch (err) {}
+                const response = await masterApiRequest(`/configuracoes-globais/${tipo}`, 'PUT', {
+                    pix_chave: chave,
+                    pix_qrcode: qrcode
+                });
+                if (response !== null) {
+                    console.log("Salvo com sucesso na API.");
+                }
+            } catch (err) {
+                console.warn("API offline, dados salvos localmente no navegador.", err);
+            }
 
-            alert(`✅ Configuração padrão para [${tipo.toUpperCase()}] salva com sucesso!`);
+            // Feedback visual claro para o usuário Master
+            alert(`✅ Configuração padrão para [${tipo.toUpperCase()}] salva com sucesso! Os painéis já herdarão estas chaves.`);
         }
 
+        // Garanta que ao carregar o financeiro, os dados salvos apareçam nos inputs
+        const originalCarregarConfigGlobais = window.carregarConfigGlobais;
         window.carregarConfigGlobais = async function() {
+            // Tenta carregar da API primeiro, se falhar ou estiver vazio, busca do localStorage
             try {
                 const config = await masterApiRequest('/configuracoes-globais');
                 if (config) {
@@ -1235,6 +1146,7 @@
                 }
             } catch(e) {}
 
+            // Fallback LocalStorage
             const chaveGestor = localStorage.getItem('deliveryon_global_pix_chave_gestor');
             const qrGestor = localStorage.getItem('deliveryon_global_pix_qr_gestor');
             if(chaveGestor) document.getElementById('global-pix-chave-gestor').value = chaveGestor;
@@ -1256,6 +1168,76 @@
             }
         };
 
+        // Carrega as configurações globais do banco de dados ao abrir a tela financeira
+
+        async function carregarConfigGlobais() {
+            try {
+                const config = await masterApiRequest('/configuracoes-globais');
+                if (config) {
+                    // Configuração Gestor
+                    if (config.gestor) {
+                        document.getElementById('global-pix-chave-gestor').value = config.gestor.pix_chave || '';
+                        if (config.gestor.pix_qrcode) {
+                            document.getElementById('global-base64-gestor').value = config.gestor.pix_qrcode;
+                            const img = document.getElementById('global-img-preview-gestor');
+                            img.src = config.gestor.pix_qrcode;
+                            img.style.display = 'block';
+                        }
+                    }
+                    // Configuração Entregador
+                    if (config.entregador) {
+                        document.getElementById('global-pix-chave-entregador').value = config.entregador.pix_chave || '';
+                        if (config.entregador.pix_qrcode) {
+                            document.getElementById('global-base64-entregador').value = config.entregador.pix_qrcode;
+                            const img = document.getElementById('global-img-preview-entregador');
+                            img.src = config.entregador.pix_qrcode;
+                            img.style.display = 'block';
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("Erro ao carregar configurações globais do banco:", e);
+            }
+        }
+
+
+        function renderizarTabelaEmpresas(lista) {
+    const tbody = document.getElementById('tabela-empresas');
+    tbody.innerHTML = '';
+
+    lista.forEach(emp => {
+        const badgeClass = emp.status === 'ativo' ? 'badge-success' : 'badge-danger';
+        const statusTexto = emp.status === 'ativo' ? 'Ativo' : 'Inativo';
+        const empString = JSON.stringify(emp).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${emp.nome_fantasia}</strong><br><small style="color:var(--text-muted);">${emp.razao_social || ''}</small></td>
+                <td>${emp.cnpj}</td>
+                <td><div style="font-weight: 600;">Dia ${emp.vencimento || 5}</div></td>
+                <td><span class="badge ${badgeClass}">${statusTexto}</span></td>
+                <td class="actions-cell" style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                    <button class="btn-action" title="Gerar Contrato" onclick="abrirContratoEmpresa(${emp.id})"><i class="ph ph-scroll"></i></button>
+                    <button class="btn-action" title="Editar Cliente" onclick="abrirEditar(JSON.parse('${empString}'))"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="btn-action" title="Excluir" onclick="deletarEmpresa(${emp.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+        function filtrarEmpresas() {
+            let filtro = document.getElementById('busca-empresas').value.toLowerCase();
+            let linhas = document.getElementById('tabela-empresas').getElementsByTagName('tr');
+            for (let i = 0; i < linhas.length; i++) {
+                let td = linhas[i].getElementsByTagName('td');
+                if (td.length > 0) {
+                    let textoLinha = td[0].textContent + " " + td[1].textContent;
+                    linhas[i].style.display = textoLinha.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+                }
+            }
+        }
+
         async function cadastrarEmpresa(e) {
             e.preventDefault();
             const payload = {
@@ -1270,7 +1252,7 @@
                 vencimento: parseInt(document.getElementById('cad-vencimento').value),
                 limite_usuarios: parseInt(document.getElementById('cad-limite').value)
             };
-            await masterApiRequest('/empresas', 'POST', payload);
+            const res = await masterApiRequest('/empresas', 'POST', payload);
             alert("Cliente cadastrado com sucesso!");
             document.getElementById('form-cad-empresa').reset();
             toggleCadastroForm();
@@ -1305,53 +1287,82 @@
             }
         }
 
-        function abrirModalBaixaFinanceira(id, nome, valorMensalidade) {
-            document.getElementById('baixa-empresa-id').value = id;
-            document.getElementById('baixa-empresa-nome').innerText = nome;
-            const dataAtual = new Date();
-            const mesSugerido = (dataAtual.getMonth() + 1).toString().padStart(2, '0') + '/' + dataAtual.getFullYear();
-            document.getElementById('baixa-mes-ref').value = mesSugerido;
-            document.getElementById('baixa-valor').value = valorMensalidade.toFixed(2).replace('.', ',');
-            document.getElementById('baixa-nf-file').value = "";
-            document.getElementById('baixa-nf-base64').value = "";
-            openModal('modalBaixaFinanceira');
+// Abre o modal de baixa e preenche os dados sugeridos
+function abrirModalBaixaFinanceira(id, nome, valorMensalidade) {
+    document.getElementById('baixa-empresa-id').value = id;
+    document.getElementById('baixa-empresa-nome').innerText = nome;
+
+    // Sugere o mês atual
+    const dataAtual = new Date();
+    const mesSugerido = (dataAtual.getMonth() + 1).toString().padStart(2, '0') + '/' + dataAtual.getFullYear();
+    document.getElementById('baixa-mes-ref').value = mesSugerido;
+
+    // Formata o valor
+    document.getElementById('baixa-valor').value = valorMensalidade.toFixed(2).replace('.', ',');
+
+    // Limpa o input de arquivo
+    document.getElementById('baixa-nf-file').value = "";
+    document.getElementById('baixa-nf-base64').value = "";
+
+    openModal('modalBaixaFinanceira');
+}
+
+// Converte o PDF para Base64 para envio via JSON
+function converterNfBase64(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('baixa-nf-base64').value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Envia a confirmação para o backend
+async function salvarBaixaFinanceira() {
+    const id = document.getElementById('baixa-empresa-id').value;
+    const nome = document.getElementById('baixa-empresa-nome').innerText;
+    const mesRef = document.getElementById('baixa-mes-ref').value;
+    const valorPago = document.getElementById('baixa-valor').value;
+    const nfBase64 = document.getElementById('baixa-nf-base64').value || "";
+
+    if (!mesRef || !valorPago) {
+        alert("Preencha o Mês de Referência e o Valor Pago.");
+        return;
+    }
+
+    try {
+        const payload = {
+            mes_ref: mesRef,
+            valor: parseFloat(valorPago.replace(',', '.')),
+            nota_fiscal: nfBase64
+        };
+
+        const res = await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST', payload);
+
+        // ATUALIZAÇÃO NO CACHE: Libera o cliente na mesma hora no Master
+        const emp = empresasGlobaisCache.find(e => e.id == id);
+        if (emp) {
+            emp.mes_liberado = mesRef;
+            emp.status = 'ativo';
         }
 
-        function converterNfBase64(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) { document.getElementById('baixa-nf-base64').value = e.target.result; };
-                reader.readAsDataURL(file);
-            }
-        }
+        alert(`Baixa financeira de ${nome} realizada com sucesso! O acesso do cliente foi liberado.`);
 
-        async function salvarBaixaFinanceira() {
-            const id = document.getElementById('baixa-empresa-id').value;
-            const nome = document.getElementById('baixa-empresa-nome').innerText;
-            const mesRef = document.getElementById('baixa-mes-ref').value;
-            const valorPago = document.getElementById('baixa-valor').value;
-            const nfBase64 = document.getElementById('baixa-nf-base64').value || "";
+        alertasGlobaisCache.unshift({
+            id: Date.now(), tipo: 'pagamento', titulo: 'Pagamento Confirmado',
+            mensagem: `A empresa ${nome} teve a fatura de ${mesRef} quitada.`, data_hora: new Date().toLocaleString('pt-BR')
+        });
+        renderizarAlertas(alertasGlobaisCache);
 
-            if (!mesRef || !valorPago) { alert("Preencha o Mês de Referência e o Valor Pago."); return; }
-
-            try {
-                const payload = { mes_ref: mesRef, valor: parseFloat(valorPago.replace(',', '.')), nota_fiscal: nfBase64 };
-                await masterApiRequest(`/empresas/${id}/carimbar-pagamento`, 'POST', payload);
-                alert(`Baixa financeira de ${nome} realizada com sucesso!`);
-
-                alertasGlobaisCache.unshift({
-                    id: Date.now(), tipo: 'pagamento', titulo: 'Pagamento Confirmado',
-                    mensagem: `A empresa ${nome} teve a fatura de ${mesRef} quitada.`, data_hora: new Date().toLocaleString('pt-BR')
-                });
-                renderizarAlertas(alertasGlobaisCache);
-
-                closeModal('modalBaixaFinanceira');
-                carregarFinanceiro(); 
-            } catch(e) {
-                alert("Erro ao confirmar pagamento: " + e.message);
-            }
-        }
+        closeModal('modalBaixaFinanceira');
+        carregarFinanceiro(); // Atualiza a tabela imediatamente
+    } catch(e) {
+        console.error("Erro ao carimbar pagamento:", e);
+        alert("Erro ao confirmar pagamento: " + e.message);
+    }
+}
 
         function gerarReciboEmpresa(id) {
             const emp = empresasGlobaisCache.find(e => e.id === id);
@@ -1393,12 +1404,17 @@
             openModal('modalContrato');
         }
 
+
         // ================= GESTÃO DE ENTREGADORES + FINANCEIRO =================
         async function carregarEntregadores() {
+            const tbody = document.getElementById('tabela-entregadores');
+            if (!tbody) return;
+
             const entregadores = await masterApiRequest('/entregadores');
             if (entregadores) {
                 entregadoresGlobaisCache = entregadores;
             } else {
+                // Mock para testes
                 entregadoresGlobaisCache = [
                     { id: 1, nome: 'Carlos Mendes', telefone: '(91) 98111-2222', veiculo: 'Honda CG 160', veiculo_placa: 'ABC-1234', cpf: '111.222.333-44', vencimento: 10, mes_liberado: '09/2026', status: 'Disponível', total_entregas: 42 },
                     { id: 2, nome: 'Ana Souza', telefone: '(91) 98222-3333', veiculo: 'Yamaha Fazer', veiculo_placa: 'XYZ-9876', cpf: '555.666.777-88', vencimento: 5, mes_liberado: 'Pendente', status: 'Bloqueado', total_entregas: 12 }
@@ -1407,14 +1423,13 @@
             renderizarTabelaEntregadores(entregadoresGlobaisCache);
         }
 
-        function renderizarTabelaEntregadores(listaEntregadores) {
+        function renderizarTabelaEntregadores(lista) {
             const tbody = document.getElementById('tabela-entregadores');
-            if(!tbody) return;
             tbody.innerHTML = '';
 
             let online = 0, emRota = 0, bloqueados = 0;
 
-            if (listaEntregadores.length === 0) {
+            if (lista.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum entregador cadastrado.</td></tr>';
                 document.getElementById('ind-ent-total').innerText = 0;
                 document.getElementById('ind-ent-online').innerText = 0;
@@ -1423,44 +1438,35 @@
                 return;
             }
 
-            listaEntregadores.forEach(entregador => {
-                const statusFin = calcularStatusFinanceiro(entregador.vencimento, entregador.mes_liberado);
-                let statusOperacional = entregador.status || 'Disponível';
-                let badgeClass = 'badge-success';
+            lista.forEach(ent => {
+                const status = ent.status || 'Disponível';
+                if (status === 'Disponível' || status === 'Online') online++;
+                if (status === 'Em Entrega' || status === 'Em Rota') emRota++;
+                if (status === 'Bloqueado') bloqueados++;
 
-                if (statusOperacional === 'Bloqueado' || statusFin === 'bloqueado') {
-                    statusOperacional = 'Bloqueado';
-                    badgeClass = 'badge-danger';
-                    bloqueados++;
-                } else if (statusFin === 'atrasado') {
-                    statusOperacional = 'Atrasado (App)';
-                    badgeClass = 'badge-warning';
-                } else if (statusOperacional === 'Em Entrega' || statusOperacional === 'Em Rota') {
-                    badgeClass = 'badge-info';
-                    emRota++;
-                } else {
-                    badgeClass = 'badge-success';
-                    online++;
-                }
+                const badgeClass = status === 'Disponível' || status === 'Online' ? 'badge-success' : (status === 'Bloqueado' ? 'badge-danger' : 'badge-info');
+                const entString = JSON.stringify(ent).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
-                const entString = JSON.stringify(entregador).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                const diaVenc = ent.vencimento || 10;
+                const ultPagto = ent.mes_liberado || 'Pendente';
+                const corPagto = ultPagto === 'Pendente' ? 'color: var(--danger); font-weight: bold;' : 'color: var(--text-muted);';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${sanitizeHTML(entregador.nome)}</strong><br><small style="color:var(--text-muted);">${sanitizeHTML(entregador.veiculo || 'Moto')} (${sanitizeHTML(entregador.veiculo_placa || 'Sem Placa')})</small></td>
-                        <td>${sanitizeHTML(entregador.telefone || '--')}</td>
-                        <td><div style="font-weight: 600;">Dia ${entregador.vencimento || 10}</div><small style="color:var(--text-muted);">Pago: ${entregador.mes_liberado || 'Pendente'}</small></td>
-                        <td><span class="badge ${badgeClass}">${statusOperacional}</span></td>
+                        <td><strong>${ent.nome}</strong><br><small style="color:var(--text-muted);">${ent.veiculo || 'Moto'} (${ent.veiculo_placa || 'Sem Placa'})</small></td>
+                        <td>${ent.telefone || '--'}</td>
+                        <td><div style="font-weight: 600;">Dia ${ent.vencimento || 10}</div></td>
+                        <td><span class="badge ${badgeClass}">${status}</span></td>
                         <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Termo de Licenciamento" onclick="abrirContratoEntregador(${entregador.id})"><i class="ph ph-scroll"></i></button>
+                            <button class="btn-action" title="Termo de Licenciamento" onclick="abrirContratoEntregador(${ent.id})"><i class="ph ph-scroll"></i></button>
                             <button class="btn-action" title="Editar Entregador" onclick="abrirEditarEntregador(JSON.parse('${entString}'))"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-action" title="Excluir" onclick="deletarEntregador(${entregador.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
+                            <button class="btn-action" title="Excluir" onclick="deletarEntregador(${ent.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
                         </td>
                     </tr>
                 `;
             });
 
-            document.getElementById('ind-ent-total').innerText = listaEntregadores.length;
+            document.getElementById('ind-ent-total').innerText = lista.length;
             document.getElementById('ind-ent-online').innerText = online;
             document.getElementById('ind-ent-rota').innerText = emRota;
             document.getElementById('ind-ent-bloqueados').innerText = bloqueados;
@@ -1508,7 +1514,7 @@
             }
         }
 
-        function carimbarPagamentoEntregador(id, nome) {
+      function carimbarPagamentoEntregador(id, nome) {
             const dataAtual = new Date();
             const mesSugerido = (dataAtual.getMonth() + 1).toString().padStart(2, '0') + '/' + dataAtual.getFullYear();
             const mesFormatado = prompt(`Confirmar pagamento da mensalidade de ${nome}\nInforme o Mês/Ano de referência (Ex: ${mesSugerido}):`, mesSugerido);
@@ -1519,6 +1525,7 @@
                 if(ent) { ent.mes_liberado = mesFormatado; ent.status = 'Disponível'; }
                 alert(`Mensalidade do mês ${mesFormatado} carimbada com sucesso!`);
 
+                // INJETA O ALERTA DE PAGAMENTO DO ENTREGADOR INSTANTANEAMENTE
                 alertasGlobaisCache.unshift({
                     id: Date.now(), tipo: 'pagamento', titulo: 'Licença de Entregador',
                     mensagem: `O entregador ${nome} pagou a licença do mês ${mesFormatado}.`, data_hora: new Date().toLocaleString('pt-BR')
@@ -1569,6 +1576,7 @@
             openModal('modalContrato');
         }
 
+
         // ================= HELPDESK & SUPORTE =================
         async function carregarHelpdesk() {
             const ind = await masterApiRequest('/helpdesk/indicadores');
@@ -1598,8 +1606,8 @@
                 chamados.forEach(c => {
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${sanitizeHTML(c.empresa || 'Empresa')}</strong><br><small>${sanitizeHTML(c.data || '')}</small></td>
-                            <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${sanitizeHTML(c.resumo_problema)}</td>
+                            <td><strong>${c.empresa || 'Empresa'}</strong><br><small>${c.data || ''}</small></td>
+                            <td style="max-width: 250px; white-space: normal; font-size: 0.85rem;">${c.resumo_problema}</td>
                             <td>
                                 <select class="form-control" style="padding: 4px; font-size: 0.8rem; width: auto;" onchange="alterarStatusChamado(${c.id}, this.value)">
                                     <option value="aberto" ${c.status === 'aberto' ? 'selected' : ''}>Aberto</option>
@@ -1607,7 +1615,7 @@
                                     <option value="concluido" ${c.status === 'concluido' ? 'selected' : ''}>Concluído</option>
                                 </select>
                             </td>
-                            <td>${sanitizeHTML(c.tecnico_responsavel || 'Não atribuído')}</td>
+                            <td>${c.tecnico_responsavel || 'Não atribuído'}</td>
                             <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
                                 <button class="btn-action" title="Concluir" onclick="abrirModalConcluir(${c.id})"><i class="ph ph-seal-check" style="color: var(--success);"></i></button>
                                 <button class="btn-action" title="Cancelar" onclick="abrirModalCancelar(${c.id})"><i class="ph ph-trash" style="color: var(--danger);"></i></button>
@@ -1665,6 +1673,7 @@
             carregarHelpdesk();
         }
 
+
         // ================= FUNÇÕES DE INTERFACE GERAIS =================
         function abrirEditar(emp) {
             document.getElementById('edit-id').value = emp.id;
@@ -1682,25 +1691,26 @@
         }
 
         function navigate(sectionId, clickedElement) {
-            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById('sec-' + sectionId).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+    document.getElementById('sec-' + sectionId).classList.remove('hidden');
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
-            if(clickedElement) clickedElement.classList.add('active');
+    if(clickedElement) clickedElement.classList.add('active');
 
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-            }
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-overlay');
+    if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    }
 
-            if (sectionId === 'financeiro') carregarFinanceiro();
-            if (sectionId === 'empresas') carregarEmpresas();
-            if (sectionId === 'entregadores') carregarEntregadores();
-            if (sectionId === 'helpdesk') carregarHelpdesk();
-            if (sectionId === 'dashboard') carregarMetricas();
-        }
+    // Gatilhos dinâmicos: Atualiza a tela sempre que você clica nela
+    if (sectionId === 'financeiro') carregarFinanceiro();
+    if (sectionId === 'empresas') carregarEmpresas();
+    if (sectionId === 'entregadores') carregarEntregadores();
+    if (sectionId === 'helpdesk') carregarHelpdesk();
+    if (sectionId === 'dashboard') carregarMetricas();
+}
 
         function toggleCadastroForm() {
             const card = document.getElementById('card-novo-cliente');
@@ -1730,49 +1740,111 @@
         }
 
         function abrirModalConfigurarPix(id, nome, tipo) {
-            document.getElementById('pix-empresa-id').value = id;
-            document.getElementById('pix-tipo-entidade').value = tipo;
-            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            const d = new Date();
-            document.getElementById('pix-mes-referencia-texto').innerText = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
-            document.getElementById('input-arquivo-qrcode').value = '';
-            document.getElementById('input-url-qrcode-base64').value = '';
-            document.getElementById('preview-qrcode-container').style.display = 'none';
-            document.getElementById('input-copia-cola-master').value = '';
-            openModal('modalPixMaster');
+    document.getElementById('pix-empresa-id').value = id;
+    document.getElementById('pix-tipo-entidade').value = tipo; // Armazena 'empresa' ou 'entregador'
+
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const d = new Date();
+    document.getElementById('pix-mes-referencia-texto').innerText = `${meses[d.getMonth()]} de ${d.getFullYear()}`;
+    document.getElementById('input-arquivo-qrcode').value = '';
+    document.getElementById('input-url-qrcode-base64').value = '';
+    document.getElementById('preview-qrcode-container').style.display = 'none';
+    document.getElementById('input-copia-cola-master').value = '';
+    openModal('modalPixMaster');
+}
+
+async function salvarConfiguracaoPix() {
+    const id = document.getElementById('pix-empresa-id').value;
+    const tipo = document.getElementById('pix-tipo-entidade').value;
+    const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
+    const copiaECola = document.getElementById('input-copia-cola-master').value;
+
+    if(!imagemBase64) {
+        alert("Por favor, selecione a imagem do QR Code.");
+        return;
+    }
+
+    // Define a rota dinamicamente com base no tipo
+    const endpoint = tipo === 'empresa' ? `/empresas/${id}/pix` : `/entregadores/${id}/pix`;
+
+    await masterApiRequest(endpoint, 'PUT', { qrcode_imagem: imagemBase64, copia_e_cola: copiaECola });
+    alert("QR Code enviado com sucesso!");
+    closeModal('modalPixMaster');
+    carregarFinanceiro();
+}
+
+
+ function renderLinhaFinanceira(id, titulo, subtitulo, tipoPlano, valor, diaVenc, statusBadge, telefone, tipoEntidade) {
+    let acoes = '';
+
+    if (tipoEntidade === 'empresa') {
+        acoes = `
+            <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}', 'empresa')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+            <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEmpresa(${id})"><i class="ph ph-receipt"></i></button>
+            <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+            <button class="btn-action" title="Dar Baixa com NF" onclick="abrirModalBaixaFinanceira(${id}, '${titulo}', ${valor})" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+        `;
+    } else {
+        // Agora o entregador também tem o botão PIX, passando 'entregador'
+        acoes = `
+            <button class="btn-action" title="Configurar Fatura Pix" onclick="abrirModalConfigurarPix(${id}, '${titulo}', 'entregador')"><i class="ph ph-qr-code" style="color: #673ab7;"></i></button>
+            <button class="btn-action" title="Gerar Recibo" onclick="gerarReciboEntregador(${id})"><i class="ph ph-receipt"></i></button>
+            <button class="btn-action" title="Cobrar WhatsApp" onclick="enviarCobranca('${telefone}', '${titulo}', ${valor})"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
+            <button class="btn-action" title="Dar Baixa App" onclick="carimbarPagamentoEntregador(${id}, '${titulo}')" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
+        `;
+    }
+
+    return `
+        <tr>
+            <td><strong>${titulo}</strong><br><small style="color:var(--text-muted)">${subtitulo}</small></td>
+            <td><span class="badge badge-info" style="background:#e3f2fd; color:#0277bd;">${tipoPlano}</span></td>
+            <td><strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong></td>
+            <td>Todo dia ${diaVenc}</td>
+            <td>${statusBadge}</td>
+            <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">${acoes}</td>
+        </tr>
+    `;
+}
+
+
+
+function enviarCobranca(telefone, empresa, valor) {
+    const msg = `Olá, equipe da *${empresa}*.\n\nAqui é do financeiro da plataforma *deliveryON*.\nIdentificamos que a sua fatura mensal no valor de *R$ ${valor.toFixed(2).replace('.', ',')}* encontra-se em aberto.\n\nPor favor, realize o pagamento para evitar a suspensão do painel.`;
+    window.open(`https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+
+async function confirmarPagamentoMaster(id) {
+    if(confirm("Confirmar o recebimento da mensalidade deste cliente?")) {
+        try {
+            await fetch(`${API_BASE_URL}/master/empresas/${id}/carimbar-pagamento`, {
+                method: 'POST',
+                headers: { 'x-master-key': localStorage.getItem('app_master_token') }
+            });
+            alert("Baixa financeira realizada com sucesso!");
+            carregarFinanceiro(); // Recarrega a tabela
+        } catch(e) {
+            alert("Erro ao confirmar pagamento.");
         }
+    }
+}
 
-        async function salvarConfiguracaoPix() {
-            const id = document.getElementById('pix-empresa-id').value;
-            const tipo = document.getElementById('pix-tipo-entidade').value;
-            const imagemBase64 = document.getElementById('input-url-qrcode-base64').value;
-            const copiaECola = document.getElementById('input-copia-cola-master').value;
+function filtrarTabela(inputId, tbodyId) {
+    let filtro = document.getElementById(inputId).value.toLowerCase();
+    let linhas = document.getElementById(tbodyId).getElementsByTagName('tr');
 
-            if(!imagemBase64) { alert("Por favor, selecione a imagem do QR Code."); return; }
+    for (let i = 0; i < linhas.length; i++) {
+        // Pega todo o texto da linha (nome, cnpj, plano, status)
+        let textoLinha = linhas[i].textContent || linhas[i].innerText;
+        // Se o texto digitado existir na linha, exibe, senão oculta
+        linhas[i].style.display = textoLinha.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+    }
+}
 
-            const endpoint = tipo === 'empresa' ? `/empresas/${id}/pix` : `/entregadores/${id}/pix`;
-            await masterApiRequest(endpoint, 'PUT', { qrcode_imagem: imagemBase64, copia_e_cola: copiaECola });
-            alert("QR Code enviado com sucesso!");
-            closeModal('modalPixMaster');
-            carregarFinanceiro();
-        }
-
-        function enviarCobranca(telefone, empresa, valor) {
-            const msg = `Olá, equipe da *${empresa}*.\n\nAqui é do financeiro da plataforma *deliveryON*.\nIdentificamos que a sua fatura mensal no valor de *R$ ${valor.toFixed(2).replace('.', ',')}* encontra-se em aberto.\n\nPor favor, realize o pagamento para evitar a suspensão do painel.`;
-            window.open(`https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        function filtrarTabela(inputId, tbodyId) {
-            let filtro = document.getElementById(inputId).value.toLowerCase();
-            let linhas = document.getElementById(tbodyId).getElementsByTagName('tr');
-            for (let i = 0; i < linhas.length; i++) {
-                let textoLinha = linhas[i].textContent || linhas[i].innerText;
-                linhas[i].style.display = textoLinha.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
-            }
-        }
 
         let toastsDeInadimplenciaExibidos = false;
 
+        // Função universal para exibir alertas visuais no canto da tela (estilo Windows)
         function mostrarToastMaster(titulo, mensagem, tipo = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -1791,35 +1863,121 @@
                 </div>
                 <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
             `;
+
             container.appendChild(toast);
+
+            // Ativa a animação de entrada
             setTimeout(() => toast.classList.add('show'), 10);
+
+            // Auto-fecha após 6 segundos
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
             }, 6000);
         }
 
+
+        // Função que verifica atrasos e dispara os Toasts
         function verificarPendenciasToasts(empresas, entregadores) {
-            if (toastsDeInadimplenciaExibidos) return; 
+            if (toastsDeInadimplenciaExibidos) return; // Garante que não vai ficar spamando alertas
 
             const diaAtual = new Date().getDate();
             let pendenciasEmpresa = 0;
             let pendenciasEntregador = 0;
 
-            empresas.forEach(emp => { if (diaAtual > (parseInt(emp.vencimento) || 5) && calcularStatusFinanceiro(emp.vencimento, emp.mes_liberado) !== 'em_dia') pendenciasEmpresa++; });
-            entregadores.forEach(ent => { if (diaAtual > (parseInt(ent.vencimento) || 10) && calcularStatusFinanceiro(ent.vencimento, ent.mes_liberado) !== 'em_dia') pendenciasEntregador++; });
+            empresas.forEach(emp => { if (diaAtual > (parseInt(emp.vencimento) || 5)) pendenciasEmpresa++; });
+            entregadores.forEach(ent => { if (diaAtual > (parseInt(ent.vencimento) || 10)) pendenciasEntregador++; });
 
             if (pendenciasEmpresa > 0) {
                 mostrarToastMaster("Faturas em Aberto", `Existem ${pendenciasEmpresa} painéis de clientes com mensalidades pendentes.`, "danger");
             }
             if (pendenciasEntregador > 0) {
+                // Atraso de 1.5s para os dois toasts não aparecerem totalmente colados
                 setTimeout(() => {
                     mostrarToastMaster("Licenças Pendentes", `Existem ${pendenciasEntregador} entregadores aguardando renovação da licença do app.`, "warning");
                 }, 1500);
             }
+
             toastsDeInadimplenciaExibidos = true;
         }
 
+function calcularStatusFinanceiroMaster(diaVencimento, mesReferenciaPago) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1;
+
+    let mesDevido = mesAtual;
+    let anoDevido = anoAtual;
+
+    // Descobre qual é o próximo mês que o cliente tem que pagar
+    if (mesReferenciaPago && mesReferenciaPago !== 'Pendente' && mesReferenciaPago.includes('/')) {
+        const partes = mesReferenciaPago.split('/');
+        mesDevido = parseInt(partes[0]) + 1;
+        anoDevido = parseInt(partes[1]);
+        if (mesDevido > 12) {
+            mesDevido = 1;
+            anoDevido += 1;
+        }
+    }
+
+    const dataVencimento = new Date(anoDevido, mesDevido - 1, diaVencimento);
+    const diffDays = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 3600 * 24));
+
+    if (diffDays >= 0) {
+        return { statusEnum: "EM_DIA", html: '<span class="badge badge-success">Em Dia</span>' };
+    } else {
+        const atraso = Math.abs(diffDays);
+        if (atraso <= 7) {
+            return { statusEnum: "CARENCIA", html: `<span class="badge badge-warning">Atrasado (${atraso} dias)</span>` };
+        } else {
+            return { statusEnum: "VENCIDO", html: '<span class="badge badge-danger">Bloqueado</span>' };
+        }
+    }
+}
+
+
     </script>
+<!-- MODAL DE BAIXA FINANCEIRA COM NF -->
+<div class="modal-overlay" id="modalBaixaFinanceira">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3><i class="ph ph-check-circle" style="color: var(--success);"></i> Confirmar Pagamento e Emitir NF</h3>
+            <button class="close-modal" onclick="closeModal('modalBaixaFinanceira')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="baixa-empresa-id">
+            <p style="margin-bottom: 15px; font-size: 1.1rem;">Cliente: <strong id="baixa-empresa-nome" style="color: var(--brand-primary);"></strong></p>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label>Mês de Referência</label>
+                    <input type="text" id="baixa-mes-ref" class="form-control" placeholder="Ex: 10/2026" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor Pago (R$)</label>
+                    <input type="text" id="baixa-valor" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group mt-20" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
+                <label style="display: flex; align-items: center; gap: 8px; color: #333;">
+                    <i class="ph ph-file-pdf" style="color: var(--danger); font-size: 1.2rem;"></i> Anexar Nota Fiscal (PDF)
+                </label>
+                <input type="file" id="baixa-nf-file" class="form-control" accept="application/pdf" onchange="converterNfBase64(event)" style="margin-top: 10px;">
+                <small style="color: var(--text-muted); display: block; margin-top: 5px;">Este arquivo ficará disponível no painel do cliente imediatamente.</small>
+                <input type="hidden" id="baixa-nf-base64">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modalBaixaFinanceira')">Cancelar</button>
+            <button class="btn btn-success" onclick="salvarBaixaFinanceira()"><i class="ph ph-floppy-disk"></i> Confirmar Baixa e Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
+    <div id="toast-container"></div>
+
 </body>
 </html>
