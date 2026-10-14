@@ -1143,11 +1143,14 @@ function ativarAgoraGestor() {
         }
 
         function logoutGestor() {
-            localStorage.removeItem('empresa_logada_cnpj');
-            localStorage.removeItem('empresa_logada_id');
-            localStorage.removeItem('empresa_logada_vencimento');
-
-
+            localStorage.removeItem('deliveryon_empresa_id');
+            localStorage.removeItem('deliveryon_empresa_nome');
+            localStorage.removeItem('deliveryon_vencimento');
+            localStorage.removeItem('deliveryon_pix_qr');
+            localStorage.removeItem('deliveryon_pix_chave');
+            localStorage.removeItem('deliveryon_status_pagamento');
+            localStorage.removeItem('deliveryon_global_pix_chave_gestor');
+            localStorage.removeItem('deliveryon_global_pix_qr_gestor');
             window.location.reload();
         }
 
